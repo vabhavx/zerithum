@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 
 import MRRCard from "@/components/dashboard/MRRCard";
 import RevenueBreakdownChart from "@/components/dashboard/RevenueBreakdownChart";
@@ -128,15 +129,22 @@ export default function Dashboard() {
       </div>
 
       {/* Concentration Risk Alert */}
-      {showRiskAlert && metrics.concentrationRisk && (
-        <div className="mb-6">
-          <ConcentrationRiskAlert
-            platform={metrics.concentrationRisk.platform}
-            percentage={metrics.concentrationRisk.percentage}
-            onDismiss={() => setShowRiskAlert(false)}
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {showRiskAlert && metrics.concentrationRisk && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ConcentrationRiskAlert
+              platform={metrics.concentrationRisk.platform}
+              percentage={metrics.concentrationRisk.percentage}
+              onDismiss={() => setShowRiskAlert(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
