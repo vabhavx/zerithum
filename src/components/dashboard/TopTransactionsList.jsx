@@ -28,53 +28,57 @@ const CATEGORY_LABELS = {
 export default function TopTransactionsList({ transactions }) {
   if (!transactions || transactions.length === 0) {
     return (
-      <div className="clay rounded-3xl p-6 lg:p-8">
-        <h3 className="text-lg font-semibold text-slate-800 mb-6">Top Transactions</h3>
-        <div className="text-center py-12 text-slate-400">
+      <div className="card-modern rounded-xl p-6">
+        <h3 className="text-base font-semibold text-white mb-6">Top Transactions</h3>
+        <div className="text-center py-12 text-white/30">
           <CircleDollarSign className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>No transactions this month</p>
+          <p className="text-sm">No transactions this month</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="clay rounded-3xl p-6 lg:p-8">
+    <div className="card-modern rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-slate-800">Top Transactions</h3>
-          <p className="text-sm text-slate-500">This month's highlights</p>
+          <h3 className="text-base font-semibold text-white">Top Transactions</h3>
+          <p className="text-xs text-white/40">This month's highlights</p>
         </div>
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-2">
         {transactions.slice(0, 5).map((transaction, index) => {
           const Icon = PLATFORM_ICONS[transaction.platform] || CircleDollarSign;
           return (
             <div 
               key={transaction.id || index}
-              className="clay-sm rounded-2xl p-4 flex items-center gap-4 clay-hover transition-all duration-200"
+              className="rounded-lg p-3 flex items-center gap-3 bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-white/10 transition-all duration-200"
             >
               <div className={cn(
-                "w-12 h-12 rounded-xl flex items-center justify-center border",
-                PLATFORM_COLORS[transaction.platform] || "bg-slate-50 text-slate-600 border-slate-100"
+                "w-10 h-10 rounded-lg flex items-center justify-center border",
+                transaction.platform === "youtube" && "bg-red-500/10 border-red-500/20 text-red-400",
+                transaction.platform === "patreon" && "bg-rose-500/10 border-rose-500/20 text-rose-400",
+                transaction.platform === "stripe" && "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+                transaction.platform === "gumroad" && "bg-pink-500/10 border-pink-500/20 text-pink-400",
+                !transaction.platform && "bg-white/5 border-white/10 text-white/50"
               )}>
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-slate-800 truncate">
+                <p className="font-medium text-white text-sm truncate">
                   {transaction.description || CATEGORY_LABELS[transaction.category] || "Transaction"}
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="text-xs text-white/40">
                   {transaction.platform?.charAt(0).toUpperCase() + transaction.platform?.slice(1)} · {format(new Date(transaction.transaction_date), "MMM d")}
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-slate-800">
+                <p className="font-semibold text-white text-sm">
                   ${transaction.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 {transaction.platform_fee > 0 && (
-                  <p className="text-xs text-slate-400">
+                  <p className="text-[10px] text-red-400/60">
                     -${transaction.platform_fee?.toFixed(2)} fee
                   </p>
                 )}

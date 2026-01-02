@@ -13,14 +13,14 @@ export default function ConcentrationRiskAlert({ platform, percentage, onDismiss
   if (!platform || percentage < 70) return null;
 
   return (
-    <div className="clay rounded-2xl p-4 lg:p-5 bg-gradient-to-r from-amber-50/80 to-orange-50/80 border border-amber-200/50">
-      <div className="flex items-start gap-4">
-        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-          <AlertTriangle className="w-5 h-5 text-amber-600" />
+    <div className="rounded-xl p-4 bg-amber-500/10 border border-amber-500/30 backdrop-blur-sm">
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0 border border-amber-500/30">
+          <AlertTriangle className="w-4 h-4 text-amber-400" />
         </div>
         <div className="flex-1">
-          <h4 className="font-semibold text-amber-800 mb-1">Revenue Concentration Risk</h4>
-          <p className="text-sm text-amber-700">
+          <h4 className="font-semibold text-amber-400 mb-1 text-sm">Revenue Concentration Risk</h4>
+          <p className="text-xs text-amber-300/80">
             <span className="font-medium">{percentage.toFixed(1)}%</span> of your revenue comes from{" "}
             <span className="font-medium">{PLATFORM_LABELS[platform] || platform}</span>. 
             Consider diversifying your income streams to reduce platform dependency risk.
@@ -30,10 +30,10 @@ export default function ConcentrationRiskAlert({ platform, percentage, onDismiss
           <Button
             variant="ghost"
             size="icon"
-            className="text-amber-600 hover:bg-amber-100/50 -mt-1 -mr-1"
+            className="text-amber-400 hover:bg-amber-500/20 -mt-1 -mr-1 h-8 w-8"
             onClick={onDismiss}
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </Button>
         )}
       </div>

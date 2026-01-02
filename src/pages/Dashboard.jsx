@@ -113,20 +113,24 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
+      >
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">Dashboard</h1>
-          <p className="text-slate-500 mt-1">Your revenue at a glance</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
+          <p className="text-white/40 mt-1 text-sm">Your revenue at a glance</p>
         </div>
         <Button
           onClick={() => refetch()}
           disabled={isLoading}
-          className="clay-sm hover:clay rounded-xl bg-white text-slate-700 border-0 shadow-none hover:shadow-none"
+          className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition-all text-sm h-9"
         >
-          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isLoading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
-      </div>
+      </motion.div>
 
       {/* Concentration Risk Alert */}
       <AnimatePresence>
@@ -159,35 +163,55 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Stats */}
-        <div className="lg:col-span-2 grid grid-cols-2 gap-4">
-          <div className="clay rounded-2xl p-5">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Transactions</p>
-            <p className="text-2xl font-bold text-slate-800">{metrics.topTransactions.length}</p>
-            <p className="text-xs text-slate-400 mt-1">This month</p>
-          </div>
-          <div className="clay rounded-2xl p-5">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Platforms</p>
-            <p className="text-2xl font-bold text-slate-800">
+        <div className="lg:col-span-2 grid grid-cols-2 gap-3">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="card-modern rounded-xl p-4"
+          >
+            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em] mb-2">Transactions</p>
+            <p className="text-2xl font-bold text-white">{metrics.topTransactions.length}</p>
+            <p className="text-[10px] text-white/30 mt-1">This month</p>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15 }}
+            className="card-modern rounded-xl p-4"
+          >
+            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em] mb-2">Platforms</p>
+            <p className="text-2xl font-bold text-white">
               {Object.values(metrics.platformBreakdown).filter(v => v > 0).length}
             </p>
-            <p className="text-xs text-slate-400 mt-1">Active</p>
-          </div>
-          <div className="clay rounded-2xl p-5">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Avg Transaction</p>
-            <p className="text-2xl font-bold text-slate-800">
+            <p className="text-[10px] text-white/30 mt-1">Active</p>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="card-modern rounded-xl p-4"
+          >
+            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em] mb-2">Avg Transaction</p>
+            <p className="text-2xl font-bold text-white">
               ${metrics.topTransactions.length > 0 
                 ? (metrics.totalMRR / metrics.topTransactions.length).toFixed(0)
                 : "0"}
             </p>
-            <p className="text-xs text-slate-400 mt-1">This month</p>
-          </div>
-          <div className="clay rounded-2xl p-5 flex items-center justify-center">
+            <p className="text-[10px] text-white/30 mt-1">This month</p>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25 }}
+            className="card-modern rounded-xl p-4 flex items-center justify-center"
+          >
             <div className="text-center">
-              <Sparkles className="w-6 h-6 text-violet-500 mx-auto mb-2" />
-              <p className="text-xs text-slate-500">AI Insights</p>
-              <p className="text-lg font-semibold text-violet-600">{insights.length}</p>
+              <Sparkles className="w-5 h-5 text-indigo-400 mx-auto mb-2" />
+              <p className="text-[10px] text-white/40 uppercase tracking-wider">AI Insights</p>
+              <p className="text-xl font-bold text-indigo-400 mt-1">{insights.length}</p>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
