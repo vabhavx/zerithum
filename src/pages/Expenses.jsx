@@ -364,7 +364,7 @@ export default function Expenses() {
       </div>
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="card-modern rounded-2xl border max-w-2xl max-h-[90vh] overflow-y-auto !pointer-events-auto">
+        <DialogContent className="card-modern rounded-2xl border max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-white">Add Expense</DialogTitle>
           </DialogHeader>
