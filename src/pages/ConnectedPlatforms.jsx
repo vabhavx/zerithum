@@ -496,7 +496,6 @@ export default function ConnectedPlatforms() {
               );
             })}
           </div>
-        </div>
       )}
 
       {/* Connect Dialog */}
