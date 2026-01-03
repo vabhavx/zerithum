@@ -579,7 +579,7 @@ export default function ConnectedPlatforms() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 max-h-[500px] overflow-y-auto">
               {availablePlatforms.map((platform) => {
                 const Icon = platform.icon;
                 return (
@@ -588,14 +588,13 @@ export default function ConnectedPlatforms() {
                     onClick={() => initiateOAuthFlow(platform)}
                     disabled={connectingPlatform}
                     className={cn(
-                      "rounded-lg p-4 flex flex-col items-center gap-3 text-center",
-                      "bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-white/10",
-                      "transition-all duration-200",
+                      "rounded-lg p-4 flex flex-col items-center gap-3 text-center cursor-pointer",
+                      "bg-white/[0.02] border border-white/[0.05]",
                       connectingPlatform && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     <div className={cn(
-                      "w-12 h-12 rounded-lg flex items-center justify-center border",
+                      "w-12 h-12 rounded-lg flex items-center justify-center border flex-shrink-0",
                       platform.color
                     )}>
                       <Icon className="w-5 h-5" />
