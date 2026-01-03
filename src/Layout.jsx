@@ -7,14 +7,14 @@ import {
   Link2, 
   Scale, 
   FileText, 
+  Settings, 
   Menu, 
   X,
   LogOut,
+  ChevronRight,
   User,
   AlertTriangle,
-  DollarSign,
-  RefreshCw,
-  Sparkles
+  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,12 +36,8 @@ export default function Layout({ children, currentPageName }) {
 
   useEffect(() => {
     const loadUser = async () => {
-      try {
-        const currentUser = await base44.auth.me();
-        setUser(currentUser);
-      } catch (error) {
-        console.log("Not authenticated");
-      }
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
     };
     loadUser();
   }, []);
@@ -51,79 +47,119 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-dark)' }}>
-      {/* Top Navigation */}
-      <nav className="fixed top-0 left-0 right-0 h-16 z-40 flex items-center justify-between px-6" 
-           style={{ 
-             backgroundColor: 'var(--bg-dark)', 
-             borderBottom: '1px solid var(--border-subtle)' 
-           }}>
-        {/* Left: Logo + Menu Toggle */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors"
-            aria-label="Toggle menu"
-          >
-            {sidebarOpen ? (
-              <X className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
-            ) : (
-              <Menu className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
-            )}
-          </button>
-          
-          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-3">
-            <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
-              alt="Zerithum"
-              className="h-8 w-auto object-contain"
-            />
-            <span className="text-base font-semibold hidden sm:block" style={{ color: 'var(--text-primary)' }}>
-              Zerithum
-            </span>
-          </Link>
-        </div>
+    <div className="min-h-screen bg-[#0A0A0A]">
+      <style>{`
+        :root {
+          --bg-primary: #0A0A0A;
+          --bg-secondary: #111111;
+          --bg-tertiary: #1A1A1A;
+          --border-primary: rgba(255, 255, 255, 0.06);
+          --border-secondary: rgba(255, 255, 255, 0.12);
+          --text-primary: #FFFFFF;
+          --text-secondary: #A1A1A1;
+          --accent: #6366F1;
+          --accent-hover: #7C7FF2;
+        }
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-3">
-          {user && (
-            <>
-              <button className="btn-primary btn-small hidden sm:flex">
-                <Sparkles className="w-4 h-4" />
-                Generate Insights
-              </button>
-              <button className="btn-secondary btn-small">
-                <RefreshCw className="w-4 h-4" />
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
-            </>
-          )}
+        @keyframes shimmer {
+          0% { background-position: -1000px 0; }
+          100% { background-position: 1000px 0; }
+        }
+
+        .card-modern {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          backdrop-filter: blur(20px);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-modern:hover {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(255, 255, 255, 0.12);
+          transform: translateY(-2px);
+        }
+
+        .glass-effect {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(40px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glow-accent {
+          box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-item-active {
+          background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+          border-left: 2px solid #6366F1;
+        }
+
+        .shimmer {
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.03) 50%,
+            transparent 100%
+          );
+          background-size: 2000px 100%;
+          animation: shimmer 3s infinite;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+      `}</style>
+
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-effect px-4 py-3 flex items-center justify-between border-b border-white/5">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 blur-md opacity-20 rounded-full"></div>
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
+            alt="Zerithum"
+            className="h-8 w-auto object-contain relative z-10"
+          />
         </div>
-      </nav>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="text-white/70 hover:text-white hover:bg-white/5"
+        >
+          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </Button>
+      </div>
 
       {/* Sidebar Overlay */}
       {sidebarOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-30 mt-16"
+          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-60 z-40 transition-transform duration-300 ease-out",
-          "lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-        style={{ 
-          backgroundColor: 'var(--bg-dark)', 
-          borderRight: '1px solid var(--border-subtle)' 
-        }}
-      >
-        <div className="h-full flex flex-col">
-          {/* Navigation Items */}
-          <nav className="flex-1 py-4 px-3 space-y-1">
+      <aside className={cn(
+        "fixed left-0 top-0 h-full w-64 bg-[#0A0A0A] border-r border-white/5 z-50 transition-all duration-300 ease-out",
+        "lg:translate-x-0",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="p-6 h-full flex flex-col">
+          {/* Logo */}
+          <div className="flex items-center gap-3 mb-12">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 blur-lg opacity-30 rounded-full"></div>
+                <img 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
+                  alt="Zerithum"
+                  className="h-10 w-auto object-contain relative z-10 drop-shadow-lg"
+                />
+              </div>
+            </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1">
             {navItems.map((item) => {
               const isActive = currentPageName === item.page;
               return (
@@ -132,19 +168,17 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl(item.page)}
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 h-11 rounded-lg transition-all duration-150",
-                    "text-sm font-medium",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
                     isActive 
-                      ? "text-white"
-                      : "hover:bg-white/5"
+                      ? "nav-item-active text-white" 
+                      : "text-white/50 hover:text-white/80 hover:bg-white/5"
                   )}
-                  style={{
-                    backgroundColor: isActive ? 'var(--primary-light)' : 'transparent',
-                    color: isActive ? 'var(--primary)' : 'var(--text-secondary)'
-                  }}
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.name}</span>
+                  {isActive && (
+                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-indigo-500 rounded-r" />
+                  )}
+                  <item.icon className={cn("w-4 h-4", isActive && "text-indigo-400")} />
+                  <span className="font-medium text-sm">{item.name}</span>
                 </Link>
               );
             })}
@@ -152,73 +186,40 @@ export default function Layout({ children, currentPageName }) {
 
           {/* User Section */}
           {user && (
-            <div className="p-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
-              <div className="flex items-center gap-3 mb-3 px-2">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm"
-                     style={{ 
-                       backgroundColor: 'var(--border-subtle)', 
-                       color: 'var(--text-primary)' 
-                     }}>
-                  {user.full_name?.[0] || user.email?.[0] || "U"}
+            <div className="pt-4 border-t border-white/5">
+              <div className="rounded-lg bg-white/5 p-3 border border-white/5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center border border-white/10">
+                    <span className="font-semibold text-white/70 text-sm">
+                      {user.full_name?.[0] || user.email?.[0] || "U"}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white text-sm truncate">{user.full_name || "Creator"}</p>
+                    <p className="text-[10px] text-white/40 truncate">{user.email}</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                    {user.full_name || "Creator"}
-                  </p>
-                  <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
-                    {user.email}
-                  </p>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="w-full justify-start text-white/50 hover:text-red-400 hover:bg-red-500/10 text-xs h-8"
+                >
+                  <LogOut className="w-3.5 h-3.5 mr-2" />
+                  Sign Out
+                </Button>
               </div>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-white/5 transition-colors"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </button>
             </div>
           )}
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-60 pt-16 min-h-screen" style={{ backgroundColor: 'var(--bg-dark)' }}>
-        {children}
-      </main>
-
-      {/* Footer */}
-      <footer className="lg:ml-60 border-t py-8 px-6" 
-              style={{ 
-                backgroundColor: 'var(--bg-dark)', 
-                borderColor: 'var(--border-subtle)' 
-              }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              © {new Date().getFullYear()} Zerithum. All rights reserved.
-            </p>
-            <div className="flex flex-wrap justify-center gap-6 text-xs">
-              <a href="/pricing" className="hover:text-white transition-colors" style={{ color: 'var(--text-secondary)' }}>
-                Pricing
-              </a>
-              <a href="#" className="hover:text-white transition-colors" style={{ color: 'var(--text-secondary)' }}>
-                Privacy
-              </a>
-              <a href="#" className="hover:text-white transition-colors" style={{ color: 'var(--text-secondary)' }}>
-                Terms
-              </a>
-              <a href="#" className="hover:text-white transition-colors" style={{ color: 'var(--text-secondary)' }}>
-                Refund Policy
-              </a>
-              <a href="mailto:support@zerithum.com" className="hover:text-white transition-colors" style={{ color: 'var(--text-secondary)' }}>
-                support@zerithum.com
-              </a>
-            </div>
-          </div>
+      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 bg-[#0A0A0A]">
+        <div className="p-6 lg:p-10 max-w-[1600px] mx-auto">
+          {children}
         </div>
-      </footer>
+      </main>
     </div>
   );
 }
