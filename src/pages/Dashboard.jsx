@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import ConcentrationRiskAlert from "@/components/dashboard/ConcentrationRiskAlert";
 import LendingSignalsCard from "@/components/dashboard/LendingSignalsCard";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
+import AlertBanner from "@/components/dashboard/AlertBanner";
 
 // Lazy load chart components for better performance
 const RevenueForecasting = React.lazy(() => import("@/components/dashboard/RevenueForecasting"));
@@ -17,6 +18,7 @@ const InteractivePlatformChart = React.lazy(() => import("@/components/dashboard
 export default function Dashboard() {
   const [showRiskAlert, setShowRiskAlert] = useState(true);
   const [generatingInsights, setGeneratingInsights] = useState(false);
+  const [alerts, setAlerts] = useState([]);
 
   const { data: transactions = [], isLoading, refetch } = useQuery({
     queryKey: ["revenueTransactions"],
@@ -36,6 +38,62 @@ export default function Dashboard() {
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
   });
+
+  const { data: autopsyEvents = [] } = useQuery({
+    queryKey: ["autopsyEvents"],
+    queryFn: async () => {
+      const user = await base44.auth.me();
+      return base44.entities.AutopsyEvent.filter({ user_id: user.id, status: 'pending_review' }, "-detected_at", 5);
+    },
+  });
+
+  const { data: connectedPlatforms = [] } = useQuery({
+    queryKey: ["connectedPlatforms"],
+    queryFn: async () => {
+      const user = await base44.auth.me();
+      return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
+    },
+  });
+
+  useEffect(() => {
+    const newAlerts = [];
+
+    // Autopsy alerts
+    if (autopsyEvents.length > 0) {
+      newAlerts.push({
+        id: 'autopsy',
+        type: 'error',
+        title: `⚠️ ${autopsyEvents.length} Revenue Anomal${autopsyEvents.length > 1 ? 'ies' : 'y'} Detected`,
+        description: 'Critical events require your decision. Review now to understand impact.',
+        dismissible: false
+      });
+    }
+
+    // Sync alerts
+    const failedSyncs = connectedPlatforms.filter(p => p.sync_status === 'error');
+    if (failedSyncs.length > 0) {
+      newAlerts.push({
+        id: 'sync',
+        type: 'sync',
+        title: `⏰ ${failedSyncs.length} Platform${failedSyncs.length > 1 ? 's' : ''} Failed to Sync`,
+        description: 'Go to Connected Platforms to reconnect.',
+        dismissible: true
+      });
+    }
+
+    // AI insights available
+    if (insights.length > 3) {
+      newAlerts.push({
+        id: 'insights',
+        type: 'info',
+        title: '✨ New AI Insights Available',
+        description: `${insights.length} insights ready for review.`,
+        dismissible: true
+      });
+    }
+
+    setAlerts(newAlerts);
+  }, [autopsyEvents, connectedPlatforms, insights]);
 
   const handleGenerateInsights = async () => {
     setGeneratingInsights(true);
@@ -176,6 +234,12 @@ export default function Dashboard() {
           </Button>
         </div>
       </motion.div>
+
+      {/* Alert Banners */}
+      <AlertBanner 
+        alerts={alerts} 
+        onDismiss={(id) => setAlerts(alerts.filter(a => a.id !== id))} 
+      />
 
       {/* Concentration Risk Alert */}
       <AnimatePresence>
