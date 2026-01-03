@@ -498,7 +498,7 @@ export default function ConnectedPlatforms() {
 
       {/* Connect Dialog */}
       <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
-        <DialogContent className="card-modern rounded-2xl border max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogContent className="card-modern rounded-2xl border max-w-2xl !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-white">
               {selectedPlatform ? `Connect ${selectedPlatform.name}` : "Connect Platform"}
