@@ -47,85 +47,20 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
-      <style>{`
-        :root {
-          --bg-primary: #0A0A0A;
-          --bg-secondary: #111111;
-          --bg-tertiary: #1A1A1A;
-          --border-primary: rgba(255, 255, 255, 0.06);
-          --border-secondary: rgba(255, 255, 255, 0.12);
-          --text-primary: #FFFFFF;
-          --text-secondary: #A1A1A1;
-          --accent: #6366F1;
-          --accent-hover: #7C7FF2;
-        }
-
-        @keyframes shimmer {
-          0% { background-position: -1000px 0; }
-          100% { background-position: 1000px 0; }
-        }
-
-        .card-modern {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          backdrop-filter: blur(20px);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .card-modern:hover {
-          background: rgba(255, 255, 255, 0.04);
-          border-color: rgba(255, 255, 255, 0.12);
-          transform: translateY(-2px);
-        }
-
-        .glass-effect {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(40px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .glow-accent {
-          box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .nav-item-active {
-          background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
-          border-left: 2px solid #6366F1;
-        }
-
-        .shimmer {
-          background: linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.03) 50%,
-            transparent 100%
-          );
-          background-size: 2000px 100%;
-          animation: shimmer 3s infinite;
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
-      `}</style>
+    <div className="min-h-screen bg-[var(--surface-base)]">
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-effect px-4 py-3 flex items-center justify-between border-b border-white/5">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 blur-md opacity-20 rounded-full"></div>
-          <img 
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
-            alt="Zerithum"
-            className="h-8 w-auto object-contain relative z-10"
-          />
-        </div>
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-effect px-6 py-4 flex items-center justify-between border-b border-[var(--border-subtle)]">
+        <img 
+          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
+          alt="Zerithum"
+          className="h-8 w-auto object-contain"
+        />
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-white/70 hover:text-white hover:bg-white/5"
+          className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]"
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
@@ -141,22 +76,19 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 bg-[#0A0A0A] border-r border-white/5 z-50 transition-all duration-300 ease-out",
+        "fixed left-0 top-0 h-full w-64 bg-[var(--surface-base)] border-r border-[var(--border-subtle)] z-50 transition-all duration-300 ease-out",
         "lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6 h-full flex flex-col">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-12">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 blur-lg opacity-30 rounded-full"></div>
-                <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
-                  alt="Zerithum"
-                  className="h-10 w-auto object-contain relative z-10 drop-shadow-lg"
-                />
-              </div>
-            </div>
+          <div className="flex items-center mb-10">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
+              alt="Zerithum"
+              className="h-9 w-auto object-contain"
+            />
+          </div>
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1">
@@ -168,16 +100,13 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl(item.page)}
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-lg)] transition-all duration-150 group relative",
                     isActive 
-                      ? "nav-item-active text-white" 
-                      : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                      ? "bg-[var(--brand-teal-500)]/10 text-[var(--brand-teal-400)] border-l-2 border-[var(--brand-teal-500)]" 
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]"
                   )}
                 >
-                  {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-indigo-500 rounded-r" />
-                  )}
-                  <item.icon className={cn("w-4 h-4", isActive && "text-indigo-400")} />
+                  <item.icon className="w-4.5 h-4.5" />
                   <span className="font-medium text-sm">{item.name}</span>
                 </Link>
               );
@@ -186,26 +115,26 @@ export default function Layout({ children, currentPageName }) {
 
           {/* User Section */}
           {user && (
-            <div className="pt-4 border-t border-white/5">
-              <div className="rounded-lg bg-white/5 p-3 border border-white/5">
+            <div className="pt-4 border-t border-[var(--border-subtle)]">
+              <div className="rounded-[var(--radius-lg)] bg-[var(--surface-elevated)] p-4 border border-[var(--border-subtle)]">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center border border-white/10">
-                    <span className="font-semibold text-white/70 text-sm">
+                  <div className="w-10 h-10 rounded-[var(--radius-md)] bg-gradient-to-br from-[var(--brand-teal-500)]/20 to-[var(--brand-teal-600)]/20 flex items-center justify-center border border-[var(--border-default)]">
+                    <span className="font-semibold text-[var(--brand-teal-400)] text-sm">
                       {user.full_name?.[0] || user.email?.[0] || "U"}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm truncate">{user.full_name || "Creator"}</p>
-                    <p className="text-[10px] text-white/40 truncate">{user.email}</p>
+                    <p className="font-semibold text-[var(--text-primary)] text-sm truncate">{user.full_name || "Creator"}</p>
+                    <p className="text-xs text-[var(--text-tertiary)] truncate">{user.email}</p>
                   </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleLogout}
-                  className="w-full justify-start text-white/50 hover:text-red-400 hover:bg-red-500/10 text-xs h-8"
+                  className="w-full justify-start text-[var(--text-secondary)] hover:text-[var(--error)] hover:bg-[var(--error)]/10 text-xs h-9"
                 >
-                  <LogOut className="w-3.5 h-3.5 mr-2" />
+                  <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </Button>
               </div>
@@ -215,8 +144,8 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 bg-[#0A0A0A]">
-        <div className="p-6 lg:p-10 max-w-[1600px] mx-auto">
+      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 bg-[var(--surface-base)]">
+        <div className="p-6 lg:p-12 max-w-[1600px] mx-auto">
           {children}
         </div>
       </main>
