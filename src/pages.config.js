@@ -18,6 +18,7 @@ import TaxExport from './pages/TaxExport';
 import TaxReports from './pages/TaxReports';
 import Transactions from './pages/Transactions';
 import AuthCallback from './pages/AuthCallback';
+import TaxEstimator from './pages/TaxEstimator';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +43,7 @@ export const PAGES = {
     "TaxReports": TaxReports,
     "Transactions": Transactions,
     "AuthCallback": AuthCallback,
+    "TaxEstimator": TaxEstimator,
 }
 
 export const pagesConfig = {

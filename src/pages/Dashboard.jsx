@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
-import { RefreshCw, Sparkles, Loader2 } from "lucide-react";
+import { RefreshCw, Sparkles, Loader2, TrendingUp, FileText, CircleDollarSign, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -196,25 +196,74 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Revenue Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <RevenueOverviewCard
-          title="Total Revenue"
-          amount={metrics.totalMRR}
-          change={metrics.prevMRR > 0 ? metrics.totalMRR - metrics.prevMRR : 0}
-          changePercent={metrics.prevMRR > 0 ? ((metrics.totalMRR - metrics.prevMRR) / metrics.prevMRR) * 100 : 0}
-        />
-        <RevenueOverviewCard
-          title="Total Transactions"
-          amount={transactions.length}
-          change={0}
-          changePercent={0}
-        />
-        <RevenueOverviewCard
-          title="Avg Transaction"
-          amount={transactions.length > 0 ? metrics.totalMRR / transactions.length : 0}
-          change={0}
-          changePercent={0}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="card-modern rounded-xl p-5 hover:scale-[1.02] transition-transform"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-indigo-400" />
+            </div>
+          </div>
+          <p className="text-white/50 text-xs mb-1">This Month</p>
+          <p className="text-2xl font-bold text-white">${metrics.totalMRR.toFixed(0)}</p>
+          <p className={`text-xs mt-2 flex items-center gap-1 ${metrics.mrrTrend === 'up' ? 'text-emerald-400' : metrics.mrrTrend === 'down' ? 'text-red-400' : 'text-white/40'}`}>
+            {metrics.mrrChange} vs last month
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="card-modern rounded-xl p-5 hover:scale-[1.02] transition-transform"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-white/10 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-emerald-400" />
+            </div>
+          </div>
+          <p className="text-white/50 text-xs mb-1">Transactions</p>
+          <p className="text-2xl font-bold text-white">{transactions.length}</p>
+          <p className="text-xs text-white/40 mt-2">All-time</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="card-modern rounded-xl p-5 hover:scale-[1.02] transition-transform"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center">
+              <CircleDollarSign className="w-5 h-5 text-blue-400" />
+            </div>
+          </div>
+          <p className="text-white/50 text-xs mb-1">Avg Transaction</p>
+          <p className="text-2xl font-bold text-white">
+            ${transactions.length > 0 ? (metrics.totalMRR / transactions.length).toFixed(0) : 0}
+          </p>
+          <p className="text-xs text-white/40 mt-2">Per transaction</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="card-modern rounded-xl p-5 hover:scale-[1.02] transition-transform"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center">
+              <Link2 className="w-5 h-5 text-amber-400" />
+            </div>
+          </div>
+          <p className="text-white/50 text-xs mb-1">Platforms</p>
+          <p className="text-2xl font-bold text-white">{metrics.platformBreakdown.length}</p>
+          <p className="text-xs text-white/40 mt-2">Connected sources</p>
+        </motion.div>
       </div>
 
       {/* Charts Row */}

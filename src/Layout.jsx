@@ -18,10 +18,10 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
-  { name: "Reports & Analytics", icon: FileText, page: "Reports" },
+  { name: "Tax Estimator", icon: FileText, page: "TaxEstimator" },
   { name: "Connected Platforms", icon: Link2, page: "ConnectedPlatforms" },
+  { name: "Reports & Analytics", icon: FileText, page: "Reports" },
   { name: "Reconciliation", icon: Scale, page: "Reconciliation" },
-  { name: "Tax Reports", icon: FileText, page: "TaxReports" },
   { name: "Settings", icon: Settings, page: "Settings" },
 ];
 
@@ -108,12 +108,11 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-effect px-4 py-3 flex items-center justify-between border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">Z</span>
-          </div>
-          <span className="font-semibold text-white">Zerithum</span>
-        </div>
+        <img 
+          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
+          alt="Zerithum"
+          className="h-7 w-auto object-contain"
+        />
         <Button
           variant="ghost"
           size="icon"
@@ -141,14 +140,12 @@ export default function Layout({ children, currentPageName }) {
         <div className="p-6 h-full flex flex-col">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white font-bold text-base">Z</span>
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
+                alt="Zerithum"
+                className="h-8 w-auto object-contain"
+              />
             </div>
-            <div>
-              <h1 className="font-bold text-lg text-white tracking-tight">Zerithum</h1>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider">Revenue Platform</p>
-            </div>
-          </div>
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1">
