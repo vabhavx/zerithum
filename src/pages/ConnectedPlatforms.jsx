@@ -118,10 +118,10 @@ export default function ConnectedPlatforms() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
-    const platform = urlParams.get('platform');
+    const state = urlParams.get('state');
     
-    if (code && platform) {
-      handleOAuthCallback(platform, code);
+    if (code && state) {
+      handleOAuthCallback(state, code);
       // Clean URL
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -414,8 +414,7 @@ export default function ConnectedPlatforms() {
           </Button>
         </div>
       ) : (
-        <AnimatePresence mode="popLayout">
-          <div className="space-y-4">
+        <div className="space-y-4">
             {connectedPlatforms.map((connection) => {
               const platform = PLATFORMS.find(p => p.id === connection.platform);
               if (!platform) return null;
@@ -423,13 +422,8 @@ export default function ConnectedPlatforms() {
               const isSyncing = syncingPlatform === connection.id;
 
               return (
-                <motion.div
+                <div
                   key={connection.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
                   className="card-modern rounded-xl p-5"
                 >
                   <div className="flex items-center gap-4">
@@ -498,11 +492,11 @@ export default function ConnectedPlatforms() {
                       </Button>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
-        </AnimatePresence>
+        </div>
       )}
 
       {/* Connect Dialog */}

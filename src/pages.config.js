@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard';
 import Reconciliation from './pages/Reconciliation';
 import Settings from './pages/Settings';
 import TaxReports from './pages/TaxReports';
+import Reports from './pages/Reports';
 import __Layout from './Layout.jsx';
 
 
@@ -12,6 +13,7 @@ export const PAGES = {
     "Reconciliation": Reconciliation,
     "Settings": Settings,
     "TaxReports": TaxReports,
+    "Reports": Reports,
 }
 
 export const pagesConfig = {

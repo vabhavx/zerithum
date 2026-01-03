@@ -18,9 +18,10 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
+  { name: "Reports & Analytics", icon: FileText, page: "Reports" },
   { name: "Connected Platforms", icon: Link2, page: "ConnectedPlatforms" },
   { name: "Reconciliation", icon: Scale, page: "Reconciliation" },
-  { name: "Export & Tax Reports", icon: FileText, page: "TaxReports" },
+  { name: "Tax Reports", icon: FileText, page: "TaxReports" },
   { name: "Settings", icon: Settings, page: "Settings" },
 ];
 
