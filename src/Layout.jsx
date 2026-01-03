@@ -12,13 +12,15 @@ import {
   X,
   LogOut,
   ChevronRight,
-  User
+  User,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
+  { name: "Revenue Autopsy", icon: AlertTriangle, page: "RevenueAutopsy" },
   { name: "Transactions", icon: FileText, page: "TransactionAnalysis" },
   { name: "Expenses", icon: Scale, page: "Expenses" },
   { name: "Tax Estimator", icon: FileText, page: "TaxEstimator" },

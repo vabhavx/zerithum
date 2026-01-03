@@ -22,6 +22,7 @@ import TaxExport from './pages/TaxExport';
 import TaxReports from './pages/TaxReports';
 import TransactionAnalysis from './pages/TransactionAnalysis';
 import Transactions from './pages/Transactions';
+import RevenueAutopsy from './pages/RevenueAutopsy';
 import __Layout from './Layout.jsx';
 
 
@@ -50,6 +51,7 @@ export const PAGES = {
     "TaxReports": TaxReports,
     "TransactionAnalysis": TransactionAnalysis,
     "Transactions": Transactions,
+    "RevenueAutopsy": RevenueAutopsy,
 }
 
 export const pagesConfig = {
