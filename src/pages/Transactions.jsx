@@ -1,200 +1,269 @@
-import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Download, Filter } from "lucide-react";
-import { format } from "date-fns";
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import moment from 'moment';
 
 export default function Transactions() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterPlatform, setFilterPlatform] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [platformFilter, setPlatformFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [sortField, setSortField] = useState('transaction_date');
+  const [sortDirection, setSortDirection] = useState('desc');
 
   const { data: transactions = [] } = useQuery({
-    queryKey: ["transactions"],
-    queryFn: () => base44.entities.Transaction.list("-transaction_date", 500),
+    queryKey: ['transactions'],
+    queryFn: () => base44.entities.Transaction.list('-transaction_date', 500),
+    initialData: []
   });
 
-  const filteredTransactions = transactions.filter((txn) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      txn.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      txn.platform_transaction_id?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPlatform = filterPlatform === "all" || txn.platform === filterPlatform;
-    const matchesStatus = filterStatus === "all" || txn.status === filterStatus;
-    return matchesSearch && matchesPlatform && matchesStatus;
-  });
+  // Filter and sort transactions
+  const filteredTransactions = transactions
+    .filter(t => {
+      const matchesSearch = !searchTerm || 
+        t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.platform_transaction_id?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesPlatform = platformFilter === 'all' || t.platform === platformFilter;
+      const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
+      const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+      return matchesSearch && matchesPlatform && matchesCategory && matchesStatus;
+    })
+    .sort((a, b) => {
+      const aVal = a[sortField];
+      const bVal = b[sortField];
+      const modifier = sortDirection === 'asc' ? 1 : -1;
+      if (aVal < bVal) return -1 * modifier;
+      if (aVal > bVal) return 1 * modifier;
+      return 0;
+    });
 
-  const totalRevenue = filteredTransactions
-    .filter((t) => t.status === "completed")
-    .reduce((sum, t) => sum + (t.net_amount || t.amount), 0);
-
-  const handleExport = () => {
-    // Mock CSV export
-    const csv = [
-      ["Date", "Platform", "Transaction ID", "Amount", "Fees", "Net", "Category", "Status", "Description"].join(","),
-      ...filteredTransactions.map((txn) =>
-        [
-          txn.transaction_date,
-          txn.platform,
-          txn.platform_transaction_id,
-          txn.gross_amount || txn.amount,
-          txn.fees_amount || 0,
-          txn.net_amount || txn.amount,
-          txn.category,
-          txn.status,
-          `"${txn.description || ""}"`,
-        ].join(",")
-      ),
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `zerithum-transactions-${format(new Date(), "yyyy-MM-dd")}.csv`;
-    a.click();
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
   };
 
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
+  };
+
+  const totalRevenue = filteredTransactions
+    .filter(t => t.status === 'completed')
+    .reduce((sum, t) => sum + (t.net_amount || t.amount), 0);
+
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="max-w-[1200px] mx-auto">
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-[#5E5240] mb-2">Transactions</h1>
-          <p className="text-[#5E5240]/60">All revenue transactions across platforms</p>
+          <p className="text-[#5E5240]/60">View and manage all your revenue transactions</p>
         </div>
-        <Button onClick={handleExport} className="btn-primary">
+        <Button className="btn-secondary">
           <Download className="w-4 h-4 mr-2" />
           Export CSV
         </Button>
       </div>
 
-      {/* Summary Card */}
-      <div className="clay-card mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <p className="text-xs text-[#5E5240]/60 mb-1">Total Transactions</p>
-            <p className="text-2xl font-bold text-[#5E5240]">{filteredTransactions.length}</p>
-          </div>
-          <div>
-            <p className="text-xs text-[#5E5240]/60 mb-1">Total Revenue</p>
-            <p className="text-2xl font-bold text-[#208D9E]">${totalRevenue.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-xs text-[#5E5240]/60 mb-1">Average Transaction</p>
-            <p className="text-2xl font-bold text-[#5E5240]">
-              ${filteredTransactions.length > 0 ? (totalRevenue / filteredTransactions.length).toFixed(2) : "0.00"}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Filters */}
-      <div className="clay-card mb-6">
+      <div className="clay-card p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#5E5240]/40" />
-              <Input
-                placeholder="Search transactions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#5E5240]/40" />
+            <Input
+              placeholder="Search transactions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-clay pl-10"
+            />
           </div>
-          <select
-            value={filterPlatform}
-            onChange={(e) => setFilterPlatform(e.target.value)}
-            className="px-4 py-2 border border-[#5E5240]/20 rounded-lg text-sm"
-          >
-            <option value="all">All Platforms</option>
-            <option value="youtube">YouTube</option>
-            <option value="patreon">Patreon</option>
-            <option value="gumroad">Gumroad</option>
-            <option value="stripe">Stripe</option>
-            <option value="instagram">Instagram</option>
-            <option value="tiktok">TikTok</option>
-          </select>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-[#5E5240]/20 rounded-lg text-sm"
-          >
-            <option value="all">All Status</option>
-            <option value="completed">Completed</option>
-            <option value="pending">Pending</option>
-            <option value="refunded">Refunded</option>
-            <option value="failed">Failed</option>
-          </select>
+
+          <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <SelectTrigger className="input-clay">
+              <SelectValue placeholder="All Platforms" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Platforms</SelectItem>
+              <SelectItem value="youtube">YouTube</SelectItem>
+              <SelectItem value="patreon">Patreon</SelectItem>
+              <SelectItem value="gumroad">Gumroad</SelectItem>
+              <SelectItem value="stripe">Stripe</SelectItem>
+              <SelectItem value="instagram">Instagram</SelectItem>
+              <SelectItem value="tiktok">TikTok</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="input-clay">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="ad_revenue">Ad Revenue</SelectItem>
+              <SelectItem value="sponsorship">Sponsorship</SelectItem>
+              <SelectItem value="affiliate">Affiliate</SelectItem>
+              <SelectItem value="product_sale">Product Sale</SelectItem>
+              <SelectItem value="membership">Membership</SelectItem>
+              <SelectItem value="service">Service</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="input-clay">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="refunded">Refunded</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <span className="text-[#5E5240]/60">
+            Showing {filteredTransactions.length} transactions
+          </span>
+          <span className="font-semibold text-[#208D9E]">
+            Total: ${totalRevenue.toFixed(2)}
+          </span>
         </div>
       </div>
 
       {/* Transactions Table */}
-      <div className="clay-card overflow-x-auto">
-        {filteredTransactions.length > 0 ? (
+      <div className="clay-card overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#5E5240]/10">
-                <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Date</th>
-                <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Platform</th>
-                <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Transaction ID</th>
-                <th className="text-right py-4 px-4 text-xs font-semibold text-[#5E5240]">Gross</th>
-                <th className="text-right py-4 px-4 text-xs font-semibold text-[#5E5240]">Fees</th>
-                <th className="text-right py-4 px-4 text-xs font-semibold text-[#5E5240]">Net</th>
+            <thead className="bg-[#5E5240]/5">
+              <tr>
+                <th 
+                  onClick={() => handleSort('transaction_date')}
+                  className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240] cursor-pointer hover:bg-[#5E5240]/10"
+                >
+                  <div className="flex items-center gap-1">
+                    Date <SortIcon field="transaction_date" />
+                  </div>
+                </th>
+                <th 
+                  onClick={() => handleSort('platform')}
+                  className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240] cursor-pointer hover:bg-[#5E5240]/10"
+                >
+                  <div className="flex items-center gap-1">
+                    Platform <SortIcon field="platform" />
+                  </div>
+                </th>
+                <th 
+                  onClick={() => handleSort('amount')}
+                  className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240] cursor-pointer hover:bg-[#5E5240]/10"
+                >
+                  <div className="flex items-center gap-1">
+                    Amount <SortIcon field="amount" />
+                  </div>
+                </th>
                 <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Category</th>
-                <th className="text-center py-4 px-4 text-xs font-semibold text-[#5E5240]">Status</th>
+                <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Status</th>
+                <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredTransactions.map((txn) => (
-                <tr key={txn.id} className="border-b border-[#5E5240]/5 hover:bg-[#5E5240]/5">
-                  <td className="py-4 px-4 text-sm text-[#5E5240]">
-                    {format(new Date(txn.transaction_date), "MMM d, yyyy")}
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className="capitalize font-medium text-[#5E5240]">{txn.platform}</span>
-                  </td>
-                  <td className="py-4 px-4 text-xs text-[#5E5240]/60 font-mono">
-                    {txn.platform_transaction_id}
-                  </td>
-                  <td className="py-4 px-4 text-sm text-right text-[#5E5240]">
-                    ${(txn.gross_amount || txn.amount).toFixed(2)}
-                  </td>
-                  <td className="py-4 px-4 text-sm text-right text-[#C0152F]">
-                    ${(txn.fees_amount || 0).toFixed(2)}
-                  </td>
-                  <td className="py-4 px-4 text-sm text-right font-semibold text-[#208D9E]">
-                    ${(txn.net_amount || txn.amount).toFixed(2)}
-                  </td>
-                  <td className="py-4 px-4 text-xs text-[#5E5240]/60 capitalize">
-                    {txn.category.replace("_", " ")}
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                        txn.status === "completed"
-                          ? "bg-[#208D9E]/10 text-[#208D9E]"
-                          : txn.status === "pending"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : txn.status === "refunded"
-                          ? "bg-[#C0152F]/10 text-[#C0152F]"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {txn.status}
-                    </span>
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions.map((transaction) => (
+                  <React.Fragment key={transaction.id}>
+                    <tr className="border-t border-[#5E524012] hover:bg-[#5E5240]/5 cursor-pointer"
+                        onClick={() => setExpandedRow(expandedRow === transaction.id ? null : transaction.id)}>
+                      <td className="py-4 px-4 text-sm">
+                        {moment(transaction.transaction_date).format('MMM D, YYYY')}
+                      </td>
+                      <td className="py-4 px-4 text-sm capitalize">{transaction.platform}</td>
+                      <td className="py-4 px-4">
+                        <div className="text-sm font-semibold text-[#208D9E]">
+                          ${(transaction.net_amount || transaction.amount).toFixed(2)}
+                        </div>
+                        {transaction.fees_amount > 0 && (
+                          <div className="text-xs text-[#5E5240]/60">
+                            Fee: ${transaction.fees_amount.toFixed(2)}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-4 px-4 text-sm capitalize">
+                        {transaction.category?.replace('_', ' ')}
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          transaction.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          transaction.status === 'refunded' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {transaction.status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedRow(expandedRow === transaction.id ? null : transaction.id);
+                          }}
+                          className="btn-secondary text-xs"
+                        >
+                          {expandedRow === transaction.id ? 'Hide' : 'Details'}
+                        </Button>
+                      </td>
+                    </tr>
+                    {expandedRow === transaction.id && (
+                      <tr className="border-t border-[#5E524012] bg-[#5E5240]/5">
+                        <td colSpan="6" className="py-4 px-4">
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-[#5E5240]/60">Transaction ID:</span>
+                              <div className="font-mono text-xs mt-1">{transaction.platform_transaction_id}</div>
+                            </div>
+                            <div>
+                              <span className="text-[#5E5240]/60">Synced:</span>
+                              <div className="mt-1">{moment(transaction.synced_date || transaction.created_date).format('MMM D, YYYY h:mm A')}</div>
+                            </div>
+                            {transaction.description && (
+                              <div className="col-span-2">
+                                <span className="text-[#5E5240]/60">Description:</span>
+                                <div className="mt-1">{transaction.description}</div>
+                              </div>
+                            )}
+                            <div>
+                              <span className="text-[#5E5240]/60">Gross Amount:</span>
+                              <div className="mt-1">${(transaction.gross_amount || transaction.amount).toFixed(2)}</div>
+                            </div>
+                            <div>
+                              <span className="text-[#5E5240]/60">Currency:</span>
+                              <div className="mt-1">{transaction.currency || 'USD'}</div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="py-12 text-center text-[#5E5240]/40">
+                    No transactions found. Try adjusting your filters.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-[#5E5240]/60">No transactions found</p>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

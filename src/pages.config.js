@@ -12,6 +12,11 @@ import Help from './pages/Help';
 import SettingsAccount from './pages/SettingsAccount';
 import SettingsPrivacy from './pages/SettingsPrivacy';
 import SettingsNotifications from './pages/SettingsNotifications';
+import Platforms from './pages/Platforms';
+import Subscription from './pages/Subscription';
+import ConnectedApps from './pages/ConnectedApps';
+import Notifications from './pages/Notifications';
+import Privacy from './pages/Privacy';
 import __Layout from './Layout.jsx';
 
 
@@ -30,6 +35,11 @@ export const PAGES = {
     "SettingsAccount": SettingsAccount,
     "SettingsPrivacy": SettingsPrivacy,
     "SettingsNotifications": SettingsNotifications,
+    "Platforms": Platforms,
+    "Subscription": Subscription,
+    "ConnectedApps": ConnectedApps,
+    "Notifications": Notifications,
+    "Privacy": Privacy,
 }
 
 export const pagesConfig = {
