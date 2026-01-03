@@ -2,215 +2,201 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
-import { 
-  LayoutDashboard, 
-  Link2, 
-  Scale, 
-  FileText, 
-  Settings, 
-  Menu, 
-  X,
+import {
+  LayoutDashboard,
+  Plug2,
+  Receipt,
+  GitCompare,
+  FileText,
+  Settings,
+  HelpCircle,
   LogOut,
-  ChevronRight
+  Menu,
+  X,
+  ChevronDown,
+  User as UserIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-const navItems = [
-  { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
-  { name: "Reports & Analytics", icon: FileText, page: "Reports" },
-  { name: "Connected Platforms", icon: Link2, page: "ConnectedPlatforms" },
-  { name: "Reconciliation", icon: Scale, page: "Reconciliation" },
-  { name: "Tax Reports", icon: FileText, page: "TaxReports" },
-  { name: "Settings", icon: Settings, page: "Settings" },
-];
 
 export default function Layout({ children, currentPageName }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
-    const loadUser = async () => {
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
-    };
     loadUser();
   }, []);
 
-  const handleLogout = () => {
-    base44.auth.logout();
+  const loadUser = async () => {
+    try {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+    } catch (error) {
+      console.error("User not authenticated");
+    }
+  };
+
+  const handleLogout = async () => {
+    await base44.auth.logout();
+  };
+
+  const navItems = [
+    { name: "Dashboard", page: "Dashboard", icon: LayoutDashboard },
+    { name: "Connected Platforms", page: "ConnectedPlatforms", icon: Plug2 },
+    { name: "Transactions", page: "Transactions", icon: Receipt },
+    { name: "Reconciliation", page: "Reconciliation", icon: GitCompare },
+    { name: "Tax Export", page: "TaxExport", icon: FileText },
+  ];
+
+  const settingsItems = [
+    { name: "Account", page: "SettingsAccount" },
+    { name: "Subscription", page: "SettingsSubscription" },
+    { name: "Connected Apps", page: "SettingsConnectedApps" },
+    { name: "Privacy & Data", page: "SettingsPrivacy" },
+    { name: "Notifications", page: "SettingsNotifications" },
+  ];
+
+  const NavLink = ({ item }) => {
+    const isActive = currentPageName === item.page;
+    const Icon = item.icon;
+
+    return (
+      <Link
+        to={createPageUrl(item.page)}
+        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+          isActive
+            ? "bg-[#208D9E]/10 border-l-4 border-[#208D9E] text-[#208D9E] font-semibold"
+            : "text-[#5E5240] hover:bg-[#5E5240]/5"
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      >
+        <Icon className="w-5 h-5" />
+        <span>{item.name}</span>
+      </Link>
+    );
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
-      <style>{`
-        :root {
-          --bg-primary: #0A0A0A;
-          --bg-secondary: #111111;
-          --bg-tertiary: #1A1A1A;
-          --border-primary: rgba(255, 255, 255, 0.06);
-          --border-secondary: rgba(255, 255, 255, 0.12);
-          --text-primary: #FFFFFF;
-          --text-secondary: #A1A1A1;
-          --accent: #6366F1;
-          --accent-hover: #7C7FF2;
-        }
-
-        @keyframes shimmer {
-          0% { background-position: -1000px 0; }
-          100% { background-position: 1000px 0; }
-        }
-
-        .card-modern {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          backdrop-filter: blur(20px);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .card-modern:hover {
-          background: rgba(255, 255, 255, 0.04);
-          border-color: rgba(255, 255, 255, 0.12);
-          transform: translateY(-2px);
-        }
-
-        .glass-effect {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(40px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .glow-accent {
-          box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .nav-item-active {
-          background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
-          border-left: 2px solid #6366F1;
-        }
-
-        .shimmer {
-          background: linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.03) 50%,
-            transparent 100%
-          );
-          background-size: 2000px 100%;
-          animation: shimmer 3s infinite;
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
-      `}</style>
-
+    <div className="min-h-screen bg-[#FCF8F9]">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-effect px-4 py-3 flex items-center justify-between border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">Z</span>
-          </div>
-          <span className="font-semibold text-white">Zerithum</span>
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-[#FFFFFE] border-b border-[#5E5240]/10 z-50 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 hover:bg-[#5E5240]/5 rounded-lg"
+          >
+            {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+          <h1 className="text-xl font-bold text-[#208D9E]">Zerithum</h1>
+          <div className="w-10" />
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-white/70 hover:text-white hover:bg-white/5"
-        >
-          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </Button>
       </div>
 
-      {/* Sidebar Overlay */}
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 h-full bg-[#FFFFFE] border-r border-[#5E5240]/10 z-40 transition-transform ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 w-64`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="p-6 border-b border-[#5E5240]/10">
+            <h1 className="text-2xl font-bold text-[#208D9E]">Zerithum</h1>
+            <p className="text-xs text-[#5E5240]/60 mt-1">Creator Revenue Hub</p>
+          </div>
+
+          {/* User Info */}
+          {user && (
+            <div className="px-4 py-4 border-b border-[#5E5240]/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#208D9E]/10 flex items-center justify-center">
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt={user.full_name} className="w-10 h-10 rounded-full" />
+                  ) : (
+                    <UserIcon className="w-5 h-5 text-[#208D9E]" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#5E5240] truncate">{user.full_name}</p>
+                  <p className="text-xs text-[#5E5240]/60 truncate">
+                    {user.plan_tier === "free" ? "Free Plan" : user.plan_tier === "pro" ? "Creator Pro" : "Creator Max"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <nav className="flex-1 px-3 py-4 overflow-y-auto">
+            <div className="space-y-1">
+              {navItems.map((item) => (
+                <NavLink key={item.page} item={item} />
+              ))}
+            </div>
+
+            {/* Settings Dropdown */}
+            <div className="mt-6">
+              <button
+                onClick={() => setSettingsOpen(!settingsOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-[#5E5240] hover:bg-[#5E5240]/5 rounded-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className="w-5 h-5" />
+                  <span>Settings</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform ${settingsOpen ? "rotate-180" : ""}`} />
+              </button>
+              {settingsOpen && (
+                <div className="ml-4 mt-1 space-y-1">
+                  {settingsItems.map((item) => (
+                    <Link
+                      key={item.page}
+                      to={createPageUrl(item.page)}
+                      className={`block px-4 py-2 text-sm rounded-lg transition-all ${
+                        currentPageName === item.page
+                          ? "bg-[#208D9E]/10 text-[#208D9E] font-semibold"
+                          : "text-[#5E5240]/80 hover:bg-[#5E5240]/5"
+                      }`}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </nav>
+
+          {/* Bottom Actions */}
+          <div className="p-3 border-t border-[#5E5240]/10 space-y-1">
+            <Link
+              to={createPageUrl("Help")}
+              className="flex items-center gap-3 px-4 py-3 text-[#5E5240] hover:bg-[#5E5240]/5 rounded-lg"
+            >
+              <HelpCircle className="w-5 h-5" />
+              <span>Help & Support</span>
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 text-[#C0152F] hover:bg-[#C0152F]/5 rounded-lg"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile Overlay */}
       {sidebarOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+        <div
+          className="lg:hidden fixed inset-0 bg-black/20 z-30"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
-      <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 bg-[#0A0A0A] border-r border-white/5 z-50 transition-all duration-300 ease-out",
-        "lg:translate-x-0",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
-        <div className="p-6 h-full flex flex-col">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white font-bold text-base">Z</span>
-            </div>
-            <div>
-              <h1 className="font-bold text-lg text-white tracking-tight">Zerithum</h1>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider">Revenue Platform</p>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 space-y-1">
-            {navItems.map((item) => {
-              const isActive = currentPageName === item.page;
-              return (
-                <Link
-                  key={item.page}
-                  to={createPageUrl(item.page)}
-                  onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
-                    isActive 
-                      ? "nav-item-active text-white" 
-                      : "text-white/50 hover:text-white/80 hover:bg-white/5"
-                  )}
-                >
-                  {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-indigo-500 rounded-r" />
-                  )}
-                  <item.icon className={cn("w-4 h-4", isActive && "text-indigo-400")} />
-                  <span className="font-medium text-sm">{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* User Section */}
-          {user && (
-            <div className="pt-4 border-t border-white/5">
-              <div className="rounded-lg bg-white/5 p-3 border border-white/5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center border border-white/10">
-                    <span className="font-semibold text-white/70 text-sm">
-                      {user.full_name?.[0] || user.email?.[0] || "U"}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm truncate">{user.full_name || "Creator"}</p>
-                    <p className="text-[10px] text-white/40 truncate">{user.email}</p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="w-full justify-start text-white/50 hover:text-red-400 hover:bg-red-500/10 text-xs h-8"
-                >
-                  <LogOut className="w-3.5 h-3.5 mr-2" />
-                  Sign Out
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </aside>
-
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 bg-[#0A0A0A]">
-        <div className="p-6 lg:p-10 max-w-[1600px] mx-auto">
-          {children}
-        </div>
+      <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
+        {children}
       </main>
     </div>
   );

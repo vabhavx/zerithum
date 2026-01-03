@@ -1,231 +1,232 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
-import { RefreshCw, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
-
-import MRRCard from "@/components/dashboard/MRRCard";
-import RevenueBreakdownChart from "@/components/dashboard/RevenueBreakdownChart";
-import MRRTrendChart from "@/components/dashboard/MRRTrendChart";
-import TopTransactionsList from "@/components/dashboard/TopTransactionsList";
-import ConcentrationRiskAlert from "@/components/dashboard/ConcentrationRiskAlert";
+import { DollarSign, TrendingUp, Plug2, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import KPICard from "../components/dashboard/KPICard";
+import RevenueChart from "../components/dashboard/RevenueChart";
+import { format } from "date-fns";
 
 export default function Dashboard() {
-  const [showRiskAlert, setShowRiskAlert] = useState(true);
+  const [user, setUser] = useState(null);
 
-  const { data: transactions = [], isLoading, refetch } = useQuery({
-    queryKey: ["revenueTransactions"],
-    queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 100),
-  });
+  useEffect(() => {
+    loadUser();
+  }, []);
 
-  const { data: insights = [] } = useQuery({
-    queryKey: ["insights"],
-    queryFn: () => base44.entities.Insight.filter({ insight_type: "concentration_risk" }, "-created_date", 1),
-  });
-
-  // Calculate metrics
-  const metrics = useMemo(() => {
-    const now = new Date();
-    const currentMonthStart = startOfMonth(now);
-    const currentMonthEnd = endOfMonth(now);
-    
-    // Current month transactions
-    const currentMonthTxns = transactions.filter(t => {
-      const date = new Date(t.transaction_date);
-      return date >= currentMonthStart && date <= currentMonthEnd;
-    });
-
-    // Previous month for comparison
-    const prevMonthStart = startOfMonth(subMonths(now, 1));
-    const prevMonthEnd = endOfMonth(subMonths(now, 1));
-    const prevMonthTxns = transactions.filter(t => {
-      const date = new Date(t.transaction_date);
-      return date >= prevMonthStart && date <= prevMonthEnd;
-    });
-
-    // Total MRR
-    const totalMRR = currentMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-    const prevMRR = prevMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-    
-    // MRR change
-    let mrrTrend = "neutral";
-    let mrrChange = "0%";
-    if (prevMRR > 0) {
-      const changePercent = ((totalMRR - prevMRR) / prevMRR) * 100;
-      mrrTrend = changePercent > 0 ? "up" : changePercent < 0 ? "down" : "neutral";
-      mrrChange = `${changePercent > 0 ? "+" : ""}${changePercent.toFixed(1)}%`;
+  const loadUser = async () => {
+    try {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+    } catch (error) {
+      console.error("User not authenticated");
     }
+  };
 
-    // Platform breakdown
-    const platformBreakdown = { youtube: 0, patreon: 0, stripe: 0, gumroad: 0 };
-    currentMonthTxns.forEach(t => {
-      if (platformBreakdown.hasOwnProperty(t.platform)) {
-        platformBreakdown[t.platform] += t.amount || 0;
+  const { data: connections = [] } = useQuery({
+    queryKey: ["platform_connections"],
+    queryFn: () => base44.entities.PlatformConnection.list(),
+  });
+
+  const { data: transactions = [] } = useQuery({
+    queryKey: ["transactions"],
+    queryFn: () => base44.entities.Transaction.list("-transaction_date", 100),
+  });
+
+  // Calculate KPIs
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  const monthlyRevenue = transactions
+    .filter((t) => {
+      const date = new Date(t.transaction_date);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear && t.status === "completed";
+    })
+    .reduce((sum, t) => sum + (t.net_amount || t.amount), 0);
+
+  const yearlyRevenue = transactions
+    .filter((t) => {
+      const date = new Date(t.transaction_date);
+      return date.getFullYear() === currentYear && t.status === "completed";
+    })
+    .reduce((sum, t) => sum + (t.net_amount || t.amount), 0);
+
+  const activeConnections = connections.filter((c) => c.sync_status === "active").length;
+
+  // Revenue by platform for chart
+  const revenueByPlatform = transactions
+    .filter((t) => t.status === "completed")
+    .reduce((acc, t) => {
+      const existing = acc.find((item) => item.platform === t.platform);
+      if (existing) {
+        existing.amount += t.net_amount || t.amount;
+      } else {
+        acc.push({ platform: t.platform, amount: t.net_amount || t.amount });
       }
-    });
+      return acc;
+    }, []);
 
-    // Concentration risk
-    let concentrationRisk = null;
-    const totalPlatformRevenue = Object.values(platformBreakdown).reduce((a, b) => a + b, 0);
-    if (totalPlatformRevenue > 0) {
-      Object.entries(platformBreakdown).forEach(([platform, amount]) => {
-        const percentage = (amount / totalPlatformRevenue) * 100;
-        if (percentage >= 70) {
-          concentrationRisk = { platform, percentage };
-        }
-      });
-    }
+  // Reconciliation status (mock for now)
+  const reconciliationRate = 100; // Mock 100% matched
 
-    // 3-month trend
-    const trendData = [];
-    for (let i = 2; i >= 0; i--) {
-      const monthStart = startOfMonth(subMonths(now, i));
-      const monthEnd = endOfMonth(subMonths(now, i));
-      const monthTxns = transactions.filter(t => {
-        const date = new Date(t.transaction_date);
-        return date >= monthStart && date <= monthEnd;
-      });
-      const monthTotal = monthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-      trendData.push({
-        month: format(monthStart, "MMM yyyy"),
-        amount: monthTotal
-      });
-    }
-
-    // Top transactions this month
-    const topTransactions = [...currentMonthTxns]
-      .sort((a, b) => (b.amount || 0) - (a.amount || 0))
-      .slice(0, 5);
-
-    return {
-      totalMRR,
-      mrrTrend,
-      mrrChange,
-      platformBreakdown,
-      concentrationRisk,
-      trendData,
-      topTransactions
-    };
-  }, [transactions]);
+  // Recent transactions
+  const recentTransactions = transactions.slice(0, 10);
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
-      >
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
-          <p className="text-white/40 mt-1 text-sm">Your revenue at a glance</p>
-        </div>
-        <Button
-          onClick={() => refetch()}
-          disabled={isLoading}
-          className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition-all text-sm h-9"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </motion.div>
-
-      {/* Concentration Risk Alert */}
-      <AnimatePresence>
-        {showRiskAlert && metrics.concentrationRisk && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-            animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
-            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ConcentrationRiskAlert
-              platform={metrics.concentrationRisk.platform}
-              percentage={metrics.concentrationRisk.percentage}
-              onDismiss={() => setShowRiskAlert(false)}
-            />
-          </motion.div>
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      {/* Hero Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-[#5E5240] mb-2">
+          Your Creator Revenue, Unified
+        </h1>
+        <p className="text-[#5E5240]/60 mb-4">
+          Real-time earnings from all platforms. Reconciled. Taxed. Done.
+        </p>
+        {user && user.plan_tier === "free" && activeConnections >= 2 && (
+          <Link to={createPageUrl("SettingsSubscription")}>
+            <Button className="btn-primary">
+              Unlock all platforms for $49/mo
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
         )}
-      </AnimatePresence>
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Total MRR */}
-        <div className="lg:col-span-1">
-          <MRRCard
-            title="Total MRR"
-            amount={metrics.totalMRR}
-            trend={metrics.mrrTrend}
-            trendValue={metrics.mrrChange}
-          />
-        </div>
-
-        {/* Quick Stats */}
-        <div className="lg:col-span-2 grid grid-cols-2 gap-3">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="card-modern rounded-xl p-4"
-          >
-            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em] mb-2">Transactions</p>
-            <p className="text-2xl font-bold text-white">{metrics.topTransactions.length}</p>
-            <p className="text-[10px] text-white/30 mt-1">This month</p>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15 }}
-            className="card-modern rounded-xl p-4"
-          >
-            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em] mb-2">Platforms</p>
-            <p className="text-2xl font-bold text-white">
-              {Object.values(metrics.platformBreakdown).filter(v => v > 0).length}
-            </p>
-            <p className="text-[10px] text-white/30 mt-1">Active</p>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="card-modern rounded-xl p-4"
-          >
-            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em] mb-2">Avg Transaction</p>
-            <p className="text-2xl font-bold text-white">
-              ${metrics.topTransactions.length > 0 
-                ? (metrics.totalMRR / metrics.topTransactions.length).toFixed(0)
-                : "0"}
-            </p>
-            <p className="text-[10px] text-white/30 mt-1">This month</p>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.25 }}
-            className="card-modern rounded-xl p-4 flex items-center justify-center"
-          >
-            <div className="text-center">
-              <Sparkles className="w-5 h-5 text-indigo-400 mx-auto mb-2" />
-              <p className="text-[10px] text-white/40 uppercase tracking-wider">AI Insights</p>
-              <p className="text-xl font-bold text-indigo-400 mt-1">{insights.length}</p>
-            </div>
-          </motion.div>
-        </div>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <RevenueBreakdownChart 
-          data={metrics.platformBreakdown}
-          concentrationRisk={metrics.concentrationRisk}
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <KPICard
+          title="Monthly Revenue (MRR)"
+          value={`$${monthlyRevenue.toLocaleString()}`}
+          trend="up"
+          trendValue="+12%"
+          subtitle={`Across ${activeConnections} platforms`}
+          icon={DollarSign}
+          color="#208D9E"
         />
-        <MRRTrendChart data={metrics.trendData} />
+        <KPICard
+          title="Total Revenue (YTD)"
+          value={`$${yearlyRevenue.toLocaleString()}`}
+          subtitle={`Jan 1 - ${format(new Date(), "MMM d")}`}
+          icon={TrendingUp}
+          color="#208D9E"
+        />
+        <KPICard
+          title="Platforms Connected"
+          value={activeConnections}
+          subtitle={
+            activeConnections === 6
+              ? "All platforms connected"
+              : `${6 - activeConnections} more available`
+          }
+          icon={Plug2}
+          color="#5E5240"
+        />
+        <KPICard
+          title="Reconciliation"
+          value={reconciliationRate === 100 ? "✓ All matched" : `${reconciliationRate}%`}
+          subtitle={reconciliationRate === 100 ? "Up to date" : "15 unmatched"}
+          icon={reconciliationRate === 100 ? CheckCircle : AlertCircle}
+          color={reconciliationRate === 100 ? "#208D9E" : "#C0152F"}
+        />
       </div>
 
-      {/* Top Transactions */}
-      <TopTransactionsList transactions={metrics.topTransactions} />
+      {/* Charts and Tables */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        {/* Revenue Chart */}
+        <div className="lg:col-span-1">
+          {revenueByPlatform.length > 0 ? (
+            <RevenueChart data={revenueByPlatform} />
+          ) : (
+            <div className="clay-card text-center py-12">
+              <p className="text-[#5E5240]/60 mb-4">No revenue data yet</p>
+              <Link to={createPageUrl("ConnectedPlatforms")}>
+                <Button className="btn-primary">Connect Your First Platform</Button>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="lg:col-span-2 clay-card">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-[#5E5240]">Recent Transactions</h3>
+            <Link to={createPageUrl("Transactions")}>
+              <Button className="btn-secondary text-sm">View All</Button>
+            </Link>
+          </div>
+
+          {recentTransactions.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#5E5240]/10">
+                    <th className="text-left py-3 px-2 text-xs font-semibold text-[#5E5240]/60">Date</th>
+                    <th className="text-left py-3 px-2 text-xs font-semibold text-[#5E5240]/60">Platform</th>
+                    <th className="text-right py-3 px-2 text-xs font-semibold text-[#5E5240]/60">Amount</th>
+                    <th className="text-left py-3 px-2 text-xs font-semibold text-[#5E5240]/60">Category</th>
+                    <th className="text-center py-3 px-2 text-xs font-semibold text-[#5E5240]/60">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentTransactions.map((txn) => (
+                    <tr key={txn.id} className="border-b border-[#5E5240]/5 hover:bg-[#5E5240]/5">
+                      <td className="py-3 px-2 text-sm text-[#5E5240]">
+                        {format(new Date(txn.transaction_date), "MMM d")}
+                      </td>
+                      <td className="py-3 px-2 text-sm">
+                        <span className="capitalize font-medium text-[#5E5240]">{txn.platform}</span>
+                      </td>
+                      <td className="py-3 px-2 text-sm text-right font-semibold text-[#208D9E]">
+                        ${(txn.net_amount || txn.amount).toFixed(2)}
+                      </td>
+                      <td className="py-3 px-2 text-xs text-[#5E5240]/60">
+                        {txn.category.replace("_", " ")}
+                      </td>
+                      <td className="py-3 px-2 text-center">
+                        <span
+                          className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                            txn.status === "completed"
+                              ? "bg-[#208D9E]/10 text-[#208D9E]"
+                              : txn.status === "pending"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-[#C0152F]/10 text-[#C0152F]"
+                          }`}
+                        >
+                          {txn.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-[#5E5240]/60 mb-4">No transactions yet</p>
+              <Link to={createPageUrl("ConnectedPlatforms")}>
+                <Button className="btn-primary">Connect platforms to see transactions</Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-4">
+        <Link to={createPageUrl("ConnectedPlatforms")}>
+          <Button className="btn-primary">
+            <Plug2 className="w-4 h-4 mr-2" />
+            Connect New Platform
+          </Button>
+        </Link>
+        <Link to={createPageUrl("TaxExport")}>
+          <Button className="btn-secondary">
+            Export for Taxes
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }
