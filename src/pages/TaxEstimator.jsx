@@ -52,6 +52,11 @@ export default function TaxEstimator() {
     queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 1000),
   });
 
+  const { data: expenses = [] } = useQuery({
+    queryKey: ["expenses"],
+    queryFn: () => base44.entities.Expense.list("-expense_date", 1000),
+  });
+
   const { data: taxProfile } = useQuery({
     queryKey: ["taxProfile", currentYear],
     queryFn: async () => {
@@ -94,11 +99,22 @@ export default function TaxEstimator() {
       return date >= yearStart && date <= yearEnd;
     });
 
+    const yearExpenses = expenses.filter(e => {
+      const date = new Date(e.expense_date);
+      return date >= yearStart && date <= yearEnd;
+    });
+
     const totalRevenue = yearTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
     const totalFees = yearTransactions.reduce((sum, t) => sum + (t.platform_fee || 0), 0);
     const netIncome = totalRevenue - totalFees;
 
-    const deductions = taxSettings.estimated_deductions || 0;
+    // Calculate deductible expenses
+    const deductibleExpenses = yearExpenses.reduce((sum, e) => {
+      if (!e.is_tax_deductible) return sum;
+      return sum + (e.amount * (e.deduction_percentage / 100));
+    }, 0);
+
+    const deductions = (taxSettings.estimated_deductions || 0) + deductibleExpenses;
     const taxableIncome = Math.max(0, netIncome - deductions);
 
     const selfEmploymentTax = taxableIncome * 0.153;
@@ -155,7 +171,7 @@ export default function TaxEstimator() {
       totalPaid,
       remaining,
       upcomingDeadlines,
-      deductibleExpenses: deductibleExpenses
+      deductibleExpenses
     };
   }, [transactions, expenses, taxSettings, taxProfile, currentYear]);
 
@@ -334,6 +350,11 @@ export default function TaxEstimator() {
           <div className="p-4 rounded-lg bg-white/[0.02] border border-white/5">
             <p className="text-xs text-white/40 mb-1">Deductions</p>
             <p className="text-xl font-bold text-red-400">-${taxCalculations.deductions.toFixed(0)}</p>
+            {taxCalculations.deductibleExpenses > 0 && (
+              <p className="text-[10px] text-emerald-400 mt-1">
+                ${taxCalculations.deductibleExpenses.toFixed(0)} from tracked expenses
+              </p>
+            )}
           </div>
           <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
             <p className="text-xs text-emerald-400 mb-1">Taxable Income</p>
