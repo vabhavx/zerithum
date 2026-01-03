@@ -414,7 +414,7 @@ export default function ConnectedPlatforms() {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4">
             {connectedPlatforms.map((connection) => {
               const platform = PLATFORMS.find(p => p.id === connection.platform);
               if (!platform) return null;
@@ -422,9 +422,11 @@ export default function ConnectedPlatforms() {
               const isSyncing = syncingPlatform === connection.id;
 
               return (
-                <div
+                <motion.div
                   key={connection.id}
-                  className="card-modern rounded-xl p-5"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="card-modern rounded-xl p-5 cursor-default"
                 >
                   <div className="flex items-center gap-4">
                     <div className={cn(
