@@ -13,7 +13,8 @@ import {
   LogOut,
   ChevronRight,
   User,
-  AlertTriangle
+  AlertTriangle,
+  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ const navItems = [
   { name: "Tax Estimator", icon: FileText, page: "TaxEstimator" },
   { name: "Connected Platforms", icon: Link2, page: "ConnectedPlatforms" },
   { name: "Profile", icon: User, page: "Profile" },
+  { name: "Pricing", icon: DollarSign, page: "Pricing" },
 ];
 
 export default function Layout({ children, currentPageName }) {

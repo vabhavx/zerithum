@@ -23,6 +23,7 @@ import TaxExport from './pages/TaxExport';
 import TaxReports from './pages/TaxReports';
 import TransactionAnalysis from './pages/TransactionAnalysis';
 import Transactions from './pages/Transactions';
+import Pricing from './pages/Pricing';
 import __Layout from './Layout.jsx';
 
 
@@ -52,6 +53,7 @@ export const PAGES = {
     "TaxReports": TaxReports,
     "TransactionAnalysis": TransactionAnalysis,
     "Transactions": Transactions,
+    "Pricing": Pricing,
 }
 
 export const pagesConfig = {
