@@ -579,17 +579,19 @@ export default function ConnectedPlatforms() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 max-h-[500px] overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pointer-events-auto">
               {availablePlatforms.map((platform) => {
                 const Icon = platform.icon;
                 return (
                   <button
                     key={platform.id}
+                    type="button"
                     onClick={() => initiateOAuthFlow(platform)}
                     disabled={connectingPlatform}
                     className={cn(
-                      "rounded-lg p-4 flex flex-col items-center gap-3 text-center cursor-pointer",
+                      "rounded-lg p-4 flex flex-col items-center gap-3 text-center",
                       "bg-white/[0.02] border border-white/[0.05]",
+                      !connectingPlatform && "hover:bg-white/[0.04] hover:border-white/10 cursor-pointer",
                       connectingPlatform && "opacity-50 cursor-not-allowed"
                     )}
                   >
