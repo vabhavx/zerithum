@@ -1,17 +1,17 @@
-import Dashboard from './pages/Dashboard';
 import ConnectedPlatforms from './pages/ConnectedPlatforms';
+import Dashboard from './pages/Dashboard';
 import Reconciliation from './pages/Reconciliation';
-import TaxReports from './pages/TaxReports';
 import Settings from './pages/Settings';
+import TaxReports from './pages/TaxReports';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
     "ConnectedPlatforms": ConnectedPlatforms,
+    "Dashboard": Dashboard,
     "Reconciliation": Reconciliation,
-    "TaxReports": TaxReports,
     "Settings": Settings,
+    "TaxReports": TaxReports,
 }
 
 export const pagesConfig = {
