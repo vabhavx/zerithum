@@ -44,7 +44,7 @@ const PLATFORMS = [
     scope: "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly",
     redirectUri: window.location.origin + "/auth/callback",
     requiresApiKey: false,
-    clientId: "YOUR_GOOGLE_CLIENT_ID"
+    clientId: "985180453886-8qbvanuid2ifpdoq84culbg4gta83rbn.apps.googleusercontent.com"
   },
   {
     id: "patreon",
@@ -254,15 +254,33 @@ export default function ConnectedPlatforms() {
         redirect_uri: platform.redirectUri,
         response_type: 'code',
         scope: platform.scope || '',
-        state: platform.id
+        state: platform.id,
+        access_type: platform.id === 'youtube' ? 'offline' : undefined,
+        prompt: platform.id === 'youtube' ? 'consent' : undefined
       });
     }
 
-    // Store platform in sessionStorage for callback
-    sessionStorage.setItem('oauth_platform', platform.id);
+    // Open OAuth in popup
+    const width = 600;
+    const height = 700;
+    const left = (window.screen.width / 2) - (width / 2);
+    const top = (window.screen.height / 2) - (height / 2);
     
-    // Redirect to OAuth provider
-    window.location.href = `${platform.oauthUrl}?${params.toString()}`;
+    const popup = window.open(
+      `${platform.oauthUrl}?${params.toString()}`,
+      'oauth_popup',
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+
+    // Listen for OAuth completion
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'oauth_success') {
+        setConnectingPlatform(null);
+        queryClient.invalidateQueries(['connectedPlatforms']);
+        toast.success(`${platform.name} connected successfully!`);
+        if (popup) popup.close();
+      }
+    });
   };
 
   const handleApiKeyConnect = async () => {
@@ -299,9 +317,25 @@ export default function ConnectedPlatforms() {
     }
   };
 
-  const handleSync = (platformId) => {
+  const handleSync = async (platformId) => {
+    const connection = connectedPlatforms.find(p => p.id === platformId);
+    if (!connection) return;
+
     setSyncingPlatform(platformId);
-    syncMutation.mutate(platformId);
+    
+    try {
+      await base44.functions.invoke('syncPlatformData', {
+        connectionId: platformId,
+        platform: connection.platform
+      });
+      
+      queryClient.invalidateQueries(['connectedPlatforms']);
+      toast.success('Sync completed successfully!');
+    } catch (error) {
+      toast.error('Sync failed. Please try again.');
+    } finally {
+      setSyncingPlatform(null);
+    }
   };
 
   const getStatusIcon = (status) => {
