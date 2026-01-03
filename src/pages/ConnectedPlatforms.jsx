@@ -53,10 +53,10 @@ const PLATFORMS = [
     color: "bg-rose-500/10 border-rose-500/20 text-rose-400",
     description: "Sync pledges, membership tiers, and patron data",
     oauthUrl: "https://www.patreon.com/oauth2/authorize",
-    scope: "campaigns campaigns.members pledges-to-me my-campaign",
+    scope: "identity identity[email] campaigns campaigns.members",
     redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
     requiresApiKey: false,
-    clientId: "YOUR_PATREON_CLIENT_ID"
+    clientId: "i1ircOfqA2eD5ChN4-d6uElxt4vjWzIEv4vCfj0K_92LqilSM5OA_dJS24uFjiTR"
   },
   {
     id: "gumroad",
