@@ -584,8 +584,7 @@ export default function ConnectedPlatforms() {
                     type="button"
                     onClick={() => initiateOAuthFlow(platform)}
                     disabled={connectingPlatform}
-                    className="rounded-lg p-4 flex flex-col items-center gap-3 text-center bg-white/[0.02] border border-white/[0.05] cursor-pointer"
-                    style={{ pointerEvents: connectingPlatform ? 'none' : 'auto', opacity: connectingPlatform ? 0.5 : 1 }}
+                    className="rounded-lg p-4 flex flex-col items-center gap-3 text-center bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className={cn(
                       "w-12 h-12 rounded-lg flex items-center justify-center border flex-shrink-0",

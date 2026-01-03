@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -14,8 +14,14 @@ import {
   CheckCircle2,
   Edit,
   Trash2,
-  X
+  X,
+  FileSpreadsheet,
+  BarChart3,
+  Bot
 } from "lucide-react";
+import BulkImportDialog from "../components/expense/BulkImportDialog";
+import ExpenseAnalytics from "../components/expense/ExpenseAnalytics";
+import AIExpenseChat from "../components/expense/AIExpenseChat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +47,9 @@ const CATEGORIES = {
 
 export default function Expenses() {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [processingReceipt, setProcessingReceipt] = useState(false);
   const [categorizing, setCategorizing] = useState(false);
@@ -181,11 +190,17 @@ export default function Expenses() {
     });
   };
 
-  const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-  const totalDeductible = expenses.reduce((sum, e) => {
-    if (!e.is_tax_deductible) return sum;
-    return sum + (e.amount * (e.deduction_percentage / 100));
-  }, 0);
+  const metrics = useMemo(() => {
+    const total = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const deductible = expenses.reduce((sum, e) => {
+      if (!e.is_tax_deductible) return sum;
+      return sum + (e.amount * (e.deduction_percentage / 100));
+    }, 0);
+    const withReceipts = expenses.filter(e => e.receipt_url).length;
+    const avgPerDay = expenses.length > 0 ? total / expenses.length : 0;
+    
+    return { total, deductible, withReceipts, avgPerDay };
+  }, [expenses]);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -196,15 +211,33 @@ export default function Expenses() {
       >
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Expenses</h1>
-          <p className="text-white/40 mt-1 text-sm">Track and categorize business expenses</p>
+          <p className="text-white/40 mt-1 text-sm">AI-powered expense tracking & tax optimization</p>
         </div>
-        <Button
-          onClick={() => setShowAddDialog(true)}
-          className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700 h-9"
-        >
-          <Plus className="w-3.5 h-3.5 mr-2" />
-          Add Expense
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowAIChat(true)}
+            variant="outline"
+            className="rounded-lg border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 h-9"
+          >
+            <Bot className="w-3.5 h-3.5 mr-2" />
+            AI Advisor
+          </Button>
+          <Button
+            onClick={() => setShowBulkImport(true)}
+            variant="outline"
+            className="rounded-lg border-white/10 text-white/70 hover:bg-white/5 h-9"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 mr-2" />
+            Bulk Import
+          </Button>
+          <Button
+            onClick={() => setShowAddDialog(true)}
+            className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700 h-9"
+          >
+            <Plus className="w-3.5 h-3.5 mr-2" />
+            Add Expense
+          </Button>
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -219,7 +252,7 @@ export default function Expenses() {
             </div>
           </div>
           <p className="text-white/50 text-xs mb-1">Total Expenses</p>
-          <p className="text-2xl font-bold text-white">${totalExpenses.toFixed(0)}</p>
+          <p className="text-2xl font-bold text-white">${metrics.total.toFixed(0)}</p>
           <p className="text-xs text-white/40 mt-2">{expenses.length} transactions</p>
         </motion.div>
 
@@ -235,8 +268,8 @@ export default function Expenses() {
             </div>
           </div>
           <p className="text-white/50 text-xs mb-1">Tax Deductible</p>
-          <p className="text-2xl font-bold text-white">${totalDeductible.toFixed(0)}</p>
-          <p className="text-xs text-emerald-400 mt-2">{((totalDeductible / totalExpenses) * 100).toFixed(0)}% of total</p>
+          <p className="text-2xl font-bold text-white">${metrics.deductible.toFixed(0)}</p>
+          <p className="text-xs text-emerald-400 mt-2">{metrics.total > 0 ? ((metrics.deductible / metrics.total) * 100).toFixed(0) : 0}% of total</p>
         </motion.div>
 
         <motion.div
@@ -251,10 +284,24 @@ export default function Expenses() {
             </div>
           </div>
           <p className="text-white/50 text-xs mb-1">With Receipts</p>
-          <p className="text-2xl font-bold text-white">{expenses.filter(e => e.receipt_url).length}</p>
-          <p className="text-xs text-white/40 mt-2">Documented expenses</p>
+          <p className="text-2xl font-bold text-white">{metrics.withReceipts}</p>
+          <p className="text-xs text-white/40 mt-2">
+            <button onClick={() => setShowAnalytics(!showAnalytics)} className="text-indigo-400 hover:text-indigo-300">
+              {showAnalytics ? 'Hide' : 'View'} Analytics
+            </button>
+          </p>
         </motion.div>
       </div>
+
+      {showAnalytics && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+        >
+          <ExpenseAnalytics expenses={expenses} />
+        </motion.div>
+      )}
 
       <div className="card-modern rounded-xl p-6">
         <h3 className="text-lg font-bold text-white mb-4">Recent Expenses</h3>
@@ -476,6 +523,17 @@ export default function Expenses() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <BulkImportDialog
+        open={showBulkImport}
+        onOpenChange={setShowBulkImport}
+        onSuccess={() => queryClient.invalidateQueries(["expenses"])}
+      />
+
+      <AIExpenseChat
+        open={showAIChat}
+        onOpenChange={setShowAIChat}
+      />
     </div>
   );
 }
