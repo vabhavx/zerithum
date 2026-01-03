@@ -6,9 +6,9 @@ import { RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
-import MRRCard from "@/components/dashboard/MRRCard";
-import RevenueBreakdownChart from "@/components/dashboard/RevenueBreakdownChart";
-import MRRTrendChart from "@/components/dashboard/MRRTrendChart";
+import RevenueOverviewCard from "@/components/dashboard/RevenueOverviewCard";
+import PlatformBreakdownChart from "@/components/dashboard/PlatformBreakdownChart";
+import RevenueTrendChart from "@/components/dashboard/RevenueTrendChart";
 import TopTransactionsList from "@/components/dashboard/TopTransactionsList";
 import ConcentrationRiskAlert from "@/components/dashboard/ConcentrationRiskAlert";
 
@@ -47,30 +47,36 @@ export default function Dashboard() {
 
     // Total MRR
     const totalMRR = currentMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-    const prevMRR = prevMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const _prevMRR = prevMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
     
     // MRR change
     let mrrTrend = "neutral";
     let mrrChange = "0%";
-    if (prevMRR > 0) {
-      const changePercent = ((totalMRR - prevMRR) / prevMRR) * 100;
+    if (_prevMRR > 0) {
+      const changePercent = ((totalMRR - _prevMRR) / _prevMRR) * 100;
       mrrTrend = changePercent > 0 ? "up" : changePercent < 0 ? "down" : "neutral";
       mrrChange = `${changePercent > 0 ? "+" : ""}${changePercent.toFixed(1)}%`;
     }
 
     // Platform breakdown
-    const platformBreakdown = { youtube: 0, patreon: 0, stripe: 0, gumroad: 0 };
+    const platformMap = {};
     currentMonthTxns.forEach(t => {
-      if (platformBreakdown.hasOwnProperty(t.platform)) {
-        platformBreakdown[t.platform] += t.amount || 0;
+      if (!platformMap[t.platform]) {
+        platformMap[t.platform] = 0;
       }
+      platformMap[t.platform] += t.amount || 0;
     });
+    
+    const platformBreakdown = Object.entries(platformMap).map(([platform, amount]) => ({
+      platform,
+      amount
+    }));
 
     // Concentration risk
     let concentrationRisk = null;
-    const totalPlatformRevenue = Object.values(platformBreakdown).reduce((a, b) => a + b, 0);
+    const totalPlatformRevenue = platformBreakdown.reduce((sum, p) => sum + p.amount, 0);
     if (totalPlatformRevenue > 0) {
-      Object.entries(platformBreakdown).forEach(([platform, amount]) => {
+      platformBreakdown.forEach(({ platform, amount }) => {
         const percentage = (amount / totalPlatformRevenue) * 100;
         if (percentage >= 70) {
           concentrationRisk = { platform, percentage };
@@ -89,8 +95,8 @@ export default function Dashboard() {
       });
       const monthTotal = monthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
       trendData.push({
-        month: format(monthStart, "MMM yyyy"),
-        amount: monthTotal
+        month: format(monthStart, "MMM"),
+        revenue: monthTotal
       });
     }
 
@@ -106,7 +112,8 @@ export default function Dashboard() {
       platformBreakdown,
       concentrationRisk,
       trendData,
-      topTransactions
+      topTransactions,
+      prevMRR: _prevMRR
     };
   }, [transactions]);
 
@@ -150,78 +157,34 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Total MRR */}
-        <div className="lg:col-span-1">
-          <MRRCard
-            title="Total MRR"
-            amount={metrics.totalMRR}
-            trend={metrics.mrrTrend}
-            trendValue={metrics.mrrChange}
-          />
-        </div>
-
-        {/* Quick Stats */}
-        <div className="lg:col-span-2 grid grid-cols-2 gap-3">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="card-modern rounded-xl p-4"
-          >
-            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em] mb-2">Transactions</p>
-            <p className="text-2xl font-bold text-white">{metrics.topTransactions.length}</p>
-            <p className="text-[10px] text-white/30 mt-1">This month</p>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15 }}
-            className="card-modern rounded-xl p-4"
-          >
-            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em] mb-2">Platforms</p>
-            <p className="text-2xl font-bold text-white">
-              {Object.values(metrics.platformBreakdown).filter(v => v > 0).length}
-            </p>
-            <p className="text-[10px] text-white/30 mt-1">Active</p>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="card-modern rounded-xl p-4"
-          >
-            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em] mb-2">Avg Transaction</p>
-            <p className="text-2xl font-bold text-white">
-              ${metrics.topTransactions.length > 0 
-                ? (metrics.totalMRR / metrics.topTransactions.length).toFixed(0)
-                : "0"}
-            </p>
-            <p className="text-[10px] text-white/30 mt-1">This month</p>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.25 }}
-            className="card-modern rounded-xl p-4 flex items-center justify-center"
-          >
-            <div className="text-center">
-              <Sparkles className="w-5 h-5 text-indigo-400 mx-auto mb-2" />
-              <p className="text-[10px] text-white/40 uppercase tracking-wider">AI Insights</p>
-              <p className="text-xl font-bold text-indigo-400 mt-1">{insights.length}</p>
-            </div>
-          </motion.div>
-        </div>
+      {/* Revenue Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <RevenueOverviewCard
+          title="Total Revenue"
+          amount={metrics.totalMRR}
+          change={metrics.prevMRR > 0 ? metrics.totalMRR - metrics.prevMRR : 0}
+          changePercent={metrics.prevMRR > 0 ? ((metrics.totalMRR - metrics.prevMRR) / metrics.prevMRR) * 100 : 0}
+        />
+        <RevenueOverviewCard
+          title="Total Transactions"
+          amount={metrics.topTransactions.length}
+          change={0}
+          changePercent={0}
+        />
+        <RevenueOverviewCard
+          title="Avg Transaction"
+          amount={metrics.topTransactions.length > 0 ? metrics.totalMRR / metrics.topTransactions.length : 0}
+          change={0}
+          changePercent={0}
+        />
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <RevenueBreakdownChart 
+        <PlatformBreakdownChart 
           data={metrics.platformBreakdown}
-          concentrationRisk={metrics.concentrationRisk}
         />
-        <MRRTrendChart data={metrics.trendData} />
+        <RevenueTrendChart data={metrics.trendData} />
       </div>
 
       {/* Top Transactions */}
