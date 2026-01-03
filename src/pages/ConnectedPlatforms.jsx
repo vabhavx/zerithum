@@ -42,7 +42,7 @@ const PLATFORMS = [
     description: "Track ad revenue, memberships, and Super Chat earnings",
     oauthUrl: "https://accounts.google.com/o/oauth2/v2/auth",
     scope: "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly",
-    redirectUri: window.location.origin + "/auth/callback",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/auth/callback",
     requiresApiKey: false,
     clientId: "985180453886-8qbvanuid2ifpdoq84culbg4gta83rbn.apps.googleusercontent.com"
   },
@@ -54,7 +54,7 @@ const PLATFORMS = [
     description: "Sync pledges, membership tiers, and patron data",
     oauthUrl: "https://www.patreon.com/oauth2/authorize",
     scope: "campaigns campaigns.members pledges-to-me my-campaign",
-    redirectUri: window.location.origin + "/auth/callback",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/auth/callback",
     requiresApiKey: false,
     clientId: "YOUR_PATREON_CLIENT_ID"
   },
@@ -75,7 +75,7 @@ const PLATFORMS = [
     description: "Connect payments, subscriptions, and payout data",
     oauthUrl: "https://connect.stripe.com/oauth/authorize",
     scope: "read_write",
-    redirectUri: window.location.origin + "/auth/callback",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/auth/callback",
     requiresApiKey: false,
     clientId: "YOUR_STRIPE_CLIENT_ID"
   },
@@ -87,7 +87,7 @@ const PLATFORMS = [
     description: "Pull revenue from Instagram Insights and monetization",
     oauthUrl: "https://www.facebook.com/v20.0/dialog/oauth",
     scope: "instagram_basic,instagram_manage_insights,pages_read_engagement",
-    redirectUri: window.location.origin + "/auth/callback",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/auth/callback",
     requiresApiKey: false,
     clientId: "YOUR_META_APP_ID"
   },
@@ -99,7 +99,7 @@ const PLATFORMS = [
     description: "Track Creator Fund earnings and video insights",
     oauthUrl: "https://www.tiktok.com/v2/auth/authorize/",
     scope: "video.list,user.info.basic,video.insights",
-    redirectUri: window.location.origin + "/auth/callback",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/auth/callback",
     requiresApiKey: false,
     clientKey: "YOUR_TIKTOK_CLIENT_KEY"
   }
@@ -114,18 +114,7 @@ export default function ConnectedPlatforms() {
   const [validatingKey, setValidatingKey] = useState(false);
   const queryClient = useQueryClient();
 
-  // Handle OAuth callback
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    
-    if (code && state) {
-      handleOAuthCallback(state, code);
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
+
 
   const { data: connectedPlatforms = [], isLoading } = useQuery({
     queryKey: ["connectedPlatforms"],
@@ -203,31 +192,7 @@ export default function ConnectedPlatforms() {
     }
   });
 
-  const handleOAuthCallback = async (platform, code) => {
-    setConnectingPlatform(platform);
-    
-    try {
-      // In production, exchange code for tokens on backend
-      // This simulates the token exchange
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 1);
-      
-      connectMutation.mutate({
-        platform: platform,
-        oauth_token: `token_${code}_${Date.now()}`, // Simulated access token
-        refresh_token: `refresh_${code}_${Date.now()}`, // Simulated refresh token
-        expires_at: expiresAt.toISOString(),
-        sync_status: "active",
-        connected_at: new Date().toISOString(),
-        last_synced_at: new Date().toISOString()
-      });
-    } catch (error) {
-      setConnectingPlatform(null);
-      toast.error(`Failed to connect ${platform}. Please try again.`);
-    }
-  };
+
 
   const initiateOAuthFlow = (platform) => {
     if (platform.requiresApiKey) {
@@ -260,27 +225,8 @@ export default function ConnectedPlatforms() {
       });
     }
 
-    // Open OAuth in popup
-    const width = 600;
-    const height = 700;
-    const left = (window.screen.width / 2) - (width / 2);
-    const top = (window.screen.height / 2) - (height / 2);
-    
-    const popup = window.open(
-      `${platform.oauthUrl}?${params.toString()}`,
-      'oauth_popup',
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
-
-    // Listen for OAuth completion
-    window.addEventListener('message', (event) => {
-      if (event.data.type === 'oauth_success') {
-        setConnectingPlatform(null);
-        queryClient.invalidateQueries(['connectedPlatforms']);
-        toast.success(`${platform.name} connected successfully!`);
-        if (popup) popup.close();
-      }
-    });
+    // Redirect to OAuth URL
+    window.location.href = `${platform.oauthUrl}?${params.toString()}`;
   };
 
   const handleApiKeyConnect = async () => {

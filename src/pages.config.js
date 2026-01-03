@@ -17,6 +17,7 @@ import Subscription from './pages/Subscription';
 import TaxExport from './pages/TaxExport';
 import TaxReports from './pages/TaxReports';
 import Transactions from './pages/Transactions';
+import AuthCallback from './pages/AuthCallback';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +41,7 @@ export const PAGES = {
     "TaxExport": TaxExport,
     "TaxReports": TaxReports,
     "Transactions": Transactions,
+    "AuthCallback": AuthCallback,
 }
 
 export const pagesConfig = {
