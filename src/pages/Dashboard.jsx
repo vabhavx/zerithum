@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
-import { RefreshCw, Sparkles } from "lucide-react";
+import { RefreshCw, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -11,19 +11,41 @@ import PlatformBreakdownChart from "@/components/dashboard/PlatformBreakdownChar
 import RevenueTrendChart from "@/components/dashboard/RevenueTrendChart";
 import TopTransactionsList from "@/components/dashboard/TopTransactionsList";
 import ConcentrationRiskAlert from "@/components/dashboard/ConcentrationRiskAlert";
+import LendingSignalsCard from "@/components/dashboard/LendingSignalsCard";
+import InsightsPanel from "@/components/dashboard/InsightsPanel";
 
 export default function Dashboard() {
   const [showRiskAlert, setShowRiskAlert] = useState(true);
+  const [generatingInsights, setGeneratingInsights] = useState(false);
 
   const { data: transactions = [], isLoading, refetch } = useQuery({
     queryKey: ["revenueTransactions"],
     queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 100),
   });
 
+  const queryClient = useQueryClient();
+
   const { data: insights = [] } = useQuery({
     queryKey: ["insights"],
-    queryFn: () => base44.entities.Insight.filter({ insight_type: "concentration_risk" }, "-created_date", 1),
+    queryFn: () => base44.entities.Insight.list("-created_date", 10),
   });
+
+  const { data: user } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const handleGenerateInsights = async () => {
+    setGeneratingInsights(true);
+    try {
+      await base44.functions.invoke('generateInsights');
+      await queryClient.invalidateQueries(['insights']);
+    } catch (error) {
+      console.error('Failed to generate insights:', error);
+    } finally {
+      setGeneratingInsights(false);
+    }
+  };
 
   // Calculate metrics
   const metrics = useMemo(() => {
@@ -129,14 +151,28 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
           <p className="text-white/40 mt-1 text-sm">Your revenue at a glance</p>
         </div>
-        <Button
-          onClick={() => refetch()}
-          disabled={isLoading}
-          className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition-all text-sm h-9"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleGenerateInsights}
+            disabled={generatingInsights}
+            className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700 text-sm h-9"
+          >
+            {generatingInsights ? (
+              <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5 mr-2" />
+            )}
+            Generate Insights
+          </Button>
+          <Button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition-all text-sm h-9"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </motion.div>
 
       {/* Concentration Risk Alert */}
@@ -185,6 +221,20 @@ export default function Dashboard() {
           data={metrics.platformBreakdown}
         />
         <RevenueTrendChart data={metrics.trendData} />
+      </div>
+
+      {/* Insights & Lending Signals */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-2">
+          <InsightsPanel 
+            insights={insights.filter(i => i.insight_type !== 'cashflow_forecast')} 
+          />
+        </div>
+        <div>
+          <LendingSignalsCard 
+            insight={insights.find(i => i.insight_type === 'cashflow_forecast')} 
+          />
+        </div>
       </div>
 
       {/* Top Transactions */}
