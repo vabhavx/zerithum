@@ -494,7 +494,7 @@ export default function ConnectedPlatforms() {
                       </Button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
