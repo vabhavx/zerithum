@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update connection status
+    // Update connection status and send email notification
     try {
       const body = await req.clone().json();
       if (body.connectionId) {
@@ -252,6 +252,16 @@ Deno.serve(async (req) => {
           sync_status: 'error',
           error_message: error.message
         });
+        
+        // Send sync failed email
+        const user = await base44.auth.me();
+        if (user) {
+          await base44.asServiceRole.functions.invoke('sendSyncFailedEmail', {
+            userId: user.id,
+            platform: body.platform,
+            errorMessage: error.message
+          });
+        }
       }
     } catch (parseError) {
       console.error('Failed to parse request body for error handling:', parseError);
