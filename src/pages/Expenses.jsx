@@ -364,7 +364,7 @@ export default function Expenses() {
       </div>
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="card-modern rounded-2xl border max-w-2xl max-h-[90vh] overflow-y-auto !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !transform-none" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+        <DialogContent className="card-modern rounded-2xl border max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-white">Add Expense</DialogTitle>
           </DialogHeader>

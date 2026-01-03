@@ -10,6 +10,7 @@ import Privacy from './pages/Privacy';
 import Profile from './pages/Profile';
 import Reconciliation from './pages/Reconciliation';
 import Reports from './pages/Reports';
+import RevenueAutopsy from './pages/RevenueAutopsy';
 import Settings from './pages/Settings';
 import SettingsAccount from './pages/SettingsAccount';
 import SettingsConnectedApps from './pages/SettingsConnectedApps';
@@ -22,7 +23,6 @@ import TaxExport from './pages/TaxExport';
 import TaxReports from './pages/TaxReports';
 import TransactionAnalysis from './pages/TransactionAnalysis';
 import Transactions from './pages/Transactions';
-import RevenueAutopsy from './pages/RevenueAutopsy';
 import __Layout from './Layout.jsx';
 
 
@@ -39,6 +39,7 @@ export const PAGES = {
     "Profile": Profile,
     "Reconciliation": Reconciliation,
     "Reports": Reports,
+    "RevenueAutopsy": RevenueAutopsy,
     "Settings": Settings,
     "SettingsAccount": SettingsAccount,
     "SettingsConnectedApps": SettingsConnectedApps,
@@ -51,7 +52,6 @@ export const PAGES = {
     "TaxReports": TaxReports,
     "TransactionAnalysis": TransactionAnalysis,
     "Transactions": Transactions,
-    "RevenueAutopsy": RevenueAutopsy,
 }
 
 export const pagesConfig = {
