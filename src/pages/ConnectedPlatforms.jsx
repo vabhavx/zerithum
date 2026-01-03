@@ -20,8 +20,12 @@ import {
   Key,
   History,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  FileText
 } from "lucide-react";
+import PlatformSyncHistory from "../components/platform/PlatformSyncHistory";
+import MotivationalQuote from "../components/shared/MotivationalQuote";
+import SuccessConfetti from "../components/shared/SuccessConfetti";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,11 +115,13 @@ const PLATFORMS = [
 export default function ConnectedPlatforms() {
   const [showConnectDialog, setShowConnectDialog] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState(null);
+  const [selectedHistoryPlatform, setSelectedHistoryPlatform] = useState(null);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [connectingPlatform, setConnectingPlatform] = useState(null);
   const [syncingPlatform, setSyncingPlatform] = useState(null);
   const [validatingKey, setValidatingKey] = useState(false);
-  const [showHistory, setShowHistory] = useState({});
+  const [showConfetti, setShowConfetti] = useState(false);
   const queryClient = useQueryClient();
 
 
@@ -154,7 +160,9 @@ export default function ConnectedPlatforms() {
       setApiKey("");
       setConnectingPlatform(null);
       setValidatingKey(false);
+      setShowConfetti(true);
       toast.success("Platform connected successfully! ✓");
+      setTimeout(() => setShowConfetti(false), 3000);
     },
     onError: (error) => {
       setConnectingPlatform(null);
@@ -292,12 +300,20 @@ export default function ConnectedPlatforms() {
       });
       
       queryClient.invalidateQueries(['connectedPlatforms']);
+      queryClient.invalidateQueries(['syncHistory']);
+      setShowConfetti(true);
       toast.success('Sync completed successfully!');
+      setTimeout(() => setShowConfetti(false), 3000);
     } catch (error) {
       toast.error('Sync failed. Please try again.');
     } finally {
       setSyncingPlatform(null);
     }
+  };
+
+  const handleViewHistory = (connection) => {
+    setSelectedHistoryPlatform(connection);
+    setShowHistoryDialog(true);
   };
 
   const getStatusIcon = (status) => {
@@ -350,6 +366,10 @@ export default function ConnectedPlatforms() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      <SuccessConfetti trigger={showConfetti} />
+      
+      <MotivationalQuote className="mb-6" />
+
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -466,6 +486,14 @@ export default function ConnectedPlatforms() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewHistory(connection)}
+                        className="text-white/40 hover:text-blue-400 hover:bg-white/5 transition-colors h-8 w-8"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -607,6 +635,12 @@ export default function ConnectedPlatforms() {
           )}
         </DialogContent>
       </Dialog>
+
+      <PlatformSyncHistory
+        platform={selectedHistoryPlatform}
+        open={showHistoryDialog}
+        onOpenChange={setShowHistoryDialog}
+      />
 
       {/* Sync History */}
       {syncHistory.length > 0 && (

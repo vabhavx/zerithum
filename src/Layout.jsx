@@ -109,11 +109,14 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-effect px-4 py-3 flex items-center justify-between border-b border-white/5">
-        <img 
-          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
-          alt="Zerithum"
-          className="h-7 w-auto object-contain"
-        />
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 blur-md opacity-20 rounded-full"></div>
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
+            alt="Zerithum"
+            className="h-8 w-auto object-contain relative z-10"
+          />
+        </div>
         <Button
           variant="ghost"
           size="icon"
@@ -141,11 +144,14 @@ export default function Layout({ children, currentPageName }) {
         <div className="p-6 h-full flex flex-col">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-12">
-              <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
-                alt="Zerithum"
-                className="h-8 w-auto object-contain"
-              />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 blur-lg opacity-30 rounded-full"></div>
+                <img 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
+                  alt="Zerithum"
+                  className="h-10 w-auto object-contain relative z-10 drop-shadow-lg"
+                />
+              </div>
             </div>
 
           {/* Navigation */}
