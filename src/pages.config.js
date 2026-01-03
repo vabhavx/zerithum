@@ -1,45 +1,45 @@
+import ConnectedApps from './pages/ConnectedApps';
 import ConnectedPlatforms from './pages/ConnectedPlatforms';
 import Dashboard from './pages/Dashboard';
+import Help from './pages/Help';
+import Notifications from './pages/Notifications';
+import Platforms from './pages/Platforms';
+import Privacy from './pages/Privacy';
 import Reconciliation from './pages/Reconciliation';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
-import TaxReports from './pages/TaxReports';
-import SettingsSubscription from './pages/SettingsSubscription';
-import SettingsConnectedApps from './pages/SettingsConnectedApps';
-import Transactions from './pages/Transactions';
-import TaxExport from './pages/TaxExport';
-import Help from './pages/Help';
 import SettingsAccount from './pages/SettingsAccount';
-import SettingsPrivacy from './pages/SettingsPrivacy';
+import SettingsConnectedApps from './pages/SettingsConnectedApps';
 import SettingsNotifications from './pages/SettingsNotifications';
-import Platforms from './pages/Platforms';
+import SettingsPrivacy from './pages/SettingsPrivacy';
+import SettingsSubscription from './pages/SettingsSubscription';
 import Subscription from './pages/Subscription';
-import ConnectedApps from './pages/ConnectedApps';
-import Notifications from './pages/Notifications';
-import Privacy from './pages/Privacy';
+import TaxExport from './pages/TaxExport';
+import TaxReports from './pages/TaxReports';
+import Transactions from './pages/Transactions';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "ConnectedApps": ConnectedApps,
     "ConnectedPlatforms": ConnectedPlatforms,
     "Dashboard": Dashboard,
+    "Help": Help,
+    "Notifications": Notifications,
+    "Platforms": Platforms,
+    "Privacy": Privacy,
     "Reconciliation": Reconciliation,
     "Reports": Reports,
     "Settings": Settings,
-    "TaxReports": TaxReports,
-    "SettingsSubscription": SettingsSubscription,
-    "SettingsConnectedApps": SettingsConnectedApps,
-    "Transactions": Transactions,
-    "TaxExport": TaxExport,
-    "Help": Help,
     "SettingsAccount": SettingsAccount,
-    "SettingsPrivacy": SettingsPrivacy,
+    "SettingsConnectedApps": SettingsConnectedApps,
     "SettingsNotifications": SettingsNotifications,
-    "Platforms": Platforms,
+    "SettingsPrivacy": SettingsPrivacy,
+    "SettingsSubscription": SettingsSubscription,
     "Subscription": Subscription,
-    "ConnectedApps": ConnectedApps,
-    "Notifications": Notifications,
-    "Privacy": Privacy,
+    "TaxExport": TaxExport,
+    "TaxReports": TaxReports,
+    "Transactions": Transactions,
 }
 
 export const pagesConfig = {

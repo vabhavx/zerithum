@@ -9,7 +9,8 @@ import {
   Save,
   Loader2,
   Check,
-  Chrome
+  Chrome,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,9 +27,25 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const SUBSCRIPTION_TIERS = {
-  free: { name: "Free", features: ["Basic dashboard", "2 platforms", "Monthly exports"] },
-  creator_pro: { name: "Creator Pro", features: ["All platforms", "Weekly exports", "AI insights", "Priority support"] },
-  creator_max: { name: "Creator Max", features: ["Everything in Pro", "API access", "Custom reports", "Dedicated support"] }
+  free: { 
+    name: "Free", 
+    price: "$0",
+    period: "/month",
+    features: ["Basic dashboard", "2 platforms", "Monthly exports"] 
+  },
+  creator_pro: { 
+    name: "Creator Pro", 
+    price: "$49",
+    period: "/month",
+    features: ["All platforms", "Weekly exports", "AI insights", "Priority support"],
+    popular: true
+  },
+  creator_max: { 
+    name: "Creator Max", 
+    price: "$199",
+    period: "/month",
+    features: ["Everything in Pro", "API access", "Custom reports", "Dedicated support"] 
+  }
 };
 
 export default function Settings() {
@@ -75,51 +92,51 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto">
-        <div className="clay rounded-3xl p-12 text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-slate-400 mx-auto" />
-          <p className="text-slate-500 mt-4">Loading settings...</p>
+      <div className="max-w-4xl mx-auto">
+        <div className="card-modern rounded-xl p-12 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-white/30 mx-auto" />
+          <p className="text-white/40 mt-4">Loading settings...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">Settings</h1>
-        <p className="text-slate-500 mt-1">Manage your account and preferences</p>
+        <h1 className="text-2xl font-bold text-white">Settings</h1>
+        <p className="text-white/40 mt-1">Manage your account and preferences</p>
       </div>
 
       {/* Profile Section */}
-      <div className="clay rounded-3xl p-6 lg:p-8 mb-6">
+      <div className="card-modern rounded-xl p-6 lg:p-8 mb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
-            <User className="w-5 h-5 text-violet-600" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center">
+            <User className="w-5 h-5 text-violet-400" />
           </div>
-          <h2 className="text-lg font-semibold text-slate-800">Profile</h2>
+          <h2 className="text-lg font-semibold text-white">Profile</h2>
         </div>
 
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="name" className="text-slate-600 mb-2 block">Full Name</Label>
+              <Label htmlFor="name" className="text-white/60 mb-2 block">Full Name</Label>
               <Input
                 id="name"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="clay-sm rounded-xl border-0 bg-white/50"
+                className="rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30"
                 placeholder="Your name"
               />
             </div>
             <div>
-              <Label htmlFor="email" className="text-slate-600 mb-2 block">Email</Label>
+              <Label htmlFor="email" className="text-white/60 mb-2 block">Email</Label>
               <Input
                 id="email"
                 value={user?.email || ""}
                 disabled
-                className="clay-sm rounded-xl border-0 bg-slate-100/50 text-slate-500"
+                className="rounded-xl bg-white/5 border-white/10 text-white/40"
               />
             </div>
           </div>
@@ -127,22 +144,22 @@ export default function Settings() {
       </div>
 
       {/* Authentication Section */}
-      <div className="clay rounded-3xl p-6 lg:p-8 mb-6">
+      <div className="card-modern rounded-xl p-6 lg:p-8 mb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-blue-600" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center">
+            <Shield className="w-5 h-5 text-blue-400" />
           </div>
-          <h2 className="text-lg font-semibold text-slate-800">Authentication</h2>
+          <h2 className="text-lg font-semibold text-white">Authentication</h2>
         </div>
 
         <div className="space-y-4">
-          <p className="text-sm text-slate-500 mb-4">
+          <p className="text-sm text-white/40 mb-4">
             Connect additional login methods for faster access
           </p>
           
-          <div className="clay-sm rounded-xl p-4 flex items-center justify-between">
+          <div className="rounded-xl p-4 flex items-center justify-between bg-white/[0.02] border border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-slate-200">
+              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-white/20">
                 <svg viewBox="0 0 24 24" className="w-5 h-5">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -151,32 +168,32 @@ export default function Settings() {
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-slate-800">Google</p>
-                <p className="text-sm text-slate-500">Sign in with your Google account</p>
+                <p className="font-medium text-white">Google</p>
+                <p className="text-sm text-white/40">Sign in with your Google account</p>
               </div>
             </div>
             <Button 
               variant="outline" 
-              className="rounded-xl"
+              className="rounded-xl border-white/10 text-white/70 hover:bg-white/5"
               onClick={() => base44.auth.redirectToLogin()}
             >
               Connect
             </Button>
           </div>
 
-          <div className="clay-sm rounded-xl p-4 flex items-center justify-between">
+          <div className="rounded-xl p-4 flex items-center justify-between bg-white/[0.02] border border-white/10">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-[#FF424D] flex items-center justify-center">
                 <span className="text-white font-bold text-sm">P</span>
               </div>
               <div>
-                <p className="font-medium text-slate-800">Patreon</p>
-                <p className="text-sm text-slate-500">Sign in with your Patreon account</p>
+                <p className="font-medium text-white">Patreon</p>
+                <p className="text-sm text-white/40">Sign in with your Patreon account</p>
               </div>
             </div>
             <Button 
               variant="outline" 
-              className="rounded-xl"
+              className="rounded-xl border-white/10 text-white/70 hover:bg-white/5"
               onClick={() => base44.auth.redirectToLogin()}
             >
               Connect
@@ -186,19 +203,19 @@ export default function Settings() {
       </div>
 
       {/* Notifications Section */}
-      <div className="clay rounded-3xl p-6 lg:p-8 mb-6">
+      <div className="card-modern rounded-xl p-6 lg:p-8 mb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-            <Bell className="w-5 h-5 text-amber-600" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center">
+            <Bell className="w-5 h-5 text-amber-400" />
           </div>
-          <h2 className="text-lg font-semibold text-slate-800">Notifications</h2>
+          <h2 className="text-lg font-semibold text-white">Notifications</h2>
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between clay-sm rounded-xl p-4">
+          <div className="flex items-center justify-between rounded-xl p-4 bg-white/[0.02] border border-white/10">
             <div>
-              <p className="font-medium text-slate-800">Email Notifications</p>
-              <p className="text-sm text-slate-500">Receive updates about your revenue</p>
+              <p className="font-medium text-white">Email Notifications</p>
+              <p className="text-sm text-white/40">Receive updates about your revenue</p>
             </div>
             <Switch
               checked={formData.notifications_enabled}
@@ -208,12 +225,12 @@ export default function Settings() {
 
           {formData.notifications_enabled && (
             <div>
-              <Label className="text-slate-600 mb-2 block">Email Frequency</Label>
+              <Label className="text-white/60 mb-2 block">Email Frequency</Label>
               <Select 
                 value={formData.email_frequency} 
                 onValueChange={(value) => setFormData({ ...formData, email_frequency: value })}
               >
-                <SelectTrigger className="clay-sm rounded-xl border-0 bg-white/50">
+                <SelectTrigger className="rounded-xl bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -228,42 +245,79 @@ export default function Settings() {
       </div>
 
       {/* Subscription Section */}
-      <div className="clay rounded-3xl p-6 lg:p-8 mb-6">
+      <div className="card-modern rounded-xl p-6 lg:p-8 mb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-            <Palette className="w-5 h-5 text-emerald-600" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-indigo-400" />
           </div>
-          <h2 className="text-lg font-semibold text-slate-800">Subscription</h2>
+          <div>
+            <h2 className="text-lg font-semibold text-white">Subscription & Pricing</h2>
+            <p className="text-white/40 text-xs">Choose the plan that fits your needs</p>
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          {Object.entries(SUBSCRIPTION_TIERS).map(([key, tier]) => (
-            <button
-              key={key}
-              onClick={() => setFormData({ ...formData, subscription_tier: key })}
-              className={cn(
-                "clay-sm rounded-xl p-4 text-left transition-all",
-                formData.subscription_tier === key 
-                  ? "clay-pressed ring-2 ring-violet-500 ring-offset-2" 
-                  : "hover:clay"
-              )}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-slate-800">{tier.name}</h4>
-                {formData.subscription_tier === key && (
-                  <Check className="w-4 h-4 text-violet-600" />
+          {Object.entries(SUBSCRIPTION_TIERS).map(([key, tier]) => {
+            const isActive = formData.subscription_tier === key;
+            const isPro = tier.popular;
+            
+            return (
+              <div key={key} className="relative">
+                {isPro && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <div className="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-semibold">
+                      Popular
+                    </div>
+                  </div>
                 )}
+                <button
+                  onClick={() => setFormData({ ...formData, subscription_tier: key })}
+                  className={cn(
+                    "w-full rounded-xl p-5 text-left transition-all border",
+                    isActive 
+                      ? "bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-indigo-500/40 ring-2 ring-indigo-500/50" 
+                      : "bg-white/[0.02] border-white/10 hover:bg-white/[0.04] hover:border-white/20",
+                    isPro && "border-indigo-500/30"
+                  )}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h4 className="font-semibold text-white text-base mb-1">{tier.name}</h4>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-white">{tier.price}</span>
+                        <span className="text-white/40 text-sm">{tier.period}</span>
+                      </div>
+                    </div>
+                    {isActive && (
+                      <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center">
+                        <Check className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <ul className="space-y-2 mb-4">
+                    {tier.features.map((feature, i) => (
+                      <li key={i} className="text-xs text-white/60 flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {!isActive && (
+                    <div className={cn(
+                      "text-xs font-medium text-center py-2 rounded-lg border",
+                      isPro 
+                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0"
+                        : "bg-white/5 text-white/70 border-white/10"
+                    )}>
+                      {key === 'free' ? 'Current Plan' : 'Upgrade'}
+                    </div>
+                  )}
+                </button>
               </div>
-              <ul className="space-y-1">
-                {tier.features.map((feature, i) => (
-                  <li key={i} className="text-xs text-slate-500 flex items-center gap-1">
-                    <span className="w-1 h-1 rounded-full bg-slate-400" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </button>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -272,7 +326,7 @@ export default function Settings() {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="clay-sm hover:clay rounded-xl bg-gradient-to-r from-violet-500 to-indigo-600 text-white border-0 px-8"
+          className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 px-8 hover:from-indigo-600 hover:to-purple-700"
         >
           {saving ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
