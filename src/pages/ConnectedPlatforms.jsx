@@ -17,7 +17,10 @@ import {
   Trash2,
   ExternalLink,
   Loader2,
-  Key
+  Key,
+  History,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,6 +115,7 @@ export default function ConnectedPlatforms() {
   const [connectingPlatform, setConnectingPlatform] = useState(null);
   const [syncingPlatform, setSyncingPlatform] = useState(null);
   const [validatingKey, setValidatingKey] = useState(false);
+  const [showHistory, setShowHistory] = useState({});
   const queryClient = useQueryClient();
 
 
@@ -122,6 +126,14 @@ export default function ConnectedPlatforms() {
       // Fetch only current user's connections
       const user = await base44.auth.me();
       return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
+    },
+  });
+
+  const { data: syncHistory = [] } = useQuery({
+    queryKey: ["syncHistory"],
+    queryFn: async () => {
+      const user = await base44.auth.me();
+      return base44.entities.SyncHistory.filter({ user_id: user.id }, "-sync_started_at", 50);
     },
   });
 

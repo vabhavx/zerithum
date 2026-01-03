@@ -11,7 +11,9 @@ import {
   Calendar,
   FileText,
   Settings as SettingsIcon,
-  Info
+  Info,
+  Download,
+  Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,6 +127,20 @@ export default function TaxEstimator() {
     const totalPaid = (taxProfile?.q1_paid || 0) + (taxProfile?.q2_paid || 0) + (taxProfile?.q3_paid || 0) + (taxProfile?.q4_paid || 0);
     const remaining = totalTaxLiability - totalPaid;
 
+    // Calculate upcoming deadlines
+    const now = new Date();
+    const upcomingDeadlines = quarterData
+      .filter(q => {
+        const deadlineDate = new Date(`${currentYear}-${q.due.split(' ')[0]}-${q.due.split(' ')[1]}`);
+        const daysUntil = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
+        return daysUntil > 0 && daysUntil <= 30 && q.paid < quarterlyPayment * 0.95;
+      })
+      .map(q => {
+        const deadlineDate = new Date(`${currentYear}-${q.due.split(' ')[0]}-${q.due.split(' ')[1]}`);
+        const daysUntil = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
+        return { ...q, daysUntil };
+      });
+
     return {
       totalRevenue,
       totalFees,
@@ -137,7 +153,8 @@ export default function TaxEstimator() {
       quarterlyPayment,
       quarterData,
       totalPaid,
-      remaining
+      remaining,
+      upcomingDeadlines
     };
   }, [transactions, taxSettings, taxProfile, currentYear]);
 
@@ -157,6 +174,27 @@ export default function TaxEstimator() {
     });
   };
 
+  const handleExportReport = async () => {
+    try {
+      const response = await base44.functions.invoke('exportTaxReport', {
+        taxYear: currentYear
+      });
+      
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tax_report_${currentYear}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('Tax report downloaded');
+    } catch (error) {
+      toast.error('Failed to export tax report');
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <motion.div 
@@ -168,14 +206,41 @@ export default function TaxEstimator() {
           <h1 className="text-2xl font-bold text-white tracking-tight">Tax Estimator</h1>
           <p className="text-white/40 mt-1 text-sm">Estimate and track your quarterly tax obligations</p>
         </div>
-        <Button
-          onClick={() => setShowSettings(true)}
-          className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white h-9"
-        >
-          <SettingsIcon className="w-3.5 h-3.5 mr-2" />
-          Tax Settings
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleExportReport}
+            className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white h-9"
+          >
+            <Download className="w-3.5 h-3.5 mr-2" />
+            Export Report
+          </Button>
+          <Button
+            onClick={() => setShowSettings(true)}
+            className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white h-9"
+          >
+            <SettingsIcon className="w-3.5 h-3.5 mr-2" />
+            Settings
+          </Button>
+        </div>
       </motion.div>
+
+      {taxCalculations.upcomingDeadlines.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3"
+        >
+          <Bell className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold text-amber-400 mb-1">Upcoming Tax Deadline</p>
+            {taxCalculations.upcomingDeadlines.map(deadline => (
+              <p key={deadline.name} className="text-sm text-amber-300">
+                {deadline.name} payment due in {deadline.daysUntil} days ({deadline.due}) - ${taxCalculations.quarterlyPayment.toFixed(0)}
+              </p>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <motion.div

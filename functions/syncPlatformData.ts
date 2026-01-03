@@ -1,6 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
+  const startTime = Date.now();
+  let syncHistoryId = null;
+  
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
@@ -15,13 +18,23 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing connectionId or platform' }, { status: 400 });
     }
 
+    // Create sync history record
+    const syncHistory = await base44.asServiceRole.entities.SyncHistory.create({
+      user_id: user.id,
+      platform: platform,
+      sync_started_at: new Date().toISOString(),
+      status: 'success',
+      transactions_synced: 0
+    });
+    syncHistoryId = syncHistory.id;
+
     // Get connection details - verify it belongs to the current user
     const connection = await base44.asServiceRole.entities.ConnectedPlatform.filter({ 
       id: connectionId,
       user_id: user.id 
     });
     if (!connection || connection.length === 0) {
-      return Response.json({ error: 'Connection not found or unauthorized' }, { status: 404 });
+      throw new Error('Connection not found or unauthorized');
     }
 
     const conn = connection[0];
@@ -194,16 +207,43 @@ Deno.serve(async (req) => {
       error_message: null
     });
 
+    // Update sync history
+    const duration = Date.now() - startTime;
+    await base44.asServiceRole.entities.SyncHistory.update(syncHistoryId, {
+      sync_completed_at: new Date().toISOString(),
+      status: 'success',
+      transactions_synced: transactions.length,
+      duration_ms: duration
+    });
+
     return Response.json({
       success: true,
       transactionCount: transactions.length,
-      message: `Synced ${transactions.length} transactions from ${platform}`
+      message: `Synced ${transactions.length} transactions from ${platform}`,
+      duration_ms: duration
     });
 
   } catch (error) {
     console.error('Sync error:', error);
 
-    // Try to get connectionId from the already parsed request body
+    const duration = Date.now() - startTime;
+
+    // Update sync history with error
+    if (syncHistoryId) {
+      try {
+        const base44 = createClientFromRequest(req);
+        await base44.asServiceRole.entities.SyncHistory.update(syncHistoryId, {
+          sync_completed_at: new Date().toISOString(),
+          status: 'error',
+          error_message: error.message,
+          duration_ms: duration
+        });
+      } catch (historyError) {
+        console.error('Failed to update sync history:', historyError);
+      }
+    }
+
+    // Update connection status
     try {
       const body = await req.clone().json();
       if (body.connectionId) {
