@@ -79,9 +79,9 @@ Deno.serve(async (req) => {
       }
 
       case 'patreon': {
-        // Fetch Patreon pledges
-        const pledgesResponse = await fetch(
-          'https://www.patreon.com/api/oauth2/v2/campaigns?include=pledges&fields[pledge]=amount_cents,created_at',
+        // Fetch Patreon campaigns and members
+        const campaignsResponse = await fetch(
+          'https://www.patreon.com/api/oauth2/v2/campaigns?include=benefits,tiers&fields[campaign]=creation_name,patron_count,published_at&fields[tier]=amount_cents,title,patron_count&fields[benefit]=title',
           {
             headers: {
               'Authorization': `Bearer ${conn.oauth_token}`,
@@ -90,20 +90,50 @@ Deno.serve(async (req) => {
           }
         );
 
-        if (pledgesResponse.ok) {
-          const data = await pledgesResponse.json();
-          const pledges = data.included || [];
-          transactions = pledges.map(pledge => ({
-            user_id: user.id,
-            platform_transaction_id: `patreon_${pledge.id}`,
-            platform: 'patreon',
-            amount: (pledge.attributes.amount_cents || 0) / 100,
-            currency: 'USD',
-            transaction_date: pledge.attributes.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-            category: 'membership',
-            description: 'Patreon Pledge',
-            synced_at: new Date().toISOString()
-          }));
+        if (!campaignsResponse.ok) {
+          throw new Error(`Patreon campaigns API failed: ${campaignsResponse.statusText}`);
+        }
+
+        const campaignsData = await campaignsResponse.json();
+        const campaigns = campaignsData.data || [];
+
+        // For each campaign, fetch members
+        for (const campaign of campaigns) {
+          const membersResponse = await fetch(
+            `https://www.patreon.com/api/oauth2/v2/campaigns/${campaign.id}/members?include=currently_entitled_tiers,user&fields[member]=full_name,patron_status,currently_entitled_amount_cents,pledge_relationship_start,last_charge_date,last_charge_status&fields[tier]=title,amount_cents`,
+            {
+              headers: {
+                'Authorization': `Bearer ${conn.oauth_token}`,
+                'Accept': 'application/json'
+              }
+            }
+          );
+
+          if (membersResponse.ok) {
+            const membersData = await membersResponse.json();
+            const members = membersData.data || [];
+            
+            const memberTransactions = members
+              .filter(member => member.attributes.patron_status === 'active_patron')
+              .map(member => {
+                const amount = (member.attributes.currently_entitled_amount_cents || 0) / 100;
+                const lastChargeDate = member.attributes.last_charge_date || member.attributes.pledge_relationship_start || new Date().toISOString();
+                
+                return {
+                  user_id: user.id,
+                  platform_transaction_id: `patreon_member_${member.id}_${lastChargeDate}`,
+                  platform: 'patreon',
+                  amount: amount,
+                  currency: 'USD',
+                  transaction_date: lastChargeDate.split('T')[0],
+                  category: 'membership',
+                  description: `Patreon Membership - ${member.attributes.full_name || 'Patron'}`,
+                  synced_at: new Date().toISOString()
+                };
+              });
+            
+            transactions.push(...memberTransactions);
+          }
         }
         break;
       }

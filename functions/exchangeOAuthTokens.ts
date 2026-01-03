@@ -9,7 +9,7 @@ const PLATFORM_CONFIG = {
   },
   patreon: {
     tokenUrl: 'https://www.patreon.com/api/oauth2/token',
-    clientId: 'YOUR_PATREON_CLIENT_ID',
+    clientId: 'i1ircOfqA2eD5ChN4-d6uElxt4vjWzIEv4vCfj0K_92LqilSM5OA_dJS24uFjiTR',
     clientSecretEnv: 'PATREON_CLIENT_SECRET',
     redirectUri: 'https://zerithum-copy-36d43903.base44.app/authcallback'
   },
