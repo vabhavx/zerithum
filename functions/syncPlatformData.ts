@@ -16,15 +16,32 @@ Deno.serve(async (req) => {
     }
 
     // Get connection details
-    const connection = await base44.entities.ConnectedPlatform.filter({ id: connectionId });
+    const connection = await base44.asServiceRole.entities.ConnectedPlatform.filter({ id: connectionId });
     if (!connection || connection.length === 0) {
       return Response.json({ error: 'Connection not found' }, { status: 404 });
     }
 
     const conn = connection[0];
 
+    // Check if token is expired and refresh if needed
+    const expiresAt = new Date(conn.expires_at);
+    const now = new Date();
+    if (expiresAt <= now && conn.refresh_token) {
+      const refreshResult = await base44.functions.invoke('refreshAccessToken', { 
+        connectionId: conn.id 
+      });
+      
+      if (!refreshResult.data.success) {
+        throw new Error('Failed to refresh access token');
+      }
+      
+      // Refetch connection with new token
+      const refreshedConn = await base44.asServiceRole.entities.ConnectedPlatform.filter({ id: connectionId });
+      conn.oauth_token = refreshedConn[0].oauth_token;
+    }
+
     // Update status to syncing
-    await base44.entities.ConnectedPlatform.update(connectionId, {
+    await base44.asServiceRole.entities.ConnectedPlatform.update(connectionId, {
       sync_status: 'syncing'
     });
 
@@ -138,7 +155,7 @@ Deno.serve(async (req) => {
     }
 
     // Update connection status
-    await base44.entities.ConnectedPlatform.update(connectionId, {
+    await base44.asServiceRole.entities.ConnectedPlatform.update(connectionId, {
       sync_status: 'active',
       last_synced_at: new Date().toISOString(),
       error_message: null
@@ -153,14 +170,18 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Sync error:', error);
 
-    // Update connection to error status if we have connectionId
-    const { connectionId } = await req.json().catch(() => ({}));
-    if (connectionId) {
-      const base44 = createClientFromRequest(req);
-      await base44.entities.ConnectedPlatform.update(connectionId, {
-        sync_status: 'error',
-        error_message: error.message
-      });
+    // Try to get connectionId from the already parsed request body
+    try {
+      const body = await req.clone().json();
+      if (body.connectionId) {
+        const base44 = createClientFromRequest(req);
+        await base44.asServiceRole.entities.ConnectedPlatform.update(body.connectionId, {
+          sync_status: 'error',
+          error_message: error.message
+        });
+      }
+    } catch (parseError) {
+      console.error('Failed to parse request body for error handling:', parseError);
     }
 
     return Response.json({ error: error.message }, { status: 500 });

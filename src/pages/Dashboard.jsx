@@ -20,7 +20,8 @@ export default function Dashboard() {
 
   const { data: transactions = [], isLoading, refetch } = useQuery({
     queryKey: ["revenueTransactions"],
-    queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 100),
+    queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 500),
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const queryClient = useQueryClient();
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const { data: insights = [] } = useQuery({
     queryKey: ["insights"],
     queryFn: () => base44.entities.Insight.list("-created_date", 10),
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 
   const { data: user } = useQuery({
@@ -203,13 +205,13 @@ export default function Dashboard() {
         />
         <RevenueOverviewCard
           title="Total Transactions"
-          amount={metrics.topTransactions.length}
+          amount={transactions.length}
           change={0}
           changePercent={0}
         />
         <RevenueOverviewCard
           title="Avg Transaction"
-          amount={metrics.topTransactions.length > 0 ? metrics.totalMRR / metrics.topTransactions.length : 0}
+          amount={transactions.length > 0 ? metrics.totalMRR / transactions.length : 0}
           change={0}
           changePercent={0}
         />

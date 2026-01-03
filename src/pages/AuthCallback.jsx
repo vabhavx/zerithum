@@ -35,21 +35,25 @@ export default function AuthCallback() {
 
       try {
         // Exchange code for tokens
-        await base44.functions.invoke("exchangeGoogleCodeForTokens", {
+        const response = await base44.functions.invoke("exchangeOAuthTokens", {
           code,
           platform: state || "youtube"
         });
 
-        setStatus("success");
-        
-        // Redirect after a brief delay
-        setTimeout(() => {
-          toast.success("YouTube connected successfully!");
-          navigate(createPageUrl("ConnectedPlatforms"));
-        }, 1500);
+        if (response.data.success) {
+          setStatus("success");
+          
+          // Redirect after a brief delay
+          setTimeout(() => {
+            toast.success(`${state || "YouTube"} connected successfully!`);
+            navigate(createPageUrl("ConnectedPlatforms"));
+          }, 1500);
+        } else {
+          throw new Error(response.data.error || "Failed to connect");
+        }
       } catch (err) {
         setStatus("error");
-        setError(err.message || "Failed to connect platform");
+        setError(err.response?.data?.error || err.message || "Failed to connect platform");
       }
     };
 
