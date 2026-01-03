@@ -42,7 +42,7 @@ const PLATFORMS = [
     description: "Track ad revenue, memberships, and Super Chat earnings",
     oauthUrl: "https://accounts.google.com/o/oauth2/v2/auth",
     scope: "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/auth/callback",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
     requiresApiKey: false,
     clientId: "985180453886-8qbvanuid2ifpdoq84culbg4gta83rbn.apps.googleusercontent.com"
   },
@@ -54,7 +54,7 @@ const PLATFORMS = [
     description: "Sync pledges, membership tiers, and patron data",
     oauthUrl: "https://www.patreon.com/oauth2/authorize",
     scope: "campaigns campaigns.members pledges-to-me my-campaign",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/auth/callback",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
     requiresApiKey: false,
     clientId: "YOUR_PATREON_CLIENT_ID"
   },
@@ -75,7 +75,7 @@ const PLATFORMS = [
     description: "Connect payments, subscriptions, and payout data",
     oauthUrl: "https://connect.stripe.com/oauth/authorize",
     scope: "read_write",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/auth/callback",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
     requiresApiKey: false,
     clientId: "YOUR_STRIPE_CLIENT_ID"
   },
@@ -87,7 +87,7 @@ const PLATFORMS = [
     description: "Pull revenue from Instagram Insights and monetization",
     oauthUrl: "https://www.facebook.com/v20.0/dialog/oauth",
     scope: "instagram_basic,instagram_manage_insights,pages_read_engagement",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/auth/callback",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
     requiresApiKey: false,
     clientId: "YOUR_META_APP_ID"
   },
@@ -99,7 +99,7 @@ const PLATFORMS = [
     description: "Track Creator Fund earnings and video insights",
     oauthUrl: "https://www.tiktok.com/v2/auth/authorize/",
     scope: "video.list,user.info.basic,video.insights",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/auth/callback",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
     requiresApiKey: false,
     clientKey: "YOUR_TIKTOK_CLIENT_KEY"
   }

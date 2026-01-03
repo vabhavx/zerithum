@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     // Exchange code for tokens with Google
     const clientId = "985180453886-8qbvanuid2ifpdoq84culbg4gta83rbn.apps.googleusercontent.com";
     const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
-    const redirectUri = "https://zerithum-copy-36d43903.base44.app/auth/callback";
+    const redirectUri = "https://zerithum-copy-36d43903.base44.app/authcallback";
 
     if (!clientSecret) {
       return Response.json({ 
