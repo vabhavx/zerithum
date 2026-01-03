@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
   { name: "Transactions", icon: FileText, page: "TransactionAnalysis" },
+  { name: "Expenses", icon: Scale, page: "Expenses" },
   { name: "Tax Estimator", icon: FileText, page: "TaxEstimator" },
   { name: "Connected Platforms", icon: Link2, page: "ConnectedPlatforms" },
   { name: "Profile", icon: User, page: "Profile" },

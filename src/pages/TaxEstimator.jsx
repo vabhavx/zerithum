@@ -154,9 +154,10 @@ export default function TaxEstimator() {
       quarterData,
       totalPaid,
       remaining,
-      upcomingDeadlines
+      upcomingDeadlines,
+      deductibleExpenses: deductibleExpenses
     };
-  }, [transactions, taxSettings, taxProfile, currentYear]);
+  }, [transactions, expenses, taxSettings, taxProfile, currentYear]);
 
   const handleSaveSettings = () => {
     updateTaxProfileMutation.mutate({
