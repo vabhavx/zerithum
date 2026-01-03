@@ -118,7 +118,11 @@ export default function ConnectedPlatforms() {
 
   const { data: connectedPlatforms = [], isLoading } = useQuery({
     queryKey: ["connectedPlatforms"],
-    queryFn: () => base44.entities.ConnectedPlatform.list("-connected_at"),
+    queryFn: async () => {
+      // Fetch only current user's connections
+      const user = await base44.auth.me();
+      return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
+    },
   });
 
   const disconnectMutation = useMutation({

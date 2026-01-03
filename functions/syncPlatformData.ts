@@ -15,10 +15,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing connectionId or platform' }, { status: 400 });
     }
 
-    // Get connection details
-    const connection = await base44.asServiceRole.entities.ConnectedPlatform.filter({ id: connectionId });
+    // Get connection details - verify it belongs to the current user
+    const connection = await base44.asServiceRole.entities.ConnectedPlatform.filter({ 
+      id: connectionId,
+      user_id: user.id 
+    });
     if (!connection || connection.length === 0) {
-      return Response.json({ error: 'Connection not found' }, { status: 404 });
+      return Response.json({ error: 'Connection not found or unauthorized' }, { status: 404 });
     }
 
     const conn = connection[0];

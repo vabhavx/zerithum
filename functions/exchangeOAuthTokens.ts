@@ -97,33 +97,33 @@ Deno.serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + (tokens.expires_in || 3600));
 
-    // Check if connection already exists
-    const existingConnections = await base44.entities.ConnectedPlatform.filter({
+    // UPSERT: Check if connection already exists for this user+platform
+    const existingConnections = await base44.asServiceRole.entities.ConnectedPlatform.filter({
       user_id: user.id,
       platform: platform
     });
 
     const connectionData = {
+      user_id: user.id,
+      platform: platform,
       oauth_token: tokens.access_token,
       refresh_token: tokens.refresh_token || null,
       expires_at: expiresAt.toISOString(),
       sync_status: 'active',
-      connected_at: new Date().toISOString(),
+      connected_at: existingConnections.length > 0 ? existingConnections[0].connected_at : new Date().toISOString(),
       last_synced_at: new Date().toISOString(),
       error_message: null
     };
 
     if (existingConnections.length > 0) {
+      // Update existing connection for this user
       await base44.asServiceRole.entities.ConnectedPlatform.update(
         existingConnections[0].id, 
         connectionData
       );
     } else {
-      await base44.asServiceRole.entities.ConnectedPlatform.create({
-        user_id: user.id,
-        platform: platform,
-        ...connectionData
-      });
+      // Create new connection for this user
+      await base44.asServiceRole.entities.ConnectedPlatform.create(connectionData);
     }
 
     return Response.json({ 

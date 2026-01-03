@@ -21,17 +21,26 @@ const REFRESH_CONFIG = {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { connectionId } = await req.json();
 
     if (!connectionId) {
       return Response.json({ error: 'Connection ID is required' }, { status: 400 });
     }
 
-    // Get connection details using service role
-    const connections = await base44.asServiceRole.entities.ConnectedPlatform.filter({ id: connectionId });
+    // Get connection details - verify it belongs to the current user
+    const connections = await base44.asServiceRole.entities.ConnectedPlatform.filter({ 
+      id: connectionId,
+      user_id: user.id
+    });
     
     if (!connections || connections.length === 0) {
-      return Response.json({ error: 'Connection not found' }, { status: 404 });
+      return Response.json({ error: 'Connection not found or unauthorized' }, { status: 404 });
     }
 
     const connection = connections[0];
