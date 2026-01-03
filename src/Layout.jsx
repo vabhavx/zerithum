@@ -11,18 +11,18 @@ import {
   Menu, 
   X,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
+  { name: "Transactions", icon: FileText, page: "TransactionAnalysis" },
   { name: "Tax Estimator", icon: FileText, page: "TaxEstimator" },
   { name: "Connected Platforms", icon: Link2, page: "ConnectedPlatforms" },
-  { name: "Reports & Analytics", icon: FileText, page: "Reports" },
-  { name: "Reconciliation", icon: Scale, page: "Reconciliation" },
-  { name: "Settings", icon: Settings, page: "Settings" },
+  { name: "Profile", icon: User, page: "Profile" },
 ];
 
 export default function Layout({ children, currentPageName }) {

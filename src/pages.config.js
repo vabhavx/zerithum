@@ -19,6 +19,8 @@ import TaxReports from './pages/TaxReports';
 import Transactions from './pages/Transactions';
 import AuthCallback from './pages/AuthCallback';
 import TaxEstimator from './pages/TaxEstimator';
+import TransactionAnalysis from './pages/TransactionAnalysis';
+import Profile from './pages/Profile';
 import __Layout from './Layout.jsx';
 
 
@@ -44,6 +46,8 @@ export const PAGES = {
     "Transactions": Transactions,
     "AuthCallback": AuthCallback,
     "TaxEstimator": TaxEstimator,
+    "TransactionAnalysis": TransactionAnalysis,
+    "Profile": Profile,
 }
 
 export const pagesConfig = {

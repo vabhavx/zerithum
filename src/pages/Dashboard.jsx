@@ -6,13 +6,13 @@ import { RefreshCw, Sparkles, Loader2, TrendingUp, FileText, CircleDollarSign, L
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
-import RevenueOverviewCard from "@/components/dashboard/RevenueOverviewCard";
-import PlatformBreakdownChart from "@/components/dashboard/PlatformBreakdownChart";
-import RevenueTrendChart from "@/components/dashboard/RevenueTrendChart";
-import TopTransactionsList from "@/components/dashboard/TopTransactionsList";
 import ConcentrationRiskAlert from "@/components/dashboard/ConcentrationRiskAlert";
 import LendingSignalsCard from "@/components/dashboard/LendingSignalsCard";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
+
+// Lazy load chart components for better performance
+const RevenueForecasting = React.lazy(() => import("@/components/dashboard/RevenueForecasting"));
+const InteractivePlatformChart = React.lazy(() => import("@/components/dashboard/InteractivePlatformChart"));
 
 export default function Dashboard() {
   const [showRiskAlert, setShowRiskAlert] = useState(true);
@@ -268,14 +268,24 @@ export default function Dashboard() {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <PlatformBreakdownChart 
-          data={metrics.platformBreakdown}
-        />
-        <RevenueTrendChart data={metrics.trendData} />
+        <React.Suspense fallback={
+          <div className="card-modern rounded-xl p-6 h-[400px] flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-white/30" />
+          </div>
+        }>
+          <InteractivePlatformChart transactions={transactions} />
+        </React.Suspense>
+        <React.Suspense fallback={
+          <div className="card-modern rounded-xl p-6 h-[400px] flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-white/30" />
+          </div>
+        }>
+          <RevenueForecasting transactions={transactions} />
+        </React.Suspense>
       </div>
 
       {/* Insights & Lending Signals */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <InsightsPanel 
             insights={insights.filter(i => i.insight_type !== 'cashflow_forecast')} 
@@ -287,9 +297,6 @@ export default function Dashboard() {
           />
         </div>
       </div>
-
-      {/* Top Transactions */}
-      <TopTransactionsList transactions={metrics.topTransactions} />
     </div>
   );
 }
