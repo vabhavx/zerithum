@@ -583,10 +583,8 @@ export default function ConnectedPlatforms() {
               {availablePlatforms.map((platform) => {
                 const Icon = platform.icon;
                 return (
-                  <motion.button
+                  <button
                     key={platform.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                     onClick={() => initiateOAuthFlow(platform)}
                     disabled={connectingPlatform}
                     className={cn(
@@ -610,7 +608,7 @@ export default function ConnectedPlatforms() {
                       <span>Connect</span>
                       <ExternalLink className="w-3 h-3" />
                     </div>
-                  </motion.button>
+                  </button>
                 );
               })}
             </div>
