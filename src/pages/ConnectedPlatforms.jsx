@@ -1,261 +1,618 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import PlatformCard from "../components/platform/PlatformCard";
-import { useToast } from "@/components/ui/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { format } from "date-fns";
+import { 
+  Youtube, 
+  Users, 
+  CircleDollarSign, 
+  ShoppingBag, 
+  Instagram,
+  Music,
+  Plus,
+  Check,
+  AlertCircle,
+  Clock,
+  RefreshCw,
+  Trash2,
+  ExternalLink,
+  Loader2,
+  Key
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+const PLATFORMS = [
+  {
+    id: "youtube",
+    name: "YouTube",
+    icon: Youtube,
+    color: "bg-red-500/10 border-red-500/20 text-red-400",
+    description: "Track ad revenue, memberships, and Super Chat earnings",
+    oauthUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+    scope: "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly",
+    redirectUri: window.location.origin + "/auth/callback",
+    requiresApiKey: false,
+    clientId: "YOUR_GOOGLE_CLIENT_ID"
+  },
+  {
+    id: "patreon",
+    name: "Patreon",
+    icon: Users,
+    color: "bg-rose-500/10 border-rose-500/20 text-rose-400",
+    description: "Sync pledges, membership tiers, and patron data",
+    oauthUrl: "https://www.patreon.com/oauth2/authorize",
+    scope: "campaigns campaigns.members pledges-to-me my-campaign",
+    redirectUri: window.location.origin + "/auth/callback",
+    requiresApiKey: false,
+    clientId: "YOUR_PATREON_CLIENT_ID"
+  },
+  {
+    id: "gumroad",
+    name: "Gumroad",
+    icon: ShoppingBag,
+    color: "bg-pink-500/10 border-pink-500/20 text-pink-400",
+    description: "Import product sales, subscriptions, and license data",
+    requiresApiKey: true,
+    validationUrl: "https://api.gumroad.com/v2/user"
+  },
+  {
+    id: "stripe",
+    name: "Stripe",
+    icon: CircleDollarSign,
+    color: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+    description: "Connect payments, subscriptions, and payout data",
+    oauthUrl: "https://connect.stripe.com/oauth/authorize",
+    scope: "read_write",
+    redirectUri: window.location.origin + "/auth/callback",
+    requiresApiKey: false,
+    clientId: "YOUR_STRIPE_CLIENT_ID"
+  },
+  {
+    id: "instagram",
+    name: "Instagram",
+    icon: Instagram,
+    color: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+    description: "Pull revenue from Instagram Insights and monetization",
+    oauthUrl: "https://www.facebook.com/v20.0/dialog/oauth",
+    scope: "instagram_basic,instagram_manage_insights,pages_read_engagement",
+    redirectUri: window.location.origin + "/auth/callback",
+    requiresApiKey: false,
+    clientId: "YOUR_META_APP_ID"
+  },
+  {
+    id: "tiktok",
+    name: "TikTok",
+    icon: Music,
+    color: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
+    description: "Track Creator Fund earnings and video insights",
+    oauthUrl: "https://www.tiktok.com/v2/auth/authorize/",
+    scope: "video.list,user.info.basic,video.insights",
+    redirectUri: window.location.origin + "/auth/callback",
+    requiresApiKey: false,
+    clientKey: "YOUR_TIKTOK_CLIENT_KEY"
+  }
+];
 
 export default function ConnectedPlatforms() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [connectingPlatform, setConnectingPlatform] = useState(null);
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState(null);
   const [apiKey, setApiKey] = useState("");
-  const [disconnectPlatform, setDisconnectPlatform] = useState(null);
+  const [connectingPlatform, setConnectingPlatform] = useState(null);
+  const [syncingPlatform, setSyncingPlatform] = useState(null);
+  const [validatingKey, setValidatingKey] = useState(false);
+  const queryClient = useQueryClient();
 
-  const platforms = ["youtube", "patreon", "gumroad", "stripe", "instagram", "tiktok"];
+  // Handle OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    if (code && state) {
+      handleOAuthCallback(state, code);
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
-  const { data: connections = [] } = useQuery({
-    queryKey: ["platform_connections"],
-    queryFn: () => base44.entities.PlatformConnection.list(),
-  });
-
-  const connectMutation = useMutation({
-    mutationFn: (data) => base44.entities.PlatformConnection.create(data),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries(["platform_connections"]);
-      toast({
-        title: "Platform Connected",
-        description: `${variables.platform} connected successfully! Syncing data...`,
-      });
-      setConnectingPlatform(null);
-      setApiKey("");
-      // Trigger first sync
-      handleSync(variables.platform);
-    },
+  const { data: connectedPlatforms = [], isLoading } = useQuery({
+    queryKey: ["connectedPlatforms"],
+    queryFn: () => base44.entities.ConnectedPlatform.list("-connected_at"),
   });
 
   const disconnectMutation = useMutation({
-    mutationFn: (id) => base44.entities.PlatformConnection.delete(id),
+    mutationFn: (id) => base44.entities.ConnectedPlatform.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["platform_connections"]);
-      toast({
-        title: "Platform Disconnected",
-        description: "Your earnings history stays. You can reconnect anytime.",
-      });
-      setDisconnectPlatform(null);
+      queryClient.invalidateQueries(["connectedPlatforms"]);
+      toast.success("Platform disconnected successfully");
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.PlatformConnection.update(id, data),
+  const connectMutation = useMutation({
+    mutationFn: (data) => base44.entities.ConnectedPlatform.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["platform_connections"]);
+      queryClient.invalidateQueries(["connectedPlatforms"]);
+      setShowConnectDialog(false);
+      setSelectedPlatform(null);
+      setApiKey("");
+      setConnectingPlatform(null);
+      setValidatingKey(false);
+      toast.success("Platform connected successfully! ✓");
     },
+    onError: (error) => {
+      setConnectingPlatform(null);
+      setValidatingKey(false);
+      toast.error("Failed to connect platform. Please retry.");
+    }
   });
 
-  const handleConnect = (platform) => {
-    // For Gumroad (API key), show dialog
-    if (platform === "gumroad") {
-      setConnectingPlatform(platform);
-    } else {
-      // For OAuth platforms, simulate OAuth flow
-      // In production, this would redirect to OAuth provider
-      toast({
-        title: "Opening OAuth Flow",
-        description: `Redirecting to ${platform} authorization...`,
+  const syncMutation = useMutation({
+    mutationFn: async (platformId) => {
+      const connection = connectedPlatforms.find(p => p.id === platformId);
+      
+      // Update to syncing status
+      await base44.entities.ConnectedPlatform.update(platformId, {
+        sync_status: "syncing"
       });
-
-      // Mock OAuth success after 2 seconds
-      setTimeout(() => {
-        const user_id = "current_user"; // In production, get from base44.auth.me()
-        connectMutation.mutate({
-          user_id,
-          platform,
-          oauth_token: `mock_token_${platform}_${Date.now()}`,
-          refresh_token: `mock_refresh_${platform}`,
-          expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days
-          sync_status: "active",
-          connected_at: new Date().toISOString(),
-          last_synced: new Date().toISOString(),
+      
+      // Simulate data fetch from platform API
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Random success/failure for demo (90% success rate)
+      const success = Math.random() > 0.1;
+      
+      if (!success) {
+        throw new Error("Sync failed");
+      }
+      
+      return base44.entities.ConnectedPlatform.update(platformId, {
+        last_synced_at: new Date().toISOString(),
+        sync_status: "active",
+        error_message: null
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["connectedPlatforms"]);
+      setSyncingPlatform(null);
+      toast.success("Sync completed successfully! ✓");
+    },
+    onError: (error, platformId) => {
+      // Update to error status
+      const connection = connectedPlatforms.find(p => p.id === platformId);
+      if (connection) {
+        base44.entities.ConnectedPlatform.update(platformId, {
+          sync_status: "error",
+          error_message: "Failed to sync data. Please check your connection and try again."
         });
-      }, 2000);
+      }
+      queryClient.invalidateQueries(["connectedPlatforms"]);
+      setSyncingPlatform(null);
+      toast.error("Sync failed. Please retry or reconnect the platform.");
+    }
+  });
+
+  const handleOAuthCallback = async (platform, code) => {
+    setConnectingPlatform(platform);
+    
+    try {
+      // In production, exchange code for tokens on backend
+      // This simulates the token exchange
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      
+      connectMutation.mutate({
+        platform: platform,
+        oauth_token: `token_${code}_${Date.now()}`, // Simulated access token
+        refresh_token: `refresh_${code}_${Date.now()}`, // Simulated refresh token
+        expires_at: expiresAt.toISOString(),
+        sync_status: "active",
+        connected_at: new Date().toISOString(),
+        last_synced_at: new Date().toISOString()
+      });
+    } catch (error) {
+      setConnectingPlatform(null);
+      toast.error(`Failed to connect ${platform}. Please try again.`);
     }
   };
 
-  const handleApiKeyConnect = () => {
-    if (!apiKey.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid API key",
-        variant: "destructive",
-      });
+  const initiateOAuthFlow = (platform) => {
+    if (platform.requiresApiKey) {
+      setSelectedPlatform(platform);
+      setShowConnectDialog(true);
       return;
     }
 
-    const user_id = "current_user"; // In production, get from base44.auth.me()
-    connectMutation.mutate({
-      user_id,
-      platform: "gumroad",
-      api_key: apiKey,
-      sync_status: "active",
-      connected_at: new Date().toISOString(),
-      last_synced: new Date().toISOString(),
-    });
-  };
-
-  const handleDisconnect = (platform) => {
-    const connection = connections.find((c) => c.platform === platform);
-    if (connection) {
-      setDisconnectPlatform({ platform, id: connection.id });
+    setConnectingPlatform(platform.id);
+    
+    let params;
+    
+    if (platform.id === "tiktok") {
+      params = new URLSearchParams({
+        client_key: platform.clientKey,
+        scope: platform.scope,
+        response_type: 'code',
+        redirect_uri: platform.redirectUri,
+        state: platform.id
+      });
+    } else {
+      params = new URLSearchParams({
+        client_id: platform.clientId || platform.id,
+        redirect_uri: platform.redirectUri,
+        response_type: 'code',
+        scope: platform.scope || '',
+        state: platform.id
+      });
     }
+
+    // Store platform in sessionStorage for callback
+    sessionStorage.setItem('oauth_platform', platform.id);
+    
+    // Redirect to OAuth provider
+    window.location.href = `${platform.oauthUrl}?${params.toString()}`;
   };
 
-  const confirmDisconnect = () => {
-    if (disconnectPlatform) {
-      disconnectMutation.mutate(disconnectPlatform.id);
+  const handleApiKeyConnect = async () => {
+    if (!apiKey.trim()) {
+      toast.error("Please enter your API key");
+      return;
     }
-  };
 
-  const handleSync = async (platform) => {
-    const connection = connections.find((c) => c.platform === platform);
-    if (!connection) return;
-
-    // Update status to syncing
-    await updateMutation.mutateAsync({
-      id: connection.id,
-      data: { sync_status: "syncing" },
-    });
-
-    // Mock sync process (in production, call backend API)
-    setTimeout(async () => {
-      // Generate mock transactions
-      const mockTransactions = Array.from({ length: Math.floor(Math.random() * 10) + 5 }, (_, i) => ({
-        user_id: connection.user_id,
-        platform: connection.platform,
-        platform_transaction_id: `${platform}_txn_${Date.now()}_${i}`,
-        amount: Math.random() * 500 + 10,
-        gross_amount: Math.random() * 500 + 10,
-        fees_amount: Math.random() * 20,
-        net_amount: Math.random() * 480 + 10,
-        currency: "USD",
-        transaction_date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-        synced_date: new Date().toISOString(),
-        category: ["ad_revenue", "sponsorship", "product_sale", "membership"][Math.floor(Math.random() * 4)],
-        description: `${platform} transaction`,
-        status: "completed",
-      }));
-
-      // Create transactions
-      for (const txn of mockTransactions) {
-        try {
-          await base44.entities.Transaction.create(txn);
-        } catch (error) {
-          // Skip duplicates
+    setValidatingKey(true);
+    setConnectingPlatform(selectedPlatform.id);
+    
+    try {
+      // Validate API key
+      if (selectedPlatform.id === "gumroad") {
+        const response = await fetch(`${selectedPlatform.validationUrl}?access_token=${apiKey}`);
+        
+        if (!response.ok) {
+          throw new Error("Invalid API key");
         }
       }
-
-      // Update connection status
-      await updateMutation.mutateAsync({
-        id: connection.id,
-        data: {
-          sync_status: "active",
-          last_synced: new Date().toISOString(),
-        },
+      
+      // Key is valid, save connection
+      connectMutation.mutate({
+        platform: selectedPlatform.id,
+        oauth_token: apiKey,
+        sync_status: "active",
+        connected_at: new Date().toISOString(),
+        last_synced_at: new Date().toISOString()
       });
-
-      toast({
-        title: "Sync Complete",
-        description: `${platform} synced ${mockTransactions.length} transactions`,
-      });
-
-      queryClient.invalidateQueries(["transactions"]);
-    }, 3000);
+    } catch (error) {
+      setConnectingPlatform(null);
+      setValidatingKey(false);
+      toast.error("Invalid API key. Please check and try again.");
+    }
   };
 
-  const getConnectionForPlatform = (platform) => {
-    return connections.find((c) => c.platform === platform);
+  const handleSync = (platformId) => {
+    setSyncingPlatform(platformId);
+    syncMutation.mutate(platformId);
   };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "active":
+        return <Check className="w-3.5 h-3.5" />;
+      case "syncing":
+        return <Loader2 className="w-3.5 h-3.5 animate-spin" />;
+      case "error":
+        return <AlertCircle className="w-3.5 h-3.5" />;
+      case "stale":
+        return <Clock className="w-3.5 h-3.5" />;
+      default:
+        return null;
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "active":
+        return "Synced";
+      case "syncing":
+        return "Syncing...";
+      case "error":
+        return "Error";
+      case "stale":
+        return "Stale";
+      default:
+        return "Unknown";
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "active":
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+      case "syncing":
+        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+      case "error":
+        return "bg-red-500/10 text-red-400 border-red-500/20";
+      case "stale":
+        return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+      default:
+        return "bg-white/5 text-white/40 border-white/10";
+    }
+  };
+
+  const connectedIds = connectedPlatforms.map(p => p.platform);
+  const availablePlatforms = PLATFORMS.filter(p => !connectedIds.includes(p.id));
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-[#5E5240] mb-2">Connected Platforms</h1>
-        <p className="text-[#5E5240]/60">
-          Authorize Zerithum to access your earnings. Each platform stores your data securely.
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
+      >
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Connected Platforms</h1>
+          <p className="text-white/40 mt-1 text-sm">Manage your revenue sources</p>
+        </div>
+        {availablePlatforms.length > 0 && (
+          <Button
+            onClick={() => setShowConnectDialog(true)}
+            className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700 transition-all text-sm h-9"
+          >
+            <Plus className="w-3.5 h-3.5 mr-2" />
+            Connect Platform
+          </Button>
+        )}
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {platforms.map((platform) => (
-          <PlatformCard
-            key={platform}
-            platform={platform}
-            connection={getConnectionForPlatform(platform)}
-            onConnect={handleConnect}
-            onDisconnect={handleDisconnect}
-            onSync={handleSync}
-          />
-        ))}
-      </div>
-
-      {/* Gumroad API Key Dialog */}
-      <Dialog open={connectingPlatform === "gumroad"} onOpenChange={() => setConnectingPlatform(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Connect Gumroad</DialogTitle>
-            <DialogDescription>
-              Enter your Gumroad API key. You can find it in your Gumroad settings under "Advanced" → "Create application".
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="api-key">API Key</Label>
-              <Input
-                id="api-key"
-                placeholder="Paste your Gumroad API key here"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
+      {/* Connected Platforms */}
+      {connectingPlatform && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="rounded-xl p-4 mb-6 bg-indigo-500/10 border border-indigo-500/30 backdrop-blur-sm"
+        >
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+            <div>
+              <p className="font-semibold text-indigo-400 text-sm">Connecting Platform...</p>
+              <p className="text-xs text-indigo-300/80">Establishing secure connection</p>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConnectingPlatform(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleApiKeyConnect} className="btn-primary">
-              Connect
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </motion.div>
+      )}
 
-      {/* Disconnect Confirmation Dialog */}
-      <Dialog open={!!disconnectPlatform} onOpenChange={() => setDisconnectPlatform(null)}>
-        <DialogContent>
+      {isLoading ? (
+        <div className="card-modern rounded-xl p-8 text-center">
+          <RefreshCw className="w-8 h-8 animate-spin text-white/30 mx-auto" />
+          <p className="text-white/40 mt-4 text-sm">Loading platforms...</p>
+        </div>
+      ) : connectedPlatforms.length === 0 ? (
+        <div className="card-modern rounded-xl p-12 text-center">
+          <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/10">
+            <ExternalLink className="w-8 h-8 text-white/30" />
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-2">No platforms connected</h3>
+          <p className="text-white/40 mb-6 text-sm">Connect your first platform to start tracking revenue</p>
+          <Button
+            onClick={() => setShowConnectDialog(true)}
+            className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Connect Platform
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+            {connectedPlatforms.map((connection) => {
+              const platform = PLATFORMS.find(p => p.id === connection.platform);
+              if (!platform) return null;
+              const Icon = platform.icon;
+              const isSyncing = syncingPlatform === connection.id;
+
+              return (
+                <div
+                  key={connection.id}
+                  className="card-modern rounded-xl p-5"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      "w-12 h-12 rounded-lg flex items-center justify-center border relative",
+                      platform.color
+                    )}>
+                      <Icon className="w-5 h-5" />
+                      {connection.sync_status === "active" && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center border border-[#0A0A0A]"
+                        >
+                          <Check className="w-2.5 h-2.5 text-white" />
+                        </motion.div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-white text-sm">{platform.name}</h3>
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className={cn(
+                            "flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border",
+                            getStatusColor(connection.sync_status)
+                          )}
+                        >
+                          {getStatusIcon(connection.sync_status)}
+                          <span>{getStatusLabel(connection.sync_status)}</span>
+                        </motion.div>
+                      </div>
+                      <p className="text-xs text-white/40">
+                        Connected {format(new Date(connection.connected_at), "MMM d, yyyy")}
+                        {connection.last_synced_at && connection.sync_status !== "syncing" && (
+                          <> · {format(new Date(connection.last_synced_at), "MMM d, h:mm a")}</>
+                        )}
+                      </p>
+                      {connection.error_message && connection.sync_status === "error" && (
+                        <p className="text-xs text-red-400 mt-1">{connection.error_message}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleSync(connection.id)}
+                        disabled={isSyncing || connection.sync_status === "syncing"}
+                        className="text-white/40 hover:text-indigo-400 hover:bg-white/5 transition-colors h-8 w-8"
+                      >
+                        <RefreshCw className={cn("w-3.5 h-3.5", (isSyncing || connection.sync_status === "syncing") && "animate-spin")} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors h-8 w-8"
+                        onClick={() => {
+                          if (window.confirm(`Disconnect ${platform.name}? This will stop syncing revenue data.`)) {
+                            disconnectMutation.mutate(connection.id);
+                          }
+                        }}
+                        disabled={disconnectMutation.isPending}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+      )}
+
+      {/* Connect Dialog */}
+      <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
+        <DialogContent className="card-modern rounded-2xl border max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Disconnect {disconnectPlatform?.platform}?</DialogTitle>
-            <DialogDescription>
-              Your earnings history stays. You can reconnect anytime.
+            <DialogTitle className="text-lg font-bold text-white">
+              {selectedPlatform ? `Connect ${selectedPlatform.name}` : "Connect Platform"}
+            </DialogTitle>
+            <DialogDescription className="text-white/40 text-sm">
+              {selectedPlatform 
+                ? "Enter your API key to securely connect" 
+                : "Choose a platform to sync your revenue data"}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDisconnectPlatform(null)}>
-              Cancel
-            </Button>
-            <Button onClick={confirmDisconnect} className="btn-danger">
-              Disconnect
-            </Button>
-          </DialogFooter>
+
+          {selectedPlatform?.requiresApiKey ? (
+            <div className="space-y-4 mt-4">
+              <div className="rounded-lg p-4 flex items-center gap-3 bg-white/[0.02] border border-white/[0.05]">
+                <div className={cn(
+                  "w-11 h-11 rounded-lg flex items-center justify-center border",
+                  selectedPlatform.color
+                )}>
+                  {React.createElement(selectedPlatform.icon, { className: "w-5 h-5" })}
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white text-sm">{selectedPlatform.name}</h4>
+                  <p className="text-xs text-white/40">{selectedPlatform.description}</p>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="apiKey" className="text-white/60 mb-2 block text-sm">API Key</Label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                  <Input
+                    id="apiKey"
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder={`Enter your ${selectedPlatform.name} API key`}
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-lg"
+                  />
+                </div>
+                <p className="text-xs text-white/30 mt-2">
+                  Find your API key in {selectedPlatform.name} Settings → Advanced
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedPlatform(null);
+                    setApiKey("");
+                  }}
+                  className="flex-1 rounded-lg border-white/10 text-white/70 hover:bg-white/5"
+                  disabled={connectingPlatform || validatingKey}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleApiKeyConnect}
+                  disabled={connectingPlatform || validatingKey || !apiKey.trim()}
+                  className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                >
+                  {(connectingPlatform || validatingKey) ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {validatingKey ? "Validating..." : "Connecting..."}
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Connect
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+              {availablePlatforms.map((platform) => {
+                const Icon = platform.icon;
+                return (
+                  <motion.button
+                    key={platform.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => initiateOAuthFlow(platform)}
+                    disabled={connectingPlatform}
+                    className={cn(
+                      "rounded-lg p-4 flex flex-col items-center gap-3 text-center",
+                      "bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-white/10",
+                      "transition-all duration-200",
+                      connectingPlatform && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-12 h-12 rounded-lg flex items-center justify-center border",
+                      platform.color
+                    )}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-white text-sm mb-1">{platform.name}</h4>
+                      <p className="text-xs text-white/40 line-clamp-2">{platform.description}</p>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-indigo-400">
+                      <span>Connect</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

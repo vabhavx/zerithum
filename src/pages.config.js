@@ -4,19 +4,6 @@ import Reconciliation from './pages/Reconciliation';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import TaxReports from './pages/TaxReports';
-import SettingsSubscription from './pages/SettingsSubscription';
-import SettingsConnectedApps from './pages/SettingsConnectedApps';
-import Transactions from './pages/Transactions';
-import TaxExport from './pages/TaxExport';
-import Help from './pages/Help';
-import SettingsAccount from './pages/SettingsAccount';
-import SettingsPrivacy from './pages/SettingsPrivacy';
-import SettingsNotifications from './pages/SettingsNotifications';
-import Platforms from './pages/Platforms';
-import Subscription from './pages/Subscription';
-import ConnectedApps from './pages/ConnectedApps';
-import Notifications from './pages/Notifications';
-import Privacy from './pages/Privacy';
 import __Layout from './Layout.jsx';
 
 
@@ -27,19 +14,6 @@ export const PAGES = {
     "Reports": Reports,
     "Settings": Settings,
     "TaxReports": TaxReports,
-    "SettingsSubscription": SettingsSubscription,
-    "SettingsConnectedApps": SettingsConnectedApps,
-    "Transactions": Transactions,
-    "TaxExport": TaxExport,
-    "Help": Help,
-    "SettingsAccount": SettingsAccount,
-    "SettingsPrivacy": SettingsPrivacy,
-    "SettingsNotifications": SettingsNotifications,
-    "Platforms": Platforms,
-    "Subscription": Subscription,
-    "ConnectedApps": ConnectedApps,
-    "Notifications": Notifications,
-    "Privacy": Privacy,
 }
 
 export const pagesConfig = {
