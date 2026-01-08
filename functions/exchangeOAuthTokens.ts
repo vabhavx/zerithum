@@ -1,35 +1,42 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const PLATFORM_CONFIG = {
+const PLATFORM_CONFIG: Record<string, {
+  tokenUrl: string;
+  clientId?: string;
+  clientKey?: string;
+  clientSecretEnv: string;
+  redirectUri: string;
+}> = {
   youtube: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    clientId: '985180453886-8qbvanuid2ifpdoq84culbg4gta83rbn.apps.googleusercontent.com',
+    // Sentinel: Prefer env var, fallback to hardcoded for compatibility (should be removed in prod)
+    clientId: Deno.env.get('GOOGLE_CLIENT_ID') || '985180453886-8qbvanuid2ifpdoq84culbg4gta83rbn.apps.googleusercontent.com',
     clientSecretEnv: 'GOOGLE_CLIENT_SECRET',
-    redirectUri: 'https://zerithum-copy-36d43903.base44.app/authcallback'
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI') || 'https://zerithum-copy-36d43903.base44.app/authcallback'
   },
   patreon: {
     tokenUrl: 'https://www.patreon.com/api/oauth2/token',
-    clientId: 'i1ircOfqA2eD5ChN4-d6uElxt4vjWzIEv4vCfj0K_92LqilSM5OA_dJS24uFjiTR',
+    clientId: Deno.env.get('PATREON_CLIENT_ID') || 'i1ircOfqA2eD5ChN4-d6uElxt4vjWzIEv4vCfj0K_92LqilSM5OA_dJS24uFjiTR',
     clientSecretEnv: 'PATREON_CLIENT_SECRET',
-    redirectUri: 'https://zerithum-copy-36d43903.base44.app/authcallback'
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI') || 'https://zerithum-copy-36d43903.base44.app/authcallback'
   },
   stripe: {
     tokenUrl: 'https://connect.stripe.com/oauth/token',
-    clientId: 'YOUR_STRIPE_CLIENT_ID',
+    clientId: Deno.env.get('STRIPE_CLIENT_ID') || 'YOUR_STRIPE_CLIENT_ID',
     clientSecretEnv: 'STRIPE_CLIENT_SECRET',
-    redirectUri: 'https://zerithum-copy-36d43903.base44.app/authcallback'
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI') || 'https://zerithum-copy-36d43903.base44.app/authcallback'
   },
   instagram: {
     tokenUrl: 'https://graph.facebook.com/v20.0/oauth/access_token',
-    clientId: 'YOUR_META_APP_ID',
+    clientId: Deno.env.get('META_APP_ID') || 'YOUR_META_APP_ID',
     clientSecretEnv: 'META_APP_SECRET',
-    redirectUri: 'https://zerithum-copy-36d43903.base44.app/authcallback'
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI') || 'https://zerithum-copy-36d43903.base44.app/authcallback'
   },
   tiktok: {
     tokenUrl: 'https://open.tiktokapis.com/v2/oauth/token/',
-    clientKey: 'YOUR_TIKTOK_CLIENT_KEY',
+    clientKey: Deno.env.get('TIKTOK_CLIENT_KEY') || 'YOUR_TIKTOK_CLIENT_KEY',
     clientSecretEnv: 'TIKTOK_CLIENT_SECRET',
-    redirectUri: 'https://zerithum-copy-36d43903.base44.app/authcallback'
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI') || 'https://zerithum-copy-36d43903.base44.app/authcallback'
   }
 };
 
@@ -48,30 +55,33 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Code and platform are required' }, { status: 400 });
     }
 
-    const config = PLATFORM_CONFIG[platform];
-    if (!config) {
-      return Response.json({ error: 'Unsupported platform' }, { status: 400 });
+    // Input Validation: specific check against allowed keys
+    if (!Object.prototype.hasOwnProperty.call(PLATFORM_CONFIG, platform)) {
+       return Response.json({ error: 'Unsupported platform' }, { status: 400 });
     }
+
+    const config = PLATFORM_CONFIG[platform];
 
     const clientSecret = Deno.env.get(config.clientSecretEnv);
     if (!clientSecret) {
+      console.error(`Missing client secret env var: ${config.clientSecretEnv}`);
       return Response.json({ 
-        error: `${platform} OAuth not configured. Please set ${config.clientSecretEnv} in environment variables.` 
+        error: 'OAuth configuration error'
       }, { status: 500 });
     }
 
     // Build token request
-    const tokenParams = {
+    const tokenParams: Record<string, string> = {
       code,
       grant_type: 'authorization_code',
       redirect_uri: config.redirectUri
     };
 
     if (platform === 'tiktok') {
-      tokenParams.client_key = config.clientKey;
+      tokenParams.client_key = config.clientKey || '';
       tokenParams.client_secret = clientSecret;
     } else {
-      tokenParams.client_id = config.clientId;
+      tokenParams.client_id = config.clientId || '';
       tokenParams.client_secret = clientSecret;
     }
 
@@ -85,9 +95,9 @@ Deno.serve(async (req) => {
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json();
+      console.error('Token exchange failed:', errorData);
       return Response.json({ 
-        error: 'Failed to exchange code for tokens', 
-        details: errorData 
+        error: 'Failed to exchange code for tokens'
       }, { status: 400 });
     }
 
@@ -133,6 +143,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Token exchange error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    // Sentinel: Don't leak error message to client
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 });
