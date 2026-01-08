@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import moment from 'moment';
 
 export default function Transactions() {
@@ -16,10 +17,9 @@ export default function Transactions() {
   const [sortField, setSortField] = useState('transaction_date');
   const [sortDirection, setSortDirection] = useState('desc');
 
-  const { data: transactions = [] } = useQuery({
+  const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions'],
-    queryFn: () => base44.entities.Transaction.list('-transaction_date', 500),
-    initialData: []
+    queryFn: () => base44.entities.Transaction.list('-transaction_date', 500)
   });
 
   // Filter and sort transactions
@@ -81,6 +81,7 @@ export default function Transactions() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#5E5240]/40" />
             <Input
               placeholder="Search transactions..."
+              aria-label="Search transactions"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-clay pl-10"
@@ -178,7 +179,21 @@ export default function Transactions() {
               </tr>
             </thead>
             <tbody>
-              {filteredTransactions.length > 0 ? (
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-t border-[#5E524012]">
+                    <td className="py-4 px-4"><Skeleton className="h-4 w-24" /></td>
+                    <td className="py-4 px-4"><Skeleton className="h-4 w-20" /></td>
+                    <td className="py-4 px-4">
+                      <Skeleton className="h-4 w-16 mb-1" />
+                      <Skeleton className="h-3 w-12" />
+                    </td>
+                    <td className="py-4 px-4"><Skeleton className="h-4 w-24" /></td>
+                    <td className="py-4 px-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                    <td className="py-4 px-4"><Skeleton className="h-8 w-16" /></td>
+                  </tr>
+                ))
+              ) : filteredTransactions.length > 0 ? (
                 filteredTransactions.map((transaction) => (
                   <React.Fragment key={transaction.id}>
                     <tr className="border-t border-[#5E524012] hover:bg-[#5E5240]/5 cursor-pointer"
