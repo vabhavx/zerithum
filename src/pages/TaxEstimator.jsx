@@ -1,15 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, startOfYear, endOfYear, startOfQuarter, endOfQuarter } from "date-fns";
+import { startOfYear, endOfYear, startOfQuarter, endOfQuarter } from "date-fns";
 import { 
   Calculator, 
   DollarSign, 
-  TrendingUp, 
   AlertCircle,
   CheckCircle2,
   Calendar,
-  FileText,
   Settings as SettingsIcon,
   Info,
   Download,

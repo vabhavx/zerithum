@@ -4,19 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { 
   Plus, 
-  Upload, 
   Sparkles, 
-  Receipt, 
-  DollarSign,
-  Calendar,
+  Receipt,
   TrendingDown,
   Loader2,
   CheckCircle2,
-  Edit,
   Trash2,
-  X,
   FileSpreadsheet,
-  BarChart3,
   Bot
 } from "lucide-react";
 import BulkImportDialog from "../components/expense/BulkImportDialog";
@@ -29,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = {

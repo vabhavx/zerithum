@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ChevronDown, ChevronUp, Sparkles, Shield, Clock, TrendingUp } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Shield, Clock, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { base44 } from "@/api/base44Client";
 
 const PLANS = {
   monthly: [

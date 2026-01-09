@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle, RefreshCw, Settings as SettingsIcon, Trash2 } from 'lucide-react';
+import { CheckCircle2, Circle, RefreshCw, Trash2 } from 'lucide-react';
 import moment from 'moment';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';

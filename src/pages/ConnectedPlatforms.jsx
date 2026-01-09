@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -19,8 +19,6 @@ import {
   Loader2,
   Key,
   History,
-  ChevronDown,
-  ChevronUp,
   FileText
 } from "lucide-react";
 import PlatformSyncHistory from "../components/platform/PlatformSyncHistory";
@@ -37,7 +35,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const PLATFORMS = [

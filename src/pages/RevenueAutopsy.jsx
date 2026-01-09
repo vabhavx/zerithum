@@ -12,7 +12,6 @@ import {
   XCircle,
   Shield,
   Loader2,
-  Sparkles,
   FileText,
   Activity
 } from "lucide-react";

@@ -10,10 +10,9 @@ import {
   ResponsiveContainer,
   Cell,
   PieChart,
-  Pie,
-  Legend
+  Pie
 } from 'recharts';
-import { TrendingUp, Activity, PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
+import { Activity, PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const PLATFORM_COLORS = {
