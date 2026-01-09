@@ -67,7 +67,11 @@ export default function PlatformCard({ platform, connection, onConnect, onDiscon
       {/* Platform Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: `${config.color}15` }}>
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+            style={{ background: `${config.color}15` }}
+            aria-hidden="true"
+          >
             {config.icon}
           </div>
           <div>
@@ -76,10 +80,10 @@ export default function PlatformCard({ platform, connection, onConnect, onDiscon
           </div>
         </div>
         {isConnected && (
-          <CheckCircle2 className="w-5 h-5 text-[#208D9E]" />
+          <CheckCircle2 className="w-5 h-5 text-[#208D9E]" aria-label="Connected" role="img" />
         )}
         {hasError && (
-          <AlertCircle className="w-5 h-5 text-[#C0152F]" />
+          <AlertCircle className="w-5 h-5 text-[#C0152F]" aria-label="Connection Error" role="img" />
         )}
       </div>
 
@@ -125,6 +129,7 @@ export default function PlatformCard({ platform, connection, onConnect, onDiscon
           <Button
             onClick={() => onConnect(platform)}
             className="flex-1 btn-primary"
+            aria-label={`Connect to ${config.name}`}
           >
             <ExternalLink className="w-4 h-4 mr-2" />
             Connect
@@ -135,6 +140,7 @@ export default function PlatformCard({ platform, connection, onConnect, onDiscon
               onClick={handleSync}
               disabled={syncing || connection.sync_status === "syncing"}
               className="flex-1 btn-primary text-sm"
+              aria-label={`Sync ${config.name} data now`}
             >
               {syncing || connection.sync_status === "syncing" ? (
                 <>
@@ -148,6 +154,8 @@ export default function PlatformCard({ platform, connection, onConnect, onDiscon
             <Button
               onClick={() => onDisconnect(platform)}
               className="btn-secondary text-sm"
+              aria-label={`Disconnect ${config.name}`}
+              title={`Disconnect ${config.name}`}
             >
               Disconnect
             </Button>
