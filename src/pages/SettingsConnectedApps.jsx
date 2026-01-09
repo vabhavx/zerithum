@@ -2,7 +2,7 @@ import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Circle, RotateCw, Unplug, Settings as SettingsIcon } from "lucide-react";
+import { CheckCircle2, Circle, RotateCw, Unplug } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";

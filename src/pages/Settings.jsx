@@ -2,14 +2,11 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { 
   User, 
-  Mail, 
   Shield, 
-  Bell, 
-  Palette,
+  Bell,
   Save,
   Loader2,
   Check,
-  Chrome,
   Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

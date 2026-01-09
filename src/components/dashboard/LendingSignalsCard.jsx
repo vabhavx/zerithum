@@ -1,8 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Calendar, DollarSign, AlertCircle } from 'lucide-react';
+import { TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 const PLATFORM_COLORS = {
   youtube: '#FF0000',

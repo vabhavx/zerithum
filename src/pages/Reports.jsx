@@ -9,7 +9,6 @@ import {
   TrendingDown,
   DollarSign,
   BarChart3,
-  PieChart as PieChartIcon,
   FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,8 +32,7 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  Legend 
+  ResponsiveContainer
 } from "recharts";
 
 const PLATFORM_COLORS = {

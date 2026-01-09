@@ -5,7 +5,6 @@ import { format } from "date-fns";
 import { 
   Scale, 
   Check, 
-  X, 
   ArrowRight, 
   Search,
   Filter,

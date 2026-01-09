@@ -1,7 +1,6 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
-import { format } from 'date-fns';
 
 export default function RevenueTrendChart({ data }) {
   const CustomTooltip = ({ active, payload }) => {

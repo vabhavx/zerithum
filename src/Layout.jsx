@@ -7,11 +7,9 @@ import {
   Link2, 
   Scale, 
   FileText, 
-  Settings, 
   Menu, 
   X,
   LogOut,
-  ChevronRight,
   User,
   AlertTriangle,
   DollarSign

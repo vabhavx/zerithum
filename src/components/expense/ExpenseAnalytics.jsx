@@ -1,8 +1,7 @@
 import React, { useMemo } from "react";
-import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { TrendingUp, TrendingDown, DollarSign, Calendar } from "lucide-react";
+import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { TrendingUp, DollarSign } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 
 const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4'];
 

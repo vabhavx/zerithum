@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { format, startOfYear, endOfYear, subYears } from "date-fns";
+import { format, startOfYear, endOfYear } from "date-fns";
 import { 
-  FileText, 
   Download, 
   Calendar, 
   DollarSign,
@@ -20,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS = {
   ad_revenue: "Ad Revenue",
