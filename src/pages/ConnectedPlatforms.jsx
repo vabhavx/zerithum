@@ -488,6 +488,7 @@ export default function ConnectedPlatforms() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleViewHistory(connection)}
+                        aria-label={`View sync history for ${platform.name}`}
                         className="text-white/40 hover:text-blue-400 hover:bg-white/5 transition-colors h-8 w-8"
                       >
                         <FileText className="w-3.5 h-3.5" />
@@ -497,6 +498,7 @@ export default function ConnectedPlatforms() {
                         size="icon"
                         onClick={() => handleSync(connection.id)}
                         disabled={isSyncing || connection.sync_status === "syncing"}
+                        aria-label={`Sync ${platform.name}`}
                         className="text-white/40 hover:text-indigo-400 hover:bg-white/5 transition-colors h-8 w-8"
                       >
                         <RefreshCw className={cn("w-3.5 h-3.5", (isSyncing || connection.sync_status === "syncing") && "animate-spin")} />
@@ -504,6 +506,7 @@ export default function ConnectedPlatforms() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label={`Disconnect ${platform.name}`}
                         className="text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors h-8 w-8"
                         onClick={() => {
                           if (window.confirm(`Disconnect ${platform.name}? This will stop syncing revenue data.`)) {
