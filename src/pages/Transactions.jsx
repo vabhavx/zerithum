@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import moment from 'moment';
+import { format } from 'date-fns';
 
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -199,7 +199,7 @@ export default function Transactions() {
                     <tr className="border-t border-[#5E524012] hover:bg-[#5E5240]/5 cursor-pointer"
                         onClick={() => setExpandedRow(expandedRow === transaction.id ? null : transaction.id)}>
                       <td className="py-4 px-4 text-sm">
-                        {moment(transaction.transaction_date).format('MMM D, YYYY')}
+                        {format(new Date(transaction.transaction_date), 'MMM d, yyyy')}
                       </td>
                       <td className="py-4 px-4 text-sm capitalize">{transaction.platform}</td>
                       <td className="py-4 px-4">
@@ -247,7 +247,7 @@ export default function Transactions() {
                             </div>
                             <div>
                               <span className="text-[#5E5240]/60">Synced:</span>
-                              <div className="mt-1">{moment(transaction.synced_date || transaction.created_date).format('MMM D, YYYY h:mm A')}</div>
+                              <div className="mt-1">{format(new Date(transaction.synced_date || transaction.created_date), 'MMM d, yyyy h:mm a')}</div>
                             </div>
                             {transaction.description && (
                               <div className="col-span-2">
