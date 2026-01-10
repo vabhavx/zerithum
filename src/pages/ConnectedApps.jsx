@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Circle, RefreshCw, Trash2 } from 'lucide-react';
-import moment from 'moment';
+import { format, formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 
@@ -105,14 +105,14 @@ export default function ConnectedApps() {
                       </td>
                       <td className="py-4 px-4 text-sm">
                         {connection.last_synced ? (
-                          moment(connection.last_synced).fromNow()
+                          formatDistanceToNow(new Date(connection.last_synced), { addSuffix: true })
                         ) : (
                           <span className="text-[#5E5240]/40">Never</span>
                         )}
                       </td>
                       <td className="py-4 px-4 text-sm">
                         {connection.expires_at ? (
-                          moment(connection.expires_at).format('MMM D, YYYY')
+                          format(new Date(connection.expires_at), 'MMM d, yyyy')
                         ) : (
                           <span className="text-[#5E5240]/40">
                             {config.usesOAuth ? 'N/A' : 'N/A (API key)'}
