@@ -5,38 +5,37 @@ const PLATFORM_CONFIG: Record<string, {
   clientId?: string;
   clientKey?: string;
   clientSecretEnv: string;
-  redirectUri: string;
+  redirectUri?: string;
 }> = {
   youtube: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    // Sentinel: Prefer env var, fallback to hardcoded for compatibility (should be removed in prod)
-    clientId: Deno.env.get('GOOGLE_CLIENT_ID') || '985180453886-8qbvanuid2ifpdoq84culbg4gta83rbn.apps.googleusercontent.com',
+    clientId: Deno.env.get('GOOGLE_CLIENT_ID'),
     clientSecretEnv: 'GOOGLE_CLIENT_SECRET',
-    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI') || 'https://zerithum-copy-36d43903.base44.app/authcallback'
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI')
   },
   patreon: {
     tokenUrl: 'https://www.patreon.com/api/oauth2/token',
-    clientId: Deno.env.get('PATREON_CLIENT_ID') || 'i1ircOfqA2eD5ChN4-d6uElxt4vjWzIEv4vCfj0K_92LqilSM5OA_dJS24uFjiTR',
+    clientId: Deno.env.get('PATREON_CLIENT_ID'),
     clientSecretEnv: 'PATREON_CLIENT_SECRET',
-    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI') || 'https://zerithum-copy-36d43903.base44.app/authcallback'
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI')
   },
   stripe: {
     tokenUrl: 'https://connect.stripe.com/oauth/token',
-    clientId: Deno.env.get('STRIPE_CLIENT_ID') || 'YOUR_STRIPE_CLIENT_ID',
+    clientId: Deno.env.get('STRIPE_CLIENT_ID'),
     clientSecretEnv: 'STRIPE_CLIENT_SECRET',
-    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI') || 'https://zerithum-copy-36d43903.base44.app/authcallback'
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI')
   },
   instagram: {
     tokenUrl: 'https://graph.facebook.com/v20.0/oauth/access_token',
-    clientId: Deno.env.get('META_APP_ID') || 'YOUR_META_APP_ID',
+    clientId: Deno.env.get('META_APP_ID'),
     clientSecretEnv: 'META_APP_SECRET',
-    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI') || 'https://zerithum-copy-36d43903.base44.app/authcallback'
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI')
   },
   tiktok: {
     tokenUrl: 'https://open.tiktokapis.com/v2/oauth/token/',
-    clientKey: Deno.env.get('TIKTOK_CLIENT_KEY') || 'YOUR_TIKTOK_CLIENT_KEY',
+    clientKey: Deno.env.get('TIKTOK_CLIENT_KEY'),
     clientSecretEnv: 'TIKTOK_CLIENT_SECRET',
-    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI') || 'https://zerithum-copy-36d43903.base44.app/authcallback'
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI')
   }
 };
 
@@ -70,6 +69,25 @@ Deno.serve(async (req) => {
       }, { status: 500 });
     }
 
+    if (!config.redirectUri) {
+      console.error('Missing OAUTH_REDIRECT_URI env var');
+      return Response.json({
+        error: 'OAuth configuration error'
+      }, { status: 500 });
+    }
+
+    if (platform === 'tiktok' && !config.clientKey) {
+      console.error('Missing TIKTOK_CLIENT_KEY env var');
+      return Response.json({
+        error: 'OAuth configuration error'
+      }, { status: 500 });
+    } else if (platform !== 'tiktok' && !config.clientId) {
+      console.error(`Missing Client ID env var for ${platform}`);
+      return Response.json({
+        error: 'OAuth configuration error'
+      }, { status: 500 });
+    }
+
     // Build token request
     const tokenParams: Record<string, string> = {
       code,
@@ -78,10 +96,10 @@ Deno.serve(async (req) => {
     };
 
     if (platform === 'tiktok') {
-      tokenParams.client_key = config.clientKey || '';
+      tokenParams.client_key = config.clientKey!;
       tokenParams.client_secret = clientSecret;
     } else {
-      tokenParams.client_id = config.clientId || '';
+      tokenParams.client_id = config.clientId!;
       tokenParams.client_secret = clientSecret;
     }
 
