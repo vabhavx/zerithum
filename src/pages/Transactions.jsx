@@ -6,7 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import moment from 'moment';
+import { format } from 'date-fns';
+import { useMemo, useCallback } from 'react';
+
+const SortIcon = ({ field, sortField, sortDirection }) => {
+  if (sortField !== field) return null;
+  return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
+};
 
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,9 +28,9 @@ export default function Transactions() {
     queryFn: () => base44.entities.Transaction.list('-transaction_date', 500)
   });
 
-  // Filter and sort transactions
-  const filteredTransactions = transactions
-    .filter(t => {
+  // Filter transactions
+  const filteredList = useMemo(() => {
+    return transactions.filter(t => {
       const matchesSearch = !searchTerm || 
         t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.platform_transaction_id?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -32,8 +38,12 @@ export default function Transactions() {
       const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
       const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
       return matchesSearch && matchesPlatform && matchesCategory && matchesStatus;
-    })
-    .sort((a, b) => {
+    });
+  }, [transactions, searchTerm, platformFilter, categoryFilter, statusFilter]);
+
+  // Sort transactions
+  const filteredTransactions = useMemo(() => {
+    return [...filteredList].sort((a, b) => {
       const aVal = a[sortField];
       const bVal = b[sortField];
       const modifier = sortDirection === 'asc' ? 1 : -1;
@@ -41,24 +51,20 @@ export default function Transactions() {
       if (aVal > bVal) return 1 * modifier;
       return 0;
     });
+  }, [filteredList, sortField, sortDirection]);
 
-  const handleSort = (field) => {
+  const handleSort = useCallback((field) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
       setSortDirection('desc');
     }
-  };
+  }, [sortField]);
 
-  const SortIcon = ({ field }) => {
-    if (sortField !== field) return null;
-    return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
-  };
-
-  const totalRevenue = filteredTransactions
+  const totalRevenue = useMemo(() => filteredList
     .filter(t => t.status === 'completed')
-    .reduce((sum, t) => sum + (t.net_amount || t.amount), 0);
+    .reduce((sum, t) => sum + (t.net_amount || t.amount), 0), [filteredList]);
 
   return (
     <div className="max-w-[1200px] mx-auto">
@@ -154,7 +160,7 @@ export default function Transactions() {
                   className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240] cursor-pointer hover:bg-[#5E5240]/10"
                 >
                   <div className="flex items-center gap-1">
-                    Date <SortIcon field="transaction_date" />
+                    Date <SortIcon field="transaction_date" sortField={sortField} sortDirection={sortDirection} />
                   </div>
                 </th>
                 <th 
@@ -162,7 +168,7 @@ export default function Transactions() {
                   className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240] cursor-pointer hover:bg-[#5E5240]/10"
                 >
                   <div className="flex items-center gap-1">
-                    Platform <SortIcon field="platform" />
+                    Platform <SortIcon field="platform" sortField={sortField} sortDirection={sortDirection} />
                   </div>
                 </th>
                 <th 
@@ -170,7 +176,7 @@ export default function Transactions() {
                   className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240] cursor-pointer hover:bg-[#5E5240]/10"
                 >
                   <div className="flex items-center gap-1">
-                    Amount <SortIcon field="amount" />
+                    Amount <SortIcon field="amount" sortField={sortField} sortDirection={sortDirection} />
                   </div>
                 </th>
                 <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Category</th>
@@ -199,7 +205,7 @@ export default function Transactions() {
                     <tr className="border-t border-[#5E524012] hover:bg-[#5E5240]/5 cursor-pointer"
                         onClick={() => setExpandedRow(expandedRow === transaction.id ? null : transaction.id)}>
                       <td className="py-4 px-4 text-sm">
-                        {moment(transaction.transaction_date).format('MMM D, YYYY')}
+                        {format(new Date(transaction.transaction_date), 'MMM d, yyyy')}
                       </td>
                       <td className="py-4 px-4 text-sm capitalize">{transaction.platform}</td>
                       <td className="py-4 px-4">
@@ -247,7 +253,7 @@ export default function Transactions() {
                             </div>
                             <div>
                               <span className="text-[#5E5240]/60">Synced:</span>
-                              <div className="mt-1">{moment(transaction.synced_date || transaction.created_date).format('MMM D, YYYY h:mm A')}</div>
+                              <div className="mt-1">{format(new Date(transaction.synced_date || transaction.created_date), 'MMM d, yyyy h:mm a')}</div>
                             </div>
                             {transaction.description && (
                               <div className="col-span-2">
