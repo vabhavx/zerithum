@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, AlertCircle, Loader2, Clock } from 'lucide-react';
-import moment from 'moment';
+import { formatDistanceToNow } from 'date-fns';
 
 const platformConfig = {
   youtube: {
@@ -78,7 +78,7 @@ export default function PlatformCard({ platform, connection, onConnect, onSync, 
         {isConnected && connection?.last_synced && (
           <div className="text-xs text-[#5E5240]/60 mb-3">
             <Clock className="w-3 h-3 inline mr-1" />
-            Last synced {moment(connection.last_synced).fromNow()}
+            Last synced {formatDistanceToNow(new Date(connection.last_synced), { addSuffix: true })}
           </div>
         )}
         

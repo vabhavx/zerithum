@@ -1,22 +1,46 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { logAudit } from './utils/audit.ts';
 
 Deno.serve(async (req) => {
   const startTime = Date.now();
   let syncHistoryId = null;
+  let userId = 'unknown';
   
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user) {
+      logAudit({
+        action_type: 'SYNC_PLATFORM_DATA_ATTEMPT',
+        status: 'failure',
+        error_message: 'Unauthorized access attempt'
+      });
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    userId = user.id;
 
     const { connectionId, platform } = await req.json();
 
     if (!connectionId || !platform) {
+      logAudit({
+        actor_id: userId,
+        action_type: 'SYNC_PLATFORM_DATA_ATTEMPT',
+        status: 'failure',
+        error_message: 'Missing connectionId or platform',
+        details: { connectionId, platform }
+      });
       return Response.json({ error: 'Missing connectionId or platform' }, { status: 400 });
     }
+
+    logAudit({
+      actor_id: userId,
+      action_type: 'SYNC_PLATFORM_DATA_START',
+      status: 'success',
+      target_resource: 'connected_platform',
+      target_id: connectionId,
+      details: { platform }
+    });
 
     // Create sync history record
     const syncHistory = await base44.asServiceRole.entities.SyncHistory.create({
@@ -216,6 +240,19 @@ Deno.serve(async (req) => {
       duration_ms: duration
     });
 
+    logAudit({
+      actor_id: userId,
+      action_type: 'SYNC_PLATFORM_DATA_COMPLETE',
+      status: 'success',
+      target_resource: 'connected_platform',
+      target_id: connectionId,
+      duration_ms: duration,
+      details: {
+        platform,
+        transactions_count: transactions.length
+      }
+    });
+
     return Response.json({
       success: true,
       transactionCount: transactions.length,
@@ -225,8 +262,15 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Sync error:', error);
-
     const duration = Date.now() - startTime;
+
+    logAudit({
+      actor_id: userId,
+      action_type: 'SYNC_PLATFORM_DATA_ERROR',
+      status: 'error',
+      duration_ms: duration,
+      error_message: error.message
+    });
 
     // Update sync history with error
     if (syncHistoryId) {
