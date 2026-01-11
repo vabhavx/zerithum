@@ -1,18 +1,28 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { logAudit } from './utils/audit.ts';
 
 Deno.serve(async (req) => {
   const startTime = Date.now();
   let syncHistoryId = null;
+  let body: any = {};
+  let user: any = null;
   
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    user = await base44.auth.me();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { connectionId, platform } = await req.json();
+    // Securely parse body once
+    try {
+      body = await req.json();
+    } catch (e) {
+      return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const { connectionId, platform } = body;
 
     if (!connectionId || !platform) {
       return Response.json({ error: 'Missing connectionId or platform' }, { status: 400 });
@@ -195,10 +205,47 @@ Deno.serve(async (req) => {
         throw new Error('Unsupported platform');
     }
 
-    // Save transactions
+    // Deduplication and Saving
+    let savedCount = 0;
+    let duplicateCount = 0;
+
     if (transactions.length > 0) {
-      await base44.asServiceRole.entities.RevenueTransaction.bulkCreate(transactions);
+      // Fetch existing transactions to deduplicate
+      // We filter by user_id and platform to narrow down the search space
+      // TODO: Optimize this for scalability. Currently fetching all user transactions for platform.
+      // Ideally, we should filter by the specific IDs we are trying to insert, e.g., using an $in query if supported,
+      // or filtering by the date range of the new transactions.
+      const existingRecs = await base44.asServiceRole.entities.RevenueTransaction.filter({
+        user_id: user.id,
+        platform: platform
+      });
+
+      const existingIds = new Set(existingRecs.map((t: any) => t.platform_transaction_id));
+      const newTransactions = transactions.filter((t: any) => !existingIds.has(t.platform_transaction_id));
+
+      duplicateCount = transactions.length - newTransactions.length;
+      savedCount = newTransactions.length;
+
+      if (newTransactions.length > 0) {
+        await base44.asServiceRole.entities.RevenueTransaction.bulkCreate(newTransactions);
+      }
     }
+
+    // Audit Log
+    logAudit({
+      action: 'sync_platform_data',
+      actor_id: user.id,
+      resource_id: connectionId,
+      resource_type: 'connected_platform',
+      status: 'success',
+      details: {
+        platform,
+        found_transactions: transactions.length,
+        synced_transactions: savedCount,
+        duplicates_ignored: duplicateCount,
+        duration_ms: Date.now() - startTime
+      }
+    });
 
     // Update connection status
     await base44.asServiceRole.entities.ConnectedPlatform.update(connectionId, {
@@ -212,21 +259,35 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.SyncHistory.update(syncHistoryId, {
       sync_completed_at: new Date().toISOString(),
       status: 'success',
-      transactions_synced: transactions.length,
+      transactions_synced: savedCount,
       duration_ms: duration
     });
 
     return Response.json({
       success: true,
-      transactionCount: transactions.length,
-      message: `Synced ${transactions.length} transactions from ${platform}`,
+      transactionCount: savedCount,
+      message: `Synced ${savedCount} transactions from ${platform}`,
       duration_ms: duration
     });
 
   } catch (error) {
-    console.error('Sync error:', error);
+    console.error('Sync error:', error); // Internal log
 
     const duration = Date.now() - startTime;
+
+    // Audit Log Failure
+    logAudit({
+      action: 'sync_platform_data_failed',
+      actor_id: user?.id,
+      resource_id: body?.connectionId,
+      resource_type: 'connected_platform',
+      status: 'failure',
+      details: {
+        platform: body?.platform,
+        error_message: error.message, // Safe for internal audit
+        duration_ms: duration
+      }
+    });
 
     // Update sync history with error
     if (syncHistoryId) {
@@ -245,7 +306,6 @@ Deno.serve(async (req) => {
 
     // Update connection status and send email notification
     try {
-      const body = await req.clone().json();
       if (body.connectionId) {
         const base44 = createClientFromRequest(req);
         await base44.asServiceRole.entities.ConnectedPlatform.update(body.connectionId, {
@@ -254,7 +314,6 @@ Deno.serve(async (req) => {
         });
         
         // Send sync failed email
-        const user = await base44.auth.me();
         if (user) {
           await base44.asServiceRole.functions.invoke('sendSyncFailedEmail', {
             userId: user.id,
@@ -264,9 +323,10 @@ Deno.serve(async (req) => {
         }
       }
     } catch (parseError) {
-      console.error('Failed to parse request body for error handling:', parseError);
+      console.error('Failed to handle error side-effects:', parseError);
     }
 
-    return Response.json({ error: error.message }, { status: 500 });
+    // Return generic error to client
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 });

@@ -1,15 +1,25 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { logAudit } from './utils/audit.ts';
 
 Deno.serve(async (req) => {
+  let user = null;
+  let body: any = {};
+
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    user = await base44.auth.me();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { receiptUrl } = await req.json();
+    try {
+      body = await req.json();
+    } catch(e) {
+      return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const { receiptUrl } = body;
 
     if (!receiptUrl) {
       return Response.json({ error: 'Receipt URL required' }, { status: 400 });
@@ -50,6 +60,17 @@ If you cannot determine something, use null.`;
       receiptUrl
     });
 
+    logAudit({
+        action: 'process_receipt',
+        actor_id: user.id,
+        status: 'success',
+        details: {
+            receiptUrl,
+            merchant: result.merchant,
+            amount: result.amount
+        }
+    });
+
     return Response.json({
       success: true,
       extracted: result,
@@ -58,6 +79,17 @@ If you cannot determine something, use null.`;
 
   } catch (error) {
     console.error('Receipt processing error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+
+    logAudit({
+        action: 'process_receipt_failed',
+        actor_id: user?.id,
+        status: 'failure',
+        details: {
+            error: error.message,
+            receiptUrl: body?.receiptUrl
+        }
+    });
+
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 });
