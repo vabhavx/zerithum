@@ -3,6 +3,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   const startTime = Date.now();
   let syncHistoryId = null;
+  let connectionId = null;
+  let platform = null;
   
   try {
     const base44 = createClientFromRequest(req);
@@ -12,7 +14,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { connectionId, platform } = await req.json();
+    const body = await req.json();
+    connectionId = body.connectionId;
+    platform = body.platform;
 
     if (!connectionId || !platform) {
       return Response.json({ error: 'Missing connectionId or platform' }, { status: 400 });
@@ -245,10 +249,9 @@ Deno.serve(async (req) => {
 
     // Update connection status and send email notification
     try {
-      const body = await req.clone().json();
-      if (body.connectionId) {
+      if (connectionId) {
         const base44 = createClientFromRequest(req);
-        await base44.asServiceRole.entities.ConnectedPlatform.update(body.connectionId, {
+        await base44.asServiceRole.entities.ConnectedPlatform.update(connectionId, {
           sync_status: 'error',
           error_message: error.message
         });
@@ -258,15 +261,16 @@ Deno.serve(async (req) => {
         if (user) {
           await base44.asServiceRole.functions.invoke('sendSyncFailedEmail', {
             userId: user.id,
-            platform: body.platform,
+            platform: platform,
             errorMessage: error.message
           });
         }
       }
     } catch (parseError) {
-      console.error('Failed to parse request body for error handling:', parseError);
+      console.error('Failed to update connection status on error:', parseError);
     }
 
-    return Response.json({ error: error.message }, { status: 500 });
+    // Sentinel: Don't leak error message to client
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 });

@@ -193,6 +193,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('OAuth callback error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    // Sentinel: Don't leak error message to client
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 });
