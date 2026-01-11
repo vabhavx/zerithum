@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ export default function Transactions() {
   });
 
   // Filter and sort transactions
-  const filteredTransactions = transactions
+  const filteredTransactions = useMemo(() => transactions
     .filter(t => {
       const matchesSearch = !searchTerm || 
         t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,7 +40,7 @@ export default function Transactions() {
       if (aVal < bVal) return -1 * modifier;
       if (aVal > bVal) return 1 * modifier;
       return 0;
-    });
+    }), [transactions, searchTerm, platformFilter, categoryFilter, statusFilter, sortField, sortDirection]);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -56,9 +56,9 @@ export default function Transactions() {
     return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
   };
 
-  const totalRevenue = filteredTransactions
+  const totalRevenue = useMemo(() => filteredTransactions
     .filter(t => t.status === 'completed')
-    .reduce((sum, t) => sum + (t.net_amount || t.amount), 0);
+    .reduce((sum, t) => sum + (t.net_amount || t.amount), 0), [filteredTransactions]);
 
   return (
     <div className="max-w-[1200px] mx-auto">
