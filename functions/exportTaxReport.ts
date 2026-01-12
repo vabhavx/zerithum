@@ -134,6 +134,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Tax report export error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 });
