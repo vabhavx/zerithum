@@ -106,6 +106,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, users_notified: users.length });
   } catch (error) {
     console.error('Daily digest error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 });
