@@ -30,7 +30,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function RevenueForecasting({ transactions }) {
+function RevenueForecasting({ transactions }) {
   const forecastData = useMemo(() => {
     if (!transactions.length) return [];
 
@@ -149,3 +149,5 @@ export default function RevenueForecasting({ transactions }) {
     </motion.div>
   );
 }
+
+export default React.memo(RevenueForecasting);

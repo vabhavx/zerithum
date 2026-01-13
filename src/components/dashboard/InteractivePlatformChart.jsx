@@ -50,7 +50,7 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function InteractivePlatformChart({ transactions }) {
+function InteractivePlatformChart({ transactions }) {
   const [chartType, setChartType] = useState('bar'); // 'bar' or 'pie'
 
   const platformData = useMemo(() => {
@@ -187,3 +187,5 @@ export default function InteractivePlatformChart({ transactions }) {
     </motion.div>
   );
 }
+
+export default React.memo(InteractivePlatformChart);
