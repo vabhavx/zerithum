@@ -1,6 +1,6 @@
 export interface SyncContext {
   fetchPlatformData: (url: string, headers: any) => Promise<any>;
-  fetchExistingTransactionIds: (userId: string, platform: string) => Promise<Set<string>>;
+  fetchExistingTransactionIds: (userId: string, platform: string, minDate?: string, maxDate?: string) => Promise<Set<string>>;
   saveTransactions: (transactions: any[]) => Promise<void>;
   logAudit: (entry: any) => void;
   updateConnectionStatus: (status: string, error?: string) => Promise<void>;
@@ -122,7 +122,16 @@ export async function syncPlatform(
     }
 
     if (transactions.length > 0) {
-      const existingIds = await ctx.fetchExistingTransactionIds(user.id, platform);
+      // Calculate date range for optimization
+      let minDate = transactions[0].transaction_date;
+      let maxDate = transactions[0].transaction_date;
+
+      for (const t of transactions) {
+        if (t.transaction_date < minDate) minDate = t.transaction_date;
+        if (t.transaction_date > maxDate) maxDate = t.transaction_date;
+      }
+
+      const existingIds = await ctx.fetchExistingTransactionIds(user.id, platform, minDate, maxDate);
       const newTransactions = transactions.filter((t: any) => !existingIds.has(t.platform_transaction_id));
 
       duplicateCount = transactions.length - newTransactions.length;

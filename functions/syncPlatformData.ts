@@ -72,11 +72,19 @@ Deno.serve(async (req) => {
         }
         return res.json();
       },
-      fetchExistingTransactionIds: async (userId: string, platform: string) => {
-        const existingRecs = await base44.asServiceRole.entities.RevenueTransaction.filter({
+      fetchExistingTransactionIds: async (userId: string, platform: string, minDate?: string, maxDate?: string) => {
+        const query: any = {
           user_id: userId,
           platform: platform
-        });
+        };
+
+        if (minDate || maxDate) {
+          query.transaction_date = {};
+          if (minDate) query.transaction_date.$gte = minDate;
+          if (maxDate) query.transaction_date.$lte = maxDate;
+        }
+
+        const existingRecs = await base44.asServiceRole.entities.RevenueTransaction.filter(query);
         return new Set(existingRecs.map((t: any) => t.platform_transaction_id));
       },
       saveTransactions: async (transactions: any[]) => {
