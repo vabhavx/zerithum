@@ -13,6 +13,23 @@ const SortIcon = ({ field, sortField, sortDirection }) => {
   return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
 };
 
+const SortableColumnHeader = ({ label, field, currentSortField, currentSortDirection, onSort }) => {
+  return (
+    <th
+      className="p-0 text-left text-xs font-semibold text-[#5E5240]"
+      aria-sort={currentSortField === field ? (currentSortDirection === 'asc' ? 'ascending' : 'descending') : undefined}
+    >
+      <button
+        onClick={() => onSort(field)}
+        className="flex items-center gap-1 w-full h-full py-4 px-4 hover:bg-[#5E5240]/10 focus-visible:bg-[#5E5240]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#208D9E] focus-visible:ring-inset"
+      >
+        {label}
+        <SortIcon field={field} sortField={currentSortField} sortDirection={currentSortDirection} />
+      </button>
+    </th>
+  );
+};
+
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState('');
   const [platformFilter, setPlatformFilter] = useState('all');
@@ -153,30 +170,27 @@ export default function Transactions() {
           <table className="w-full">
             <thead className="bg-[#5E5240]/5">
               <tr>
-                <th 
-                  onClick={() => handleSort('transaction_date')}
-                  className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240] cursor-pointer hover:bg-[#5E5240]/10"
-                >
-                  <div className="flex items-center gap-1">
-                    Date <SortIcon field="transaction_date" sortField={sortField} sortDirection={sortDirection} />
-                  </div>
-                </th>
-                <th 
-                  onClick={() => handleSort('platform')}
-                  className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240] cursor-pointer hover:bg-[#5E5240]/10"
-                >
-                  <div className="flex items-center gap-1">
-                    Platform <SortIcon field="platform" sortField={sortField} sortDirection={sortDirection} />
-                  </div>
-                </th>
-                <th 
-                  onClick={() => handleSort('amount')}
-                  className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240] cursor-pointer hover:bg-[#5E5240]/10"
-                >
-                  <div className="flex items-center gap-1">
-                    Amount <SortIcon field="amount" sortField={sortField} sortDirection={sortDirection} />
-                  </div>
-                </th>
+                <SortableColumnHeader
+                  label="Date"
+                  field="transaction_date"
+                  currentSortField={sortField}
+                  currentSortDirection={sortDirection}
+                  onSort={handleSort}
+                />
+                <SortableColumnHeader
+                  label="Platform"
+                  field="platform"
+                  currentSortField={sortField}
+                  currentSortDirection={sortDirection}
+                  onSort={handleSort}
+                />
+                <SortableColumnHeader
+                  label="Amount"
+                  field="amount"
+                  currentSortField={sortField}
+                  currentSortDirection={sortDirection}
+                  onSort={handleSort}
+                />
                 <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Category</th>
                 <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Status</th>
                 <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Actions</th>
