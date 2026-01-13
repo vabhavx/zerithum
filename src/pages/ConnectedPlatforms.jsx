@@ -113,6 +113,7 @@ const PLATFORMS = [
 export default function ConnectedPlatforms() {
   const [showConnectDialog, setShowConnectDialog] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState(null);
+  const [disconnectPlatform, setDisconnectPlatform] = useState(null);
   const [selectedHistoryPlatform, setSelectedHistoryPlatform] = useState(null);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [apiKey, setApiKey] = useState("");
@@ -146,6 +147,7 @@ export default function ConnectedPlatforms() {
     onSuccess: () => {
       queryClient.invalidateQueries(["connectedPlatforms"]);
       toast.success("Platform disconnected successfully");
+      setDisconnectPlatform(null);
     },
   });
 
@@ -489,6 +491,7 @@ export default function ConnectedPlatforms() {
                         size="icon"
                         onClick={() => handleViewHistory(connection)}
                         className="text-white/40 hover:text-blue-400 hover:bg-white/5 transition-colors h-8 w-8"
+                        aria-label={`View sync history for ${platform.name}`}
                       >
                         <FileText className="w-3.5 h-3.5" />
                       </Button>
@@ -498,6 +501,7 @@ export default function ConnectedPlatforms() {
                         onClick={() => handleSync(connection.id)}
                         disabled={isSyncing || connection.sync_status === "syncing"}
                         className="text-white/40 hover:text-indigo-400 hover:bg-white/5 transition-colors h-8 w-8"
+                        aria-label={`Sync ${platform.name} data`}
                       >
                         <RefreshCw className={cn("w-3.5 h-3.5", (isSyncing || connection.sync_status === "syncing") && "animate-spin")} />
                       </Button>
@@ -505,12 +509,9 @@ export default function ConnectedPlatforms() {
                         variant="ghost"
                         size="icon"
                         className="text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors h-8 w-8"
-                        onClick={() => {
-                          if (window.confirm(`Disconnect ${platform.name}? This will stop syncing revenue data.`)) {
-                            disconnectMutation.mutate(connection.id);
-                          }
-                        }}
+                        onClick={() => setDisconnectPlatform({ id: connection.id, name: platform.name })}
                         disabled={disconnectMutation.isPending}
+                        aria-label={`Disconnect ${platform.name}`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -639,6 +640,33 @@ export default function ConnectedPlatforms() {
         open={showHistoryDialog}
         onOpenChange={setShowHistoryDialog}
       />
+
+      <Dialog open={!!disconnectPlatform} onOpenChange={(open) => !open && setDisconnectPlatform(null)}>
+        <DialogContent className="card-modern rounded-2xl border max-w-md !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-white">Disconnect {disconnectPlatform?.name}?</DialogTitle>
+            <DialogDescription className="text-white/60">
+              This will stop syncing revenue data from {disconnectPlatform?.name}. Your existing history will be preserved.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setDisconnectPlatform(null)}
+              className="rounded-lg border-white/10 text-white/70 hover:bg-white/5"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => disconnectMutation.mutate(disconnectPlatform.id)}
+              disabled={disconnectMutation.isPending}
+              className="rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20"
+            >
+              {disconnectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Disconnect"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Sync History */}
       {syncHistory.length > 0 && (
