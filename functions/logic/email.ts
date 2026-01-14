@@ -1,16 +1,11 @@
 
+import { escapeHtml } from '../utils/html.ts';
+
+export { escapeHtml };
+
 export interface EmailContext {
   getUser: (userId: string) => Promise<{ id: string; email: string; full_name?: string } | null>;
   sendEmail: (to: string, subject: string, body: string) => Promise<void>;
-}
-
-export function escapeHtml(unsafe: string): string {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }
 
 export async function sendSyncFailedEmailLogic(
