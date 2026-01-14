@@ -43,6 +43,7 @@ const TransactionRow = React.memo(({ transaction, isExpanded, onToggleExpand }) 
               onToggleExpand(transaction.id);
             }}
             className="btn-secondary text-xs"
+            aria-label={`${isExpanded ? 'Hide' : 'Show'} details for ${transaction.platform} transaction on ${moment(transaction.transaction_date).format('MMM D, YYYY')}`}
           >
             {isExpanded ? 'Hide' : 'Details'}
           </Button>
