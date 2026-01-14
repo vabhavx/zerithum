@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import PlatformCard from '../components/PlatformCard';
+import PlatformCard from '@/components/PlatformCard';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,8 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-
-const PLATFORMS = ['youtube', 'patreon', 'gumroad', 'stripe', 'instagram', 'tiktok'];
+import { PLATFORMS } from "@/lib/platforms";
 
 export default function Platforms() {
   const [user, setUser] = useState(null);
@@ -118,7 +117,8 @@ export default function Platforms() {
     }
   });
 
-  const handleConnect = (platform) => {
+  const handleConnect = (platformOrObj) => {
+    const platform = platformOrObj.id || platformOrObj;
     // Check plan limits
     if (user?.plan_tier === 'free') {
       const activeConnections = connections.filter(c => 
@@ -137,13 +137,14 @@ export default function Platforms() {
     syncMutation.mutate(platform);
   };
 
-  const handleDisconnect = (platform) => {
-    setDisconnectPlatform(platform);
+  const handleDisconnect = (data) => {
+    setDisconnectPlatform(data);
   };
 
   const confirmDisconnect = () => {
     if (disconnectPlatform) {
-      disconnectMutation.mutate(disconnectPlatform);
+      const platform = disconnectPlatform.platform || disconnectPlatform;
+      disconnectMutation.mutate(platform);
     }
   };
 
@@ -167,9 +168,9 @@ export default function Platforms() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {PLATFORMS.map((platform) => (
           <PlatformCard
-            key={platform}
+            key={platform.id}
             platform={platform}
-            connection={getConnectionForPlatform(platform)}
+            connection={getConnectionForPlatform(platform.id)}
             onConnect={handleConnect}
             onSync={handleSync}
             onDisconnect={handleDisconnect}
@@ -181,7 +182,7 @@ export default function Platforms() {
       <Dialog open={!!disconnectPlatform} onOpenChange={(open) => !open && setDisconnectPlatform(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Disconnect {disconnectPlatform?.charAt(0).toUpperCase() + disconnectPlatform?.slice(1)}?</DialogTitle>
+            <DialogTitle>Disconnect {disconnectPlatform?.name || disconnectPlatform}?</DialogTitle>
             <DialogDescription>
               Your earnings history stays. You can reconnect anytime.
             </DialogDescription>

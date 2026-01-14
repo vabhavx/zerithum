@@ -60,6 +60,13 @@ describe('syncPlatform', () => {
 
     const result = await syncPlatform(mockCtx, mockUser, connectionId, platform, oauthToken);
 
+    expect(mockCtx.fetchExistingTransactionIds).toHaveBeenCalledWith(
+      mockUser.id,
+      platform,
+      '2024-01-01',
+      '2024-01-02'
+    );
+
     expect(result.transactionCount).toBe(1);
     expect(mockCtx.saveTransactions).toHaveBeenCalledWith([
       expect.objectContaining({
