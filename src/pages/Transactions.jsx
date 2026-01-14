@@ -222,7 +222,7 @@ export default function Transactions() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="py-12 text-center text-[#5E5240]/40">
+                  <td colSpan={6} className="py-12 text-center text-[#5E5240]/40">
                     No transactions found. Try adjusting your filters.
                   </td>
                 </tr>

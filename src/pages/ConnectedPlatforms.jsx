@@ -3,27 +3,17 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { 
-  Youtube, 
-  Users, 
-  CircleDollarSign, 
-  ShoppingBag, 
-  Instagram,
-  Music,
   Plus,
-  Check,
-  AlertCircle,
-  Clock,
-  RefreshCw,
-  Trash2,
   ExternalLink,
   Loader2,
   Key,
   History,
-  FileText
+  RefreshCw
 } from "lucide-react";
 import PlatformSyncHistory from "../components/platform/PlatformSyncHistory";
 import MotivationalQuote from "../components/shared/MotivationalQuote";
 import SuccessConfetti from "../components/shared/SuccessConfetti";
+import PlatformCard from "@/components/PlatformCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,78 +27,7 @@ import {
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-const PLATFORMS = [
-  {
-    id: "youtube",
-    name: "YouTube",
-    icon: Youtube,
-    color: "bg-red-500/10 border-red-500/20 text-red-400",
-    description: "Track ad revenue, memberships, and Super Chat earnings",
-    oauthUrl: "https://accounts.google.com/o/oauth2/v2/auth",
-    scope: "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
-    requiresApiKey: false,
-    clientId: "985180453886-pof8b9qoqf1a7cha901khhg9lk7548b4.apps.googleusercontent.com"
-  },
-  {
-    id: "patreon",
-    name: "Patreon",
-    icon: Users,
-    color: "bg-rose-500/10 border-rose-500/20 text-rose-400",
-    description: "Sync pledges, membership tiers, and patron data",
-    oauthUrl: "https://www.patreon.com/oauth2/authorize",
-    scope: "identity identity[email] campaigns campaigns.members",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
-    requiresApiKey: false,
-    clientId: "i1ircOfqA2eD5ChN4-d6uElxt4vjWzIEv4vCfj0K_92LqilSM5OA_dJS24uFjiTR"
-  },
-  {
-    id: "gumroad",
-    name: "Gumroad",
-    icon: ShoppingBag,
-    color: "bg-pink-500/10 border-pink-500/20 text-pink-400",
-    description: "Import product sales, subscriptions, and license data",
-    requiresApiKey: true,
-    validationUrl: "https://api.gumroad.com/v2/user"
-  },
-  {
-    id: "stripe",
-    name: "Stripe",
-    icon: CircleDollarSign,
-    color: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
-    description: "Connect payments, subscriptions, and payout data",
-    oauthUrl: "https://connect.stripe.com/oauth/authorize",
-    scope: "read_write",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
-    requiresApiKey: false,
-    clientId: "YOUR_STRIPE_CLIENT_ID"
-  },
-  {
-    id: "instagram",
-    name: "Instagram",
-    icon: Instagram,
-    color: "bg-purple-500/10 border-purple-500/20 text-purple-400",
-    description: "Pull revenue from Instagram Insights and monetization",
-    oauthUrl: "https://www.facebook.com/v20.0/dialog/oauth",
-    scope: "instagram_basic,instagram_manage_insights,pages_read_engagement",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
-    requiresApiKey: false,
-    clientId: "YOUR_META_APP_ID"
-  },
-  {
-    id: "tiktok",
-    name: "TikTok",
-    icon: Music,
-    color: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
-    description: "Track Creator Fund earnings and video insights",
-    oauthUrl: "https://www.tiktok.com/v2/auth/authorize/",
-    scope: "video.list,user.info.basic,video.insights",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
-    requiresApiKey: false,
-    clientKey: "YOUR_TIKTOK_CLIENT_KEY"
-  }
-];
+import { PLATFORMS } from "@/lib/platforms";
 
 export default function ConnectedPlatforms() {
   const [showConnectDialog, setShowConnectDialog] = useState(false);
@@ -316,50 +235,6 @@ export default function ConnectedPlatforms() {
     setShowHistoryDialog(true);
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "active":
-        return <Check className="w-3.5 h-3.5" />;
-      case "syncing":
-        return <Loader2 className="w-3.5 h-3.5 animate-spin" />;
-      case "error":
-        return <AlertCircle className="w-3.5 h-3.5" />;
-      case "stale":
-        return <Clock className="w-3.5 h-3.5" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "active":
-        return "Synced";
-      case "syncing":
-        return "Syncing...";
-      case "error":
-        return "Error";
-      case "stale":
-        return "Stale";
-      default:
-        return "Unknown";
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "active":
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-      case "syncing":
-        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
-      case "error":
-        return "bg-red-500/10 text-red-400 border-red-500/20";
-      case "stale":
-        return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-      default:
-        return "bg-white/5 text-white/40 border-white/10";
-    }
-  };
 
   const connectedIds = connectedPlatforms.map(p => p.platform);
   const availablePlatforms = PLATFORMS.filter(p => !connectedIds.includes(p.id));
@@ -431,95 +306,18 @@ export default function ConnectedPlatforms() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-            {connectedPlatforms.map((connection) => {
-              const platform = PLATFORMS.find(p => p.id === connection.platform);
-              if (!platform) return null;
-              const Icon = platform.icon;
-              const isSyncing = syncingPlatform === connection.id;
-
-              return (
-                <motion.div
-                  key={connection.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="card-modern rounded-xl p-5 cursor-default"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "w-12 h-12 rounded-lg flex items-center justify-center border relative",
-                      platform.color
-                    )}>
-                      <Icon className="w-5 h-5" />
-                      {connection.sync_status === "active" && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center border border-[#0A0A0A]"
-                        >
-                          <Check className="w-2.5 h-2.5 text-white" />
-                        </motion.div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-white text-sm">{platform.name}</h3>
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className={cn(
-                            "flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border",
-                            getStatusColor(connection.sync_status)
-                          )}
-                        >
-                          {getStatusIcon(connection.sync_status)}
-                          <span>{getStatusLabel(connection.sync_status)}</span>
-                        </motion.div>
-                      </div>
-                      <p className="text-xs text-white/40">
-                        Connected {format(new Date(connection.connected_at), "MMM d, yyyy")}
-                        {connection.last_synced_at && connection.sync_status !== "syncing" && (
-                          <> · {format(new Date(connection.last_synced_at), "MMM d, h:mm a")}</>
-                        )}
-                      </p>
-                      {connection.error_message && connection.sync_status === "error" && (
-                        <p className="text-xs text-red-400 mt-1">{connection.error_message}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleViewHistory(connection)}
-                        className="text-white/40 hover:text-blue-400 hover:bg-white/5 transition-colors h-8 w-8"
-                        aria-label={`View sync history for ${platform.name}`}
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleSync(connection.id)}
-                        disabled={isSyncing || connection.sync_status === "syncing"}
-                        className="text-white/40 hover:text-indigo-400 hover:bg-white/5 transition-colors h-8 w-8"
-                        aria-label={`Sync ${platform.name} data`}
-                      >
-                        <RefreshCw className={cn("w-3.5 h-3.5", (isSyncing || connection.sync_status === "syncing") && "animate-spin")} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors h-8 w-8"
-                        onClick={() => setDisconnectPlatform({ id: connection.id, name: platform.name })}
-                        disabled={disconnectMutation.isPending}
-                        aria-label={`Disconnect ${platform.name}`}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {connectedPlatforms.map((connection) => (
+              <PlatformCard
+                key={connection.id}
+                platform={connection.platform}
+                connection={connection}
+                onViewHistory={handleViewHistory}
+                onSync={handleSync}
+                onDisconnect={setDisconnectPlatform}
+                isSyncing={syncingPlatform === connection.id}
+                isDisconnecting={disconnectMutation.isPending && disconnectPlatform?.id === connection.id}
+              />
+            ))}
           </div>
       )}
 

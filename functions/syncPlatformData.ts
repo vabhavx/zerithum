@@ -72,10 +72,11 @@ Deno.serve(async (req) => {
         }
         return res.json();
       },
-      fetchExistingTransactionIds: async (userId: string, platform: string) => {
+      fetchExistingTransactionIds: async (userId: string, platform: string, minDate: string, maxDate: string) => {
         const existingRecs = await base44.asServiceRole.entities.RevenueTransaction.filter({
           user_id: userId,
-          platform: platform
+          platform: platform,
+          transaction_date: { $gte: minDate, $lte: maxDate }
         });
         return new Set(existingRecs.map((t: any) => t.platform_transaction_id));
       },
