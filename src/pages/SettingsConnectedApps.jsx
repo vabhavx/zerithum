@@ -129,6 +129,7 @@ export default function SettingsConnectedApps() {
                             variant="outline"
                             onClick={() => handleRefresh(connection)}
                             className="text-xs"
+                            aria-label={`Refresh ${platformNames[platform]} connection`}
                           >
                             <RotateCw className="w-3 h-3 mr-1" />
                             Refresh
@@ -138,6 +139,7 @@ export default function SettingsConnectedApps() {
                             variant="outline"
                             onClick={() => handleDisconnect(connection)}
                             className="text-xs text-[#C0152F] hover:bg-[#C0152F]/10"
+                            aria-label={`Disconnect ${platformNames[platform]}`}
                           >
                             <Unplug className="w-3 h-3 mr-1" />
                             Disconnect
@@ -145,7 +147,7 @@ export default function SettingsConnectedApps() {
                         </>
                       ) : (
                         <Link to={createPageUrl("ConnectedPlatforms")}>
-                          <Button size="sm" className="btn-primary text-xs">
+                          <Button size="sm" className="btn-primary text-xs" aria-label={`Connect ${platformNames[platform]}`}>
                             Connect
                           </Button>
                         </Link>
@@ -168,7 +170,7 @@ export default function SettingsConnectedApps() {
               <p className="font-medium text-[#5E5240]">Auto-sync Frequency</p>
               <p className="text-sm text-[#5E5240]/60">How often to sync data automatically</p>
             </div>
-            <select className="px-4 py-2 border border-[#5E5240]/20 rounded-lg text-sm">
+            <select className="px-4 py-2 border border-[#5E5240]/20 rounded-lg text-sm" aria-label="Auto-sync Frequency">
               <option value="daily">Daily (6 AM UTC)</option>
               <option value="6-hourly">Every 6 Hours</option>
               <option value="never">Never (Manual Only)</option>
@@ -181,7 +183,7 @@ export default function SettingsConnectedApps() {
               <p className="text-sm text-[#5E5240]/60">Email reminder when tokens expire soon</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <input type="checkbox" className="sr-only peer" defaultChecked aria-label="Expiry Notifications" />
               <div className="w-11 h-6 bg-[#5E5240]/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#208D9E]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#208D9E]"></div>
             </label>
           </div>

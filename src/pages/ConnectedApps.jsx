@@ -121,11 +121,17 @@ export default function ConnectedApps() {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center justify-end gap-2">
-                          <Button className="btn-secondary text-xs">
+                          <Button
+                            className="btn-secondary text-xs"
+                            aria-label={`Refresh ${config.name} connection`}
+                          >
                             <RefreshCw className="w-3 h-3 mr-1" />
                             Refresh
                           </Button>
-                          <Button className="btn-secondary text-xs text-[#C0152F] border-[#C0152F] hover:bg-[#C0152F]/5">
+                          <Button
+                            className="btn-secondary text-xs text-[#C0152F] border-[#C0152F] hover:bg-[#C0152F]/5"
+                            aria-label={`Disconnect ${config.name}`}
+                          >
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
@@ -169,7 +175,7 @@ export default function ConnectedApps() {
                     <td className="py-4 px-4">
                       <div className="flex items-center justify-end">
                         <Link to={createPageUrl('Platforms')}>
-                          <Button className="btn-primary text-xs">Connect</Button>
+                          <Button className="btn-primary text-xs" aria-label={`Connect ${config.name}`}>Connect</Button>
                         </Link>
                       </div>
                     </td>
@@ -190,7 +196,7 @@ export default function ConnectedApps() {
               <div className="font-medium text-[#5E5240]">Auto-sync frequency</div>
               <div className="text-sm text-[#5E5240]/60">How often to sync your platforms</div>
             </div>
-            <select className="input-clay">
+            <select className="input-clay" aria-label="Auto-sync frequency">
               <option>Daily (recommended)</option>
               <option>Every 6 hours</option>
               <option>Never (manual only)</option>
@@ -202,7 +208,12 @@ export default function ConnectedApps() {
               <div className="font-medium text-[#5E5240]">Notify when token expires</div>
               <div className="text-sm text-[#5E5240]/60">Get email reminders 7 days before expiry</div>
             </div>
-            <input type="checkbox" className="w-5 h-5" defaultChecked />
+            <input
+              type="checkbox"
+              className="w-5 h-5"
+              defaultChecked
+              aria-label="Notify when token expires"
+            />
           </div>
 
           <div className="pt-4 border-t border-[#5E524012]">
