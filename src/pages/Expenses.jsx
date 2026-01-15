@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -9,7 +9,6 @@ import {
   TrendingDown,
   Loader2,
   CheckCircle2,
-  Trash2,
   FileSpreadsheet,
   Bot
 } from "lucide-react";
@@ -25,19 +24,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-const CATEGORIES = {
-  software_subscriptions: { label: "Software & Subscriptions", icon: "💻", color: "bg-blue-500/10 text-blue-400" },
-  equipment: { label: "Equipment", icon: "🖥️", color: "bg-purple-500/10 text-purple-400" },
-  marketing: { label: "Marketing", icon: "📢", color: "bg-pink-500/10 text-pink-400" },
-  professional_services: { label: "Professional Services", icon: "⚖️", color: "bg-indigo-500/10 text-indigo-400" },
-  office_supplies: { label: "Office Supplies", icon: "📎", color: "bg-green-500/10 text-green-400" },
-  travel: { label: "Travel", icon: "✈️", color: "bg-amber-500/10 text-amber-400" },
-  education: { label: "Education", icon: "📚", color: "bg-cyan-500/10 text-cyan-400" },
-  internet_phone: { label: "Internet & Phone", icon: "📱", color: "bg-teal-500/10 text-teal-400" },
-  rent_utilities: { label: "Rent & Utilities", icon: "🏢", color: "bg-orange-500/10 text-orange-400" },
-  other: { label: "Other", icon: "📦", color: "bg-gray-500/10 text-gray-400" }
-};
+import { CATEGORIES } from "@/lib/expenseCategories";
+import ExpenseRow from "@/components/expense/ExpenseRow";
 
 export default function Expenses() {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -84,6 +72,12 @@ export default function Expenses() {
       toast.success("Expense deleted");
     },
   });
+
+  const handleDelete = useCallback((id) => {
+    if (confirm("Delete this expense?")) {
+      deleteExpenseMutation.mutate(id);
+    }
+  }, [deleteExpenseMutation.mutate]);
 
   const resetForm = () => {
     setFormData({
@@ -310,49 +304,14 @@ export default function Expenses() {
           </div>
         ) : (
           <div className="space-y-2">
-            {expenses.map((expense) => {
-              const category = CATEGORIES[expense.category];
-              return (
-                <motion.div
-                  key={expense.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors"
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center text-lg", category.color)}>
-                      {category.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-white font-medium text-sm">{expense.merchant || expense.description}</p>
-                        {expense.is_tax_deductible && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400">
-                            {expense.deduction_percentage}% deductible
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-white/40 text-xs">{format(new Date(expense.expense_date), "MMM d, yyyy")} · {category.label}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <p className="text-white font-semibold">${expense.amount.toFixed(2)}</p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (confirm("Delete this expense?")) {
-                          deleteExpenseMutation.mutate(expense.id);
-                        }
-                      }}
-                      className="text-white/40 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {expenses.map((expense) => (
+              <ExpenseRow
+                key={expense.id}
+                expense={expense}
+                category={CATEGORIES[expense.category]}
+                onDelete={handleDelete}
+              />
+            ))}
           </div>
         )}
       </div>
