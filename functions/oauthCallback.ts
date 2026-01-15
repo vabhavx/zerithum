@@ -15,7 +15,8 @@ Deno.serve(async (req) => {
     const error = url.searchParams.get('error');
 
     if (error) {
-      return Response.json({ error: `OAuth error: ${error}` }, { status: 400 });
+      console.error(`OAuth error param: ${error}`);
+      return Response.json({ error: 'OAuth provider reported an error' }, { status: 400 });
     }
 
     if (!code || !state) {
@@ -47,7 +48,8 @@ Deno.serve(async (req) => {
 
         if (!tokenResponse.ok) {
           const errorData = await tokenResponse.text();
-          throw new Error(`YouTube token exchange failed: ${errorData}`);
+          console.error(`YouTube token exchange failed: ${errorData}`);
+          throw new Error('Token exchange failed');
         }
 
         tokenData = await tokenResponse.json();
@@ -71,7 +73,9 @@ Deno.serve(async (req) => {
         });
 
         if (!tokenResponse.ok) {
-          throw new Error('Patreon token exchange failed');
+          const errorData = await tokenResponse.text();
+          console.error(`Patreon token exchange failed: ${errorData}`);
+          throw new Error('Token exchange failed');
         }
 
         tokenData = await tokenResponse.json();
@@ -93,7 +97,9 @@ Deno.serve(async (req) => {
         });
 
         if (!tokenResponse.ok) {
-          throw new Error('Stripe token exchange failed');
+          const errorData = await tokenResponse.text();
+          console.error(`Stripe token exchange failed: ${errorData}`);
+          throw new Error('Token exchange failed');
         }
 
         tokenData = await tokenResponse.json();
@@ -103,11 +109,6 @@ Deno.serve(async (req) => {
       case 'instagram': {
         const clientId = Deno.env.get('INSTAGRAM_CLIENT_ID');
         const clientSecret = Deno.env.get('INSTAGRAM_CLIENT_SECRET');
-
-        const tokenResponse = await fetch('https://graph.facebook.com/v20.0/oauth/access_token', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
 
         const params = new URLSearchParams({
           client_id: clientId,
@@ -119,7 +120,9 @@ Deno.serve(async (req) => {
         const instagramTokenResponse = await fetch(`https://graph.facebook.com/v20.0/oauth/access_token?${params}`);
 
         if (!instagramTokenResponse.ok) {
-          throw new Error('Instagram token exchange failed');
+          const errorData = await instagramTokenResponse.text();
+          console.error(`Instagram token exchange failed: ${errorData}`);
+          throw new Error('Token exchange failed');
         }
 
         tokenData = await instagramTokenResponse.json();
@@ -143,7 +146,9 @@ Deno.serve(async (req) => {
         });
 
         if (!tokenResponse.ok) {
-          throw new Error('TikTok token exchange failed');
+          const errorData = await tokenResponse.text();
+          console.error(`TikTok token exchange failed: ${errorData}`);
+          throw new Error('Token exchange failed');
         }
 
         const tiktokData = await tokenResponse.json();
@@ -193,6 +198,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('OAuth callback error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 });
