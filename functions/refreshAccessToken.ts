@@ -1,19 +1,23 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const REFRESH_CONFIG = {
+const REFRESH_CONFIG: Record<string, {
+  tokenUrl: string;
+  clientId?: string;
+  clientSecretEnv: string;
+}> = {
   youtube: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    clientId: '985180453886-8qbvanuid2ifpdoq84culbg4gta83rbn.apps.googleusercontent.com',
+    clientId: Deno.env.get('GOOGLE_CLIENT_ID'),
     clientSecretEnv: 'GOOGLE_CLIENT_SECRET'
   },
   patreon: {
     tokenUrl: 'https://www.patreon.com/api/oauth2/token',
-    clientId: 'i1ircOfqA2eD5ChN4-d6uElxt4vjWzIEv4vCfj0K_92LqilSM5OA_dJS24uFjiTR',
+    clientId: Deno.env.get('PATREON_CLIENT_ID'),
     clientSecretEnv: 'PATREON_CLIENT_SECRET'
   },
   stripe: {
     tokenUrl: 'https://connect.stripe.com/oauth/token',
-    clientId: 'YOUR_STRIPE_CLIENT_ID',
+    clientId: Deno.env.get('STRIPE_CLIENT_ID'),
     clientSecretEnv: 'STRIPE_CLIENT_SECRET'
   }
 };
@@ -56,8 +60,16 @@ Deno.serve(async (req) => {
 
     const clientSecret = Deno.env.get(config.clientSecretEnv);
     if (!clientSecret) {
+      console.error(`Missing client secret for ${connection.platform}`);
       return Response.json({ 
-        error: `OAuth not configured for ${connection.platform}` 
+        error: 'OAuth configuration error'
+      }, { status: 500 });
+    }
+
+    if (!config.clientId) {
+      console.error(`Missing client ID for ${connection.platform}`);
+      return Response.json({
+        error: 'OAuth configuration error'
       }, { status: 500 });
     }
 
@@ -76,10 +88,10 @@ Deno.serve(async (req) => {
     });
 
     if (!refreshResponse.ok) {
-      const errorData = await refreshResponse.json();
+      const errorData = await refreshResponse.text();
+      console.error('Token refresh failed:', errorData);
       return Response.json({ 
-        error: 'Failed to refresh token', 
-        details: errorData 
+        error: 'Failed to refresh token'
       }, { status: 400 });
     }
 
@@ -103,6 +115,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Token refresh error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 });
