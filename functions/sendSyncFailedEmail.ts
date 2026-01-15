@@ -1,7 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { sendSyncFailedEmailLogic, EmailContext } from './logic/email.ts';
+import { validateCronSecret } from './utils/security.ts';
+import { logAudit } from './utils/audit.ts';
 
-Deno.serve(async (req) => {
+Deno.serve(async (req, info) => {
+  // 0. Security Check
+  const cronSecret = Deno.env.get('CRON_SECRET');
+  const authHeader = req.headers.get('Authorization');
+
+  if (!validateCronSecret(authHeader, cronSecret)) {
+    logAudit({
+      action: 'sendSyncFailedEmail',
+      status: 'failure',
+      details: { error: 'Unauthorized', ip: info.remoteAddr.hostname || 'unknown' }
+    });
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: any;
   try {
     // 1. Safe JSON parsing
