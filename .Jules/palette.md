@@ -5,3 +5,7 @@
 ## 2025-05-24 - Accessible Table Headers
 **Learning:** `<th>` elements with `onClick` are not keyboard accessible by default, preventing keyboard users from sorting tables.
 **Action:** Wrap header content in a `<button>` inside the `<th>`. Use `aria-sort` on the `th` to indicate sort direction, and ensure the button has focus styles.
+
+## 2026-01-16 - Implicit Form Labeling
+**Learning:** Using `Label` components near inputs without explicit `htmlFor` and `id` linking breaks accessibility for screen readers and reduces hit area for mouse users.
+**Action:** Always assign unique `id`s to inputs/triggers and use `htmlFor` on `Label` components to programmatically link them.

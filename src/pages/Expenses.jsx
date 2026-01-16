@@ -346,6 +346,7 @@ export default function Expenses() {
                         }
                       }}
                       className="text-white/40 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+                      aria-label={`Delete expense from ${expense.merchant || expense.description || 'unknown'}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
@@ -365,9 +366,10 @@ export default function Expenses() {
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-4">
             <div className="rounded-lg p-4 bg-white/[0.02] border border-white/5">
-              <Label className="text-white/60 mb-2 block text-sm">Upload Receipt (Optional)</Label>
+              <Label htmlFor="receipt-upload" className="text-white/60 mb-2 block text-sm">Upload Receipt (Optional)</Label>
               <div className="flex gap-2">
                 <Input
+                  id="receipt-upload"
                   type="file"
                   accept="image/*"
                   onChange={handleReceiptUpload}
@@ -385,8 +387,9 @@ export default function Expenses() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-white/60 mb-2 block text-sm">Amount *</Label>
+                <Label htmlFor="expense-amount" className="text-white/60 mb-2 block text-sm">Amount *</Label>
                 <Input
+                  id="expense-amount"
                   type="number"
                   step="0.01"
                   value={formData.amount}
@@ -397,8 +400,9 @@ export default function Expenses() {
                 />
               </div>
               <div>
-                <Label className="text-white/60 mb-2 block text-sm">Date *</Label>
+                <Label htmlFor="expense-date" className="text-white/60 mb-2 block text-sm">Date *</Label>
                 <Input
+                  id="expense-date"
                   type="date"
                   value={formData.expense_date}
                   onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })}
@@ -409,8 +413,9 @@ export default function Expenses() {
             </div>
 
             <div>
-              <Label className="text-white/60 mb-2 block text-sm">Merchant</Label>
+              <Label htmlFor="expense-merchant" className="text-white/60 mb-2 block text-sm">Merchant</Label>
               <Input
+                id="expense-merchant"
                 value={formData.merchant}
                 onChange={(e) => setFormData({ ...formData, merchant: e.target.value })}
                 placeholder="Amazon, Adobe, etc."
@@ -419,8 +424,9 @@ export default function Expenses() {
             </div>
 
             <div>
-              <Label className="text-white/60 mb-2 block text-sm">Description</Label>
+              <Label htmlFor="expense-description" className="text-white/60 mb-2 block text-sm">Description</Label>
               <Textarea
+                id="expense-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="What was this expense for?"
@@ -431,7 +437,7 @@ export default function Expenses() {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label className="text-white/60 text-sm">Category</Label>
+                <Label htmlFor="expense-category" className="text-white/60 text-sm">Category</Label>
                 <Button
                   type="button"
                   onClick={handleAICategorize}
@@ -447,7 +453,7 @@ export default function Expenses() {
                 </Button>
               </div>
               <Select value={formData.category} onValueChange={(val) => setFormData({ ...formData, category: val })}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                <SelectTrigger id="expense-category" className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -462,8 +468,9 @@ export default function Expenses() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-white/60 mb-2 block text-sm">Tax Deductible %</Label>
+                <Label htmlFor="expense-deduction" className="text-white/60 mb-2 block text-sm">Tax Deductible %</Label>
                 <Input
+                  id="expense-deduction"
                   type="number"
                   min="0"
                   max="100"
@@ -473,9 +480,9 @@ export default function Expenses() {
                 />
               </div>
               <div>
-                <Label className="text-white/60 mb-2 block text-sm">Payment Method</Label>
+                <Label htmlFor="expense-payment-method" className="text-white/60 mb-2 block text-sm">Payment Method</Label>
                 <Select value={formData.payment_method} onValueChange={(val) => setFormData({ ...formData, payment_method: val })}>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectTrigger id="expense-payment-method" className="bg-white/5 border-white/10 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
