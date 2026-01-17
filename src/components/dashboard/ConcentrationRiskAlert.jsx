@@ -32,6 +32,7 @@ export default function ConcentrationRiskAlert({ platform, percentage, onDismiss
             size="icon"
             className="text-amber-400 hover:bg-amber-500/20 -mt-1 -mr-1 h-8 w-8"
             onClick={onDismiss}
+            aria-label="Dismiss risk alert"
           >
             <X className="w-3.5 h-3.5" />
           </Button>

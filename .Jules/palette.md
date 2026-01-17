@@ -9,3 +9,7 @@
 ## 2026-01-16 - Implicit Form Labeling
 **Learning:** Using `Label` components near inputs without explicit `htmlFor` and `id` linking breaks accessibility for screen readers and reduces hit area for mouse users.
 **Action:** Always assign unique `id`s to inputs/triggers and use `htmlFor` on `Label` components to programmatically link them.
+
+## 2025-05-25 - Dashboard Alerts
+**Learning:** Dismissible alerts and panels in dashboards often use icon-only "X" buttons that lack accessible labels, leaving screen reader users stuck in a list of "button" announcements.
+**Action:** Always add `aria-label="Dismiss alert"` (or specific context like "Dismiss risk warning") to these icon-only close buttons.

@@ -49,6 +49,7 @@ export default function AlertBanner({ alerts = [], onDismiss }) {
               <button
                 onClick={() => onDismiss(alert.id)}
                 className="ml-4 p-1 hover:bg-white/10 rounded transition-colors"
+                aria-label="Dismiss alert"
               >
                 <X className="w-4 h-4" />
               </button>
