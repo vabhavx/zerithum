@@ -516,9 +516,9 @@ export default function Pricing() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
               <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/2c9557f00_Zerithumlogo.jpg" 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png" 
                 alt="Zerithum"
-                className="h-8 w-auto object-contain"
+                className="h-7 w-auto object-contain"
               />
             </div>
             <div className="flex flex-wrap justify-center gap-6 text-sm">
