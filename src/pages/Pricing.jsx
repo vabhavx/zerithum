@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Check, ChevronDown, ChevronUp, Shield, Clock, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import NumberFlow from "@number-flow/react";
 
 const PLANS = {
   monthly: [
@@ -288,7 +289,21 @@ export default function Pricing() {
 
               <div className="mb-6">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-bold text-white">${plan.price}</span>
+                  <NumberFlow
+                    value={plan.price}
+                    format={{
+                      style: "currency",
+                      currency: "USD",
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    }}
+                    transformTiming={{
+                      duration: 500,
+                      easing: "ease-out",
+                    }}
+                    willChange
+                    className="text-5xl font-bold text-white"
+                  />
                   <span className="text-white/40">/{plan.period}</span>
                 </div>
                 {plan.originalPrice && (
