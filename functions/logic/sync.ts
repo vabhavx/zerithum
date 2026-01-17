@@ -1,6 +1,6 @@
 export interface SyncContext {
   fetchPlatformData: (url: string, headers: any) => Promise<any>;
-  fetchExistingTransactionIds: (userId: string, platform: string) => Promise<Set<string>>;
+  fetchExistingTransactionIdsInRange: (userId: string, platform: string, startDate: string, endDate: string) => Promise<Set<string>>;
   saveTransactions: (transactions: any[]) => Promise<void>;
   logAudit: (entry: any) => void;
   updateConnectionStatus: (status: string, error?: string) => Promise<void>;
@@ -12,7 +12,8 @@ export async function syncPlatform(
   user: any,
   connectionId: string,
   platform: string,
-  oauthToken: string
+  oauthToken: string,
+  lastSyncedAt?: string | null
 ) {
   const startTime = Date.now();
   let transactions: any[] = [];
@@ -26,7 +27,13 @@ export async function syncPlatform(
     // Fetch data from each platform
     switch (platform) {
       case 'youtube': {
-        const url = 'https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=2024-01-01&endDate=2026-12-31&metrics=estimatedRevenue&dimensions=day';
+        // Default to 30 days ago if no last sync
+        const startDate = lastSyncedAt
+          ? new Date(lastSyncedAt).toISOString().split('T')[0]
+          : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const endDate = new Date().toISOString().split('T')[0];
+
+        const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=${startDate}&endDate=${endDate}&metrics=estimatedRevenue&dimensions=day`;
         const analyticsResponse = await ctx.fetchPlatformData(url, {
           'Authorization': `Bearer ${oauthToken}`,
           'Accept': 'application/json'
@@ -122,7 +129,16 @@ export async function syncPlatform(
     }
 
     if (transactions.length > 0) {
-      const existingIds = await ctx.fetchExistingTransactionIds(user.id, platform);
+      // Find date range of fetched transactions
+      let minDate = transactions[0].transaction_date;
+      let maxDate = transactions[0].transaction_date;
+
+      for (const t of transactions) {
+        if (t.transaction_date < minDate) minDate = t.transaction_date;
+        if (t.transaction_date > maxDate) maxDate = t.transaction_date;
+      }
+
+      const existingIds = await ctx.fetchExistingTransactionIdsInRange(user.id, platform, minDate, maxDate);
       const newTransactions = transactions.filter((t: any) => !existingIds.has(t.platform_transaction_id));
 
       duplicateCount = transactions.length - newTransactions.length;

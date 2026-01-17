@@ -11,7 +11,7 @@ describe('syncPlatform', () => {
   beforeEach(() => {
     mockCtx = {
       fetchPlatformData: vi.fn(),
-      fetchExistingTransactionIds: vi.fn().mockResolvedValue(new Set()),
+      fetchExistingTransactionIdsInRange: vi.fn().mockResolvedValue(new Set()),
       saveTransactions: vi.fn().mockResolvedValue(undefined),
       logAudit: vi.fn(),
       updateConnectionStatus: vi.fn().mockResolvedValue(undefined),
@@ -32,6 +32,15 @@ describe('syncPlatform', () => {
 
     expect(result.success).toBe(true);
     expect(result.transactionCount).toBe(2);
+
+    // Verify date range call
+    expect(mockCtx.fetchExistingTransactionIdsInRange).toHaveBeenCalledWith(
+        mockUser.id,
+        platform,
+        '2024-01-01',
+        '2024-01-02'
+    );
+
     expect(mockCtx.saveTransactions).toHaveBeenCalledWith([
       expect.objectContaining({
         platform_transaction_id: 'youtube_2024-01-01',
@@ -48,7 +57,20 @@ describe('syncPlatform', () => {
     }));
   });
 
-  it('should deduplicate transactions', async () => {
+  it('should use lastSyncedAt for youtube start date', async () => {
+    const lastSyncedAt = '2024-02-01T00:00:00.000Z';
+    const mockResponse = { rows: [] };
+    (mockCtx.fetchPlatformData as any).mockResolvedValue(mockResponse);
+
+    await syncPlatform(mockCtx, mockUser, connectionId, platform, oauthToken, lastSyncedAt);
+
+    expect(mockCtx.fetchPlatformData).toHaveBeenCalledWith(
+        expect.stringContaining('startDate=2024-02-01'),
+        expect.any(Object)
+    );
+  });
+
+  it('should deduplicate transactions using range', async () => {
     const mockResponse = {
       rows: [
         ['2024-01-01', 100.50], // Existing
@@ -56,7 +78,7 @@ describe('syncPlatform', () => {
       ]
     };
     (mockCtx.fetchPlatformData as any).mockResolvedValue(mockResponse);
-    (mockCtx.fetchExistingTransactionIds as any).mockResolvedValue(new Set(['youtube_2024-01-01']));
+    (mockCtx.fetchExistingTransactionIdsInRange as any).mockResolvedValue(new Set(['youtube_2024-01-01']));
 
     const result = await syncPlatform(mockCtx, mockUser, connectionId, platform, oauthToken);
 
