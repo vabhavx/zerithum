@@ -1,9 +1,7 @@
 import AuthCallback from './pages/AuthCallback';
-import ConnectedApps from './pages/ConnectedApps';
 import connectedappsTest from './pages/ConnectedApps.test';
 import ConnectedPlatforms from './pages/ConnectedPlatforms';
 import Dashboard from './pages/Dashboard';
-import Expenses from './pages/Expenses';
 import expensesTest from './pages/Expenses.test';
 import Help from './pages/Help';
 import Notifications from './pages/Notifications';
@@ -11,7 +9,6 @@ import Platforms from './pages/Platforms';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
 import Profile from './pages/Profile';
-import Reconciliation from './pages/Reconciliation';
 import reconciliationTest from './pages/Reconciliation.test';
 import Reports from './pages/Reports';
 import RevenueAutopsy from './pages/RevenueAutopsy';
@@ -32,11 +29,9 @@ import __Layout from './Layout.jsx';
 
 export const PAGES = {
     "AuthCallback": AuthCallback,
-    "ConnectedApps": ConnectedApps,
     "ConnectedApps.test": connectedappsTest,
     "ConnectedPlatforms": ConnectedPlatforms,
     "Dashboard": Dashboard,
-    "Expenses": Expenses,
     "Expenses.test": expensesTest,
     "Help": Help,
     "Notifications": Notifications,
@@ -44,7 +39,6 @@ export const PAGES = {
     "Pricing": Pricing,
     "Privacy": Privacy,
     "Profile": Profile,
-    "Reconciliation": Reconciliation,
     "Reconciliation.test": reconciliationTest,
     "Reports": Reports,
     "RevenueAutopsy": RevenueAutopsy,
