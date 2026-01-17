@@ -33,11 +33,41 @@ export default function AuthCallback() {
         return;
       }
 
+      // 🛡️ Sentinel: Validate CSRF Token
+      const storedToken = sessionStorage.getItem('oauth_state');
+      let platform = state;
+
+      // Require a stored token to ensure this browser initiated the flow
+      if (!storedToken) {
+        setStatus("error");
+        setError("Security session expired or invalid source. Please try connecting again.");
+        return;
+      }
+
+      if (state && state.includes(':')) {
+        const [platformId, token] = state.split(':');
+        if (token !== storedToken) {
+          setStatus("error");
+          setError("Security validation failed (CSRF mismatch).");
+          sessionStorage.removeItem('oauth_state');
+          return;
+        }
+        platform = platformId;
+      } else {
+        // If state doesn't have the token but we expect one, fail secure.
+        setStatus("error");
+        setError("Security error: Invalid state format.");
+        sessionStorage.removeItem('oauth_state');
+        return;
+      }
+
+      sessionStorage.removeItem('oauth_state'); // Consume token
+
       try {
         // Exchange code for tokens
         const response = await base44.functions.invoke("exchangeOAuthTokens", {
           code,
-          platform: state || "youtube"
+          platform: platform || "youtube"
         });
 
         if (response.data.success) {

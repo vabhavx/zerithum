@@ -222,13 +222,18 @@ export default function ConnectedPlatforms() {
     
     let params;
     
+    // Generate and store CSRF token
+    const csrfToken = crypto.randomUUID();
+    sessionStorage.setItem('oauth_state', csrfToken);
+    const stateValue = `${platform.id}:${csrfToken}`;
+
     if (platform.id === "tiktok") {
       params = new URLSearchParams({
         client_key: platform.clientKey,
         scope: platform.scope,
         response_type: 'code',
         redirect_uri: platform.redirectUri,
-        state: platform.id
+        state: stateValue
       });
     } else {
       params = new URLSearchParams({
@@ -236,7 +241,7 @@ export default function ConnectedPlatforms() {
         redirect_uri: platform.redirectUri,
         response_type: 'code',
         scope: platform.scope || '',
-        state: platform.id,
+        state: stateValue,
         access_type: platform.id === 'youtube' ? 'offline' : undefined,
         prompt: platform.id === 'youtube' ? 'consent' : undefined
       });
