@@ -29,6 +29,7 @@ const navItems = [
 ];
 
 export default function Layout({ children, currentPageName }) {
+  // Optimized navigation layout
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
 
