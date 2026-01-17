@@ -68,13 +68,12 @@ export default function Layout({ children, currentPageName }) {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.06);
           backdrop-filter: blur(20px);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: background 0.15s ease, border-color 0.15s ease;
         }
 
         .card-modern:hover {
           background: rgba(255, 255, 255, 0.04);
           border-color: rgba(255, 255, 255, 0.12);
-          transform: translateY(-2px);
         }
 
         .glass-effect {
@@ -139,7 +138,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 bg-[#0A0A0A] border-r border-white/5 z-50 transition-all duration-300 ease-out",
+        "fixed left-0 top-0 h-full w-64 bg-[#0A0A0A] border-r border-white/5 z-50 transition-transform duration-150 ease-out",
         "lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
@@ -166,7 +165,7 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl(item.page)}
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-75 group relative",
                     isActive 
                       ? "nav-item-active text-white" 
                       : "text-white/50 hover:text-white/80 hover:bg-white/5"

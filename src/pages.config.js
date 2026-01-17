@@ -1,45 +1,51 @@
-import { lazy } from 'react';
+import AuthCallback from './pages/AuthCallback';
+import ConnectedApps from './pages/ConnectedApps';
+import connectedappsTest from './pages/ConnectedApps.test';
+import ConnectedPlatforms from './pages/ConnectedPlatforms';
+import Dashboard from './pages/Dashboard';
+import Expenses from './pages/Expenses';
+import expensesTest from './pages/Expenses.test';
+import Help from './pages/Help';
+import Notifications from './pages/Notifications';
+import Platforms from './pages/Platforms';
+import Pricing from './pages/Pricing';
+import Privacy from './pages/Privacy';
+import Profile from './pages/Profile';
+import Reconciliation from './pages/Reconciliation';
+import reconciliationTest from './pages/Reconciliation.test';
+import Reports from './pages/Reports';
+import RevenueAutopsy from './pages/RevenueAutopsy';
+import Settings from './pages/Settings';
+import SettingsAccount from './pages/SettingsAccount';
+import SettingsConnectedApps from './pages/SettingsConnectedApps';
+import SettingsNotifications from './pages/SettingsNotifications';
+import SettingsPrivacy from './pages/SettingsPrivacy';
+import SettingsSubscription from './pages/SettingsSubscription';
+import Subscription from './pages/Subscription';
+import TaxEstimator from './pages/TaxEstimator';
+import TaxExport from './pages/TaxExport';
+import TaxReports from './pages/TaxReports';
+import TransactionAnalysis from './pages/TransactionAnalysis';
+import Transactions from './pages/Transactions';
 import __Layout from './Layout.jsx';
 
-const AuthCallback = lazy(() => import('./pages/AuthCallback'));
-const ConnectedApps = lazy(() => import('./pages/ConnectedApps'));
-const ConnectedPlatforms = lazy(() => import('./pages/ConnectedPlatforms'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Expenses = lazy(() => import('./pages/Expenses'));
-const Help = lazy(() => import('./pages/Help'));
-const Notifications = lazy(() => import('./pages/Notifications'));
-const Platforms = lazy(() => import('./pages/Platforms'));
-const Privacy = lazy(() => import('./pages/Privacy'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Reconciliation = lazy(() => import('./pages/Reconciliation'));
-const Reports = lazy(() => import('./pages/Reports'));
-const RevenueAutopsy = lazy(() => import('./pages/RevenueAutopsy'));
-const Settings = lazy(() => import('./pages/Settings'));
-const SettingsAccount = lazy(() => import('./pages/SettingsAccount'));
-const SettingsConnectedApps = lazy(() => import('./pages/SettingsConnectedApps'));
-const SettingsNotifications = lazy(() => import('./pages/SettingsNotifications'));
-const SettingsPrivacy = lazy(() => import('./pages/SettingsPrivacy'));
-const SettingsSubscription = lazy(() => import('./pages/SettingsSubscription'));
-const Subscription = lazy(() => import('./pages/Subscription'));
-const TaxEstimator = lazy(() => import('./pages/TaxEstimator'));
-const TaxExport = lazy(() => import('./pages/TaxExport'));
-const TaxReports = lazy(() => import('./pages/TaxReports'));
-const TransactionAnalysis = lazy(() => import('./pages/TransactionAnalysis'));
-const Transactions = lazy(() => import('./pages/Transactions'));
-const Pricing = lazy(() => import('./pages/Pricing'));
 
 export const PAGES = {
     "AuthCallback": AuthCallback,
     "ConnectedApps": ConnectedApps,
+    "ConnectedApps.test": connectedappsTest,
     "ConnectedPlatforms": ConnectedPlatforms,
     "Dashboard": Dashboard,
     "Expenses": Expenses,
+    "Expenses.test": expensesTest,
     "Help": Help,
     "Notifications": Notifications,
     "Platforms": Platforms,
+    "Pricing": Pricing,
     "Privacy": Privacy,
     "Profile": Profile,
     "Reconciliation": Reconciliation,
+    "Reconciliation.test": reconciliationTest,
     "Reports": Reports,
     "RevenueAutopsy": RevenueAutopsy,
     "Settings": Settings,
@@ -54,7 +60,6 @@ export const PAGES = {
     "TaxReports": TaxReports,
     "TransactionAnalysis": TransactionAnalysis,
     "Transactions": Transactions,
-    "Pricing": Pricing,
 }
 
 export const pagesConfig = {
