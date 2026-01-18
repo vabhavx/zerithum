@@ -264,6 +264,8 @@ export default function ConnectedPlatforms() {
     // Generate and store CSRF token
     const csrfToken = crypto.randomUUID();
     sessionStorage.setItem('oauth_state', csrfToken);
+    // Sentinel: Set cookie for backend verification
+    document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax`;
     const stateValue = `${platform.id}:${csrfToken}`;
 
     if (platform.id === "tiktok") {
@@ -345,6 +347,8 @@ export default function ConnectedPlatforms() {
     // Generate and store CSRF token
     const csrfToken = crypto.randomUUID();
     sessionStorage.setItem('oauth_state', csrfToken);
+    // Sentinel: Set cookie for backend verification
+    document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax`;
     const stateValue = `shopify:${csrfToken}`;
 
     const shopifyOAuthUrl = `https://${shopifyShopName}.myshopify.com/admin/oauth/authorize`;
