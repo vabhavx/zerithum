@@ -393,6 +393,22 @@ export default function ConnectedPlatforms() {
   const connectedIds = connectedPlatforms.map(p => p.platform);
   const availablePlatforms = PLATFORMS.filter(p => !connectedIds.includes(p.id));
 
+  // Chart data calculations
+  const statusData = [
+    { name: "Active", value: connectedPlatforms.filter(c => c.sync_status === "active").length, color: "#10B981" },
+    { name: "Error", value: connectedPlatforms.filter(c => c.sync_status === "error").length, color: "#EF4444" },
+    { name: "Stale", value: connectedPlatforms.filter(c => c.sync_status === "stale").length, color: "#F59E0B" },
+  ].filter(d => d.value > 0);
+
+  const platformUsageData = connectedPlatforms.map(conn => {
+    const syncCount = syncHistory.filter(h => h.platform === conn.platform).length;
+    const platform = PLATFORMS.find(p => p.id === conn.platform);
+    return {
+      name: platform?.name || conn.platform,
+      syncs: syncCount,
+    };
+  }).sort((a, b) => b.syncs - a.syncs);
+
   return (
     <div className="max-w-4xl mx-auto">
       <SuccessConfetti trigger={showConfetti} />
@@ -419,6 +435,86 @@ export default function ConnectedPlatforms() {
           </Button>
         )}
       </motion.div>
+
+      {/* Analytics Charts */}
+      {connectedPlatforms.length > 0 && (
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {/* Platform Status Distribution */}
+          {statusData.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="card-modern rounded-2xl p-6"
+            >
+              <h3 className="text-lg font-semibold text-white mb-4">Connection Status</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      background: "rgba(0, 0, 0, 0.8)", 
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      borderRadius: "8px",
+                      color: "#fff"
+                    }}
+                  />
+                  <Legend 
+                    verticalAlign="bottom"
+                    formatter={(value) => <span className="text-white/70 text-sm">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </motion.div>
+          )}
+
+          {/* Platform Sync Frequency */}
+          {platformUsageData.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="card-modern rounded-2xl p-6"
+            >
+              <h3 className="text-lg font-semibold text-white mb-4">Sync Activity</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={platformUsageData}>
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="rgba(255, 255, 255, 0.3)"
+                    tick={{ fill: "rgba(255, 255, 255, 0.5)", fontSize: 12 }}
+                  />
+                  <YAxis 
+                    stroke="rgba(255, 255, 255, 0.3)"
+                    tick={{ fill: "rgba(255, 255, 255, 0.5)", fontSize: 12 }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      background: "rgba(0, 0, 0, 0.8)", 
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      borderRadius: "8px",
+                      color: "#fff"
+                    }}
+                    cursor={{ fill: "rgba(99, 102, 241, 0.1)" }}
+                  />
+                  <Bar dataKey="syncs" fill="#6366F1" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {/* Connected Platforms */}
       {connectingPlatform && (
