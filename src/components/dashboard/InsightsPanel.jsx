@@ -80,6 +80,7 @@ export default function InsightsPanel({ insights, onDismiss }) {
                         size="icon"
                         onClick={() => onDismiss(insight.id)}
                         className="h-6 w-6 text-white/40 hover:text-white/70 hover:bg-white/5"
+                        aria-label="Dismiss insight"
                       >
                         <X className="w-3 h-3" />
                       </Button>
