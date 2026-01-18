@@ -15,7 +15,10 @@ import {
   Loader2,
   Key,
   History,
-  RefreshCw
+  RefreshCw,
+  Tv,
+  FileText,
+  Store
 } from "lucide-react";
 import PlatformSyncHistory from "../components/platform/PlatformSyncHistory";
 import ConnectedPlatformRow from "../components/platform/ConnectedPlatformRow";
@@ -104,6 +107,40 @@ const PLATFORMS = [
     redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
     requiresApiKey: false,
     clientKey: "YOUR_TIKTOK_CLIENT_KEY"
+  },
+  {
+    id: "shopify",
+    name: "Shopify",
+    icon: Store,
+    color: "bg-green-500/10 border-green-500/20 text-green-400",
+    description: "Sync store sales, orders, and product revenue",
+    oauthUrl: "https://YOUR_SHOP.myshopify.com/admin/oauth/authorize",
+    scope: "read_orders,read_products,read_customers",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    requiresApiKey: false,
+    clientId: "YOUR_SHOPIFY_API_KEY",
+    requiresShopName: true
+  },
+  {
+    id: "twitch",
+    name: "Twitch",
+    icon: Tv,
+    color: "bg-violet-500/10 border-violet-500/20 text-violet-400",
+    description: "Track subscriptions, bits, and ad revenue",
+    oauthUrl: "https://id.twitch.tv/oauth2/authorize",
+    scope: "channel:read:subscriptions bits:read analytics:read:extensions",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    requiresApiKey: false,
+    clientId: "YOUR_TWITCH_CLIENT_ID"
+  },
+  {
+    id: "substack",
+    name: "Substack",
+    icon: FileText,
+    color: "bg-orange-500/10 border-orange-500/20 text-orange-400",
+    description: "Import newsletter subscriptions and earnings",
+    requiresApiKey: true,
+    validationUrl: "https://substack.com/api/v1/user"
   }
 ];
 
@@ -118,6 +155,7 @@ export default function ConnectedPlatforms() {
   const [syncingPlatform, setSyncingPlatform] = useState(null);
   const [validatingKey, setValidatingKey] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [shopifyShopName, setShopifyShopName] = useState("");
   const queryClient = useQueryClient();
 
   const { data: connectedPlatforms = [], isLoading } = useQuery({
@@ -212,7 +250,7 @@ export default function ConnectedPlatforms() {
   });
 
   const initiateOAuthFlow = (platform) => {
-    if (platform.requiresApiKey) {
+    if (platform.requiresApiKey || platform.requiresShopName) {
       setSelectedPlatform(platform);
       setShowConnectDialog(true);
       return;
@@ -235,6 +273,9 @@ export default function ConnectedPlatforms() {
         redirect_uri: platform.redirectUri,
         state: stateValue
       });
+    } else if (platform.id === "shopify") {
+      // For Shopify, we need the shop name first
+      return;
     } else {
       params = new URLSearchParams({
         client_id: platform.clientId || platform.id,
@@ -268,6 +309,15 @@ export default function ConnectedPlatforms() {
         if (!response.ok) {
           throw new Error("Invalid API key");
         }
+      } else if (selectedPlatform.id === "substack") {
+        // Substack validation - basic check
+        const response = await fetch(selectedPlatform.validationUrl, {
+          headers: { 'Authorization': `Bearer ${apiKey}` }
+        });
+        
+        if (!response.ok) {
+          throw new Error("Invalid API key");
+        }
       }
       
       // Key is valid, save connection
@@ -283,6 +333,28 @@ export default function ConnectedPlatforms() {
       setValidatingKey(false);
       toast.error("Invalid API key. Please check and try again.");
     }
+  };
+
+  const handleShopifyConnect = () => {
+    if (!shopifyShopName.trim()) {
+      toast.error("Please enter your Shopify store name");
+      return;
+    }
+
+    // Generate and store CSRF token
+    const csrfToken = crypto.randomUUID();
+    sessionStorage.setItem('oauth_state', csrfToken);
+    const stateValue = `shopify:${csrfToken}`;
+
+    const shopifyOAuthUrl = `https://${shopifyShopName}.myshopify.com/admin/oauth/authorize`;
+    const params = new URLSearchParams({
+      client_id: selectedPlatform.clientId,
+      scope: selectedPlatform.scope,
+      redirect_uri: selectedPlatform.redirectUri,
+      state: stateValue
+    });
+
+    window.location.href = `${shopifyOAuthUrl}?${params.toString()}`;
   };
 
   const handleSync = useCallback(async (connection) => {
@@ -482,6 +554,60 @@ export default function ConnectedPlatforms() {
                       Connect
                     </>
                   )}
+                </Button>
+              </div>
+            </div>
+          ) : selectedPlatform?.requiresShopName ? (
+            <div className="space-y-4 mt-4">
+              <div className="rounded-lg p-4 flex items-center gap-3 bg-white/[0.02] border border-white/[0.05]">
+                <div className={cn(
+                  "w-11 h-11 rounded-lg flex items-center justify-center border",
+                  selectedPlatform.color
+                )}>
+                  {React.createElement(selectedPlatform.icon, { className: "w-5 h-5" })}
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white text-sm">{selectedPlatform.name}</h4>
+                  <p className="text-xs text-white/40">{selectedPlatform.description}</p>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="shopName" className="text-white/60 mb-2 block text-sm">Store Name</Label>
+                <div className="relative">
+                  <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                  <Input
+                    id="shopName"
+                    type="text"
+                    value={shopifyShopName}
+                    onChange={(e) => setShopifyShopName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    placeholder="your-store-name"
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-lg"
+                  />
+                </div>
+                <p className="text-xs text-white/30 mt-2">
+                  Enter your Shopify store name (e.g., "your-store" from your-store.myshopify.com)
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedPlatform(null);
+                    setShopifyShopName("");
+                  }}
+                  className="flex-1 rounded-lg border-white/10 text-white/70 hover:bg-white/5"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleShopifyConnect}
+                  disabled={!shopifyShopName.trim()}
+                  className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  Continue to Shopify
                 </Button>
               </div>
             </div>
