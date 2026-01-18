@@ -6,7 +6,7 @@ import { CheckCircle2, Circle, RefreshCw, Trash2 } from 'lucide-react';
 import moment from 'moment';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const platformConfig = {
   youtube: { name: 'YouTube', icon: '🎥', usesOAuth: true },
