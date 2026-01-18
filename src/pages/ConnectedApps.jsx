@@ -6,6 +6,7 @@ import { CheckCircle2, Circle, RefreshCw, Trash2 } from 'lucide-react';
 import moment from 'moment';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const platformConfig = {
   youtube: { name: 'YouTube', icon: '🎥', usesOAuth: true },
@@ -44,6 +45,18 @@ export default function ConnectedApps() {
   const connectedPlatforms = userConnections.map(c => c.platform);
   const notConnectedPlatforms = allPlatforms.filter(p => !connectedPlatforms.includes(p));
 
+  // Chart data
+  const statusData = [
+    { name: "Active", value: userConnections.filter(c => c.sync_status === "active").length, color: "#10B981" },
+    { name: "Error", value: userConnections.filter(c => c.sync_status === "error").length, color: "#EF4444" },
+    { name: "Stale", value: userConnections.filter(c => c.sync_status === "stale").length, color: "#F59E0B" },
+  ].filter(d => d.value > 0);
+
+  const platformTypeData = [
+    { name: "OAuth", value: userConnections.filter(c => platformConfig[c.platform]?.usesOAuth).length, color: "#6366F1" },
+    { name: "API Key", value: userConnections.filter(c => !platformConfig[c.platform]?.usesOAuth).length, color: "#8B5CF6" },
+  ].filter(d => d.value > 0);
+
   return (
     <div className="max-w-[1200px] mx-auto">
       {/* Header */}
@@ -55,6 +68,77 @@ export default function ConnectedApps() {
           Manage OAuth connections and API keys securely.
         </p>
       </div>
+
+      {/* Analytics Charts */}
+      {userConnections.length > 0 && (
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          {/* Connection Status */}
+          <div className="clay-card p-6">
+            <h3 className="text-lg font-semibold text-[#5E5240] mb-4">Connection Status</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={statusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={2}
+                  dataKey="value"
+                >
+                  {statusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    background: "#fff", 
+                    border: "1px solid rgba(94, 82, 64, 0.12)",
+                    borderRadius: "8px"
+                  }}
+                />
+                <Legend 
+                  verticalAlign="bottom"
+                  formatter={(value) => <span className="text-[#5E5240]/70 text-sm">{value}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Auth Method Distribution */}
+          <div className="clay-card p-6">
+            <h3 className="text-lg font-semibold text-[#5E5240] mb-4">Authentication Method</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={platformTypeData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={2}
+                  dataKey="value"
+                >
+                  {platformTypeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    background: "#fff", 
+                    border: "1px solid rgba(94, 82, 64, 0.12)",
+                    borderRadius: "8px"
+                  }}
+                />
+                <Legend 
+                  verticalAlign="bottom"
+                  formatter={(value) => <span className="text-[#5E5240]/70 text-sm">{value}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Connected Platforms Table */}
       <div className="clay-card overflow-hidden mb-6">

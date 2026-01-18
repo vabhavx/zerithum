@@ -1,3 +1,4 @@
+import AuthCallback from './pages/AuthCallback';
 import ConnectedApps from './pages/ConnectedApps';
 import ConnectedPlatforms from './pages/ConnectedPlatforms';
 import Dashboard from './pages/Dashboard';
@@ -27,6 +28,7 @@ import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AuthCallback": AuthCallback,
     "ConnectedApps": ConnectedApps,
     "ConnectedPlatforms": ConnectedPlatforms,
     "Dashboard": Dashboard,
