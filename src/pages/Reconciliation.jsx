@@ -9,7 +9,8 @@ import {
   Sparkles,
   AlertCircle,
   CheckCircle2,
-  Clock
+  Clock,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,11 +22,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ReconciliationRow from "@/components/ReconciliationRow";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Reconciliation() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: revenueTransactions = [] } = useQuery({
     queryKey: ["revenueTransactions"],
@@ -45,8 +48,34 @@ export default function Reconciliation() {
   const createReconciliationMutation = useMutation({
     mutationFn: (data) => base44.entities.Reconciliation.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["reconciliations"]);
+      queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
     },
+  });
+
+  const autoReconcileMutation = useMutation({
+    mutationFn: () => base44.functions.invoke('reconcileRevenue', {}),
+    onSuccess: (response) => {
+      if (response.data.success) {
+        toast({
+          title: "Auto-Match Complete",
+          description: response.data.message,
+        });
+        queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
+      } else {
+        toast({
+          title: "Auto-Match Failed",
+          description: response.data.message || "Unknown error",
+          variant: "destructive"
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Connection Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   // Calculate stats
@@ -93,8 +122,16 @@ export default function Reconciliation() {
           <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">Reconciliation</h1>
           <p className="text-slate-500 mt-1">Match platform revenue with bank deposits</p>
         </div>
-        <Button className="clay-sm hover:clay rounded-xl bg-gradient-to-r from-violet-500 to-indigo-600 text-white border-0">
-          <Sparkles className="w-4 h-4 mr-2" />
+        <Button
+          onClick={() => autoReconcileMutation.mutate()}
+          disabled={autoReconcileMutation.isPending}
+          className="clay-sm hover:clay rounded-xl bg-gradient-to-r from-violet-500 to-indigo-600 text-white border-0"
+        >
+          {autoReconcileMutation.isPending ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Sparkles className="w-4 h-4 mr-2" />
+          )}
           Auto-Match
         </Button>
       </div>
