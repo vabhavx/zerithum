@@ -1,6 +1,5 @@
-import authcallbackTest from './pages/AuthCallback.test';
 import ConnectedApps from './pages/ConnectedApps';
-import connectedplatformsTest from './pages/ConnectedPlatforms.test';
+import ConnectedPlatforms from './pages/ConnectedPlatforms';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Help from './pages/Help';
@@ -28,9 +27,8 @@ import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "AuthCallback.test": authcallbackTest,
     "ConnectedApps": ConnectedApps,
-    "ConnectedPlatforms.test": connectedplatformsTest,
+    "ConnectedPlatforms": ConnectedPlatforms,
     "Dashboard": Dashboard,
     "Expenses": Expenses,
     "Help": Help,
