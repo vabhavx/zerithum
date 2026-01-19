@@ -96,8 +96,11 @@ export default function Reconciliation() {
   }, [revenueTransactions, reconciliations]);
 
   // Get unreconciled transactions
-  const reconciledRevenueIds = new Set(reconciliations.map(r => r.revenue_transaction_id));
-  const unreconciledRevenue = revenueTransactions.filter(t => !reconciledRevenueIds.has(t.id));
+  // Memoize to prevent expensive O(N+M) filtering on every render (e.g. when searching)
+  const unreconciledRevenue = useMemo(() => {
+    const reconciledRevenueIds = new Set(reconciliations.map(r => r.revenue_transaction_id));
+    return revenueTransactions.filter(t => !reconciledRevenueIds.has(t.id));
+  }, [revenueTransactions, reconciliations]);
 
   // Filter and search
   const filteredReconciliations = useMemo(() => {
