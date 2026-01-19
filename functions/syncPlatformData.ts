@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const { connectionId, platform } = body;
+    const { connectionId, platform, forceFullSync = false } = body;
 
     if (!connectionId || !platform) {
       return Response.json({ error: 'Missing connectionId or platform' }, { status: 400 });
@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
       }
     };
 
-    const result = await syncPlatform(ctx, user, connectionId, platform, oauthToken, conn.last_synced_at);
+    const result = await syncPlatform(ctx, user, connectionId, platform, oauthToken, conn.last_synced_at, forceFullSync);
 
     return Response.json(result);
 
@@ -129,6 +129,11 @@ Deno.serve(async (req) => {
        }
     }
 
-    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
+    return Response.json({ 
+      error: error.message || 'Sync failed',
+      originalError: (error as any).originalError,
+      retryAttempts: (error as any).retryAttempts || 0,
+      success: false
+    }, { status: 500 });
   }
 });

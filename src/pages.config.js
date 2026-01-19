@@ -1,15 +1,11 @@
 import AuthCallback from './pages/AuthCallback';
-import ConnectedApps from './pages/ConnectedApps';
-import ConnectedPlatforms from './pages/ConnectedPlatforms';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Help from './pages/Help';
 import Notifications from './pages/Notifications';
 import Platforms from './pages/Platforms';
-import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
 import Profile from './pages/Profile';
-import Reconciliation from './pages/Reconciliation';
 import Reports from './pages/Reports';
 import RevenueAutopsy from './pages/RevenueAutopsy';
 import Settings from './pages/Settings';
@@ -24,22 +20,22 @@ import TaxExport from './pages/TaxExport';
 import TaxReports from './pages/TaxReports';
 import TransactionAnalysis from './pages/TransactionAnalysis';
 import Transactions from './pages/Transactions';
+import Pricing from './pages/Pricing';
+import Reconciliation from './pages/Reconciliation';
+import ConnectedPlatforms from './pages/ConnectedPlatforms';
+import ConnectedApps from './pages/ConnectedApps';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AuthCallback": AuthCallback,
-    "ConnectedApps": ConnectedApps,
-    "ConnectedPlatforms": ConnectedPlatforms,
     "Dashboard": Dashboard,
     "Expenses": Expenses,
     "Help": Help,
     "Notifications": Notifications,
     "Platforms": Platforms,
-    "Pricing": Pricing,
     "Privacy": Privacy,
     "Profile": Profile,
-    "Reconciliation": Reconciliation,
     "Reports": Reports,
     "RevenueAutopsy": RevenueAutopsy,
     "Settings": Settings,
@@ -54,6 +50,10 @@ export const PAGES = {
     "TaxReports": TaxReports,
     "TransactionAnalysis": TransactionAnalysis,
     "Transactions": Transactions,
+    "Pricing": Pricing,
+    "Reconciliation": Reconciliation,
+    "ConnectedPlatforms": ConnectedPlatforms,
+    "ConnectedApps": ConnectedApps,
 }
 
 export const pagesConfig = {

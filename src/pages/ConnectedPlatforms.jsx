@@ -362,24 +362,32 @@ export default function ConnectedPlatforms() {
     window.location.href = `${shopifyOAuthUrl}?${params.toString()}`;
   };
 
-  const handleSync = useCallback(async (connection) => {
+  const handleSync = useCallback(async (connection, forceFullSync = false) => {
     if (!connection) return;
 
     setSyncingPlatform(connection.id);
     
     try {
-      await base44.functions.invoke('syncPlatformData', {
+      const response = await base44.functions.invoke('syncPlatformData', {
         connectionId: connection.id,
-        platform: connection.platform
+        platform: connection.platform,
+        forceFullSync
       });
       
       queryClient.invalidateQueries(['connectedPlatforms']);
       queryClient.invalidateQueries(['syncHistory']);
-      setShowConfetti(true);
-      toast.success('Sync completed successfully!');
-      setTimeout(() => setShowConfetti(false), 3000);
+      
+      if (response.data.success) {
+        setShowConfetti(true);
+        const message = forceFullSync 
+          ? `Full sync completed! ${response.data.transactionCount} transactions synced.`
+          : response.data.message || 'Sync completed successfully!';
+        toast.success(message);
+        setTimeout(() => setShowConfetti(false), 3000);
+      }
     } catch (error) {
-      toast.error('Sync failed. Please try again.');
+      const errorMessage = error.response?.data?.error || error.message || 'Sync failed. Please try again.';
+      toast.error(errorMessage, { duration: 6000 });
     } finally {
       setSyncingPlatform(null);
     }
