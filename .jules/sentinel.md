@@ -5,3 +5,13 @@
 1. Always use `Deno.env.get()` for configuration.
 2. Catch errors and return a generic "Internal Server Error" message to the client, while logging the full error server-side.
 3. Remove dead code to reduce attack surface.
+
+## 2024-05-24 - CSV Injection (Formula Injection)
+**Vulnerability:** User-controlled data (names, descriptions, platform names) was being directly interpolated into CSV exports without escaping. This allowed for CSV structure corruption (via commas/quotes) and Formula Injection (via `=`).
+**Learning:** Standard string replacing of quotes (e.g. `replace(/"/g, '""')`) is insufficient for secure CSV generation. It misses structure validation and does not prevent Formula Injection, which can execute code in Excel.
+**Prevention:**
+1. Use a robust CSV escaping utility for ALL user-controlled fields.
+2. The utility must handle:
+   - Wrapping in quotes if containing special chars (comma, quote, newline).
+   - Escaping internal quotes.
+   - Prepending `'` if the field starts with formula triggers (`=`, `+`, `-`, `@`).
