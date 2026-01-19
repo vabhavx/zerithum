@@ -224,13 +224,12 @@ export default function TransactionAnalysis() {
           </Select>
 
           <Button
-            variant="outline"
             onClick={() => {
               setSearchQuery("");
               setPlatformFilter("all");
               setCategoryFilter("all");
             }}
-            className="border-white/10 text-white/70 hover:bg-white/5"
+            className="bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
           >
             <Filter className="w-4 h-4 mr-2" />
             Clear Filters
