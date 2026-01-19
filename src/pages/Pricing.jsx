@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, ChevronDown, ChevronUp, Shield, Clock, TrendingUp } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Shield, Clock, TrendingUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 const PLANS = {
   monthly: [
@@ -165,6 +167,34 @@ const VALUE_BLOCKS = [
 export default function Pricing() {
   const [billingPeriod, setBillingPeriod] = useState("monthly");
   const [expandedFaq, setExpandedFaq] = useState(null);
+  const [processingPayment, setProcessingPayment] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const currentUser = await base44.auth.me();
+        setUser(currentUser);
+      } catch (error) {
+        console.log('User not logged in');
+      }
+    };
+    loadUser();
+  }, []);
+
+  useEffect(() => {
+    // Check for payment status in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    
+    if (paymentStatus === 'success') {
+      toast.success('Payment successful! Your subscription is now active.');
+      window.history.replaceState({}, '', '/pricing');
+    } else if (paymentStatus === 'cancelled') {
+      toast.error('Payment cancelled. Please try again.');
+      window.history.replaceState({}, '', '/pricing');
+    }
+  }, []);
 
   const trackEvent = (eventName, data = {}) => {
     // Track events using Base44 analytics
@@ -175,8 +205,42 @@ export default function Pricing() {
     trackEvent("pricing_viewed");
   }, []);
 
-  const handlePlanSelect = (planName) => {
-    trackEvent(`plan_selected_${planName.toLowerCase().replace(" ", "_")}`);
+  const handlePlanSelect = async (plan) => {
+    trackEvent(`plan_selected_${plan.name.toLowerCase().replace(" ", "_")}`);
+    
+    if (plan.price === 0) {
+      // Free plan - redirect to dashboard
+      window.location.href = '/';
+      return;
+    }
+
+    if (!user) {
+      toast.error('Please log in to subscribe');
+      base44.auth.redirectToLogin(window.location.pathname);
+      return;
+    }
+
+    setProcessingPayment(plan.name);
+
+    try {
+      const response = await base44.functions.invoke('createSkydoPayment', {
+        planName: plan.name,
+        amount: plan.price,
+        currency: 'USD',
+        billingPeriod: billingPeriod
+      });
+
+      if (response.data.success && response.data.payment_url) {
+        // Redirect to Skydo payment page
+        window.location.href = response.data.payment_url;
+      } else {
+        throw new Error('Failed to create payment link');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Failed to process payment. Please try again.');
+      setProcessingPayment(null);
+    }
   };
 
   const handleCTA = (ctaType) => {
@@ -206,7 +270,7 @@ export default function Pricing() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
               <Button
                 size="lg"
-                onClick={() => handleCTA("start_free")}
+                onClick={() => handlePlanSelect(plans[0])}
                 className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg px-8 h-14 rounded-xl hover:from-indigo-600 hover:to-purple-700 w-full sm:w-auto"
               >
                 Start free
@@ -221,7 +285,7 @@ export default function Pricing() {
               </Button>
             </div>
             <p className="text-sm text-white/40 pt-2">
-              Cancel anytime. Secure connections. No card required for Free.
+              Secure payments powered by Skydo • Cancel anytime • No card required for Free
             </p>
           </motion.div>
         </div>
@@ -314,10 +378,8 @@ export default function Pricing() {
               </div>
 
               <Button
-                onClick={() => {
-                  handlePlanSelect(plan.name);
-                  handleCTA("start_free");
-                }}
+                onClick={() => handlePlanSelect(plan)}
+                disabled={processingPayment === plan.name}
                 className={cn(
                   "w-full mb-6 h-12 rounded-xl",
                   plan.popular
@@ -325,7 +387,14 @@ export default function Pricing() {
                     : "bg-white/5 text-white hover:bg-white/10 border border-white/10"
                 )}
               >
-                {plan.cta}
+                {processingPayment === plan.name ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  plan.cta
+                )}
               </Button>
 
               <div className="space-y-3 mb-6">
@@ -492,7 +561,7 @@ export default function Pricing() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button
                 size="lg"
-                onClick={() => handleCTA("start_free")}
+                onClick={() => handlePlanSelect(plans[0])}
                 className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg px-8 h-14 rounded-xl hover:from-indigo-600 hover:to-purple-700 w-full sm:w-auto"
               >
                 Start free
@@ -506,6 +575,9 @@ export default function Pricing() {
                 Book a demo
               </Button>
             </div>
+            <p className="text-xs text-white/30 mt-4">
+              Powered by Skydo secure payment gateway
+            </p>
           </motion.div>
         </div>
       </section>
