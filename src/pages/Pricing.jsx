@@ -515,14 +515,11 @@ export default function Pricing() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
-              <div className="p-1.5 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/10">
-                <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png" 
-                  alt="Zerithum"
-                  className="h-7 w-auto object-contain brightness-110 contrast-125"
-                  style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.15))' }}
-                />
-              </div>
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png" 
+                alt="Zerithum"
+                className="h-7 w-auto object-contain"
+              />
             </div>
             <div className="flex flex-wrap justify-center gap-6 text-sm">
               <a href="/pricing" className="text-white/50 hover:text-white transition-colors">Pricing</a>

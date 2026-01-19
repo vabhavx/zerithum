@@ -111,12 +111,11 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-effect px-4 py-3 flex items-center justify-between border-b border-white/5">
-        <div className="relative p-1.5 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/10">
+        <div className="relative">
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png" 
             alt="Zerithum"
-            className="h-7 w-auto object-contain relative z-10 brightness-110 contrast-125"
-            style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.15))' }}
+            className="h-7 w-auto object-contain relative z-10"
           />
         </div>
         <Button
@@ -146,12 +145,11 @@ export default function Layout({ children, currentPageName }) {
         <div className="p-6 h-full flex flex-col">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-12">
-              <div className="relative p-2 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/10">
+              <div className="relative">
                 <img 
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png" 
                   alt="Zerithum"
-                  className="h-8 w-auto object-contain relative z-10 brightness-110 contrast-125"
-                  style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.15))' }}
+                  className="h-8 w-auto object-contain relative z-10"
                 />
               </div>
             </div>
