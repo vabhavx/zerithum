@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import {
   Check,
@@ -7,11 +7,19 @@ import {
   RefreshCw,
   Trash2,
   Loader2,
-  FileText
+  FileText,
+  RotateCcw,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const getStatusIcon = (status) => {
   switch (status) {
@@ -67,6 +75,7 @@ const ConnectedPlatformRow = React.memo(({
   onDisconnect,
   isDisconnecting // added prop to handle loading state for disconnect button
 }) => {
+  const [showSyncMenu, setShowSyncMenu] = useState(false);
   if (!platform) return null;
   const Icon = platform.icon;
 
@@ -128,16 +137,49 @@ const ConnectedPlatformRow = React.memo(({
           >
             <FileText className="w-3.5 h-3.5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onSync(connection)}
-            disabled={isSyncing || connection.sync_status === "syncing"}
-            className="text-white/40 hover:text-indigo-400 hover:bg-white/5 transition-colors h-8 w-8"
-            aria-label={`Sync ${platform.name} data`}
-          >
-            <RefreshCw className={cn("w-3.5 h-3.5", (isSyncing || connection.sync_status === "syncing") && "animate-spin")} />
-          </Button>
+          
+          <DropdownMenu open={showSyncMenu} onOpenChange={setShowSyncMenu}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                disabled={isSyncing || connection.sync_status === "syncing"}
+                className="text-white/40 hover:text-indigo-400 hover:bg-white/5 transition-colors h-8 px-2 gap-1"
+                aria-label={`Sync ${platform.name} data`}
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5", (isSyncing || connection.sync_status === "syncing") && "animate-spin")} />
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-[#1A1A1A] border-white/10">
+              <DropdownMenuItem 
+                onClick={() => {
+                  onSync(connection, false);
+                  setShowSyncMenu(false);
+                }}
+                className="text-white/80 hover:text-white hover:bg-white/5 cursor-pointer"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                <div>
+                  <div className="font-medium text-sm">Quick Sync</div>
+                  <div className="text-xs text-white/40">Sync recent data</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  onSync(connection, true);
+                  setShowSyncMenu(false);
+                }}
+                className="text-white/80 hover:text-white hover:bg-white/5 cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                <div>
+                  <div className="font-medium text-sm">Full Re-sync</div>
+                  <div className="text-xs text-white/40">Re-fetch all historical data (90 days)</div>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <Button
             variant="ghost"
             size="icon"
