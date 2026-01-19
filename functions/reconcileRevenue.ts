@@ -53,7 +53,16 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Reconciliation.bulkCreate(reconciliations);
       },
 
-      logAudit: logAudit
+      logAudit: async (entry: any) => {
+        // Persist to database
+        try {
+          await base44.asServiceRole.entities.AuditLog.create(entry);
+        } catch (dbError) {
+          console.error('Failed to persist audit log to DB:', dbError);
+        }
+        // Log to stdout
+        logAudit(entry);
+      }
     };
 
     const result = await autoReconcile(ctx, user);
@@ -63,9 +72,9 @@ Deno.serve(async (req) => {
   } catch (error: any) {
     console.error('Reconciliation error:', error);
 
-    // Log audit failure directly here as well if logic didn't catch it (though logic tries to catch)
-    // Actually logic catches and throws, so we catch it here again.
-    // Logic already logged the failure audit.
+    // Logic already logged the failure audit in most cases, but if it failed before calling logic:
+    // We should ensure an audit log is written if possible, but context might not be created.
+    // For now, we rely on the logic catching its own errors and using ctx.logAudit.
 
     return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
