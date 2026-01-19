@@ -13,3 +13,7 @@
 ## 2025-05-25 - Dashboard Alerts
 **Learning:** Dismissible alerts and panels in dashboards often use icon-only "X" buttons that lack accessible labels, leaving screen reader users stuck in a list of "button" announcements.
 **Action:** Always add `aria-label="Dismiss alert"` (or specific context like "Dismiss risk warning") to these icon-only close buttons.
+
+## 2025-05-26 - Destructive Actions
+**Learning:** Native `window.confirm` breaks the immersive experience and often lacks context for screen readers compared to a custom Dialog.
+**Action:** Replace all `window.confirm` calls with the `Dialog` component, ensuring the destructive action button is clearly labeled and possibly colored red.
