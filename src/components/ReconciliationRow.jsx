@@ -17,6 +17,14 @@ const MATCH_CATEGORY_COLORS = {
   unmatched: "bg-red-50 text-red-700 border-red-200"
 };
 
+/**
+ * @typedef {Object} ReconciliationRowProps
+ * @property {any} rec
+ */
+
+/**
+ * @type {React.NamedExoticComponent<ReconciliationRowProps>}
+ */
 const ReconciliationRow = memo(({ rec }) => {
   return (
     <div className="clay rounded-2xl p-5">

@@ -72,7 +72,7 @@ export default function TaxEstimator() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["taxProfile"]);
+      queryClient.invalidateQueries({ queryKey: ["taxProfile"] });
       toast.success("Tax settings updated");
       setShowSettings(false);
     },

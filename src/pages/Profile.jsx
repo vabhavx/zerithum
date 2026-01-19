@@ -66,7 +66,7 @@ export default function Profile() {
   const updateProfileMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["currentUser"]);
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       toast.success("Profile updated successfully");
     },
     onError: () => {
@@ -77,7 +77,7 @@ export default function Profile() {
   const disconnectMutation = useMutation({
     mutationFn: (id) => base44.entities.ConnectedPlatform.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["connectedPlatforms"]);
+      queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
       toast.success("Platform disconnected");
     },
   });

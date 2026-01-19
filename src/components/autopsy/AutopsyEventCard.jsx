@@ -34,6 +34,15 @@ const getSeverityColor = (severity) => {
   }
 };
 
+/**
+ * @typedef {Object} AutopsyEventCardProps
+ * @property {any} event
+ * @property {(event: any, decision: string) => void} onDecision
+ */
+
+/**
+ * @type {React.NamedExoticComponent<AutopsyEventCardProps>}
+ */
 const AutopsyEventCard = memo(({ event, onDecision }) => {
   const Icon = getEventIcon(event.event_type);
 

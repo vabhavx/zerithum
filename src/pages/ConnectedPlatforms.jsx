@@ -179,7 +179,7 @@ export default function ConnectedPlatforms() {
   const disconnectMutation = useMutation({
     mutationFn: (id) => base44.entities.ConnectedPlatform.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["connectedPlatforms"]);
+      queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
       toast.success("Platform disconnected successfully");
       setDisconnectPlatform(null);
     },
@@ -188,7 +188,7 @@ export default function ConnectedPlatforms() {
   const connectMutation = useMutation({
     mutationFn: (data) => base44.entities.ConnectedPlatform.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["connectedPlatforms"]);
+      queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
       setShowConnectDialog(false);
       setSelectedPlatform(null);
       setApiKey("");
@@ -231,7 +231,7 @@ export default function ConnectedPlatforms() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["connectedPlatforms"]);
+      queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
       setSyncingPlatform(null);
       toast.success("Sync completed successfully! ✓");
     },
@@ -244,7 +244,7 @@ export default function ConnectedPlatforms() {
           error_message: "Failed to sync data. Please check your connection and try again."
         });
       }
-      queryClient.invalidateQueries(["connectedPlatforms"]);
+      queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
       setSyncingPlatform(null);
       toast.error("Sync failed. Please retry or reconnect the platform.");
     }
@@ -374,8 +374,8 @@ export default function ConnectedPlatforms() {
         forceFullSync
       });
       
-      queryClient.invalidateQueries(['connectedPlatforms']);
-      queryClient.invalidateQueries(['syncHistory']);
+      queryClient.invalidateQueries({ queryKey: ['connectedPlatforms'] });
+      queryClient.invalidateQueries({ queryKey: ['syncHistory'] });
       
       if (response.data.success) {
         setShowConfetti(true);
