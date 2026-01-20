@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,7 @@ export default function Expenses() {
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [processingReceipt, setProcessingReceipt] = useState(false);
   const [categorizing, setCategorizing] = useState(false);
@@ -340,11 +341,7 @@ export default function Expenses() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => {
-                        if (confirm("Delete this expense?")) {
-                          deleteExpenseMutation.mutate(expense.id);
-                        }
-                      }}
+                      onClick={() => setExpenseToDelete(expense)}
                       className="text-white/40 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
                       aria-label={`Delete expense from ${expense.merchant || expense.description || 'unknown'}`}
                     >
@@ -535,6 +532,37 @@ export default function Expenses() {
         open={showAIChat}
         onOpenChange={setShowAIChat}
       />
+
+      <Dialog open={!!expenseToDelete} onOpenChange={(open) => !open && setExpenseToDelete(null)}>
+        <DialogContent className="card-modern rounded-2xl border max-w-md !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-white">Delete Expense?</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Are you sure you want to delete this expense from <span className="text-white font-medium">{expenseToDelete?.merchant || expenseToDelete?.description || 'unknown'}</span>? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setExpenseToDelete(null)}
+              className="rounded-lg border-white/10 text-white/70 hover:bg-white/5"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (expenseToDelete) {
+                  deleteExpenseMutation.mutate(expenseToDelete.id);
+                  setExpenseToDelete(null);
+                }
+              }}
+              className="rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20"
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
