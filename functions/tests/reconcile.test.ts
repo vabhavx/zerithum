@@ -130,4 +130,29 @@ describe('autoReconcile', () => {
         })
     ]);
   });
+
+  it('should match with hold period', async () => {
+    const revenues = [
+      { id: 'rev_hold', amount: 500, transaction_date: '2024-01-01', platform: 'platform_slow' }
+    ];
+    const bankTxns = [
+      { id: 'bank_hold', amount: 500, transaction_date: '2024-01-05', description: 'Delayed Payout' } // 4 days later
+    ];
+
+    (mockCtx.fetchUnreconciledRevenue as any).mockResolvedValue(revenues);
+    (mockCtx.fetchUnreconciledBankTransactions as any).mockResolvedValue(bankTxns);
+
+    const result = await autoReconcile(mockCtx, mockUser);
+
+    expect(result.matchedCount).toBe(1);
+    expect(mockCtx.createReconciliations).toHaveBeenCalledWith([
+      expect.objectContaining({
+        revenue_transaction_id: 'rev_hold',
+        bank_transaction_id: 'bank_hold',
+        match_category: 'hold_period',
+        match_confidence: 0.8,
+        reconciled_by: 'auto'
+      })
+    ]);
+  });
 });
