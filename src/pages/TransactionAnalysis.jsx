@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
+import { escapeCsv } from "@/lib/csv";
 
 const PLATFORM_NAMES = {
   youtube: 'YouTube',
@@ -113,9 +114,9 @@ export default function TransactionAnalysis() {
     const headers = ["Date", "Platform", "Category", "Description", "Amount", "Fee", "Net"];
     const rows = filteredAndSorted.map(t => [
       format(new Date(t.transaction_date), "yyyy-MM-dd"),
-      t.platform,
-      t.category,
-      t.description || "",
+      escapeCsv(t.platform),
+      escapeCsv(t.category),
+      escapeCsv(t.description || ""),
       t.amount,
       t.platform_fee || 0,
       t.amount - (t.platform_fee || 0)
