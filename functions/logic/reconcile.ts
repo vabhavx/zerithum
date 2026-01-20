@@ -48,11 +48,17 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
         let confidence = 0;
         let baseScore = 0;
 
-        // Exact Match
-        if (Math.abs(bankAmount - revAmount) < 0.01) {
+        // Exact Match (Same amount, close date)
+        if (Math.abs(bankAmount - revAmount) < 0.01 && diffDays < 2) {
           matchType = 'exact_match';
           confidence = 1.0;
           baseScore = 1000;
+        }
+        // Hold Period (Same amount, delayed payout)
+        else if (Math.abs(bankAmount - revAmount) < 0.01 && diffDays >= 2) {
+             matchType = 'hold_period';
+             confidence = 0.8;
+             baseScore = 600;
         }
         // Fee Deduction (95% - 99.9% of revenue)
         else if (bankAmount < revAmount && bankAmount >= revAmount * 0.95) {

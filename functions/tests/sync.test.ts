@@ -111,7 +111,7 @@ describe('syncPlatform', () => {
         error_message: 'API Error'
       })
     }));
-    expect(mockCtx.updateConnectionStatus).toHaveBeenCalledWith('error', 'API Error');
+    expect(mockCtx.updateConnectionStatus).toHaveBeenCalledWith('error', 'Sync failed for youtube during data sync: API Error');
   });
 
   it('should handle stripe transactions', async () => {
