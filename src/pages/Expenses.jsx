@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -41,6 +41,7 @@ const CATEGORIES = {
 
 export default function Expenses() {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
@@ -82,6 +83,7 @@ export default function Expenses() {
     onSuccess: () => {
       queryClient.invalidateQueries(["expenses"]);
       toast.success("Expense deleted");
+      setExpenseToDelete(null);
     },
   });
 
@@ -340,11 +342,7 @@ export default function Expenses() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => {
-                        if (confirm("Delete this expense?")) {
-                          deleteExpenseMutation.mutate(expense.id);
-                        }
-                      }}
+                      onClick={() => setExpenseToDelete(expense)}
                       className="text-white/40 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
                       aria-label={`Delete expense from ${expense.merchant || expense.description || 'unknown'}`}
                     >
@@ -535,6 +533,33 @@ export default function Expenses() {
         open={showAIChat}
         onOpenChange={setShowAIChat}
       />
+
+      <Dialog open={!!expenseToDelete} onOpenChange={(open) => !open && setExpenseToDelete(null)}>
+        <DialogContent className="card-modern rounded-2xl border max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-white">Delete Expense?</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Are you sure you want to delete the expense from <span className="text-white font-medium">{expenseToDelete?.merchant || expenseToDelete?.description}</span>? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setExpenseToDelete(null)}
+              className="rounded-lg border-white/10 text-white/70 hover:bg-white/5"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => deleteExpenseMutation.mutate(expenseToDelete.id)}
+              disabled={deleteExpenseMutation.isPending}
+              className="rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20"
+            >
+              {deleteExpenseMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
