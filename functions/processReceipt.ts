@@ -4,9 +4,10 @@ import { logAudit } from './utils/audit.ts';
 Deno.serve(async (req) => {
   let user = null;
   let body: any = {};
+  let base44: any = null;
 
   try {
-    const base44 = createClientFromRequest(req);
+    base44 = createClientFromRequest(req);
     user = await base44.auth.me();
 
     if (!user) {
@@ -60,7 +61,7 @@ If you cannot determine something, use null.`;
       receiptUrl
     });
 
-    logAudit({
+    await logAudit(base44, {
         action: 'process_receipt',
         actor_id: user.id,
         status: 'success',
@@ -80,7 +81,7 @@ If you cannot determine something, use null.`;
   } catch (error) {
     console.error('Receipt processing error:', error);
 
-    logAudit({
+    await logAudit(base44, {
         action: 'process_receipt_failed',
         actor_id: user?.id,
         status: 'failure',

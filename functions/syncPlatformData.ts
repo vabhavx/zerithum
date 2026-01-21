@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
       saveTransactions: async (transactions: any[]) => {
         await base44.asServiceRole.entities.RevenueTransaction.bulkCreate(transactions);
       },
-      logAudit: logAudit,
+      logAudit: async (entry: any) => await logAudit(base44, entry),
       updateConnectionStatus: async (status: string, error?: string) => {
         const update: any = { sync_status: status };
         if (status === 'active') update.last_synced_at = new Date().toISOString();

@@ -2,7 +2,7 @@ export interface ReconcileContext {
   fetchUnreconciledRevenue: (userId: string) => Promise<any[]>;
   fetchUnreconciledBankTransactions: (userId: string, startDate: string) => Promise<any[]>;
   createReconciliations: (reconciliations: any[]) => Promise<void>;
-  logAudit: (entry: any) => void;
+  logAudit: (entry: any) => Promise<void>;
 }
 
 interface MatchCandidate {
@@ -111,7 +111,7 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
 
     const duration = Date.now() - startTime;
 
-    ctx.logAudit({
+    await ctx.logAudit({
         action: 'auto_reconcile',
         actor_id: user.id,
         status: 'success',
@@ -131,7 +131,7 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
 
   } catch (error: any) {
       const duration = Date.now() - startTime;
-      ctx.logAudit({
+      await ctx.logAudit({
           action: 'auto_reconcile_failed',
           actor_id: user?.id,
           status: 'failure',

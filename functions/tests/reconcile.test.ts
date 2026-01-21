@@ -10,7 +10,7 @@ describe('autoReconcile', () => {
       fetchUnreconciledRevenue: vi.fn(),
       fetchUnreconciledBankTransactions: vi.fn(),
       createReconciliations: vi.fn().mockResolvedValue(undefined),
-      logAudit: vi.fn(),
+      logAudit: vi.fn().mockResolvedValue(undefined),
     };
   });
 
