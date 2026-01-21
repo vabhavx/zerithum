@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { escapeCsv } from "@/lib/csv";
 
 const CATEGORY_LABELS = {
   ad_revenue: "Ad Revenue",
@@ -101,9 +102,9 @@ export default function TaxReports() {
     const headers = ["Date", "Platform", "Category", "Description", "Amount", "Platform Fee", "Net Amount"];
     const rows = yearTransactions.map(t => [
       format(new Date(t.transaction_date), "yyyy-MM-dd"),
-      t.platform,
-      t.category,
-      t.description || "",
+      escapeCsv(t.platform),
+      escapeCsv(t.category),
+      escapeCsv(t.description || ""),
       t.amount?.toFixed(2),
       (t.platform_fee || 0).toFixed(2),
       ((t.amount || 0) - (t.platform_fee || 0)).toFixed(2)

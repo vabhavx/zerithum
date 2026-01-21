@@ -34,6 +34,7 @@ import {
   Tooltip, 
   ResponsiveContainer
 } from "recharts";
+import { escapeCsv } from "@/lib/csv";
 
 const PLATFORM_COLORS = {
   youtube: "#FF0000",
@@ -184,9 +185,9 @@ export default function Reports() {
     const headers = ["Date", "Platform", "Category", "Description", "Amount", "Fees", "Net"];
     const rows = filteredTransactions.map(t => [
       t.transaction_date,
-      t.platform,
-      t.category,
-      t.description || "",
+      escapeCsv(t.platform),
+      escapeCsv(t.category),
+      escapeCsv(t.description || ""),
       t.amount,
       t.platform_fee || 0,
       t.amount - (t.platform_fee || 0)
