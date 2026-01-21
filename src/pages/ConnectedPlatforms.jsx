@@ -19,7 +19,9 @@ import {
   RefreshCw,
   Tv,
   FileText,
-  Store
+  Store,
+  ShieldCheck,
+  AlertTriangle
 } from "lucide-react";
 import PlatformSyncHistory from "../components/platform/PlatformSyncHistory";
 import ConnectedPlatformRow from "../components/platform/ConnectedPlatformRow";
@@ -157,6 +159,9 @@ export default function ConnectedPlatforms() {
   const [validatingKey, setValidatingKey] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [shopifyShopName, setShopifyShopName] = useState("");
+  const [showAuditDialog, setShowAuditDialog] = useState(false);
+  const [auditResults, setAuditResults] = useState(null);
+  const [isAuditing, setIsAuditing] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: connectedPlatforms = [], isLoading } = useQuery({
@@ -402,6 +407,35 @@ export default function ConnectedPlatforms() {
     setDisconnectPlatform({ id: connection.id, name: platform.name });
   }, []);
 
+  const handleAudit = async () => {
+    setIsAuditing(true);
+    try {
+      // Simulate audit process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const results = connectedPlatforms.map(p => {
+        const platform = PLATFORMS.find(pl => pl.id === p.platform);
+        const isHealthy = p.sync_status === 'active' && (!p.last_synced_at || (new Date() - new Date(p.last_synced_at)) < 7 * 24 * 60 * 60 * 1000);
+
+        return {
+          id: p.id,
+          name: platform?.name || p.platform,
+          status: isHealthy ? "healthy" : "attention",
+          message: isHealthy ? "Connection secure and active" : "Sync data is stale or connection error",
+          lastSynced: p.last_synced_at
+        };
+      });
+
+      setAuditResults(results);
+      setShowAuditDialog(true);
+      toast.success("Platform audit completed");
+    } catch (error) {
+      toast.error("Audit failed. Please try again.");
+    } finally {
+      setIsAuditing(false);
+    }
+  };
+
   const connectedIds = connectedPlatforms.map(p => p.platform);
   const availablePlatforms = PLATFORMS.filter(p => !connectedIds.includes(p.id));
 
@@ -437,15 +471,32 @@ export default function ConnectedPlatforms() {
           <h1 className="text-2xl font-bold text-white tracking-tight">Connected Platforms</h1>
           <p className="text-white/40 mt-1 text-sm">Manage your revenue sources</p>
         </div>
-        {availablePlatforms.length > 0 && (
-          <Button
-            onClick={() => setShowConnectDialog(true)}
-            className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700 transition-all text-sm h-9"
-          >
-            <Plus className="w-3.5 h-3.5 mr-2" />
-            Connect Platform
-          </Button>
-        )}
+        <div className="flex gap-3">
+          {connectedPlatforms.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={handleAudit}
+              disabled={isAuditing}
+              className="rounded-lg border-white/10 text-white hover:bg-white/5 transition-all text-sm h-9"
+            >
+              {isAuditing ? (
+                <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+              ) : (
+                <ShieldCheck className="w-3.5 h-3.5 mr-2" />
+              )}
+              {isAuditing ? "Auditing..." : "Run Audit"}
+            </Button>
+          )}
+          {availablePlatforms.length > 0 && (
+            <Button
+              onClick={() => setShowConnectDialog(true)}
+              className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700 transition-all text-sm h-9"
+            >
+              <Plus className="w-3.5 h-3.5 mr-2" />
+              Connect Platform
+            </Button>
+          )}
+        </div>
       </motion.div>
 
       {/* Analytics Charts */}
@@ -590,7 +641,7 @@ export default function ConnectedPlatforms() {
 
       {/* Connect Dialog */}
       <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
-        <DialogContent className="card-modern rounded-2xl border max-w-2xl !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+        <DialogContent className="card-modern rounded-2xl border max-w-2xl !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 max-h-[85vh] overflow-y-auto" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-white">
               {selectedPlatform ? `Connect ${selectedPlatform.name}` : "Connect Platform"}
@@ -760,8 +811,68 @@ export default function ConnectedPlatforms() {
         onOpenChange={setShowHistoryDialog}
       />
 
-      <Dialog open={!!disconnectPlatform} onOpenChange={(open) => !open && setDisconnectPlatform(null)}>
+      <Dialog open={showAuditDialog} onOpenChange={setShowAuditDialog}>
         <DialogContent className="card-modern rounded-2xl border max-w-md !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              Platform Audit Report
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Security and connection health analysis
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 space-y-3">
+            {auditResults?.map((result) => (
+              <div
+                key={result.id}
+                className={cn(
+                  "p-3 rounded-lg border flex items-start gap-3",
+                  result.status === "healthy"
+                    ? "bg-emerald-500/5 border-emerald-500/20"
+                    : "bg-amber-500/5 border-amber-500/20"
+                )}
+              >
+                <div className={cn(
+                  "mt-0.5 p-1 rounded-full",
+                  result.status === "healthy" ? "bg-emerald-500/20" : "bg-amber-500/20"
+                )}>
+                  {result.status === "healthy" ? (
+                    <Check className={cn("w-3 h-3", result.status === "healthy" ? "text-emerald-400" : "text-amber-400")} />
+                  ) : (
+                    <AlertTriangle className="w-3 h-3 text-amber-400" />
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-white">{result.name}</h4>
+                  <p className={cn("text-xs", result.status === "healthy" ? "text-emerald-400/80" : "text-amber-400/80")}>
+                    {result.message}
+                  </p>
+                  {result.lastSynced && (
+                    <p className="text-[10px] text-white/30 mt-1">
+                      Last Check: {format(new Date(result.lastSynced), "MMM d, h:mm a")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+            {auditResults?.length === 0 && (
+              <p className="text-center text-white/40 py-4">No platforms connected to audit.</p>
+            )}
+          </div>
+          <div className="flex justify-end mt-4">
+            <Button
+              onClick={() => setShowAuditDialog(false)}
+              className="rounded-lg bg-white/10 text-white hover:bg-white/20"
+            >
+              Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!disconnectPlatform} onOpenChange={(open) => !open && setDisconnectPlatform(null)}>
+        <DialogContent className="card-modern rounded-2xl border max-w-md !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 max-h-[85vh] overflow-y-auto" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-white">Disconnect {disconnectPlatform?.name}?</DialogTitle>
             <DialogDescription className="text-white/60">

@@ -89,7 +89,7 @@ export default function Transactions() {
           <h1 className="text-3xl font-bold text-[#5E5240] mb-2">Transactions</h1>
           <p className="text-[#5E5240]/60">View and manage all your revenue transactions</p>
         </div>
-        <Button className="btn-secondary">
+        <Button className="bg-[#208D9E] text-white hover:bg-[#1A7B8A]">
           <Download className="w-4 h-4 mr-2" />
           Export CSV
         </Button>
