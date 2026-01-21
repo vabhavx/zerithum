@@ -20,7 +20,7 @@ export default function SettingsConnectedApps() {
   const disconnectMutation = useMutation({
     mutationFn: (id) => base44.entities.PlatformConnection.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["platform_connections"]);
+      queryClient.invalidateQueries({ queryKey: ["platform_connections"] });
       toast({
         title: "Disconnected",
         description: "Platform has been disconnected",
@@ -31,7 +31,7 @@ export default function SettingsConnectedApps() {
   const refreshMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.PlatformConnection.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["platform_connections"]);
+      queryClient.invalidateQueries({ queryKey: ["platform_connections"] });
       toast({
         title: "Token Refreshed",
         description: "Connection has been renewed",

@@ -66,6 +66,20 @@ const getStatusColor = (status) => {
   }
 };
 
+/**
+ * @typedef {Object} ConnectedPlatformRowProps
+ * @property {any} connection
+ * @property {any} platform
+ * @property {boolean} isSyncing
+ * @property {(connection: any) => void} onViewHistory
+ * @property {(connection: any, fullResync: boolean) => void} onSync
+ * @property {(connection: any, platform: any) => void} onDisconnect
+ * @property {boolean} [isDisconnecting]
+ */
+
+/**
+ * @type {React.NamedExoticComponent<ConnectedPlatformRowProps>}
+ */
 const ConnectedPlatformRow = React.memo(({
   connection,
   platform,

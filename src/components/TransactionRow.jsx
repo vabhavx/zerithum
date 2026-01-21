@@ -2,6 +2,16 @@ import React from 'react';
 import moment from 'moment';
 import { Button } from '@/components/ui/button';
 
+/**
+ * @typedef {Object} TransactionRowProps
+ * @property {any} transaction
+ * @property {boolean} isExpanded
+ * @property {(id: any) => void} onToggleExpand
+ */
+
+/**
+ * @type {React.NamedExoticComponent<TransactionRowProps>}
+ */
 const TransactionRow = React.memo(({ transaction, isExpanded, onToggleExpand }) => {
   return (
     <React.Fragment>

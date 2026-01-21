@@ -30,6 +30,7 @@ export default function RevenueAutopsy() {
   const { data: autopsyEvents = [], isLoading } = useQuery({
     queryKey: ["autopsyEvents"],
     queryFn: async () => {
+      /** @type {any} */
       const user = await base44.auth.me();
       return base44.entities.AutopsyEvent.filter({ user_id: user.id }, "-detected_at", 100);
     },
@@ -38,7 +39,7 @@ export default function RevenueAutopsy() {
   const updateEventMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.AutopsyEvent.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["autopsyEvents"]);
+      queryClient.invalidateQueries({ queryKey: ["autopsyEvents"] });
       setShowDecisionDialog(false);
       setSelectedEvent(null);
       setDecisionNotes("");
@@ -50,7 +51,7 @@ export default function RevenueAutopsy() {
     setScanning(true);
     try {
       await base44.functions.invoke('detectRevenueAnomalies');
-      queryClient.invalidateQueries(["autopsyEvents"]);
+      queryClient.invalidateQueries({ queryKey: ["autopsyEvents"] });
       toast.success("Anomaly scan complete");
     } catch (error) {
       toast.error("Scan failed");

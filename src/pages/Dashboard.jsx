@@ -99,7 +99,7 @@ export default function Dashboard() {
     setGeneratingInsights(true);
     try {
       await base44.functions.invoke('generateInsights');
-      await queryClient.invalidateQueries(['insights']);
+      await queryClient.invalidateQueries({ queryKey: ['insights'] });
     } catch (error) {
       console.error('Failed to generate insights:', error);
     } finally {

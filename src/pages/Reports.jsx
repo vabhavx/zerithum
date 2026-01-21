@@ -264,6 +264,7 @@ export default function Reports() {
     }, 250);
   };
 
+  /** @param {{ active?: boolean, payload?: any[] }} props */
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (

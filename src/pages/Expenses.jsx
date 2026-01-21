@@ -70,7 +70,7 @@ export default function Expenses() {
   const createExpenseMutation = useMutation({
     mutationFn: (data) => base44.entities.Expense.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["expenses"]);
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
       setShowAddDialog(false);
       resetForm();
       toast.success("Expense added successfully");
@@ -80,7 +80,7 @@ export default function Expenses() {
   const deleteExpenseMutation = useMutation({
     mutationFn: (id) => base44.entities.Expense.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["expenses"]);
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
       toast.success("Expense deleted");
     },
   });
@@ -472,8 +472,8 @@ export default function Expenses() {
                 <Input
                   id="expense-deduction"
                   type="number"
-                  min="0"
-                  max="100"
+                  min={0}
+                  max={100}
                   value={formData.deduction_percentage}
                   onChange={(e) => setFormData({ ...formData, deduction_percentage: e.target.value })}
                   className="bg-white/5 border-white/10 text-white"
@@ -528,7 +528,7 @@ export default function Expenses() {
       <BulkImportDialog
         open={showBulkImport}
         onOpenChange={setShowBulkImport}
-        onSuccess={() => queryClient.invalidateQueries(["expenses"])}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["expenses"] })}
       />
 
       <AIExpenseChat

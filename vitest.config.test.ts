@@ -9,6 +9,7 @@ export default defineConfig({
     globals: true,
     alias: {
       '@': path.resolve(__dirname, './src')
-    }
+    },
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.{idea,git,cache,output,temp}/**', '**/*.config.*']
   },
 })
