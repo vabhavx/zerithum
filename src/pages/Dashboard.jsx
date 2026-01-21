@@ -107,6 +107,16 @@ export default function Dashboard() {
     }
   };
 
+  const filteredInsights = useMemo(() =>
+    insights.filter(i => i.insight_type !== 'cashflow_forecast'),
+    [insights]
+  );
+
+  const cashflowInsight = useMemo(() =>
+    insights.find(i => i.insight_type === 'cashflow_forecast'),
+    [insights]
+  );
+
   // Calculate metrics
   const metrics = useMemo(() => {
     const now = new Date();
@@ -352,12 +362,12 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <InsightsPanel 
-            insights={insights.filter(i => i.insight_type !== 'cashflow_forecast')} 
+            insights={filteredInsights}
           />
         </div>
         <div>
           <LendingSignalsCard 
-            insight={insights.find(i => i.insight_type === 'cashflow_forecast')} 
+            insight={cashflowInsight}
           />
         </div>
       </div>
