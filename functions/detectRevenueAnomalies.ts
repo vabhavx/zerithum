@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       saveAnomalies: async (anomalies: any[]) => {
         await base44.asServiceRole.entities.AutopsyEvent.bulkCreate(anomalies);
       },
-      logAudit: logAudit
+      logAudit: async (entry: any) => await logAudit(base44, entry)
     };
 
     const result = await detectAnomalies(ctx, user);

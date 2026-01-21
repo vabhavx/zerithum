@@ -2,7 +2,7 @@ export interface SyncContext {
   fetchPlatformData: (url: string, headers: any) => Promise<any>;
   fetchExistingTransactionIdsInRange: (userId: string, platform: string, startDate: string, endDate: string) => Promise<Set<string>>;
   saveTransactions: (transactions: any[]) => Promise<void>;
-  logAudit: (entry: any) => void;
+  logAudit: (entry: any) => Promise<void>;
   updateConnectionStatus: (status: string, error?: string) => Promise<void>;
   updateSyncHistory: (status: string, count: number, duration: number, error?: string) => Promise<void>;
 }
@@ -261,7 +261,7 @@ export async function syncPlatform(
 
     const duration = Date.now() - startTime;
 
-    ctx.logAudit({
+    await ctx.logAudit({
       action: 'sync_platform_data',
       actor_id: user.id,
       resource_id: connectionId,
@@ -292,7 +292,7 @@ export async function syncPlatform(
     const duration = Date.now() - startTime;
     const detailedErrorMessage = generateDetailedErrorMessage(error, platform, 'data sync');
 
-    ctx.logAudit({
+    await ctx.logAudit({
       action: 'sync_platform_data_failed',
       actor_id: user?.id,
       resource_id: connectionId,

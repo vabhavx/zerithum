@@ -13,7 +13,7 @@ describe('syncPlatform', () => {
       fetchPlatformData: vi.fn(),
       fetchExistingTransactionIdsInRange: vi.fn().mockResolvedValue(new Set()),
       saveTransactions: vi.fn().mockResolvedValue(undefined),
-      logAudit: vi.fn(),
+      logAudit: vi.fn().mockResolvedValue(undefined),
       updateConnectionStatus: vi.fn().mockResolvedValue(undefined),
       updateSyncHistory: vi.fn().mockResolvedValue(undefined),
     };
