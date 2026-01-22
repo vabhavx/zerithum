@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Reconciliation.bulkCreate(reconciliations);
       },
 
-      logAudit: logAudit
+      logAudit: (entry: any) => logAudit(base44, entry)
     };
 
     const result = await autoReconcile(ctx, user);

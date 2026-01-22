@@ -11,7 +11,7 @@ describe('detectAnomalies', () => {
       fetchRecentAutopsies: vi.fn().mockResolvedValue([]),
       invokeLLM: vi.fn().mockResolvedValue({}),
       saveAnomalies: vi.fn().mockResolvedValue(undefined),
-      logAudit: vi.fn(),
+      logAudit: vi.fn().mockResolvedValue(undefined),
     };
   });
 

@@ -9,7 +9,7 @@ export interface AuditLogEntry {
   timestamp?: string;
 }
 
-export function logAudit(entry: AuditLogEntry): void {
+export async function logAudit(base44: any, entry: AuditLogEntry): Promise<void> {
   const logEntry = {
     timestamp: entry.timestamp || new Date().toISOString(),
     event_type: 'audit',
@@ -18,4 +18,10 @@ export function logAudit(entry: AuditLogEntry): void {
 
   // Emit structured JSON log to stdout
   console.log(JSON.stringify(logEntry));
+
+  try {
+    await base44.asServiceRole.entities.AuditLog.create(logEntry);
+  } catch (error) {
+    console.error('Failed to persist audit log:', error);
+  }
 }

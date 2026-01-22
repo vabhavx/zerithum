@@ -3,7 +3,7 @@ export interface AnomalyContext {
   fetchRecentAutopsies: (userId: string, since: Date) => Promise<any[]>;
   invokeLLM: (prompt: string, schema: any) => Promise<any>;
   saveAnomalies: (anomalies: any[]) => Promise<void>;
-  logAudit: (entry: any) => void;
+  logAudit: (entry: any) => Promise<void>;
 }
 
 export async function detectAnomalies(
@@ -150,7 +150,7 @@ Be specific and data-driven. No speculation.`,
     }
 
     // Log Audit Success
-    ctx.logAudit({
+    await ctx.logAudit({
       action: 'detect_revenue_anomalies',
       actor_id: user.id,
       status: 'success',
@@ -171,7 +171,7 @@ Be specific and data-driven. No speculation.`,
     const duration = Date.now() - startTime;
 
     // Log Audit Failure
-    ctx.logAudit({
+    await ctx.logAudit({
       action: 'detect_revenue_anomalies_failed',
       actor_id: user?.id,
       status: 'failure',
