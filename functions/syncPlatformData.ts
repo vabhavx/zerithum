@@ -6,9 +6,10 @@ Deno.serve(async (req) => {
   let syncHistoryId: string | null = null;
   let body: any = {};
   let user: any = null;
+  let base44: any = null;
 
   try {
-    const base44 = createClientFromRequest(req);
+    base44 = createClientFromRequest(req);
     user = await base44.auth.me();
 
     if (!user) {
@@ -86,7 +87,7 @@ Deno.serve(async (req) => {
       saveTransactions: async (transactions: any[]) => {
         await base44.asServiceRole.entities.RevenueTransaction.bulkCreate(transactions);
       },
-      logAudit: logAudit,
+      logAudit: async (entry) => await logAudit(base44, entry),
       updateConnectionStatus: async (status: string, error?: string) => {
         const update: any = { sync_status: status };
         if (status === 'active') update.last_synced_at = new Date().toISOString();

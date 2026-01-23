@@ -3,8 +3,9 @@ import { logAudit } from './utils/audit.ts';
 import { autoReconcile, ReconcileContext } from './logic/reconcile.ts';
 
 Deno.serve(async (req) => {
+  let base44: any = null;
   try {
-    const base44 = createClientFromRequest(req);
+    base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user) {
@@ -53,7 +54,7 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Reconciliation.bulkCreate(reconciliations);
       },
 
-      logAudit: logAudit
+      logAudit: async (entry) => await logAudit(base44, entry)
     };
 
     const result = await autoReconcile(ctx, user);

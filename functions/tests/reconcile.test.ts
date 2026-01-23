@@ -10,7 +10,7 @@ describe('autoReconcile', () => {
       fetchUnreconciledRevenue: vi.fn(),
       fetchUnreconciledBankTransactions: vi.fn(),
       createReconciliations: vi.fn().mockResolvedValue(undefined),
-      logAudit: vi.fn(),
+      logAudit: vi.fn().mockResolvedValue(undefined),
     };
   });
 
@@ -34,6 +34,31 @@ describe('autoReconcile', () => {
         bank_transaction_id: 'bank_1',
         match_category: 'exact_match',
         match_confidence: 1.0,
+        reconciled_by: 'auto'
+      })
+    ]);
+  });
+
+  it('should match with hold period (diff >= 2 days)', async () => {
+    const revenues = [
+      { id: 'rev_hold', amount: 100, transaction_date: '2024-01-01', platform: 'platform_a' }
+    ];
+    const bankTxns = [
+      { id: 'bank_hold', amount: 100, transaction_date: '2024-01-04', description: 'Deposit' } // 3 days diff
+    ];
+
+    (mockCtx.fetchUnreconciledRevenue as any).mockResolvedValue(revenues);
+    (mockCtx.fetchUnreconciledBankTransactions as any).mockResolvedValue(bankTxns);
+
+    const result = await autoReconcile(mockCtx, mockUser);
+
+    expect(result.matchedCount).toBe(1);
+    expect(mockCtx.createReconciliations).toHaveBeenCalledWith([
+      expect.objectContaining({
+        revenue_transaction_id: 'rev_hold',
+        bank_transaction_id: 'bank_hold',
+        match_category: 'hold_period',
+        match_confidence: 0.8,
         reconciled_by: 'auto'
       })
     ]);
