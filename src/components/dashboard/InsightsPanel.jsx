@@ -38,7 +38,7 @@ const INSIGHT_CONFIG = {
   }
 };
 
-export default function InsightsPanel({ insights, onDismiss }) {
+const InsightsPanel = React.memo(({ insights, onDismiss }) => {
   if (!insights || insights.length === 0) {
     return null;
   }
@@ -110,4 +110,8 @@ export default function InsightsPanel({ insights, onDismiss }) {
       </AnimatePresence>
     </div>
   );
-}
+});
+
+InsightsPanel.displayName = "InsightsPanel";
+
+export default InsightsPanel;

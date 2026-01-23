@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
@@ -106,6 +106,20 @@ export default function Dashboard() {
       setGeneratingInsights(false);
     }
   };
+
+  const handleDismissAlert = useCallback((id) => {
+    setAlerts(prev => prev.filter(a => a.id !== id));
+  }, []);
+
+  const generalInsights = useMemo(() =>
+    insights.filter(i => i.insight_type !== 'cashflow_forecast'),
+    [insights]
+  );
+
+  const lendingInsight = useMemo(() =>
+    insights.find(i => i.insight_type === 'cashflow_forecast'),
+    [insights]
+  );
 
   // Calculate metrics
   const metrics = useMemo(() => {
@@ -238,7 +252,7 @@ export default function Dashboard() {
       {/* Alert Banners */}
       <AlertBanner 
         alerts={alerts} 
-        onDismiss={(id) => setAlerts(alerts.filter(a => a.id !== id))} 
+        onDismiss={handleDismissAlert}
       />
 
       {/* Concentration Risk Alert */}
@@ -352,12 +366,12 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <InsightsPanel 
-            insights={insights.filter(i => i.insight_type !== 'cashflow_forecast')} 
+            insights={generalInsights}
           />
         </div>
         <div>
           <LendingSignalsCard 
-            insight={insights.find(i => i.insight_type === 'cashflow_forecast')} 
+            insight={lendingInsight}
           />
         </div>
       </div>

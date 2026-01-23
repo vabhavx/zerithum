@@ -3,7 +3,7 @@ import { AlertTriangle, Clock, Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export default function AlertBanner({ alerts = [], onDismiss }) {
+const AlertBanner = React.memo(({ alerts = [], onDismiss }) => {
   if (!alerts || alerts.length === 0) return null;
 
   return (
@@ -59,4 +59,8 @@ export default function AlertBanner({ alerts = [], onDismiss }) {
       })}
     </AnimatePresence>
   );
-}
+});
+
+AlertBanner.displayName = "AlertBanner";
+
+export default AlertBanner;
