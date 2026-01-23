@@ -2,7 +2,7 @@ export interface ReconcileContext {
   fetchUnreconciledRevenue: (userId: string) => Promise<any[]>;
   fetchUnreconciledBankTransactions: (userId: string, startDate: string) => Promise<any[]>;
   createReconciliations: (reconciliations: any[]) => Promise<void>;
-  logAudit: (entry: any) => void;
+  logAudit: (entry: any) => Promise<void>;
 }
 
 interface MatchCandidate {
@@ -48,8 +48,8 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
         let confidence = 0;
         let baseScore = 0;
 
-        // Exact Match
-        if (Math.abs(bankAmount - revAmount) < 0.01) {
+        // Exact Match (diff < 2 days)
+        if (Math.abs(bankAmount - revAmount) < 0.01 && diffDays < 2) {
           matchType = 'exact_match';
           confidence = 1.0;
           baseScore = 1000;
@@ -59,6 +59,12 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
           matchType = 'fee_deduction';
           confidence = 0.9;
           baseScore = 800;
+        }
+        // Hold Period (diff >= 2 days, exact amount)
+        else if (Math.abs(bankAmount - revAmount) < 0.01 && diffDays >= 2) {
+          matchType = 'hold_period';
+          confidence = 0.8;
+          baseScore = 600;
         }
 
         if (matchType) {
@@ -111,7 +117,7 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
 
     const duration = Date.now() - startTime;
 
-    ctx.logAudit({
+    await ctx.logAudit({
         action: 'auto_reconcile',
         actor_id: user.id,
         status: 'success',
@@ -131,7 +137,7 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
 
   } catch (error: any) {
       const duration = Date.now() - startTime;
-      ctx.logAudit({
+      await ctx.logAudit({
           action: 'auto_reconcile_failed',
           actor_id: user?.id,
           status: 'failure',
