@@ -12,7 +12,7 @@ const PLATFORM_COLORS = {
   tiktok: '#000000'
 };
 
-export default function LendingSignalsCard({ insight }) {
+const LendingSignalsCard = React.memo(({ insight }) => {
   if (!insight || !insight.data?.predictions) {
     return null;
   }
@@ -83,4 +83,8 @@ export default function LendingSignalsCard({ insight }) {
       </div>
     </motion.div>
   );
-}
+});
+
+LendingSignalsCard.displayName = "LendingSignalsCard";
+
+export default LendingSignalsCard;
