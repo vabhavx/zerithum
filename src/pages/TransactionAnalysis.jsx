@@ -193,6 +193,7 @@ export default function TransactionAnalysis() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
             <Input
               placeholder="Search transactions..."
+              aria-label="Search transactions"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-white/5 border-white/10 text-white"
@@ -200,7 +201,7 @@ export default function TransactionAnalysis() {
           </div>
 
           <Select value={platformFilter} onValueChange={setPlatformFilter}>
-            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+            <SelectTrigger className="bg-white/5 border-white/10 text-white" aria-label="Filter by platform">
               <SelectValue placeholder="All Platforms" />
             </SelectTrigger>
             <SelectContent>
@@ -212,7 +213,7 @@ export default function TransactionAnalysis() {
           </Select>
 
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+            <SelectTrigger className="bg-white/5 border-white/10 text-white" aria-label="Filter by category">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
@@ -332,6 +333,7 @@ export default function TransactionAnalysis() {
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="border-white/10 text-white/70 hover:bg-white/5"
+                aria-label="Previous page"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -341,6 +343,7 @@ export default function TransactionAnalysis() {
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 className="border-white/10 text-white/70 hover:bg-white/5"
+                aria-label="Next page"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
