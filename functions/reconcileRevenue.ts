@@ -3,8 +3,15 @@ import { logAudit } from './utils/audit.ts';
 import { autoReconcile, ReconcileContext } from './logic/reconcile.ts';
 
 Deno.serve(async (req) => {
+  // Initialize base44 outside try/catch to ensure it is accessible for audit logging
+  // (though in this specific function we create it inside, but let's follow the pattern if possible.
+  // Actually, createClientFromRequest might throw, so we can't fully guarantee it outside without checks.
+  // But let's stick to the current structure but improve error handling logic.)
+
+  let base44: any = null;
+
   try {
-    const base44 = createClientFromRequest(req);
+    base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user) {
@@ -53,7 +60,9 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Reconciliation.bulkCreate(reconciliations);
       },
 
-      logAudit: logAudit
+      logAudit: async (entry: any) => {
+        await logAudit(base44, entry);
+      }
     };
 
     const result = await autoReconcile(ctx, user);
@@ -63,9 +72,24 @@ Deno.serve(async (req) => {
   } catch (error: any) {
     console.error('Reconciliation error:', error);
 
-    // Log audit failure directly here as well if logic didn't catch it (though logic tries to catch)
-    // Actually logic catches and throws, so we catch it here again.
-    // Logic already logged the failure audit.
+    // Use safe logging if possible
+    // Logic already logs failures, but if something fails *before* logic or *in* logic unexpectedly:
+    // autoReconcile catches its own errors and re-throws, so we might duplicate logs if we are not careful.
+    // However, autoReconcile's catch block calls ctx.logAudit.
+    // If ctx creation failed or something else failed, we should log here.
+
+    // We can try to log if base44 is available
+    if (base44) {
+        try {
+            await logAudit(base44, {
+                action: 'reconcile_error',
+                status: 'failure',
+                details: { error: error.message }
+            });
+        } catch (logError) {
+            console.error('Failed to log error audit:', logError);
+        }
+    }
 
     return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
