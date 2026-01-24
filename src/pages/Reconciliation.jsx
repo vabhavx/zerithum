@@ -177,13 +177,14 @@ export default function Reconciliation() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search transactions..."
+            aria-label="Search transactions"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 bg-white/50 border-slate-200 rounded-xl"
           />
         </div>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-full sm:w-48 bg-white/50 border-slate-200 rounded-xl">
+          <SelectTrigger className="w-full sm:w-48 bg-white/50 border-slate-200 rounded-xl" aria-label="Filter reconciliations by status">
             <Filter className="w-4 h-4 mr-2 text-slate-400" />
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
