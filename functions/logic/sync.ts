@@ -3,7 +3,7 @@ export interface SyncContext {
   fetchExistingTransactionIdsInRange: (userId: string, platform: string, startDate: string, endDate: string) => Promise<Set<string>>;
   saveTransactions: (transactions: any[]) => Promise<void>;
   logAudit: (entry: any) => void;
-  updateConnectionStatus: (status: string, error?: string) => Promise<void>;
+  updateConnectionStatus: (status: string, error?: string, lastSyncedAt?: string) => Promise<void>;
   updateSyncHistory: (status: string, count: number, duration: number, error?: string) => Promise<void>;
 }
 
@@ -111,6 +111,7 @@ export async function syncPlatform(
   let savedCount = 0;
   let duplicateCount = 0;
   let retryAttempts = 0;
+  let currentSyncDate = new Date().toISOString(); // Default to now if not platform specific
 
   try {
     // Update status to syncing
@@ -125,6 +126,9 @@ export async function syncPlatform(
           ? new Date(lastSyncedAt).toISOString().split('T')[0]
           : new Date(Date.now() - defaultDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         const endDate = new Date().toISOString().split('T')[0];
+
+        // Update sync date to the requested end date
+        currentSyncDate = new Date(endDate).toISOString();
 
         const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=${startDate}&endDate=${endDate}&metrics=estimatedRevenue&dimensions=day`;
         
@@ -276,7 +280,7 @@ export async function syncPlatform(
       }
     });
 
-    await ctx.updateConnectionStatus('active');
+    await ctx.updateConnectionStatus('active', undefined, currentSyncDate);
     await ctx.updateSyncHistory('success', savedCount, duration);
 
     return {
@@ -307,6 +311,7 @@ export async function syncPlatform(
       }
     });
 
+    // Don't update lastSyncedAt on error
     await ctx.updateConnectionStatus('error', detailedErrorMessage);
     await ctx.updateSyncHistory('error', 0, duration, detailedErrorMessage);
 
