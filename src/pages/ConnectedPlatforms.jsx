@@ -52,7 +52,7 @@ const PLATFORMS = [
     scope: "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly",
     redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
     requiresApiKey: false,
-    clientId: "985180453886-pof8b9qoqf1a7cha901khhg9lk7548b4.apps.googleusercontent.com"
+    clientId: "985180453886-jld5u3u1nethrpaqk6o1tbvqhf1nlueb.apps.googleusercontent.com"
   },
   {
     id: "patreon",
