@@ -20,6 +20,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const getStatusIcon = (status) => {
   switch (status) {
@@ -142,15 +147,22 @@ const ConnectedPlatformRow = React.memo(({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onViewHistory(connection)}
-            className="text-white/40 hover:text-blue-400 hover:bg-white/5 transition-colors h-8 w-8"
-            aria-label={`View sync history for ${platform.name}`}
-          >
-            <FileText className="w-3.5 h-3.5" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onViewHistory(connection)}
+                className="text-white/40 hover:text-blue-400 hover:bg-white/5 transition-colors h-8 w-8"
+                aria-label={`View sync history for ${platform.name}`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>View sync history</p>
+            </TooltipContent>
+          </Tooltip>
           
           <DropdownMenu open={showSyncMenu} onOpenChange={setShowSyncMenu}>
             <DropdownMenuTrigger asChild>
@@ -194,16 +206,23 @@ const ConnectedPlatformRow = React.memo(({
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors h-8 w-8"
-            onClick={() => onDisconnect(connection, platform)}
-            disabled={isDisconnecting}
-            aria-label={`Disconnect ${platform.name}`}
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors h-8 w-8"
+                onClick={() => onDisconnect(connection, platform)}
+                disabled={isDisconnecting}
+                aria-label={`Disconnect ${platform.name}`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Disconnect {platform.name}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </motion.div>

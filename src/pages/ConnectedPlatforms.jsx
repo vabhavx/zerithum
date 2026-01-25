@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip as ChartTooltip, Legend } from "recharts";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { 
   Youtube, 
@@ -459,10 +460,11 @@ export default function ConnectedPlatforms() {
   }).sort((a, b) => b.syncs - a.syncs);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <SuccessConfetti trigger={showConfetti} />
-      
-      <MotivationalQuote className="mb-6" />
+    <TooltipProvider>
+      <div className="max-w-4xl mx-auto">
+        <SuccessConfetti trigger={showConfetti} />
+
+        <MotivationalQuote className="mb-6" />
 
       {/* Header */}
       <motion.div 
@@ -528,7 +530,7 @@ export default function ConnectedPlatforms() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <ChartTooltip
                     contentStyle={{ 
                       background: "rgba(0, 0, 0, 0.8)", 
                       border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -565,7 +567,7 @@ export default function ConnectedPlatforms() {
                     stroke="rgba(255, 255, 255, 0.3)"
                     tick={{ fill: "rgba(255, 255, 255, 0.5)", fontSize: 12 }}
                   />
-                  <Tooltip 
+                  <ChartTooltip
                     contentStyle={{ 
                       background: "rgba(0, 0, 0, 0.8)", 
                       border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -963,6 +965,7 @@ export default function ConnectedPlatforms() {
           </div>
         </motion.div>
       )}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
