@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { RefreshCw, Sparkles, Loader2, TrendingUp, FileText, CircleDollarSign, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { calculateDashboardMetrics } from "@/utils/dashboardMetrics";
 
 import ConcentrationRiskAlert from "@/components/dashboard/ConcentrationRiskAlert";
 import LendingSignalsCard from "@/components/dashboard/LendingSignalsCard";
@@ -107,97 +107,16 @@ export default function Dashboard() {
     }
   };
 
-  // Calculate metrics
-  const metrics = useMemo(() => {
-    const now = new Date();
-    const currentMonthStart = startOfMonth(now);
-    const currentMonthEnd = endOfMonth(now);
-    
-    // Current month transactions
-    const currentMonthTxns = transactions.filter(t => {
-      const date = new Date(t.transaction_date);
-      return date >= currentMonthStart && date <= currentMonthEnd;
-    });
+  const handleDismissAlert = useCallback((id) => {
+    setAlerts(prev => prev.filter(a => a.id !== id));
+  }, []);
 
-    // Previous month for comparison
-    const prevMonthStart = startOfMonth(subMonths(now, 1));
-    const prevMonthEnd = endOfMonth(subMonths(now, 1));
-    const prevMonthTxns = transactions.filter(t => {
-      const date = new Date(t.transaction_date);
-      return date >= prevMonthStart && date <= prevMonthEnd;
-    });
+  const handleDismissRisk = useCallback(() => {
+    setShowRiskAlert(false);
+  }, []);
 
-    // Total MRR
-    const totalMRR = currentMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-    const _prevMRR = prevMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-    
-    // MRR change
-    let mrrTrend = "neutral";
-    let mrrChange = "0%";
-    if (_prevMRR > 0) {
-      const changePercent = ((totalMRR - _prevMRR) / _prevMRR) * 100;
-      mrrTrend = changePercent > 0 ? "up" : changePercent < 0 ? "down" : "neutral";
-      mrrChange = `${changePercent > 0 ? "+" : ""}${changePercent.toFixed(1)}%`;
-    }
-
-    // Platform breakdown
-    const platformMap = {};
-    currentMonthTxns.forEach(t => {
-      if (!platformMap[t.platform]) {
-        platformMap[t.platform] = 0;
-      }
-      platformMap[t.platform] += t.amount || 0;
-    });
-    
-    const platformBreakdown = Object.entries(platformMap).map(([platform, amount]) => ({
-      platform,
-      amount
-    }));
-
-    // Concentration risk
-    let concentrationRisk = null;
-    const totalPlatformRevenue = platformBreakdown.reduce((sum, p) => sum + p.amount, 0);
-    if (totalPlatformRevenue > 0) {
-      platformBreakdown.forEach(({ platform, amount }) => {
-        const percentage = (amount / totalPlatformRevenue) * 100;
-        if (percentage >= 70) {
-          concentrationRisk = { platform, percentage };
-        }
-      });
-    }
-
-    // 3-month trend
-    const trendData = [];
-    for (let i = 2; i >= 0; i--) {
-      const monthStart = startOfMonth(subMonths(now, i));
-      const monthEnd = endOfMonth(subMonths(now, i));
-      const monthTxns = transactions.filter(t => {
-        const date = new Date(t.transaction_date);
-        return date >= monthStart && date <= monthEnd;
-      });
-      const monthTotal = monthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-      trendData.push({
-        month: format(monthStart, "MMM"),
-        revenue: monthTotal
-      });
-    }
-
-    // Top transactions this month
-    const topTransactions = [...currentMonthTxns]
-      .sort((a, b) => (b.amount || 0) - (a.amount || 0))
-      .slice(0, 5);
-
-    return {
-      totalMRR,
-      mrrTrend,
-      mrrChange,
-      platformBreakdown,
-      concentrationRisk,
-      trendData,
-      topTransactions,
-      prevMRR: _prevMRR
-    };
-  }, [transactions]);
+  // Calculate metrics using optimized utility
+  const metrics = useMemo(() => calculateDashboardMetrics(transactions), [transactions]);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -238,7 +157,7 @@ export default function Dashboard() {
       {/* Alert Banners */}
       <AlertBanner 
         alerts={alerts} 
-        onDismiss={(id) => setAlerts(alerts.filter(a => a.id !== id))} 
+        onDismiss={handleDismissAlert}
       />
 
       {/* Concentration Risk Alert */}
@@ -253,7 +172,7 @@ export default function Dashboard() {
             <ConcentrationRiskAlert
               platform={metrics.concentrationRisk.platform}
               percentage={metrics.concentrationRisk.percentage}
-              onDismiss={() => setShowRiskAlert(false)}
+              onDismiss={handleDismissRisk}
             />
           </motion.div>
         )}
