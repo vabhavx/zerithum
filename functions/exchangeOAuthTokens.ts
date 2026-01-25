@@ -19,6 +19,12 @@ const PLATFORM_CONFIG: Record<string, {
     clientSecretEnv: 'PATREON_CLIENT_SECRET',
     redirectUri: Deno.env.get('OAUTH_REDIRECT_URI')
   },
+  gumroad: {
+    tokenUrl: 'https://gumroad.com/oauth/token',
+    clientId: Deno.env.get('GUMROAD_CLIENT_ID'),
+    clientSecretEnv: 'GUMROAD_CLIENT_SECRET',
+    redirectUri: Deno.env.get('OAUTH_REDIRECT_URI')
+  },
   stripe: {
     tokenUrl: 'https://connect.stripe.com/oauth/token',
     clientId: Deno.env.get('STRIPE_CLIENT_ID'),
