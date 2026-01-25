@@ -22,6 +22,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { CATEGORIES } from "@/lib/expenseCategories";
@@ -31,6 +41,7 @@ export default function Expenses() {
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [processingReceipt, setProcessingReceipt] = useState(false);
   const [categorizing, setCategorizing] = useState(false);
@@ -73,10 +84,8 @@ export default function Expenses() {
   });
 
   const handleDeleteExpense = useCallback((id) => {
-    if (confirm("Delete this expense?")) {
-      deleteExpenseMutation.mutate(id);
-    }
-  }, [deleteExpenseMutation.mutate]);
+    setExpenseToDelete(id);
+  }, []);
 
   const resetForm = () => {
     setFormData({
@@ -491,6 +500,35 @@ export default function Expenses() {
         open={showAIChat}
         onOpenChange={setShowAIChat}
       />
+
+      <AlertDialog open={!!expenseToDelete} onOpenChange={(open) => !open && setExpenseToDelete(null)}>
+        <AlertDialogContent className="bg-zinc-900 border border-white/10 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              This action cannot be undone. This will permanently delete the expense
+              {expenseToDelete && (() => {
+                const expense = expenses.find(e => e.id === expenseToDelete);
+                return expense ? ` for ${expense.merchant || expense.description}` : '';
+              })()}
+              .
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5 hover:text-white">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600 text-white border-0"
+              onClick={() => deleteExpenseMutation.mutate(expenseToDelete)}
+            >
+              {deleteExpenseMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
