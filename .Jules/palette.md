@@ -13,3 +13,7 @@
 ## 2025-05-25 - Dashboard Alerts
 **Learning:** Dismissible alerts and panels in dashboards often use icon-only "X" buttons that lack accessible labels, leaving screen reader users stuck in a list of "button" announcements.
 **Action:** Always add `aria-label="Dismiss alert"` (or specific context like "Dismiss risk warning") to these icon-only close buttons.
+
+## 2026-02-14 - Tooltip Component Collisions
+**Learning:** UX Libraries often export a generic `Tooltip` component which conflicts with charting libraries (e.g. Recharts) that export the same name, leading to accidental omission of accessible UI tooltips to avoid import errors.
+**Action:** Establish a pattern of aliasing the specific library component (e.g. `import { Tooltip as ChartTooltip }`) to allow standard `Tooltip` UI components to be used freely for accessibility.
