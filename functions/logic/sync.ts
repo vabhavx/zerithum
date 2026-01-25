@@ -2,8 +2,8 @@ export interface SyncContext {
   fetchPlatformData: (url: string, headers: any) => Promise<any>;
   fetchExistingTransactionIdsInRange: (userId: string, platform: string, startDate: string, endDate: string) => Promise<Set<string>>;
   saveTransactions: (transactions: any[]) => Promise<void>;
-  logAudit: (entry: any) => void;
-  updateConnectionStatus: (status: string, error?: string) => Promise<void>;
+  logAudit: (entry: any) => Promise<void>;
+  updateConnectionStatus: (status: string, error?: string, lastSyncedAt?: string) => Promise<void>;
   updateSyncHistory: (status: string, count: number, duration: number, error?: string) => Promise<void>;
 }
 
@@ -259,9 +259,25 @@ export async function syncPlatform(
       }
     }
 
+    // Determine max date for last_synced_at update
+    let maxDate: string | undefined;
+    if (transactions.length > 0) {
+       // Start with the first one
+       maxDate = transactions[0].transaction_date;
+       for (const t of transactions) {
+         if (t.transaction_date > maxDate) {
+            maxDate = t.transaction_date;
+         }
+       }
+       // Ensure it is ISO string if it isn't (transaction_date is YYYY-MM-DD or ISO)
+       // If it's YYYY-MM-DD, we might want to append time or keep it as is.
+       // The requirement says "maximum transaction date".
+       // existing logic used transactions[0].transaction_date which was YYYY-MM-DD for some.
+    }
+
     const duration = Date.now() - startTime;
 
-    ctx.logAudit({
+    await ctx.logAudit({
       action: 'sync_platform_data',
       actor_id: user.id,
       resource_id: connectionId,
@@ -276,7 +292,7 @@ export async function syncPlatform(
       }
     });
 
-    await ctx.updateConnectionStatus('active');
+    await ctx.updateConnectionStatus('active', undefined, maxDate);
     await ctx.updateSyncHistory('success', savedCount, duration);
 
     return {
@@ -292,7 +308,7 @@ export async function syncPlatform(
     const duration = Date.now() - startTime;
     const detailedErrorMessage = generateDetailedErrorMessage(error, platform, 'data sync');
 
-    ctx.logAudit({
+    await ctx.logAudit({
       action: 'sync_platform_data_failed',
       actor_id: user?.id,
       resource_id: connectionId,
