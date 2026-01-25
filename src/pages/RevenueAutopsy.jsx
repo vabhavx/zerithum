@@ -1,7 +1,6 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { 
   AlertTriangle, 
   TrendingDown, 
@@ -16,8 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import AutopsyEventCard from "@/components/autopsy/AutopsyEventCard";
+import ResolvedEventRow from "@/components/autopsy/ResolvedEventRow";
 
 export default function RevenueAutopsy() {
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -78,8 +77,18 @@ export default function RevenueAutopsy() {
     });
   };
 
-  const pendingEvents = autopsyEvents.filter(e => e.status === 'pending_review');
-  const resolvedEvents = autopsyEvents.filter(e => e.status !== 'pending_review');
+  const pendingEvents = useMemo(() => autopsyEvents.filter(e => e.status === 'pending_review'), [autopsyEvents]);
+  const resolvedEvents = useMemo(() => autopsyEvents.filter(e => e.status !== 'pending_review'), [autopsyEvents]);
+
+  const avgExposure = useMemo(() => {
+    return autopsyEvents.length > 0
+      ? (autopsyEvents.reduce((sum, e) => sum + (e.exposure_score?.recurrence_probability || 0), 0) / autopsyEvents.length * 100).toFixed(0)
+      : 0;
+  }, [autopsyEvents]);
+
+  const totalImpact = useMemo(() => {
+    return Math.abs(autopsyEvents.reduce((sum, e) => sum + (e.impact_amount || 0), 0)).toFixed(0);
+  }, [autopsyEvents]);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -138,9 +147,7 @@ export default function RevenueAutopsy() {
           <Target className="w-5 h-5 text-amber-400 mb-2" />
           <p className="text-xs text-white/50">Avg Exposure</p>
           <p className="text-2xl font-bold text-white">
-            {autopsyEvents.length > 0 
-              ? (autopsyEvents.reduce((sum, e) => sum + (e.exposure_score?.recurrence_probability || 0), 0) / autopsyEvents.length * 100).toFixed(0)
-              : 0}%
+            {avgExposure}%
           </p>
         </motion.div>
 
@@ -153,7 +160,7 @@ export default function RevenueAutopsy() {
           <TrendingDown className="w-5 h-5 text-indigo-400 mb-2" />
           <p className="text-xs text-white/50">Total Impact</p>
           <p className="text-2xl font-bold text-white">
-            ${Math.abs(autopsyEvents.reduce((sum, e) => sum + (e.impact_amount || 0), 0)).toFixed(0)}
+            ${totalImpact}
           </p>
         </motion.div>
       </div>
@@ -180,26 +187,7 @@ export default function RevenueAutopsy() {
           <h2 className="text-lg font-bold text-white mb-4">📋 Decision History</h2>
           <div className="space-y-2">
             {resolvedEvents.map((event) => (
-              <div
-                key={event.id}
-                className="rounded-lg p-4 bg-white/[0.02] border border-white/5 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "px-2 py-1 rounded text-xs font-semibold",
-                    event.status === 'mitigated' && "bg-emerald-500/20 text-emerald-400",
-                    event.status === 'ignored' && "bg-gray-500/20 text-gray-400",
-                    event.status === 'accepted_risk' && "bg-amber-500/20 text-amber-400"
-                  )}>
-                    {event.status.replace(/_/g, ' ').toUpperCase()}
-                  </div>
-                  <p className="text-sm text-white">{event.event_type.replace(/_/g, ' ')}</p>
-                  <p className="text-xs text-white/40">
-                    {format(new Date(event.decision_made_at), "MMM d, yyyy")}
-                  </p>
-                </div>
-                <p className="text-sm text-white/60">{event.impact_percentage.toFixed(1)}% impact</p>
-              </div>
+              <ResolvedEventRow key={event.id} event={event} />
             ))}
           </div>
         </div>
