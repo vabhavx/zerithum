@@ -51,6 +51,14 @@ describe('syncPlatform', () => {
         amount: 200.00
       })
     ]);
+
+    // Verify updateConnectionStatus is called with date
+    expect(mockCtx.updateConnectionStatus).toHaveBeenCalledWith(
+        'active',
+        undefined,
+        expect.stringMatching(/^\d{4}-\d{2}-\d{2}/) // Date string
+    );
+
     expect(mockCtx.logAudit).toHaveBeenCalledWith(expect.objectContaining({
       status: 'success',
       action: 'sync_platform_data'
@@ -111,6 +119,7 @@ describe('syncPlatform', () => {
         error_message: 'API Error'
       })
     }));
+    // Failure case should NOT pass the date
     expect(mockCtx.updateConnectionStatus).toHaveBeenCalledWith('error', 'Sync failed for youtube during data sync: API Error');
   });
 

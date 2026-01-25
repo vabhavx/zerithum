@@ -24,24 +24,70 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
         return { success: true, matchedCount: 0, message: 'No unreconciled revenue found' };
     }
 
+    // Sort revenue by date ascending for sliding window
+    revenueTxns.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+
     // Find earliest revenue date to limit bank query
-    const minDate = revenueTxns.reduce((min, t) => t.transaction_date < min ? t.transaction_date : min, revenueTxns[0].transaction_date);
+    const minDate = revenueTxns[0].transaction_date;
     const bankTxns = await ctx.fetchUnreconciledBankTransactions(user.id, minDate);
 
-    // 2. Identify Potential Matches
+    // Sort bank txns by date ascending
+    bankTxns.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+
+    // 2. Identify Potential Matches (Sliding Window)
     const candidates: MatchCandidate[] = [];
+
+    let bankWindowStart = 0;
+    const maxDiffDays = 14;
 
     for (const rev of revenueTxns) {
       const revDate = new Date(rev.transaction_date);
+      const revTime = revDate.getTime();
       const revAmount = rev.amount;
 
-      for (const bank of bankTxns) {
+      // Advance window start: bank txn must be >= revDate (approx, considering same day)
+      // Actually, standard says "Bank txn must be after revenue".
+      // Let's allow strictly >= revTime.
+      // If we used diffDays calculation: bankDate - revDate.
+      // We want diffDays >= 0. So bankDate >= revDate.
+
+      while (
+        bankWindowStart < bankTxns.length &&
+        new Date(bankTxns[bankWindowStart].transaction_date).getTime() < revTime
+      ) {
+         // Check if it's REALLY before.
+         // If dates are YYYY-MM-DD strings, strict string comparison works.
+         // If they are ISO with times, we need to be careful.
+         // Existing logic used: diffDays < 0 continue.
+         // So yes, strictly forward.
+         // Wait, if transaction_date is just YYYY-MM-DD, then < compares correctly.
+         // But if it has time, we might miss same-day if we are not careful.
+         // The test uses ISO strings.
+         // logic: diffDays = (bank - rev) / days.
+         // if diffDays < 0, it means bank < rev.
+
+         // However, floating point issues with time.
+         // Let's stick to the previous logic's check:
+         // diffTime = bank - rev.
+         // if diffTime < 0, continue.
+         bankWindowStart++;
+      }
+
+      // Scan forward
+      for (let i = bankWindowStart; i < bankTxns.length; i++) {
+        const bank = bankTxns[i];
         const bankDate = new Date(bank.transaction_date);
-        const diffTime = bankDate.getTime() - revDate.getTime();
+        const diffTime = bankDate.getTime() - revTime;
         const diffDays = diffTime / (1000 * 3600 * 24);
 
-        // Date constraint: Bank txn must be after revenue (or same day) and within 14 days
-        if (diffDays < 0 || diffDays > 14) continue;
+        // Stop if we exceed max window
+        if (diffDays > maxDiffDays) {
+           break;
+        }
+
+        // Additional check for negative diff (in case sort order/time issues)
+        // (Should rely on sorted order, but safety first)
+        if (diffDays < 0) continue;
 
         const bankAmount = bank.amount;
         let matchType: MatchCandidate['matchType'] | null = null;
@@ -148,4 +194,48 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
       });
       throw error;
   }
+}
+
+// Helper for manual reconciliation
+export async function manualReconcileLogic(
+    ctx: ReconcileContext,
+    user: { id: string },
+    revenueId: string,
+    bankId: string,
+    notes?: string
+) {
+    // 1. Fetch specific transactions
+    // Since fetchUnreconciled... returns arrays, we might need a direct fetch or reuse them.
+    // Ideally, we fetch them directly. But context currently only has list fetchers.
+    // We can assume the caller has validated existence or we extend the context.
+    // For simplicity, let's assume the calling function (endpoint) does the fetching/validation
+    // OR we add fetchById to context.
+
+    // To make this pure logic, we should probably just take the txn objects.
+    // But `autoReconcile` takes context.
+    // Let's stick to the pattern: this function is called by the endpoint.
+
+    // But wait, the plan said "Update functions/logic/reconcile.ts to export a manualReconcile helper".
+    // I will add `fetchTransaction` to the context or just use `base44` in the endpoint?
+    // "Logic" files usually abstract away the DB.
+    // I'll update the interface to support fetching by ID if I want to be strict.
+    // Or I can let the endpoint handle the DB and just use this for the "matching" logic (calculating score/type)?
+    // Manual match overrides score/type. It's manual.
+    // So really, `manualReconcileLogic` is just:
+    // 1. Log audit.
+    // 2. Create record.
+
+    // So maybe I don't need much logic here.
+    // I will add it anyway for consistency.
+
+    return {
+        user_id: user.id,
+        revenue_transaction_id: revenueId,
+        bank_transaction_id: bankId,
+        match_category: 'manual', // or calculate it if they want? No, it's manual.
+        match_confidence: 1.0,
+        reconciled_by: 'manual',
+        creator_notes: notes,
+        reconciled_at: new Date().toISOString()
+    };
 }

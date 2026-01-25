@@ -87,9 +87,11 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.RevenueTransaction.bulkCreate(transactions);
       },
       logAudit: logAudit,
-      updateConnectionStatus: async (status: string, error?: string) => {
+      updateConnectionStatus: async (status: string, error?: string, lastSyncedAt?: string) => {
         const update: any = { sync_status: status };
-        if (status === 'active') update.last_synced_at = new Date().toISOString();
+        if (status === 'active') {
+             update.last_synced_at = lastSyncedAt || new Date().toISOString();
+        }
         if (error) update.error_message = error;
         else update.error_message = null;
 
