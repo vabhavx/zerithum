@@ -24,24 +24,46 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
         return { success: true, matchedCount: 0, message: 'No unreconciled revenue found' };
     }
 
+    // Sort revenue by date (asc)
+    revenueTxns.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+
     // Find earliest revenue date to limit bank query
-    const minDate = revenueTxns.reduce((min, t) => t.transaction_date < min ? t.transaction_date : min, revenueTxns[0].transaction_date);
+    const minDate = revenueTxns[0].transaction_date;
     const bankTxns = await ctx.fetchUnreconciledBankTransactions(user.id, minDate);
 
-    // 2. Identify Potential Matches
+    // Sort bank txns by date (asc)
+    bankTxns.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+
+    // 2. Identify Potential Matches using Sliding Window
     const candidates: MatchCandidate[] = [];
+    let bankWindowStart = 0;
 
     for (const rev of revenueTxns) {
       const revDate = new Date(rev.transaction_date);
+      const revTime = revDate.getTime();
       const revAmount = rev.amount;
 
-      for (const bank of bankTxns) {
+      // Advance window start: bank txn must be >= revDate
+      while (bankWindowStart < bankTxns.length) {
+          const bankDate = new Date(bankTxns[bankWindowStart].transaction_date);
+          if (bankDate.getTime() >= revTime) {
+              break;
+          }
+          bankWindowStart++;
+      }
+
+      // Scan within window
+      for (let i = bankWindowStart; i < bankTxns.length; i++) {
+        const bank = bankTxns[i];
         const bankDate = new Date(bank.transaction_date);
-        const diffTime = bankDate.getTime() - revDate.getTime();
+        const bankTime = bankDate.getTime();
+        const diffTime = bankTime - revTime;
         const diffDays = diffTime / (1000 * 3600 * 24);
 
-        // Date constraint: Bank txn must be after revenue (or same day) and within 14 days
-        if (diffDays < 0 || diffDays > 14) continue;
+        if (diffDays > 14) {
+            // Window end reached (bank date is too far in future)
+            break;
+        }
 
         const bankAmount = bank.amount;
         let matchType: MatchCandidate['matchType'] | null = null;

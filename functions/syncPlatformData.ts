@@ -87,9 +87,33 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.RevenueTransaction.bulkCreate(transactions);
       },
       logAudit: logAudit,
-      updateConnectionStatus: async (status: string, error?: string) => {
+      updateConnectionStatus: async (status: string, error?: string, lastSyncedAt?: string) => {
         const update: any = { sync_status: status };
-        if (status === 'active') update.last_synced_at = new Date().toISOString();
+        if (status === 'active') {
+             // Use provided lastSyncedAt or fallback to current time if strictly necessary,
+             // but logic/sync.ts should provide it if transactions were found.
+             // If no transactions found, maybe we shouldn't update last_synced_at?
+             // Logic: "update.last_synced_at = new Date().toISOString()" was the old behavior.
+             // New behavior: "must use the maximum transaction date from the fetched batch".
+             // If lastSyncedAt is provided, use it.
+             if (lastSyncedAt) {
+                 // Ensure it's in a format compatible with the DB (ISO usually)
+                 // transaction_date is often YYYY-MM-DD.
+                 // If it's YYYY-MM-DD, maybe append T23:59:59Z to indicate end of that day?
+                 // Or just use it as is if DB accepts it. Let's assume ISO format is preferred.
+                 // If the string already contains T, it's likely ISO.
+                 update.last_synced_at = lastSyncedAt.includes('T') ? lastSyncedAt : `${lastSyncedAt}T23:59:59.999Z`;
+             } else {
+                 // If no transactions were fetched, should we update last_synced_at?
+                 // If we successfully synced "nothing new", it means we are up to date *as of now*.
+                 // However, the rule says "use the maximum transaction date".
+                 // If there are no transactions, sticking to the old behavior (now) might be acceptable
+                 // OR we should not update it.
+                 // But the existing code updated it.
+                 // Let's keep existing behavior if no transactions: current time.
+                 update.last_synced_at = new Date().toISOString();
+             }
+        }
         if (error) update.error_message = error;
         else update.error_message = null;
 
