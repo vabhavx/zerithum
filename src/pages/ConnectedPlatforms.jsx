@@ -50,7 +50,7 @@ const PLATFORMS = [
     description: "Track ad revenue, memberships, and Super Chat earnings",
     oauthUrl: "https://accounts.google.com/o/oauth2/v2/auth",
     scope: "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
     clientId: "985180453886-jld5u3u1nethrpaqk6o1tbvqhf1nlueb.apps.googleusercontent.com"
   },
@@ -62,7 +62,7 @@ const PLATFORMS = [
     description: "Sync pledges, membership tiers, and patron data",
     oauthUrl: "https://www.patreon.com/oauth2/authorize",
     scope: "identity identity[email] campaigns campaigns.members",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
     clientId: "i1ircOfqA2eD5ChN4-d6uElxt4vjWzIEv4vCfj0K_92LqilSM5OA_dJS24uFjiTR"
   },
@@ -74,7 +74,7 @@ const PLATFORMS = [
     description: "Import product sales, subscriptions, and license data",
     oauthUrl: "https://gumroad.com/oauth/authorize",
     scope: "view_sales",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
     clientId: import.meta.env.VITE_GUMROAD_CLIENT_ID || "REPLACE_WITH_YOUR_GUMROAD_CLIENT_ID"
   },
@@ -86,7 +86,7 @@ const PLATFORMS = [
     description: "Connect payments, subscriptions, and payout data",
     oauthUrl: "https://connect.stripe.com/oauth/authorize",
     scope: "read_write",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
     clientId: "YOUR_STRIPE_CLIENT_ID"
   },
@@ -98,7 +98,7 @@ const PLATFORMS = [
     description: "Pull revenue from Instagram Insights and monetization",
     oauthUrl: "https://www.facebook.com/v20.0/dialog/oauth",
     scope: "instagram_basic,instagram_manage_insights,pages_read_engagement",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
     clientId: "YOUR_META_APP_ID"
   },
@@ -110,7 +110,7 @@ const PLATFORMS = [
     description: "Track Creator Fund earnings and video insights",
     oauthUrl: "https://www.tiktok.com/v2/auth/authorize/",
     scope: "video.list,user.info.basic,video.insights",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
     clientKey: "YOUR_TIKTOK_CLIENT_KEY"
   },
@@ -122,7 +122,7 @@ const PLATFORMS = [
     description: "Sync store sales, orders, and product revenue",
     oauthUrl: "https://YOUR_SHOP.myshopify.com/admin/oauth/authorize",
     scope: "read_orders,read_products,read_customers",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
     clientId: "YOUR_SHOPIFY_API_KEY",
     requiresShopName: true
@@ -135,7 +135,7 @@ const PLATFORMS = [
     description: "Track subscriptions, bits, and ad revenue",
     oauthUrl: "https://id.twitch.tv/oauth2/authorize",
     scope: "channel:read:subscriptions bits:read analytics:read:extensions",
-    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
     clientId: "YOUR_TWITCH_CLIENT_ID"
   },
