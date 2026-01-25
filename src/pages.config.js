@@ -2,7 +2,7 @@ import AuthCallback from './pages/AuthCallback';
 import ConnectedApps from './pages/ConnectedApps';
 import ConnectedPlatforms from './pages/ConnectedPlatforms';
 import Dashboard from './pages/Dashboard';
-import expensesTest from './pages/Expenses.test';
+import Expenses from './pages/Expenses';
 import Help from './pages/Help';
 import Notifications from './pages/Notifications';
 import Platforms from './pages/Platforms';
@@ -32,7 +32,7 @@ export const PAGES = {
     "ConnectedApps": ConnectedApps,
     "ConnectedPlatforms": ConnectedPlatforms,
     "Dashboard": Dashboard,
-    "Expenses.test": expensesTest,
+    "Expenses": Expenses,
     "Help": Help,
     "Notifications": Notifications,
     "Platforms": Platforms,

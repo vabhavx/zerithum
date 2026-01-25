@@ -72,8 +72,11 @@ const PLATFORMS = [
     icon: ShoppingBag,
     color: "bg-pink-500/10 border-pink-500/20 text-pink-400",
     description: "Import product sales, subscriptions, and license data",
-    requiresApiKey: true,
-    validationUrl: "https://api.gumroad.com/v2/user"
+    oauthUrl: "https://gumroad.com/oauth/authorize",
+    scope: "view_sales",
+    redirectUri: "https://zerithum-copy-36d43903.base44.app/authcallback",
+    requiresApiKey: false,
+    clientId: "YOUR_GUMROAD_CLIENT_ID"
   },
   {
     id: "stripe",
