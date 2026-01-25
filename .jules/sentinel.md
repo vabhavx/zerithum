@@ -13,3 +13,11 @@
 1. Use a dedicated `escapeCsv` utility for all user-controlled text fields.
 2. Prefix unsafe values (starting with `=+-@`) with a single quote `'` or tab to force text interpretation.
 3. Do not apply this to strict numeric fields (like currency) to preserve formatting.
+
+## 2025-05-28 - Information Exposure in Payment Logic
+**Vulnerability:** Upstream API error details (including structure and potential internal codes) were leaked directly to the client in the response body.
+**Learning:** Returning `error.message` or raw JSON from upstream services can expose internal paths or validation rules that help attackers map the system.
+**Prevention:**
+1. Use `try/catch` blocks to intercept upstream errors.
+2. Log the full error details to the server-side logger (for debugging).
+3. Return a generic "Internal Server Error" or "Service Unavailable" message to the client.
