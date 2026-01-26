@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { getPlanDetails } from './logic/paymentLogic.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -9,16 +10,26 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { planName, amount, currency = 'USD', billingPeriod } = await req.json();
+    const { planName, billingPeriod } = await req.json();
 
-    if (!planName || !amount) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!planName) {
+      return Response.json({ error: 'Missing planName' }, { status: 400 });
+    }
+
+    // 🛡️ Sentinel: Security Fix - Parameter Tampering
+    // Use authoritative source for price, ignoring client provided amount
+    let planDetails;
+    try {
+      planDetails = getPlanDetails(planName, billingPeriod);
+    } catch (e: any) {
+      return Response.json({ error: e.message }, { status: 400 });
     }
 
     // Create Skydo payment link
     const skydoApiKey = Deno.env.get('SKYDO_API_KEY');
     if (!skydoApiKey) {
-      return Response.json({ error: 'Skydo API key not configured' }, { status: 500 });
+      console.error('Skydo API key not configured');
+      return Response.json({ error: 'Internal server error' }, { status: 500 });
     }
 
     // Skydo payment link creation
@@ -29,17 +40,17 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        amount: amount,
-        currency: currency,
-        description: `${planName} - ${billingPeriod} subscription`,
+        amount: planDetails.price,
+        currency: planDetails.currency,
+        description: `${planDetails.name} - ${billingPeriod || 'monthly'} subscription`,
         customer: {
           email: user.email,
           name: user.full_name || user.email
         },
         metadata: {
           user_id: user.id,
-          plan: planName,
-          billing_period: billingPeriod
+          plan: planDetails.name,
+          billing_period: billingPeriod || 'monthly'
         },
         success_url: `${Deno.env.get('APP_URL') || 'https://zerithum-copy-36d43903.base44.app'}/pricing?payment=success`,
         cancel_url: `${Deno.env.get('APP_URL') || 'https://zerithum-copy-36d43903.base44.app'}/pricing?payment=cancelled`
@@ -49,9 +60,10 @@ Deno.serve(async (req) => {
     if (!skydoResponse.ok) {
       const errorData = await skydoResponse.json();
       console.error('Skydo API error:', errorData);
+      // 🛡️ Sentinel: Security Fix - Secure Error Messages
+      // Do not leak details: errorData
       return Response.json({ 
-        error: 'Failed to create payment link',
-        details: errorData 
+        error: 'Failed to create payment link'
       }, { status: skydoResponse.status });
     }
 
@@ -63,10 +75,10 @@ Deno.serve(async (req) => {
       action: 'payment_initiated',
       resource_type: 'subscription',
       data: {
-        plan: planName,
-        amount,
-        currency,
-        billing_period: billingPeriod,
+        plan: planDetails.name,
+        amount: planDetails.price,
+        currency: planDetails.currency,
+        billing_period: billingPeriod || 'monthly',
         payment_id: paymentData.id
       }
     });
@@ -77,11 +89,12 @@ Deno.serve(async (req) => {
       payment_id: paymentData.id
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Payment creation error:', error);
+    // 🛡️ Sentinel: Security Fix - Secure Error Messages
+    // Do not leak message: error.message
     return Response.json({ 
-      error: 'Internal server error',
-      message: error.message 
+      error: 'Internal server error'
     }, { status: 500 });
   }
 });

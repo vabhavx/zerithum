@@ -13,3 +13,11 @@
 1. Use a dedicated `escapeCsv` utility for all user-controlled text fields.
 2. Prefix unsafe values (starting with `=+-@`) with a single quote `'` or tab to force text interpretation.
 3. Do not apply this to strict numeric fields (like currency) to preserve formatting.
+
+## 2025-05-29 - Payment Parameter Tampering
+**Vulnerability:** The payment creation endpoint accepted `amount` and `currency` directly from the client request body, allowing a malicious user to modify the price (e.g., paying $1 for a $199 plan).
+**Learning:** Never trust client input for critical business logic like pricing. The client should only provide the intent (e.g., `planName`), and the server must determine the details from a trusted source.
+**Prevention:**
+1. Store product/plan definitions (prices, SKUs) server-side or in a database.
+2. Accept only the Plan ID/Name from the client.
+3. Look up the price server-side before initiating the payment with the provider.
