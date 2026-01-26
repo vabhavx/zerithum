@@ -73,7 +73,11 @@ export default function AIExpenseChat({ open, onOpenChange }) {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-3 p-4 bg-white/[0.02] rounded-lg">
+        <div
+          className="flex-1 overflow-y-auto space-y-3 p-4 bg-white/[0.02] rounded-lg"
+          role="log"
+          aria-live="polite"
+        >
           <AnimatePresence>
             {messages.map((msg, idx) => (
               <motion.div
@@ -115,11 +119,13 @@ export default function AIExpenseChat({ open, onOpenChange }) {
             placeholder="Ask about expenses, tax optimization, spending patterns..."
             className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
             disabled={sending}
+            aria-label="Message to AI advisor"
           />
           <Button
             onClick={handleSend}
             disabled={sending || !input.trim()}
             className="bg-gradient-to-r from-indigo-500 to-purple-600"
+            aria-label={sending ? "Sending message" : "Send message"}
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
