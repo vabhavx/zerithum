@@ -29,19 +29,43 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
     const bankTxns = await ctx.fetchUnreconciledBankTransactions(user.id, minDate);
 
     // 2. Identify Potential Matches
+
+    // Sort transactions by date to enable O(N) matching instead of O(N*M)
+    revenueTxns.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+    bankTxns.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+
     const candidates: MatchCandidate[] = [];
+    let bankStartIndex = 0;
 
     for (const rev of revenueTxns) {
       const revDate = new Date(rev.transaction_date);
+      const revTime = revDate.getTime();
       const revAmount = rev.amount;
 
-      for (const bank of bankTxns) {
+      // Advance bankStartIndex to the first potential match (bankDate >= revDate)
+      // Since arrays are sorted, we never need to check indices before bankStartIndex again
+      while (bankStartIndex < bankTxns.length) {
+        const bankDate = new Date(bankTxns[bankStartIndex].transaction_date);
+        if (bankDate.getTime() >= revTime) {
+          break;
+        }
+        bankStartIndex++;
+      }
+
+      // Check bank transactions in the valid window [revDate, revDate + 14 days]
+      for (let i = bankStartIndex; i < bankTxns.length; i++) {
+        const bank = bankTxns[i];
         const bankDate = new Date(bank.transaction_date);
-        const diffTime = bankDate.getTime() - revDate.getTime();
+        const diffTime = bankDate.getTime() - revTime;
         const diffDays = diffTime / (1000 * 3600 * 24);
 
-        // Date constraint: Bank txn must be after revenue (or same day) and within 14 days
-        if (diffDays < 0 || diffDays > 14) continue;
+        // Optimization: If diffDays > 14, we can stop checking for this revenue item
+        // because all subsequent bank transactions will be even later (sorted)
+        if (diffDays > 14) break;
+
+        // Note: diffDays < 0 check is handled by bankStartIndex logic, but
+        // strictly speaking we are iterating from bankStartIndex which ensures >= revTime.
+        // So diffDays >= 0 is guaranteed.
 
         const bankAmount = bank.amount;
         let matchType: MatchCandidate['matchType'] | null = null;

@@ -78,17 +78,15 @@ Deno.serve(async (req) => {
     // However, autoReconcile's catch block calls ctx.logAudit.
     // If ctx creation failed or something else failed, we should log here.
 
-    // We can try to log if base44 is available
-    if (base44) {
-        try {
-            await logAudit(base44, {
-                action: 'reconcile_error',
-                status: 'failure',
-                details: { error: error.message }
-            });
-        } catch (logError) {
-            console.error('Failed to log error audit:', logError);
-        }
+    // Always attempt to log audit, even if base44 is null (it will just log to stdout)
+    try {
+        await logAudit(base44, {
+            action: 'reconcile_error',
+            status: 'failure',
+            details: { error: error.message }
+        });
+    } catch (logError) {
+        console.error('Failed to log error audit:', logError);
     }
 
     return Response.json({ error: 'Internal Server Error' }, { status: 500 });
