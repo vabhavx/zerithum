@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Sparkles, Check, ArrowRight } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const MATCH_CATEGORY_LABELS = {
   exact_match: "Exact Match",
@@ -53,17 +54,28 @@ const ReconciliationRow = memo(({ rec }) => {
         </div>
       </div>
       {rec.match_confidence && (
-        <div className="mt-3 flex items-center gap-2">
-          <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+        <Tooltip>
+          <TooltipTrigger asChild>
             <div
-              className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full"
-              style={{ width: `${rec.match_confidence * 100}%` }}
-            />
-          </div>
-          <span className="text-xs font-medium text-slate-600">
-            {(rec.match_confidence * 100).toFixed(0)}% confidence
-          </span>
-        </div>
+              className="mt-3 flex items-center gap-2 cursor-help focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg p-1 -m-1"
+              tabIndex="0"
+              aria-label={`Match confidence score: ${(rec.match_confidence * 100).toFixed(0)}%`}
+            >
+              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full"
+                  style={{ width: `${rec.match_confidence * 100}%` }}
+                />
+              </div>
+              <span className="text-xs font-medium text-slate-600">
+                {(rec.match_confidence * 100).toFixed(0)}% confidence
+              </span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Confidence score based on date proximity and amount matching</p>
+          </TooltipContent>
+        </Tooltip>
       )}
       {rec.creator_notes && (
         <p className="mt-3 text-sm text-slate-500 italic">"{rec.creator_notes}"</p>
