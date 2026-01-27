@@ -13,3 +13,10 @@
 1. Use a dedicated `escapeCsv` utility for all user-controlled text fields.
 2. Prefix unsafe values (starting with `=+-@`) with a single quote `'` or tab to force text interpretation.
 3. Do not apply this to strict numeric fields (like currency) to preserve formatting.
+
+## 2025-05-27 - Price Manipulation & IDOR
+**Vulnerability:** The payment creation endpoint trusted the client-provided `amount` for subscriptions, allowing users to pay arbitrary amounts for plans.
+**Learning:** Never trust client input for business-critical values like price. Even if the frontend code seems "fixed", API endpoints can be called directly.
+**Prevention:**
+1. Implement a server-side "Source of Truth" for pricing (`paymentLogic.ts`).
+2. Backend endpoints should accept intent (e.g., `planName`) and resolve details internally, rather than accepting raw values.
