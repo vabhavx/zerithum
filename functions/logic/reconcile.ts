@@ -26,22 +26,41 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
 
     // Find earliest revenue date to limit bank query
     const minDate = revenueTxns.reduce((min, t) => t.transaction_date < min ? t.transaction_date : min, revenueTxns[0].transaction_date);
-    const bankTxns = await ctx.fetchUnreconciledBankTransactions(user.id, minDate);
+    let bankTxns = await ctx.fetchUnreconciledBankTransactions(user.id, minDate);
+
+    // Sort both lists by date to enable sliding window (O(N) instead of O(N*M))
+    revenueTxns.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+    bankTxns.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
 
     // 2. Identify Potential Matches
     const candidates: MatchCandidate[] = [];
+    let bankStartIndex = 0;
 
     for (const rev of revenueTxns) {
       const revDate = new Date(rev.transaction_date);
       const revAmount = rev.amount;
 
-      for (const bank of bankTxns) {
+      // Advance window start: bank txn must be >= revenue date
+      while (bankStartIndex < bankTxns.length) {
+        const bankDate = new Date(bankTxns[bankStartIndex].transaction_date);
+        if (bankDate.getTime() >= revDate.getTime()) {
+          break;
+        }
+        bankStartIndex++;
+      }
+
+      for (let i = bankStartIndex; i < bankTxns.length; i++) {
+        const bank = bankTxns[i];
         const bankDate = new Date(bank.transaction_date);
         const diffTime = bankDate.getTime() - revDate.getTime();
         const diffDays = diffTime / (1000 * 3600 * 24);
 
+        // Optimization: if bank txn is beyond 14 days, no further matches possible for this revenue txn
+        if (diffDays > 14) break;
+
         // Date constraint: Bank txn must be after revenue (or same day) and within 14 days
-        if (diffDays < 0 || diffDays > 14) continue;
+        // (diffDays < 0 is handled by bankStartIndex logic, but kept for safety/robustness if logic changes)
+        if (diffDays < 0) continue;
 
         const bankAmount = bank.amount;
         let matchType: MatchCandidate['matchType'] | null = null;
