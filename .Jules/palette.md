@@ -13,3 +13,7 @@
 ## 2025-05-25 - Dashboard Alerts
 **Learning:** Dismissible alerts and panels in dashboards often use icon-only "X" buttons that lack accessible labels, leaving screen reader users stuck in a list of "button" announcements.
 **Action:** Always add `aria-label="Dismiss alert"` (or specific context like "Dismiss risk warning") to these icon-only close buttons.
+
+## 2024-05-23 - Component Extraction for Accessibility Testing
+**Learning:** Testing accessibility of specific list items (like "Match" buttons) is difficult when they are deeply nested in page components with complex data mocking requirements.
+**Action:** Extract list items into dedicated, pure components (e.g., `PendingReconciliationRow`). This isolates the UI logic, enables simple unit tests for ARIA attributes, and improves render performance via `memo`.

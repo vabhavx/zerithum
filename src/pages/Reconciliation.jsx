@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { 
   Scale, 
   Search,
@@ -22,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ReconciliationRow from "@/components/ReconciliationRow";
+import PendingReconciliationRow from "@/components/PendingReconciliationRow";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Reconciliation() {
@@ -44,6 +44,13 @@ export default function Reconciliation() {
     queryKey: ["reconciliations"],
     queryFn: () => base44.entities.Reconciliation.list("-reconciled_at"),
   });
+
+  const handleMatch = (transaction) => {
+    toast({
+      title: "Match initiated",
+      description: `Matching for $${transaction.amount?.toFixed(2)} is coming soon.`,
+    });
+  };
 
   const createReconciliationMutation = useMutation({
     mutationFn: (data) => base44.entities.Reconciliation.create(data),
@@ -206,22 +213,11 @@ export default function Reconciliation() {
           </h2>
           <div className="space-y-3">
             {unreconciledRevenue.slice(0, 5).map((transaction) => (
-              <div key={transaction.id} className="clay-sm rounded-2xl p-4 flex items-center gap-4">
-                <div className="flex-1">
-                  <p className="font-medium text-slate-800">
-                    {transaction.description || `${transaction.platform} - ${transaction.category}`}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {format(new Date(transaction.transaction_date), "MMM d, yyyy")} · {transaction.platform}
-                  </p>
-                </div>
-                <p className="font-semibold text-slate-800">
-                  ${transaction.amount?.toFixed(2)}
-                </p>
-                <Button size="sm" variant="outline" className="rounded-xl">
-                  Match
-                </Button>
-              </div>
+              <PendingReconciliationRow
+                key={transaction.id}
+                transaction={transaction}
+                onMatch={handleMatch}
+              />
             ))}
           </div>
         </div>
