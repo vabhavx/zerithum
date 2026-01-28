@@ -28,20 +28,41 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
     const minDate = revenueTxns.reduce((min, t) => t.transaction_date < min ? t.transaction_date : min, revenueTxns[0].transaction_date);
     const bankTxns = await ctx.fetchUnreconciledBankTransactions(user.id, minDate);
 
-    // 2. Identify Potential Matches
+    // Sort transactions by date for sliding window
+    revenueTxns.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+    bankTxns.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+
+    // 2. Identify Potential Matches (Sliding Window O(N))
     const candidates: MatchCandidate[] = [];
+    let bankWindowStart = 0;
 
     for (const rev of revenueTxns) {
       const revDate = new Date(rev.transaction_date);
       const revAmount = rev.amount;
 
-      for (const bank of bankTxns) {
+      // Advance window start: skip bank txns that are before revenue txn
+      while (bankWindowStart < bankTxns.length) {
+        const bankDate = new Date(bankTxns[bankWindowStart].transaction_date);
+        // We look for bank date >= rev date. If bank < rev, skip it.
+        if (bankDate.getTime() < revDate.getTime()) {
+           bankWindowStart++;
+        } else {
+           break;
+        }
+      }
+
+      // Check window
+      for (let i = bankWindowStart; i < bankTxns.length; i++) {
+        const bank = bankTxns[i];
         const bankDate = new Date(bank.transaction_date);
         const diffTime = bankDate.getTime() - revDate.getTime();
         const diffDays = diffTime / (1000 * 3600 * 24);
 
-        // Date constraint: Bank txn must be after revenue (or same day) and within 14 days
-        if (diffDays < 0 || diffDays > 14) continue;
+        // If diffDays > 14, we went too far for this revenue txn.
+        // Since bankTxns are sorted, subsequent ones will also be too far.
+        if (diffDays > 14) break;
+
+        // At this point 0 <= diffDays <= 14 due to window start logic and break condition
 
         const bankAmount = bank.amount;
         let matchType: MatchCandidate['matchType'] | null = null;
