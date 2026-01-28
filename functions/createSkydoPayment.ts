@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { getPlanDetails } from './logic/paymentLogic.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -9,11 +10,22 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { planName, amount, currency = 'USD', billingPeriod } = await req.json();
+    const { planName, billingPeriod } = await req.json();
 
-    if (!planName || !amount) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!planName || !billingPeriod) {
+      return Response.json({ error: 'Missing required fields: planName, billingPeriod' }, { status: 400 });
     }
+
+    // 🛡️ Sentinel: Server-side pricing validation
+    // Prevent price manipulation by ignoring client-provided amount
+    let priceDetails;
+    try {
+      priceDetails = getPlanDetails(planName, billingPeriod);
+    } catch (e) {
+      return Response.json({ error: e.message }, { status: 400 });
+    }
+
+    const { price: amount, currency } = priceDetails;
 
     // Create Skydo payment link
     const skydoApiKey = Deno.env.get('SKYDO_API_KEY');
