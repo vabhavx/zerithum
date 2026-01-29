@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
+import TransactionAnalysisRow from "@/components/TransactionAnalysisRow";
 
 const PLATFORM_NAMES = {
   youtube: 'YouTube',
@@ -40,6 +41,7 @@ const CATEGORY_NAMES = {
 
 export default function TransactionAnalysis() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortField, setSortField] = useState("transaction_date");
@@ -52,14 +54,21 @@ export default function TransactionAnalysis() {
     queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 1000),
   });
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
   const filteredAndSorted = useMemo(() => {
     let filtered = [...transactions];
 
     // Search filter
-    if (searchQuery) {
+    if (debouncedSearchQuery) {
       filtered = filtered.filter(t => 
-        t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.platform_transaction_id?.toLowerCase().includes(searchQuery.toLowerCase())
+        t.description?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        t.platform_transaction_id?.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       );
     }
 
@@ -91,7 +100,7 @@ export default function TransactionAnalysis() {
     });
 
     return filtered;
-  }, [transactions, searchQuery, platformFilter, categoryFilter, sortField, sortOrder]);
+  }, [transactions, debouncedSearchQuery, platformFilter, categoryFilter, sortField, sortOrder]);
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -282,39 +291,13 @@ export default function TransactionAnalysis() {
             </thead>
             <tbody>
               {paginatedData.map((transaction, idx) => (
-                <motion.tr
+                <TransactionAnalysisRow
                   key={transaction.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: idx * 0.02 }}
-                  className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
-                >
-                  <td className="p-4 text-sm text-white">
-                    {format(new Date(transaction.transaction_date), "MMM d, yyyy")}
-                  </td>
-                  <td className="p-4">
-                    <span className="text-sm text-white capitalize">
-                      {PLATFORM_NAMES[transaction.platform] || transaction.platform}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className="text-xs px-2 py-1 rounded-md bg-white/5 text-white/70">
-                      {CATEGORY_NAMES[transaction.category] || transaction.category}
-                    </span>
-                  </td>
-                  <td className="p-4 text-sm text-white/70 max-w-xs truncate">
-                    {transaction.description || '-'}
-                  </td>
-                  <td className="p-4 text-sm text-white text-right font-semibold">
-                    ${transaction.amount.toFixed(2)}
-                  </td>
-                  <td className="p-4 text-sm text-red-400 text-right">
-                    ${(transaction.platform_fee || 0).toFixed(2)}
-                  </td>
-                  <td className="p-4 text-sm text-emerald-400 text-right font-semibold">
-                    ${(transaction.amount - (transaction.platform_fee || 0)).toFixed(2)}
-                  </td>
-                </motion.tr>
+                  transaction={transaction}
+                  index={idx}
+                  platformNames={PLATFORM_NAMES}
+                  categoryNames={CATEGORY_NAMES}
+                />
               ))}
             </tbody>
           </table>
