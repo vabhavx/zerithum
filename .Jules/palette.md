@@ -13,3 +13,7 @@
 ## 2025-05-25 - Dashboard Alerts
 **Learning:** Dismissible alerts and panels in dashboards often use icon-only "X" buttons that lack accessible labels, leaving screen reader users stuck in a list of "button" announcements.
 **Action:** Always add `aria-label="Dismiss alert"` (or specific context like "Dismiss risk warning") to these icon-only close buttons.
+
+## 2026-02-13 - Accessible Chat Interfaces
+**Learning:** Chat interfaces require `role="log"` and `aria-live="polite"` on the message container to automatically announce new messages to screen readers without stealing focus.
+**Action:** Apply `role="log"`, `aria-live="polite"`, and `tabIndex="0"` (for keyboard scrolling) to the chat message container.
