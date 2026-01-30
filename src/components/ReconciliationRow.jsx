@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Sparkles, Check, ArrowRight } from "lucide-react";
+import { format } from "date-fns";
 
 const MATCH_CATEGORY_LABELS = {
   exact_match: "Exact Match",
@@ -20,12 +21,14 @@ const MATCH_CATEGORY_COLORS = {
 /**
  * @typedef {Object} ReconciliationRowProps
  * @property {any} rec
+ * @property {any} [revenueTransaction]
+ * @property {any} [bankTransaction]
  */
 
 /**
  * @type {React.NamedExoticComponent<ReconciliationRowProps>}
  */
-const ReconciliationRow = memo(({ rec }) => {
+const ReconciliationRow = memo(({ rec, revenueTransaction, bankTransaction }) => {
   return (
     <div className="clay rounded-2xl p-5">
       <div className="flex items-center justify-between mb-3">
@@ -44,12 +47,46 @@ const ReconciliationRow = memo(({ rec }) => {
       <div className="flex items-center gap-4">
         <div className="flex-1 clay-sm rounded-xl p-3">
           <p className="text-xs text-slate-500 mb-1">Platform Revenue</p>
-          <p className="font-medium text-slate-800">Revenue Transaction</p>
+          {revenueTransaction ? (
+            <>
+              <p className="font-medium text-slate-800 line-clamp-1" title={revenueTransaction.description}>
+                {revenueTransaction.description || `${revenueTransaction.platform} Payout`}
+              </p>
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-xs text-slate-500">
+                  {format(new Date(revenueTransaction.transaction_date), "MMM d, yyyy")}
+                </p>
+                <p className="font-semibold text-slate-700">
+                  ${Number(revenueTransaction.amount).toFixed(2)}
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-slate-400 italic">Unknown Transaction ({rec.revenue_transaction_id})</p>
+          )}
         </div>
+
         <ArrowRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+
         <div className="flex-1 clay-sm rounded-xl p-3">
           <p className="text-xs text-slate-500 mb-1">Bank Deposit</p>
-          <p className="font-medium text-slate-800">Bank Transaction</p>
+           {bankTransaction ? (
+            <>
+              <p className="font-medium text-slate-800 line-clamp-1" title={bankTransaction.description}>
+                {bankTransaction.description || "Bank Deposit"}
+              </p>
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-xs text-slate-500">
+                  {format(new Date(bankTransaction.transaction_date), "MMM d, yyyy")}
+                </p>
+                <p className="font-semibold text-slate-700">
+                  ${Number(bankTransaction.amount).toFixed(2)}
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-slate-400 italic">Unknown Transaction ({rec.bank_transaction_id})</p>
+          )}
         </div>
       </div>
       {rec.match_confidence && (
