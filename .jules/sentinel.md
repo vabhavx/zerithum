@@ -13,3 +13,11 @@
 1. Use a dedicated `escapeCsv` utility for all user-controlled text fields.
 2. Prefix unsafe values (starting with `=+-@`) with a single quote `'` or tab to force text interpretation.
 3. Do not apply this to strict numeric fields (like currency) to preserve formatting.
+
+## 2025-05-28 - Price Manipulation in Payments
+**Vulnerability:** The payment creation endpoint (`createSkydoPayment.ts`) trusted the `amount` value sent by the client, allowing malicious users to modify the price of subscriptions.
+**Learning:** Never trust client-side input for critical values like price. Frontend pricing data is for display only.
+**Prevention:**
+1. Maintain a server-side "Source of Truth" for all pricing logic.
+2. In payment endpoints, receive only the `plan_id` (or name) from the client.
+3. Look up the authoritative price server-side before interacting with payment gateways.
