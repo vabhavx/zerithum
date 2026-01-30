@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { getPlanDetails } from './logic/paymentLogic.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -9,16 +10,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { planName, amount, currency = 'USD', billingPeriod } = await req.json();
+    const { planName, billingPeriod } = await req.json();
 
-    if (!planName || !amount) {
+    if (!planName) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    // Get authoritative plan details
+    // This throws an error if the plan or billing period is invalid
+    const planDetails = getPlanDetails(planName, billingPeriod || 'monthly');
 
     // Create Skydo payment link
     const skydoApiKey = Deno.env.get('SKYDO_API_KEY');
     if (!skydoApiKey) {
-      return Response.json({ error: 'Skydo API key not configured' }, { status: 500 });
+      console.error('Skydo API key not configured');
+      return Response.json({ error: 'Internal server error' }, { status: 500 });
     }
 
     // Skydo payment link creation
@@ -29,17 +35,17 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        amount: amount,
-        currency: currency,
-        description: `${planName} - ${billingPeriod} subscription`,
+        amount: planDetails.price,
+        currency: planDetails.currency,
+        description: `${planDetails.name} - ${planDetails.period} subscription`,
         customer: {
           email: user.email,
           name: user.full_name || user.email
         },
         metadata: {
           user_id: user.id,
-          plan: planName,
-          billing_period: billingPeriod
+          plan: planDetails.name,
+          billing_period: billingPeriod || 'monthly'
         },
         success_url: `${Deno.env.get('APP_URL') || 'https://zerithum-copy-36d43903.base44.app'}/pricing?payment=success`,
         cancel_url: `${Deno.env.get('APP_URL') || 'https://zerithum-copy-36d43903.base44.app'}/pricing?payment=cancelled`
@@ -50,8 +56,7 @@ Deno.serve(async (req) => {
       const errorData = await skydoResponse.json();
       console.error('Skydo API error:', errorData);
       return Response.json({ 
-        error: 'Failed to create payment link',
-        details: errorData 
+        error: 'Failed to create payment link'
       }, { status: skydoResponse.status });
     }
 
@@ -63,10 +68,10 @@ Deno.serve(async (req) => {
       action: 'payment_initiated',
       resource_type: 'subscription',
       data: {
-        plan: planName,
-        amount,
-        currency,
-        billing_period: billingPeriod,
+        plan: planDetails.name,
+        amount: planDetails.price,
+        currency: planDetails.currency,
+        billing_period: billingPeriod || 'monthly',
         payment_id: paymentData.id
       }
     });
@@ -79,9 +84,9 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Payment creation error:', error);
+    // Return generic error to client, stack trace is logged above
     return Response.json({ 
-      error: 'Internal server error',
-      message: error.message 
+      error: 'Internal server error'
     }, { status: 500 });
   }
 });
