@@ -13,3 +13,11 @@
 1. Use a dedicated `escapeCsv` utility for all user-controlled text fields.
 2. Prefix unsafe values (starting with `=+-@`) with a single quote `'` or tab to force text interpretation.
 3. Do not apply this to strict numeric fields (like currency) to preserve formatting.
+
+## 2025-05-27 - Price Manipulation in Payment Flow
+**Vulnerability:** The payment creation function trusted the `amount` sent by the client, allowing users to pay arbitrary amounts for subscriptions.
+**Learning:** Relying on client-provided financial values is a critical flaw. Even if the UI sends the correct amount, the API request can be intercepted and modified.
+**Prevention:**
+1. Centralize pricing logic on the server/backend.
+2. Accept only references (plan IDs/names) from the client, not raw values.
+3. Validate all inputs against authoritative sources before processing payments.
