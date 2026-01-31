@@ -278,8 +278,8 @@ export default function Pricing() {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => handleCTA("book_demo")}
-                className="border-white/20 text-white hover:bg-white/5 text-lg px-8 h-14 rounded-xl w-full sm:w-auto">
+                onClick={() => handleCTA("book_demo")} className="bg-lime-400 text-zinc-50 px-8 text-lg font-medium rounded-xl inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border shadow-sm hover:text-accent-foreground border-white/20 hover:bg-white/5 h-14 w-full sm:w-auto">
+
 
                 Book a demo
               </Button>
