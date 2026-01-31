@@ -114,7 +114,7 @@ export default function Layout({ children, currentPageName }) {
         <div className="relative">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png"
-            alt="Zerithum" className="bg-slate-800 h-7 w-auto object-contain relative z-10" />
+            alt="Zerithum" className="bg-gray-700 h-7 w-auto object-contain relative z-10" />
 
 
         </div>
