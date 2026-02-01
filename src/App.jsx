@@ -26,7 +26,12 @@ const PageLoader = () => (
 );
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated } = useAuth();
+
+  // Public routes that don't require authentication
+  const publicRoutes = ['Login', 'Signup', 'AuthCallback'];
+  const currentPath = window.location.pathname.replace('/', '');
+  const isPublicRoute = publicRoutes.includes(currentPath) || currentPath === '';
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -37,8 +42,8 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
-  if (authError) {
+  // Handle authentication errors (only for protected routes)
+  if (authError && !isPublicRoute) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
@@ -46,6 +51,12 @@ const AuthenticatedApp = () => {
       navigateToLogin();
       return null;
     }
+  }
+
+  // Redirect to login if not authenticated and trying to access protected route
+  if (!isAuthenticated && !isPublicRoute && !isLoadingAuth) {
+    navigateToLogin();
+    return null;
   }
 
   // Render the main app
@@ -62,9 +73,13 @@ const AuthenticatedApp = () => {
             key={path}
             path={`/${path}`}
             element={
-              <LayoutWrapper currentPageName={path}>
+              publicRoutes.includes(path) ? (
                 <Page />
-              </LayoutWrapper>
+              ) : (
+                <LayoutWrapper currentPageName={path}>
+                  <Page />
+                </LayoutWrapper>
+              )
             }
           />
         ))}

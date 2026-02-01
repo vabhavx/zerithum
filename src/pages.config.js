@@ -1,5 +1,7 @@
 import AuthCallback from './pages/AuthCallback';
 import ConnectedApps from './pages/ConnectedApps';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 import ConnectedPlatforms from './pages/ConnectedPlatforms';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
@@ -34,6 +36,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "Expenses": Expenses,
     "Help": Help,
+    "Login": Login,
     "Notifications": Notifications,
     "Platforms": Platforms,
     "Pricing": Pricing,
@@ -48,6 +51,7 @@ export const PAGES = {
     "SettingsNotifications": SettingsNotifications,
     "SettingsPrivacy": SettingsPrivacy,
     "SettingsSubscription": SettingsSubscription,
+    "Signup": Signup,
     "Subscription": Subscription,
     "TaxEstimator": TaxEstimator,
     "TaxExport": TaxExport,
