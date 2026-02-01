@@ -30,8 +30,9 @@ const AuthenticatedApp = () => {
 
   // Public routes that don't require authentication
   const publicRoutes = ['Login', 'Signup', 'AuthCallback'];
-  const currentPath = window.location.pathname.replace('/', '');
-  const isPublicRoute = publicRoutes.includes(currentPath) || currentPath === '';
+  // Remove leading slash for matching
+  const currentPath = window.location.pathname.substring(1);
+  const isPublicRoute = publicRoutes.includes(currentPath);
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
