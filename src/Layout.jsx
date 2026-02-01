@@ -46,68 +46,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
-      <style>{`
-        :root {
-          --bg-primary: #0A0A0A;
-          --bg-secondary: #111111;
-          --bg-tertiary: #1A1A1A;
-          --border-primary: rgba(255, 255, 255, 0.06);
-          --border-secondary: rgba(255, 255, 255, 0.12);
-          --text-primary: #FFFFFF;
-          --text-secondary: #A1A1A1;
-          --accent: #6366F1;
-          --accent-hover: #7C7FF2;
-        }
-
-        @keyframes shimmer {
-          0% { background-position: -1000px 0; }
-          100% { background-position: 1000px 0; }
-        }
-
-        .card-modern {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          backdrop-filter: blur(20px);
-          transition: background 0.15s ease, border-color 0.15s ease;
-        }
-
-        .card-modern:hover {
-          background: rgba(255, 255, 255, 0.04);
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        .glass-effect {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(40px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .glow-accent {
-          box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .nav-item-active {
-          background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
-          border-left: 2px solid #6366F1;
-        }
-
-        .shimmer {
-          background: linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.03) 50%,
-            transparent 100%
-          );
-          background-size: 2000px 100%;
-          animation: shimmer 3s infinite;
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
-      `}</style>
+    <div className="min-h-screen">
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-effect px-4 py-3 flex items-center justify-between border-b border-white/5">
@@ -138,7 +77,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 bg-[#0A0A0A] border-r border-white/5 z-50 transition-transform duration-150 ease-out",
+        "fixed left-0 top-0 h-full w-64 border-r z-50 transition-transform duration-150 ease-out",
         "lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
@@ -211,7 +150,7 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 bg-[#0A0A0A]">
+      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0">
         <div className="p-6 lg:p-10 max-w-[1600px] mx-auto">
           {children}
         </div>
