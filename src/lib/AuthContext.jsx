@@ -52,7 +52,13 @@ export const AuthProvider = ({ children }) => {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session?.user) {
-        await fetchUserProfile(session.user);
+        // Optimistically set authenticated to unblock UI
+        setIsAuthenticated(true);
+        // data.user has basic info, we set it first
+        setUser(session.user);
+
+        // Fetch full profile in background
+        fetchUserProfile(session.user).catch(console.error);
       } else {
         setIsAuthenticated(false);
         setUser(null);
