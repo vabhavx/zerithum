@@ -32,7 +32,7 @@ const AuthenticatedApp = () => {
   const publicRoutes = ['Login', 'Signup', 'AuthCallback'];
   // Remove leading slash for matching
   const currentPath = window.location.pathname.substring(1);
-  const isPublicRoute = publicRoutes.includes(currentPath);
+  const isPublicRoute = publicRoutes.some(route => route.toLowerCase() === currentPath.toLowerCase());
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
