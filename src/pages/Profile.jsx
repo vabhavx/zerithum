@@ -10,7 +10,12 @@ import {
   Save,
   CheckCircle2,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  Shield,
+  ShieldCheck,
+  History,
+  Lock,
+  KeyRound
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,14 +100,28 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-20">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-2xl font-bold text-white tracking-tight">Profile Settings</h1>
-        <p className="text-white/40 mt-1 text-sm">Manage your account and preferences</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent tracking-tight">Profile & Security</h1>
+            <p className="text-white/40 mt-1 text-sm flex items-center gap-2">
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              Data Encrypted & Isolated
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            className="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+            onClick={() => base44.auth.logout()}
+          >
+            Sign Out
+          </Button>
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 gap-6">
@@ -111,60 +130,116 @@ export default function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card-modern rounded-xl p-6"
+          className="card-modern rounded-xl p-6 border-l-4 border-l-zteal-400"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-zteal-400/20 border border-white/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-zteal-400/10 border border-zteal-400/20 flex items-center justify-center">
               <User className="w-5 h-5 text-zteal-400" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Basic Information</h3>
-              <p className="text-xs text-white/40">Update your profile details</p>
+              <h3 className="text-lg font-bold text-white">Identity</h3>
+              <p className="text-xs text-white/40">Personal details</p>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <Label className="text-white/60 mb-2 block text-sm">Full Name</Label>
-              <Input
-                value={formData.full_name}
-                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="Enter your full name"
-              />
-            </div>
-
-            <div>
-              <Label className="text-white/60 mb-2 block text-sm">Email Address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <Label className="text-white/60 mb-2 block text-sm">Full Name</Label>
                 <Input
-                  value={formData.email}
-                  disabled
-                  className="pl-10 bg-white/[0.02] border-white/5 text-white/40 cursor-not-allowed"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white focus:border-zteal-400/50"
+                  placeholder="Enter your full name"
                 />
               </div>
-              <p className="text-xs text-white/30 mt-1">Email cannot be changed</p>
+              <Button
+                onClick={handleSaveProfile}
+                disabled={updateProfileMutation.isPending}
+                className="w-full rounded-lg bg-zteal-400 hover:bg-zteal-500 text-white h-10 font-medium"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Update Profile
+              </Button>
             </div>
 
-            <div className="flex items-center gap-2 pt-2">
-              <div className="flex-1 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span className="text-sm text-emerald-400">Role: {user?.role || 'user'}</span>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-white/60 mb-2 block text-sm">Email Address</Label>
+                <div className="relative opacity-75">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                  <Input
+                    value={formData.email}
+                    disabled
+                    className="pl-10 bg-white/[0.02] border-white/5 text-white/40 cursor-not-allowed font-mono text-sm"
+                  />
+                </div>
               </div>
-              <div className="flex-1 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-blue-400" />
-                <span className="text-sm text-blue-400">Member since {user?.created_date ? format(new Date(user.created_date), 'MMM yyyy') : 'N/A'}</span>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                  <span className="text-xs text-white/40 block mb-1">Account Role</span>
+                  <div className="flex items-center gap-2 text-white font-medium text-sm">
+                    <Shield className="w-3 h-3 text-zteal-400" />
+                    {user?.role || 'User'}
+                  </div>
+                </div>
+                <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                  <span className="text-xs text-white/40 block mb-1">Joined</span>
+                  <div className="flex items-center gap-2 text-white font-medium text-sm">
+                    <History className="w-3 h-3 text-zteal-400" />
+                    {user?.created_at ? format(new Date(user.created_at), 'MMM yyyy') : 'N/A'}
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
+        </motion.div>
 
-            <Button
-              onClick={handleSaveProfile}
-              disabled={updateProfileMutation.isPending}
-              className="w-full rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white h-10"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
+        {/* Security Section (New) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="card-modern rounded-xl p-6 border-l-4 border-l-orange-400"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-orange-400/10 border border-orange-400/20 flex items-center justify-center">
+              <Lock className="w-5 h-5 text-orange-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">Security & Access</h3>
+              <p className="text-xs text-white/40">Protect your financial data</p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] border border-white/5 mb-4">
+            <div className="flex items-start gap-4">
+              <div className="mt-1">
+                <KeyRound className="w-5 h-5 text-white/40" />
+              </div>
+              <div>
+                <h4 className="text-white font-medium text-sm">Update Password</h4>
+                <p className="text-white/40 text-xs mt-1">Change your login password securely.</p>
+              </div>
+            </div>
+            <Button variant="outline" className="text-white border-white/10 hover:bg-white/5">
+              Change
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] border border-white/5">
+            <div className="flex items-start gap-4">
+              <div className="mt-1">
+                <AlertCircle className="w-5 h-5 text-white/40" />
+              </div>
+              <div>
+                <h4 className="text-white font-medium text-sm">Active Sessions</h4>
+                <p className="text-white/40 text-xs mt-1">You are currently logged in on this device.</p>
+              </div>
+            </div>
+            <Button variant="ghost" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10">
+              Sign out all devices
             </Button>
           </div>
         </motion.div>
@@ -174,11 +249,11 @@ export default function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card-modern rounded-xl p-6"
+          className="card-modern rounded-xl p-6 border-l-4 border-l-blue-400"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-white/10 flex items-center justify-center">
-              <Link2 className="w-5 h-5 text-emerald-400" />
+            <div className="w-10 h-10 rounded-lg bg-blue-400/10 border border-blue-400/20 flex items-center justify-center">
+              <Link2 className="w-5 h-5 text-blue-400" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-white">Connected Platforms</h3>
@@ -236,75 +311,24 @@ export default function Profile() {
           )}
         </motion.div>
 
-        {/* Notification Preferences */}
+        {/* Danger Zone */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="card-modern rounded-xl p-6"
+          className="rounded-xl p-6 border border-red-500/20 bg-red-500/5"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center">
-              <Bell className="w-5 h-5 text-amber-400" />
-            </div>
+          <h3 className="text-lg font-bold text-red-500 mb-2">Danger Zone</h3>
+          <p className="text-red-400/60 text-sm mb-6">Irreversible actions regarding your account.</p>
+
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-bold text-white">Notification Preferences</h3>
-              <p className="text-xs text-white/40">Control what emails you receive</p>
+              <p className="text-white font-medium text-sm">Delete Account</p>
+              <p className="text-white/40 text-xs mt-1">Permanently delete your account and all financial data.</p>
             </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] border border-white/5">
-              <div>
-                <p className="text-white text-sm font-medium">Weekly Revenue Reports</p>
-                <p className="text-white/40 text-xs mt-1">Get a summary of your earnings every week</p>
-              </div>
-              <Switch
-                checked={notifications.email_weekly_report}
-                onCheckedChange={(checked) =>
-                  setNotifications({ ...notifications, email_weekly_report: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] border border-white/5">
-              <div>
-                <p className="text-white text-sm font-medium">Tax Reminders</p>
-                <p className="text-white/40 text-xs mt-1">Quarterly tax payment due date reminders</p>
-              </div>
-              <Switch
-                checked={notifications.email_tax_reminders}
-                onCheckedChange={(checked) =>
-                  setNotifications({ ...notifications, email_tax_reminders: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] border border-white/5">
-              <div>
-                <p className="text-white text-sm font-medium">Platform Sync Notifications</p>
-                <p className="text-white/40 text-xs mt-1">Get notified when data syncs complete</p>
-              </div>
-              <Switch
-                checked={notifications.email_platform_sync}
-                onCheckedChange={(checked) =>
-                  setNotifications({ ...notifications, email_platform_sync: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] border border-white/5">
-              <div>
-                <p className="text-white text-sm font-medium">AI Insights</p>
-                <p className="text-white/40 text-xs mt-1">Receive AI-generated financial insights</p>
-              </div>
-              <Switch
-                checked={notifications.email_insights}
-                onCheckedChange={(checked) =>
-                  setNotifications({ ...notifications, email_insights: checked })
-                }
-              />
-            </div>
+            <Button variant="destructive" className="bg-red-500 hover:bg-red-600 text-white border-none">
+              Delete Account
+            </Button>
           </div>
         </motion.div>
       </div>
