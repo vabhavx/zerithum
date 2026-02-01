@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://rsms.me/inter/inter.css');
 
 @tailwind base;
 @tailwind components;
@@ -6,105 +6,107 @@
 
 @layer base {
   :root {
-    --primary-teal: #208D9E;
-    --secondary-brown: #5E5240;
-    --bg-cream: #FCF8F9;
-    --surface-white: #FFFFFE;
-    --error-red: #C0152F;
-    --success-teal: #208D9E;
+    /* Grayscale surfaces and borders (dark industrial) */
+    --z-bg-0: #0A0A0B;
+    --z-bg-1: #0F1012;
+    --z-bg-2: #15161A;
+    --z-bg-3: #1A1B1F;
+
+    --z-border-1: rgba(255,255,255,0.08);
+    --z-border-2: rgba(255,255,255,0.12);
+    --z-text-1: rgba(255,255,255,0.92);
+    --z-text-2: rgba(255,255,255,0.72);
+    --z-text-3: rgba(255,255,255,0.56);
+
+    /* Accents */
+    --z-accent: #4BA3B8;
+    --z-accent-2: #2C6B7A;
+    --z-warn: #F59E0B;
+    --z-danger: #EF4444;
+
+    /* Typography */
+    --z-font: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    --z-fs-11: 11px;
+    --z-fs-13: 13px;
+    --z-fs-15: 15px;
+    --z-fs-18: 18px;
+    --z-fs-24: 24px;
+
+    --z-fw-400: 400;
+    --z-fw-500: 500;
+    --z-fw-600: 600;
+
+    --z-ls-tight: -0.02em;
+  }
+
+  * {
+    border-color: var(--z-border-1);
   }
 
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background-color: var(--bg-cream);
-    color: var(--secondary-brown);
+    font-family: var(--z-font);
+    font-size: var(--z-fs-15);
+    font-weight: var(--z-fw-400);
+    background-color: var(--z-bg-0);
+    color: var(--z-text-1);
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
+  h1 {
+    font-size: var(--z-fs-24);
+    font-weight: var(--z-fw-600);
+    letter-spacing: var(--z-ls-tight);
+    color: var(--z-text-1);
   }
-}
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
+  h2 {
+    font-size: var(--z-fs-18);
+    font-weight: var(--z-fw-600);
+    letter-spacing: var(--z-ls-tight);
+    color: var(--z-text-1);
   }
-  50% {
-    transform: translateY(-10px);
+
+  h3 {
+    font-size: var(--z-fs-15);
+    font-weight: var(--z-fw-600);
+    color: var(--z-text-1);
+  }
+
+  a {
+    color: var(--z-accent);
+    transition: color 150ms ease;
+  }
+
+  a:hover {
+    color: var(--z-accent-2);
   }
 }
 
 @layer components {
-  .clay-card {
-    background: var(--surface-white);
-    border: 1px solid rgba(94, 82, 64, 0.07);
+  .card-modern {
+    background: var(--z-bg-2);
+    border: 1px solid var(--z-border-1);
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(94, 82, 64, 0.08);
     transition: all 150ms ease-out;
   }
 
-  .clay-card:hover {
-    box-shadow: 0 6px 16px rgba(94, 82, 64, 0.12);
-    transform: scale(1.02);
+  .card-modern:hover {
+    background: var(--z-bg-3);
+    border-color: var(--z-border-2);
   }
 
-  .btn-primary {
-    background: var(--primary-teal);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(32, 141, 158, 0.2);
-    transition: all 150ms ease-out;
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--z-border-1);
   }
 
-  .btn-primary:hover {
-    background: #1a7d8d;
-    box-shadow: 0 4px 12px rgba(32, 141, 158, 0.3);
+  .text-label {
+    font-size: var(--z-fs-13);
+    color: var(--z-text-2);
   }
 
-  .btn-secondary {
-    background: transparent;
-    border: 1px solid var(--secondary-brown);
-    color: var(--secondary-brown);
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 150ms ease-out;
-  }
-
-  .btn-secondary:hover {
-    background: rgba(94, 82, 64, 0.05);
-  }
-
-  .btn-danger {
-    background: var(--error-red);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 150ms ease-out;
-  }
-
-  .btn-danger:hover {
-    background: #a01225;
-  }
-
-  .input-clay {
-    border: 1px solid rgba(94, 82, 64, 0.12);
-    border-radius: 8px;
-    padding: 10px 14px;
-    background: var(--surface-white);
-    transition: all 150ms ease-out;
-  }
-
-  .input-clay:focus {
-    outline: 2px solid var(--primary-teal);
-    outline-offset: 0;
-    border-color: var(--primary-teal);
-  }
-
-  .input-clay::placeholder {
-    color: rgba(94, 82, 64, 0.4);
+  .text-caption {
+    font-size: var(--z-fs-11);
+    color: var(--z-text-3);
   }
 }
