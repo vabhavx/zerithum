@@ -34,14 +34,19 @@ const AuthenticatedApp = () => {
   const currentPath = window.location.pathname.substring(1);
   const isPublicRoute = publicRoutes.some(route => route.toLowerCase() === currentPath.toLowerCase());
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-950 z-50">
+        <Loader2 className="w-10 h-10 animate-spin text-zteal-400 mb-4" />
+        <p className="text-white/50 text-sm animate-pulse">
+          {isLoadingAuth ? 'Verifying authentication...' : 'Loading settings...'}
+        </p>
       </div>
     );
   }
+
+  // Failsafe: If infinite loading happens, force logout option (Hidden but accessible if needed via console)
+  // or auto-redirect after timeout could be implemented here.
 
   // Handle authentication errors (only for protected routes)
   if (authError && !isPublicRoute) {
