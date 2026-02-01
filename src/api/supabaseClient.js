@@ -1,0 +1,287 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Missing Supabase environment variables');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// ============================================================================
+// AUTH HELPERS (replaces base44.auth)
+// ============================================================================
+
+export const auth = {
+    // Get current user
+    async me() {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) throw error;
+
+        if (user) {
+            // Fetch profile data
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            return { ...user, ...profile };
+        }
+        return null;
+    },
+
+    // Update current user's profile
+    async updateMe(updates) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { data, error } = await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('id', user.id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Sign out
+    async logout(redirectUrl) {
+        await supabase.auth.signOut();
+        if (redirectUrl) {
+            window.location.href = redirectUrl;
+        }
+    },
+
+    // Redirect to login
+    redirectToLogin(redirectUrl) {
+        // Store the redirect URL for after login
+        if (redirectUrl) {
+            sessionStorage.setItem('redirectAfterLogin', redirectUrl);
+        }
+        window.location.href = '/login';
+    },
+
+    // Sign in with email
+    async signInWithEmail(email, password) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+        if (error) throw error;
+        return data;
+    },
+
+    // Sign up with email
+    async signUpWithEmail(email, password, metadata = {}) {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: metadata
+            }
+        });
+        if (error) throw error;
+        return data;
+    },
+
+    // OAuth sign in
+    async signInWithOAuth(provider) {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider,
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`
+            }
+        });
+        if (error) throw error;
+        return data;
+    }
+};
+
+// ============================================================================
+// ENTITY HELPERS (replaces base44.entities)
+// ============================================================================
+
+function createEntityHelper(tableName) {
+    return {
+        // List all records
+        async list(orderBy = '-created_at', limit = 100) {
+            const isDesc = orderBy.startsWith('-');
+            const column = orderBy.replace('-', '');
+
+            let query = supabase
+                .from(tableName)
+                .select('*')
+                .order(column, { ascending: !isDesc })
+                .limit(limit);
+
+            const { data, error } = await query;
+            if (error) throw error;
+            return data;
+        },
+
+        // Filter records
+        async filter(filters, orderBy = '-created_at', limit = 100) {
+            const isDesc = orderBy.startsWith('-');
+            const column = orderBy.replace('-', '');
+
+            let query = supabase
+                .from(tableName)
+                .select('*');
+
+            // Apply filters
+            Object.entries(filters).forEach(([key, value]) => {
+                query = query.eq(key, value);
+            });
+
+            query = query.order(column, { ascending: !isDesc }).limit(limit);
+
+            const { data, error } = await query;
+            if (error) throw error;
+            return data;
+        },
+
+        // Get single record by ID
+        async get(id) {
+            const { data, error } = await supabase
+                .from(tableName)
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error) throw error;
+            return data;
+        },
+
+        // Create a record
+        async create(record) {
+            const { data: { user } } = await supabase.auth.getUser();
+
+            const { data, error } = await supabase
+                .from(tableName)
+                .insert({ ...record, user_id: user?.id })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        },
+
+        // Bulk create records
+        async bulkCreate(records) {
+            const { data: { user } } = await supabase.auth.getUser();
+
+            const recordsWithUserId = records.map(r => ({ ...r, user_id: user?.id }));
+
+            const { data, error } = await supabase
+                .from(tableName)
+                .insert(recordsWithUserId)
+                .select();
+
+            if (error) throw error;
+            return data;
+        },
+
+        // Update a record
+        async update(id, updates) {
+            const { data, error } = await supabase
+                .from(tableName)
+                .update(updates)
+                .eq('id', id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        },
+
+        // Delete a record
+        async delete(id) {
+            const { error } = await supabase
+                .from(tableName)
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            return true;
+        }
+    };
+}
+
+// Map entity names to table names
+const tableNameMap = {
+    ConnectedPlatform: 'connected_platforms',
+    PlatformConnection: 'platform_connections',
+    RevenueTransaction: 'revenue_transactions',
+    Transaction: 'transactions',
+    BankTransaction: 'bank_transactions',
+    Expense: 'expenses',
+    Insight: 'insights',
+    AutopsyEvent: 'autopsy_events',
+    Reconciliation: 'reconciliations',
+    SyncHistory: 'sync_history',
+    TaxProfile: 'tax_profiles'
+};
+
+export const entities = Object.fromEntries(
+    Object.entries(tableNameMap).map(([entityName, tableName]) => [
+        entityName,
+        createEntityHelper(tableName)
+    ])
+);
+
+// ============================================================================
+// FUNCTIONS HELPERS (replaces base44.functions.invoke)
+// ============================================================================
+
+export const functions = {
+    async invoke(functionName, params = {}) {
+        const { data, error } = await supabase.functions.invoke(functionName, {
+            body: params
+        });
+
+        if (error) throw error;
+        return data;
+    }
+};
+
+// ============================================================================
+// FILE UPLOAD HELPER
+// ============================================================================
+
+export const storage = {
+    async upload(bucket, path, file) {
+        const { data, error } = await supabase.storage
+            .from(bucket)
+            .upload(path, file);
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(path);
+
+        return publicUrl;
+    }
+};
+
+// ============================================================================
+// BACKWARD COMPATIBLE EXPORT (drop-in replacement for base44)
+// ============================================================================
+
+export const base44Compatible = {
+    auth,
+    entities,
+    functions,
+    storage
+};
+
+// Direct export for drop-in replacement of base44Client
+export const base44 = base44Compatible;
+
+export default supabase;
+

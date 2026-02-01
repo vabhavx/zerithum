@@ -4,7 +4,7 @@ import { Check, ChevronDown, ChevronUp, Shield, Clock, TrendingUp, Loader2 } fro
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
-import { base44 } from "@/api/base44Client";
+import { base44 } from "@/api/supabaseClient";
 import { toast } from "sonner";
 
 const PLANS = {
