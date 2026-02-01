@@ -49,7 +49,16 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(true);
       setAuthError(null);
 
-      const { data: { session } } = await supabase.auth.getSession();
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Auth check timed out')), 5000)
+      );
+
+      // Race between actual auth check and timeout
+      const { data: { session } } = await Promise.race([
+        supabase.auth.getSession(),
+        timeoutPromise
+      ]);
 
       if (session?.user) {
         // Optimistically set authenticated to unblock UI
@@ -65,10 +74,17 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      setAuthError({
-        type: 'unknown',
-        message: error.message || 'Authentication check failed'
-      });
+      // If error is timeout or network, likely not logged in or offline.
+      // Default to unauthenticated state so the user isn't blocked.
+      setIsAuthenticated(false);
+      setUser(null);
+
+      if (error.message !== 'Auth check timed out') {
+        setAuthError({
+          type: 'unknown',
+          message: error.message || 'Authentication check failed'
+        });
+      }
     } finally {
       setIsLoadingAuth(false);
     }
