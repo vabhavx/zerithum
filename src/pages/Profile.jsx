@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { 
-  User, 
-  Mail, 
-  Bell, 
+import {
+  User,
+  Mail,
+  Bell,
   Link2,
   Save,
   CheckCircle2,
@@ -96,7 +96,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
@@ -114,8 +114,8 @@ export default function Profile() {
           className="card-modern rounded-xl p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center">
-              <User className="w-5 h-5 text-indigo-400" />
+            <div className="w-10 h-10 rounded-lg bg-zteal-400/20 border border-white/10 flex items-center justify-center">
+              <User className="w-5 h-5 text-zteal-400" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-white">Basic Information</h3>
@@ -161,7 +161,7 @@ export default function Profile() {
             <Button
               onClick={handleSaveProfile}
               disabled={updateProfileMutation.isPending}
-              className="w-full rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white h-10"
+              className="w-full rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white h-10"
             >
               <Save className="w-4 h-4 mr-2" />
               Save Changes
@@ -261,7 +261,7 @@ export default function Profile() {
               </div>
               <Switch
                 checked={notifications.email_weekly_report}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   setNotifications({ ...notifications, email_weekly_report: checked })
                 }
               />
@@ -274,7 +274,7 @@ export default function Profile() {
               </div>
               <Switch
                 checked={notifications.email_tax_reminders}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   setNotifications({ ...notifications, email_tax_reminders: checked })
                 }
               />
@@ -287,7 +287,7 @@ export default function Profile() {
               </div>
               <Switch
                 checked={notifications.email_platform_sync}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   setNotifications({ ...notifications, email_platform_sync: checked })
                 }
               />
@@ -300,7 +300,7 @@ export default function Profile() {
               </div>
               <Switch
                 checked={notifications.email_insights}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   setNotifications({ ...notifications, email_insights: checked })
                 }
               />

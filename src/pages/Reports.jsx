@@ -270,7 +270,7 @@ export default function Reports() {
       return (
         <div className="glass-effect rounded-lg px-4 py-2.5 border border-white/10">
           <p className="font-semibold text-white text-sm">{payload[0].payload.date || payload[0].name}</p>
-          <p className="text-xs text-indigo-400 font-medium">
+          <p className="text-xs text-zteal-400 font-medium">
             ${payload[0].value.toLocaleString()}
           </p>
         </div>
@@ -425,7 +425,7 @@ export default function Reports() {
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em]">Net Revenue</p>
-            <DollarSign className="w-4 h-4 text-indigo-400" />
+            <DollarSign className="w-4 h-4 text-zteal-400" />
           </div>
           <p className="text-2xl font-bold text-white mb-1">
             ${metrics.netRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

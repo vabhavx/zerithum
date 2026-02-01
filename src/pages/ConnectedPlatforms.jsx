@@ -3,11 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { format } from "date-fns";
-import { 
-  Youtube, 
-  Users, 
-  CircleDollarSign, 
-  ShoppingBag, 
+import {
+  Youtube,
+  Users,
+  CircleDollarSign,
+  ShoppingBag,
   Instagram,
   Music,
   Plus,
@@ -82,7 +82,7 @@ const PLATFORMS = [
     id: "stripe",
     name: "Stripe",
     icon: CircleDollarSign,
-    color: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+    color: "bg-zteal-400/10 border-zteal-400/20 text-zteal-400",
     description: "Connect payments, subscriptions, and payout data",
     oauthUrl: "https://connect.stripe.com/oauth/authorize",
     scope: "read_write",
@@ -216,22 +216,22 @@ export default function ConnectedPlatforms() {
   const syncMutation = useMutation({
     mutationFn: async (platformId) => {
       const connection = connectedPlatforms.find(p => p.id === platformId);
-      
+
       // Update to syncing status
       await base44.entities.ConnectedPlatform.update(platformId, {
         sync_status: "syncing"
       });
-      
+
       // Simulate data fetch from platform API
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
+
       // Random success/failure for demo (90% success rate)
       const success = Math.random() > 0.1;
-      
+
       if (!success) {
         throw new Error("Sync failed");
       }
-      
+
       return base44.entities.ConnectedPlatform.update(platformId, {
         last_synced_at: new Date().toISOString(),
         sync_status: "active",
@@ -266,9 +266,9 @@ export default function ConnectedPlatforms() {
     }
 
     setConnectingPlatform(platform.id);
-    
+
     let params;
-    
+
     // Generate and store CSRF token
     const csrfToken = crypto.randomUUID();
     sessionStorage.setItem('oauth_state', csrfToken);
@@ -311,12 +311,12 @@ export default function ConnectedPlatforms() {
 
     setValidatingKey(true);
     setConnectingPlatform(selectedPlatform.id);
-    
+
     try {
       // Validate API key
       if (selectedPlatform.id === "gumroad") {
         const response = await fetch(`${selectedPlatform.validationUrl}?access_token=${apiKey}`);
-        
+
         if (!response.ok) {
           throw new Error("Invalid API key");
         }
@@ -325,12 +325,12 @@ export default function ConnectedPlatforms() {
         const response = await fetch(selectedPlatform.validationUrl, {
           headers: { 'Authorization': `Bearer ${apiKey}` }
         });
-        
+
         if (!response.ok) {
           throw new Error("Invalid API key");
         }
       }
-      
+
       // Key is valid, save connection
       connectMutation.mutate({
         platform: selectedPlatform.id,
@@ -374,20 +374,20 @@ export default function ConnectedPlatforms() {
     if (!connection) return;
 
     setSyncingPlatform(connection.id);
-    
+
     try {
       const response = await base44.functions.invoke('syncPlatformData', {
         connectionId: connection.id,
         platform: connection.platform,
         forceFullSync
       });
-      
+
       queryClient.invalidateQueries({ queryKey: ['connectedPlatforms'] });
       queryClient.invalidateQueries({ queryKey: ['syncHistory'] });
-      
+
       if (response.data.success) {
         setShowConfetti(true);
-        const message = forceFullSync 
+        const message = forceFullSync
           ? `Full sync completed! ${response.data.transactionCount} transactions synced.`
           : response.data.message || 'Sync completed successfully!';
         toast.success(message);
@@ -461,11 +461,11 @@ export default function ConnectedPlatforms() {
   return (
     <div className="max-w-4xl mx-auto">
       <SuccessConfetti trigger={showConfetti} />
-      
+
       <MotivationalQuote className="mb-6" />
 
       {/* Header */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
@@ -493,7 +493,7 @@ export default function ConnectedPlatforms() {
           {availablePlatforms.length > 0 && (
             <Button
               onClick={() => setShowConnectDialog(true)}
-              className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700 transition-all text-sm h-9"
+              className="rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white border-0 transition-colors text-sm h-9"
             >
               <Plus className="w-3.5 h-3.5 mr-2" />
               Connect Platform
@@ -507,7 +507,7 @@ export default function ConnectedPlatforms() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Platform Status Distribution */}
           {statusData.length > 0 && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="card-modern rounded-2xl p-6"
@@ -528,15 +528,15 @@ export default function ConnectedPlatforms() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      background: "rgba(0, 0, 0, 0.8)", 
+                  <Tooltip
+                    contentStyle={{
+                      background: "rgba(0, 0, 0, 0.8)",
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       borderRadius: "8px",
                       color: "#fff"
                     }}
                   />
-                  <Legend 
+                  <Legend
                     verticalAlign="bottom"
                     formatter={(value) => <span className="text-white/70 text-sm">{value}</span>}
                   />
@@ -547,7 +547,7 @@ export default function ConnectedPlatforms() {
 
           {/* Platform Sync Frequency */}
           {platformUsageData.length > 0 && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
@@ -556,25 +556,25 @@ export default function ConnectedPlatforms() {
               <h3 className="text-lg font-semibold text-white mb-4">Sync Activity</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={platformUsageData}>
-                  <XAxis 
-                    dataKey="name" 
+                  <XAxis
+                    dataKey="name"
                     stroke="rgba(255, 255, 255, 0.3)"
                     tick={{ fill: "rgba(255, 255, 255, 0.5)", fontSize: 12 }}
                   />
-                  <YAxis 
+                  <YAxis
                     stroke="rgba(255, 255, 255, 0.3)"
                     tick={{ fill: "rgba(255, 255, 255, 0.5)", fontSize: 12 }}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
-                      background: "rgba(0, 0, 0, 0.8)", 
+                  <Tooltip
+                    contentStyle={{
+                      background: "rgba(0, 0, 0, 0.8)",
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       borderRadius: "8px",
                       color: "#fff"
                     }}
-                    cursor={{ fill: "rgba(99, 102, 241, 0.1)" }}
+                    cursor={{ fill: "rgba(75, 163, 184, 0.1)" }}
                   />
-                  <Bar dataKey="syncs" fill="#6366F1" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="syncs" fill="#4BA3B8" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </motion.div>
@@ -588,13 +588,13 @@ export default function ConnectedPlatforms() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="rounded-xl p-4 mb-6 bg-indigo-500/10 border border-indigo-500/30 backdrop-blur-sm"
+          className="rounded-xl p-4 mb-6 bg-zteal-400/10 border border-zteal-400/30 backdrop-blur-sm"
         >
           <div className="flex items-center gap-3">
-            <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+            <Loader2 className="w-5 h-5 animate-spin text-zteal-400" />
             <div>
-              <p className="font-semibold text-indigo-400 text-sm">Connecting Platform...</p>
-              <p className="text-xs text-indigo-300/80">Establishing secure connection</p>
+              <p className="font-semibold text-zteal-400 text-sm">Connecting Platform...</p>
+              <p className="text-xs text-zteal-300/80">Establishing secure connection</p>
             </div>
           </div>
         </motion.div>
@@ -614,7 +614,7 @@ export default function ConnectedPlatforms() {
           <p className="text-white/40 mb-6 text-sm">Connect your first platform to start tracking revenue</p>
           <Button
             onClick={() => setShowConnectDialog(true)}
-            className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0"
+            className="rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white border-0"
           >
             <Plus className="w-4 h-4 mr-2" />
             Connect Platform
@@ -622,24 +622,24 @@ export default function ConnectedPlatforms() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-            {connectedPlatforms.map((connection) => {
-              const platform = PLATFORMS.find(p => p.id === connection.platform);
-              if (!platform) return null;
+          {connectedPlatforms.map((connection) => {
+            const platform = PLATFORMS.find(p => p.id === connection.platform);
+            if (!platform) return null;
 
-              return (
-                <ConnectedPlatformRow
-                  key={connection.id}
-                  connection={connection}
-                  platform={platform}
-                  isSyncing={syncingPlatform === connection.id}
-                  onViewHistory={handleViewHistory}
-                  onSync={handleSync}
-                  onDisconnect={handleDisconnect}
-                  isDisconnecting={disconnectMutation.isPending}
-                />
-              );
-            })}
-          </div>
+            return (
+              <ConnectedPlatformRow
+                key={connection.id}
+                connection={connection}
+                platform={platform}
+                isSyncing={syncingPlatform === connection.id}
+                onViewHistory={handleViewHistory}
+                onSync={handleSync}
+                onDisconnect={handleDisconnect}
+                isDisconnecting={disconnectMutation.isPending}
+              />
+            );
+          })}
+        </div>
       )}
 
       {/* Connect Dialog */}
@@ -650,8 +650,8 @@ export default function ConnectedPlatforms() {
               {selectedPlatform ? `Connect ${selectedPlatform.name}` : "Connect Platform"}
             </DialogTitle>
             <DialogDescription className="text-white/40 text-sm">
-              {selectedPlatform 
-                ? "Enter your API key to securely connect" 
+              {selectedPlatform
+                ? "Enter your API key to securely connect"
                 : "Choose a platform to sync your revenue data"}
             </DialogDescription>
           </DialogHeader>
@@ -704,7 +704,7 @@ export default function ConnectedPlatforms() {
                 <Button
                   onClick={handleApiKeyConnect}
                   disabled={connectingPlatform || validatingKey || !apiKey.trim()}
-                  className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                  className="flex-1 rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white"
                 >
                   {(connectingPlatform || validatingKey) ? (
                     <>
@@ -767,7 +767,7 @@ export default function ConnectedPlatforms() {
                 <Button
                   onClick={handleShopifyConnect}
                   disabled={!shopifyShopName.trim()}
-                  className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                  className="flex-1 rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white"
                 >
                   <Check className="w-4 h-4 mr-2" />
                   Continue to Shopify
@@ -796,7 +796,7 @@ export default function ConnectedPlatforms() {
                       <h4 className="font-semibold text-white text-sm mb-1">{platform.name}</h4>
                       <p className="text-xs text-white/40 line-clamp-2">{platform.description}</p>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-indigo-400">
+                    <div className="flex items-center gap-1 text-xs text-zteal-400">
                       <span>Connect</span>
                       <ExternalLink className="w-3 h-3" />
                     </div>

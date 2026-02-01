@@ -157,7 +157,7 @@ export default function RevenueAutopsy() {
           transition={{ delay: 0.3 }}
           className="card-modern rounded-xl p-4"
         >
-          <TrendingDown className="w-5 h-5 text-indigo-400 mb-2" />
+          <TrendingDown className="w-5 h-5 text-zteal-400 mb-2" />
           <p className="text-xs text-white/50">Total Impact</p>
           <p className="text-2xl font-bold text-white">
             ${totalImpact}
@@ -220,7 +220,7 @@ export default function RevenueAutopsy() {
               <Button
                 onClick={submitDecision}
                 disabled={!decisionNotes.trim()}
-                className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600"
+                className="flex-1 bg-zteal-400"
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Log Decision

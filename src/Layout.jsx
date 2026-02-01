@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
-import { 
-  LayoutDashboard, 
-  Link2, 
-  Scale, 
-  FileText, 
-  Menu, 
+import {
+  LayoutDashboard,
+  Link2,
+  Scale,
+  FileText,
+  Menu,
   X,
   LogOut,
   User,
@@ -47,73 +47,12 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
-      <style>{`
-        :root {
-          --bg-primary: #0A0A0A;
-          --bg-secondary: #111111;
-          --bg-tertiary: #1A1A1A;
-          --border-primary: rgba(255, 255, 255, 0.06);
-          --border-secondary: rgba(255, 255, 255, 0.12);
-          --text-primary: #FFFFFF;
-          --text-secondary: #A1A1A1;
-          --accent: #6366F1;
-          --accent-hover: #7C7FF2;
-        }
-
-        @keyframes shimmer {
-          0% { background-position: -1000px 0; }
-          100% { background-position: 1000px 0; }
-        }
-
-        .card-modern {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          backdrop-filter: blur(20px);
-          transition: background 0.15s ease, border-color 0.15s ease;
-        }
-
-        .card-modern:hover {
-          background: rgba(255, 255, 255, 0.04);
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        .glass-effect {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(40px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .glow-accent {
-          box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .nav-item-active {
-          background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
-          border-left: 2px solid #6366F1;
-        }
-
-        .shimmer {
-          background: linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.03) 50%,
-            transparent 100%
-          );
-          background-size: 2000px 100%;
-          animation: shimmer 3s infinite;
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
-      `}</style>
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-effect px-4 py-3 flex items-center justify-between border-b border-white/5">
         <div className="relative">
-          <img 
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png" 
+          <img
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png"
             alt="Zerithum"
             className="h-7 w-auto object-contain relative z-10"
           />
@@ -130,7 +69,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar Overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
           onClick={() => setSidebarOpen(false)}
         />
@@ -145,14 +84,14 @@ export default function Layout({ children, currentPageName }) {
         <div className="p-6 h-full flex flex-col">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-12">
-              <div className="relative">
-                <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png" 
-                  alt="Zerithum"
-                  className="h-8 w-auto object-contain relative z-10"
-                />
-              </div>
+            <div className="relative">
+              <img
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png"
+                alt="Zerithum"
+                className="h-8 w-auto object-contain relative z-10"
+              />
             </div>
+          </div>
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1">
@@ -165,15 +104,15 @@ export default function Layout({ children, currentPageName }) {
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-75 group relative",
-                    isActive 
-                      ? "nav-item-active text-white" 
+                    isActive
+                      ? "nav-item-active text-white"
                       : "text-white/50 hover:text-white/80 hover:bg-white/5"
                   )}
                 >
                   {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-indigo-500 rounded-r" />
+                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-zteal-400 rounded-r" />
                   )}
-                  <item.icon className={cn("w-4 h-4", isActive && "text-indigo-400")} />
+                  <item.icon className={cn("w-4 h-4", isActive && "text-zteal-400")} />
                   <span className="font-medium text-sm">{item.name}</span>
                 </Link>
               );

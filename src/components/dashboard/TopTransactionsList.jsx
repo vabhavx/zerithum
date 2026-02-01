@@ -59,7 +59,7 @@ export default function TopTransactionsList({ transactions }) {
                 "w-10 h-10 rounded-lg flex items-center justify-center border",
                 transaction.platform === "youtube" && "bg-red-500/10 border-red-500/20 text-red-400",
                 transaction.platform === "patreon" && "bg-rose-500/10 border-rose-500/20 text-rose-400",
-                transaction.platform === "stripe" && "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+                transaction.platform === "stripe" && "bg-zteal-400/10 border-zteal-400/20 text-zteal-400",
                 transaction.platform === "gumroad" && "bg-pink-500/10 border-pink-500/20 text-pink-400",
                 !transaction.platform && "bg-white/5 border-white/10 text-white/50"
               )}>

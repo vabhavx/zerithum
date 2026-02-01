@@ -244,8 +244,8 @@ export default function Settings() {
       {/* Subscription Section */}
       <div className="card-modern rounded-xl p-6 lg:p-8 mb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-indigo-400" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-zteal-400/20 to-purple-500/20 border border-white/10 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-zteal-400" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-white">Subscription & Pricing</h2>
@@ -262,7 +262,7 @@ export default function Settings() {
               <div key={key} className="relative">
                 {isPro && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                    <div className="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-semibold">
+                    <div className="px-3 py-1 rounded-full bg-zteal-400 text-white text-xs font-semibold">
                       Popular
                     </div>
                   </div>
@@ -272,9 +272,9 @@ export default function Settings() {
                   className={cn(
                     "w-full rounded-xl p-5 text-left transition-all border",
                     isActive 
-                      ? "bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-indigo-500/40 ring-2 ring-indigo-500/50" 
+                      ? "bg-gradient-to-br from-zteal-400/20 to-purple-500/20 border-zteal-400/40 ring-2 ring-indigo-500/50" 
                       : "bg-white/[0.02] border-white/10 hover:bg-white/[0.04] hover:border-white/20",
-                    isPro && "border-indigo-500/30"
+                    isPro && "border-zteal-400/30"
                   )}
                 >
                   <div className="flex items-start justify-between mb-4">
@@ -286,7 +286,7 @@ export default function Settings() {
                       </div>
                     </div>
                     {isActive && (
-                      <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-zteal-400 flex items-center justify-center">
                         <Check className="w-3.5 h-3.5 text-white" />
                       </div>
                     )}
@@ -305,7 +305,7 @@ export default function Settings() {
                     <div className={cn(
                       "text-xs font-medium text-center py-2 rounded-lg border",
                       isPro 
-                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0"
+                        ? "bg-zteal-400 text-white border-0"
                         : "bg-white/5 text-white/70 border-white/10"
                     )}>
                       {key === 'free' ? 'Current Plan' : 'Upgrade'}
@@ -323,7 +323,7 @@ export default function Settings() {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 px-8 hover:from-indigo-600 hover:to-purple-700"
+          className="rounded-xl bg-zteal-400 text-white border-0 px-8 hover:bg-zteal-600"
         >
           {saving ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />

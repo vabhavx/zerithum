@@ -2,9 +2,9 @@ import React, { useState, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { 
-  Plus, 
-  Sparkles, 
+import {
+  Plus,
+  Sparkles,
   Receipt,
   TrendingDown,
   Loader2,
@@ -110,10 +110,10 @@ export default function Expenses() {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setFormData(prev => ({ ...prev, receipt_url: file_url }));
-      
+
       setProcessingReceipt(true);
       const result = await base44.functions.invoke('processReceipt', { receiptUrl: file_url });
-      
+
       if (result.data.success) {
         const { extracted, categorization } = result.data;
         setFormData(prev => ({
@@ -173,7 +173,7 @@ export default function Expenses() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.amount || !formData.expense_date) {
       toast.error("Amount and date are required");
       return;
@@ -194,13 +194,13 @@ export default function Expenses() {
     }, 0);
     const withReceipts = expenses.filter(e => e.receipt_url).length;
     const avgPerDay = expenses.length > 0 ? total / expenses.length : 0;
-    
+
     return { total, deductible, withReceipts, avgPerDay };
   }, [expenses]);
 
   return (
     <div className="max-w-6xl mx-auto">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
@@ -213,7 +213,7 @@ export default function Expenses() {
           <Button
             onClick={() => setShowAIChat(true)}
             variant="outline"
-            className="rounded-lg border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 h-9"
+            className="rounded-lg border-zteal-400/30 text-zteal-400 hover:bg-zteal-400/10 h-9"
           >
             <Bot className="w-3.5 h-3.5 mr-2" />
             AI Advisor
@@ -228,7 +228,7 @@ export default function Expenses() {
           </Button>
           <Button
             onClick={() => setShowAddDialog(true)}
-            className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700 h-9"
+            className="rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white border-0 transition-colors h-9"
           >
             <Plus className="w-3.5 h-3.5 mr-2" />
             Add Expense
@@ -282,7 +282,7 @@ export default function Expenses() {
           <p className="text-white/50 text-xs mb-1">With Receipts</p>
           <p className="text-2xl font-bold text-white">{metrics.withReceipts}</p>
           <p className="text-xs text-white/40 mt-2">
-            <button onClick={() => setShowAnalytics(!showAnalytics)} className="text-indigo-400 hover:text-indigo-300">
+            <button onClick={() => setShowAnalytics(!showAnalytics)} className="text-zteal-400 hover:text-zteal-300">
               {showAnalytics ? 'Hide' : 'View'} Analytics
             </button>
           </p>
@@ -342,7 +342,7 @@ export default function Expenses() {
                   className="bg-white/5 border-white/10 text-white text-sm"
                 />
                 {(uploadingReceipt || processingReceipt) && (
-                  <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                  <Loader2 className="w-5 h-5 animate-spin text-zteal-400" />
                 )}
               </div>
               {formData.receipt_url && (
@@ -407,7 +407,7 @@ export default function Expenses() {
                   type="button"
                   onClick={handleAICategorize}
                   disabled={categorizing}
-                  className="h-7 text-xs bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                  className="h-7 text-xs bg-zteal-400 hover:bg-zteal-600 text-white"
                 >
                   {categorizing ? (
                     <Loader2 className="w-3 h-3 mr-1 animate-spin" />
@@ -476,7 +476,7 @@ export default function Expenses() {
               <Button
                 type="submit"
                 disabled={createExpenseMutation.isPending}
-                className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                className="flex-1 bg-zteal-400 hover:bg-zteal-600 text-white"
               >
                 {createExpenseMutation.isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

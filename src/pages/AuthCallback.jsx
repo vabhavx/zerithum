@@ -95,7 +95,7 @@ export default function AuthCallback() {
       <div className="max-w-md w-full">
         {status === "processing" && (
           <div className="card-modern rounded-2xl p-12 text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-indigo-400 mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 animate-spin text-zteal-400 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">Connecting Platform</h2>
             <p className="text-white/40 text-sm">Please wait while we securely connect your account...</p>
           </div>
@@ -120,7 +120,7 @@ export default function AuthCallback() {
             <p className="text-white/60 text-sm text-center mb-6">{error}</p>
             <Button
               onClick={() => navigate(createPageUrl("ConnectedPlatforms"))}
-              className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+              className="w-full rounded-xl bg-zteal-400 text-white"
             >
               Back to Connected Platforms
             </Button>

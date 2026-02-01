@@ -146,7 +146,7 @@ export default function TransactionAnalysis() {
         </div>
         <Button
           onClick={exportToCSV}
-          className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white h-9"
+          className="rounded-lg bg-zteal-400 text-white h-9"
         >
           <Download className="w-3.5 h-3.5 mr-2" />
           Export CSV

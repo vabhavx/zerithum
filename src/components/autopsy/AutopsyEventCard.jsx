@@ -88,7 +88,7 @@ const AutopsyEventCard = memo(({ event, onDecision }) => {
       {/* Causal Reconstruction */}
       <div className="grid grid-cols-2 gap-4 mb-4 p-4 rounded-lg bg-white/[0.02] border border-white/5">
         <div>
-          <p className="text-xs font-semibold text-indigo-400 mb-1">🏢 Platform Behavior</p>
+          <p className="text-xs font-semibold text-zteal-400 mb-1">🏢 Platform Behavior</p>
           <p className="text-xs text-white/70">{event.causal_reconstruction?.platform_behaviour}</p>
         </div>
         <div>

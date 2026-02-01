@@ -406,7 +406,7 @@ export default function TaxEstimator() {
                   <Button
                     onClick={() => handleMarkPaid(quarter)}
                     disabled={updateTaxProfileMutation.isPending}
-                    className="w-full rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs h-8"
+                    className="w-full rounded-lg bg-zteal-400 text-white text-xs h-8"
                   >
                     Mark as Paid
                   </Button>
@@ -498,7 +498,7 @@ export default function TaxEstimator() {
               <Button
                 onClick={handleSaveSettings}
                 disabled={updateTaxProfileMutation.isPending}
-                className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                className="flex-1 rounded-lg bg-zteal-400 text-white"
               >
                 Save Settings
               </Button>

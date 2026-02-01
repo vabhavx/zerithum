@@ -68,7 +68,7 @@ export default function AIExpenseChat({ open, onOpenChange }) {
       <DialogContent className="card-modern rounded-2xl border max-w-2xl h-[600px] flex flex-col" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
         <DialogHeader>
           <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-400" />
+            <Sparkles className="w-5 h-5 text-zteal-400" />
             AI Expense Advisor
           </DialogTitle>
         </DialogHeader>
@@ -83,11 +83,11 @@ export default function AIExpenseChat({ open, onOpenChange }) {
                 className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {msg.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-indigo-400" />
+                  <div className="w-8 h-8 rounded-full bg-zteal-400/20 flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-zteal-400" />
                   </div>
                 )}
-                <div className={`max-w-[80%] rounded-xl p-3 ${msg.role === 'user' ? 'bg-indigo-500 text-white' : 'bg-white/5 text-white/90'}`}>
+                <div className={`max-w-[80%] rounded-xl p-3 ${msg.role === 'user' ? 'bg-zteal-400 text-white' : 'bg-white/5 text-white/90'}`}>
                   {msg.role === 'user' ? (
                     <p className="text-sm">{msg.content}</p>
                   ) : (
@@ -119,7 +119,7 @@ export default function AIExpenseChat({ open, onOpenChange }) {
           <Button
             onClick={handleSend}
             disabled={sending || !input.trim()}
-            className="bg-gradient-to-r from-indigo-500 to-purple-600"
+            className="bg-zteal-400"
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>

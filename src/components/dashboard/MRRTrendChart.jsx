@@ -7,7 +7,7 @@ export default function MRRTrendChart({ data }) {
       return (
         <div className="glass-effect rounded-lg px-4 py-2.5 border border-white/10">
           <p className="font-semibold text-white text-sm">{label}</p>
-          <p className="text-xs text-indigo-400 font-medium">
+          <p className="text-xs text-zteal-400 font-medium">
             ${payload[0].value.toLocaleString()}
           </p>
         </div>

@@ -46,7 +46,7 @@ export default function InsightsPanel({ insights, onDismiss }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-4">
-        <Sparkles className="w-5 h-5 text-indigo-400" />
+        <Sparkles className="w-5 h-5 text-zteal-400" />
         <h3 className="text-lg font-bold text-white">AI Insights</h3>
       </div>
 

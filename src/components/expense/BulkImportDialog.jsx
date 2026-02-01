@@ -90,7 +90,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }) {
           </div>
 
           {!result && (
-            <div className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center hover:border-indigo-500/50 transition-colors">
+            <div className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center hover:border-zteal-400/50 transition-colors">
               <FileSpreadsheet className="w-12 h-12 text-white/30 mx-auto mb-3" />
               <Input
                 type="file"
@@ -104,7 +104,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }) {
                 <Button
                   type="button"
                   disabled={uploading || processing}
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600"
+                  className="bg-zteal-400"
                   onClick={() => document.getElementById('bulk-upload').click()}
                 >
                   {uploading ? (

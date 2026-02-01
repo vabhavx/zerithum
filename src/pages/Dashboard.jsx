@@ -112,7 +112,7 @@ export default function Dashboard() {
     const now = new Date();
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
-    
+
     // Current month transactions
     const currentMonthTxns = transactions.filter(t => {
       const date = new Date(t.transaction_date);
@@ -130,7 +130,7 @@ export default function Dashboard() {
     // Total MRR
     const totalMRR = currentMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
     const _prevMRR = prevMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-    
+
     // MRR change
     let mrrTrend = "neutral";
     let mrrChange = "0%";
@@ -148,7 +148,7 @@ export default function Dashboard() {
       }
       platformMap[t.platform] += t.amount || 0;
     });
-    
+
     const platformBreakdown = Object.entries(platformMap).map(([platform, amount]) => ({
       platform,
       amount
@@ -202,7 +202,7 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
@@ -215,7 +215,7 @@ export default function Dashboard() {
           <Button
             onClick={handleGenerateInsights}
             disabled={generatingInsights}
-            className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700 text-sm h-9"
+            className="rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white border-0 transition-colors text-sm h-9"
           >
             {generatingInsights ? (
               <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
@@ -236,9 +236,9 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Alert Banners */}
-      <AlertBanner 
-        alerts={alerts} 
-        onDismiss={(id) => setAlerts(alerts.filter(a => a.id !== id))} 
+      <AlertBanner
+        alerts={alerts}
+        onDismiss={(id) => setAlerts(alerts.filter(a => a.id !== id))}
       />
 
       {/* Concentration Risk Alert */}
@@ -268,8 +268,8 @@ export default function Dashboard() {
           className="card-modern rounded-xl p-5 hover:scale-[1.02] transition-transform"
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-indigo-400" />
+            <div className="w-10 h-10 rounded-lg bg-zteal-400/20 border border-white/10 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-zteal-400" />
             </div>
           </div>
           <p className="text-white/50 text-xs mb-1">This Month</p>
@@ -351,13 +351,13 @@ export default function Dashboard() {
       {/* Insights & Lending Signals */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <InsightsPanel 
-            insights={insights.filter(i => i.insight_type !== 'cashflow_forecast')} 
+          <InsightsPanel
+            insights={insights.filter(i => i.insight_type !== 'cashflow_forecast')}
           />
         </div>
         <div>
-          <LendingSignalsCard 
-            insight={insights.find(i => i.insight_type === 'cashflow_forecast')} 
+          <LendingSignalsCard
+            insight={insights.find(i => i.insight_type === 'cashflow_forecast')}
           />
         </div>
       </div>

@@ -271,7 +271,7 @@ export default function Pricing() {
               <Button
                 size="lg"
                 onClick={() => handlePlanSelect(plans[0])}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg px-8 h-14 rounded-xl hover:from-indigo-600 hover:to-purple-700 w-full sm:w-auto"
+                className="bg-zteal-400 text-white text-lg px-8 h-14 rounded-xl hover:bg-zteal-600 w-full sm:w-auto"
               >
                 Start free
               </Button>
@@ -340,7 +340,7 @@ export default function Pricing() {
             >
               {plan.badge && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="px-4 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-semibold">
+                  <span className="px-4 py-1 rounded-full bg-zteal-400 text-white text-xs font-semibold">
                     {plan.badge}
                   </span>
                 </div>
@@ -383,7 +383,7 @@ export default function Pricing() {
                 className={cn(
                   "w-full mb-6 h-12 rounded-xl",
                   plan.popular
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700"
+                    ? "bg-zteal-400 text-white hover:bg-zteal-600"
                     : "bg-white/5 text-white hover:bg-white/10 border border-white/10"
                 )}
               >
@@ -427,7 +427,7 @@ export default function Pricing() {
                 <tr className="border-b border-white/10">
                   <th className="text-left py-4 px-4 text-white/60 font-medium text-sm">Feature</th>
                   <th className="text-center py-4 px-4 text-white font-semibold">Free</th>
-                  <th className="text-center py-4 px-4 text-white font-semibold bg-indigo-500/5 rounded-t-xl">
+                  <th className="text-center py-4 px-4 text-white font-semibold bg-zteal-400/5 rounded-t-xl">
                     Creator Pro
                   </th>
                   <th className="text-center py-4 px-4 text-white font-semibold">Creator Max</th>
@@ -448,7 +448,7 @@ export default function Pricing() {
                         <span className="text-sm text-white/50">{feature.free}</span>
                       )}
                     </td>
-                    <td className="py-4 px-4 text-center bg-indigo-500/5">
+                    <td className="py-4 px-4 text-center bg-zteal-400/5">
                       {typeof feature.pro === "boolean" ? (
                         feature.pro ? (
                           <Check className="w-5 h-5 text-emerald-400 mx-auto" />
@@ -496,12 +496,12 @@ export default function Pricing() {
                   transition={{ delay: index * 0.1 }}
                   className="card-modern rounded-2xl p-8"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center mb-6">
-                    <Icon className="w-6 h-6 text-indigo-400" />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-zteal-400/20 to-purple-500/20 border border-white/10 flex items-center justify-center mb-6">
+                    <Icon className="w-6 h-6 text-zteal-400" />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-3">{block.title}</h3>
                   <p className="text-white/60 mb-4">{block.description}</p>
-                  <p className="text-sm font-semibold text-indigo-400">{block.metric}</p>
+                  <p className="text-sm font-semibold text-zteal-400">{block.metric}</p>
                 </motion.div>
               );
             })}
@@ -562,7 +562,7 @@ export default function Pricing() {
               <Button
                 size="lg"
                 onClick={() => handlePlanSelect(plans[0])}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg px-8 h-14 rounded-xl hover:from-indigo-600 hover:to-purple-700 w-full sm:w-auto"
+                className="bg-zteal-400 text-white text-lg px-8 h-14 rounded-xl hover:bg-zteal-600 w-full sm:w-auto"
               >
                 Start free
               </Button>

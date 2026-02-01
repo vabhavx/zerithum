@@ -10,7 +10,7 @@ export default function RevenueTrendChart({ data }) {
           <p className="text-white font-semibold text-sm mb-1">
             {payload[0].payload.month}
           </p>
-          <p className="text-indigo-400 text-xs">
+          <p className="text-zteal-400 text-xs">
             Revenue: ${payload[0].value.toLocaleString()}
           </p>
         </div>

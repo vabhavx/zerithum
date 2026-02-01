@@ -157,7 +157,7 @@ const ConnectedPlatformRow = React.memo(({
               <Button
                 variant="ghost"
                 disabled={isSyncing || connection.sync_status === "syncing"}
-                className="text-white/40 hover:text-indigo-400 hover:bg-white/5 transition-colors h-8 px-2 gap-1"
+                className="text-white/40 hover:text-zteal-400 hover:bg-white/5 transition-colors h-8 px-2 gap-1"
                 aria-label={`Sync ${platform.name} data`}
               >
                 <RefreshCw className={cn("w-3.5 h-3.5", (isSyncing || connection.sync_status === "syncing") && "animate-spin")} />

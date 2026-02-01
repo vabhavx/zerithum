@@ -28,9 +28,9 @@ export default function RevenueOverviewCard({ title, amount, change, changePerce
         </div>
         <div className={cn(
           "w-10 h-10 rounded-lg flex items-center justify-center",
-          "bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10"
+          "bg-gradient-to-br from-zteal-400/20 to-purple-500/20 border border-white/10"
         )}>
-          <DollarSign className="w-5 h-5 text-indigo-400" />
+          <DollarSign className="w-5 h-5 text-zteal-400" />
         </div>
       </div>
 

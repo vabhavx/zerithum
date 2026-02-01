@@ -53,7 +53,7 @@ export default function PlatformSyncHistory({ platform, open, onOpenChange }) {
           </div>
           <div className="bg-white/[0.02] rounded-lg p-3 border border-white/5">
             <p className="text-xs text-white/50 mb-1">Transactions</p>
-            <p className="text-xl font-bold text-indigo-400">{stats.total}</p>
+            <p className="text-xl font-bold text-zteal-400">{stats.total}</p>
           </div>
           <div className="bg-white/[0.02] rounded-lg p-3 border border-white/5">
             <p className="text-xs text-white/50 mb-1">Avg Duration</p>
