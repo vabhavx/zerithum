@@ -34,13 +34,29 @@ const AuthenticatedApp = () => {
   const currentPath = window.location.pathname.substring(1);
   const isPublicRoute = publicRoutes.some(route => route.toLowerCase() === currentPath.toLowerCase());
 
+  const [showSlowLoadingMessage, setShowSlowLoadingMessage] = React.useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setShowSlowLoadingMessage(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-950 z-50">
         <Loader2 className="w-10 h-10 animate-spin text-zteal-400 mb-4" />
-        <p className="text-white/50 text-sm animate-pulse">
+        <p className="text-white/50 text-sm animate-pulse mb-4">
           {isLoadingAuth ? 'Verifying authentication...' : 'Loading settings...'}
         </p>
+        
+        {showSlowLoadingMessage && (
+           <button 
+             onClick={() => window.location.href = '/Login'}
+             className="text-xs text-zteal-400 hover:text-white underline transition-colors cursor-pointer"
+           >
+             Taking too long? Click here to Login
+           </button>
+        )}
       </div>
     );
   }
