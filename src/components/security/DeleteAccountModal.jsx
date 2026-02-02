@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Trash2, Loader2, AlertTriangle, AlertOctagon, CheckCircle2, XCircle } from "lucide-react";
+import { Trash2, Loader2, AlertTriangle, AlertOctagon, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +47,6 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
         mutationFn: (data) => base44.functions.invoke('deleteAccount', data),
         onSuccess: () => {
             setStep("success");
-            // Redirect handled in success view
         },
         onError: (error) => {
             if (error.requiresReauth && error.authMethod === 'otp') {
@@ -88,7 +87,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
     };
 
     const handleClose = () => {
-        // Prevent closing during processing or success (unless forcing via redirect)
+        // Prevent closing during processing or success
         if (step === "processing" || step === "success") return;
 
         setStep("warning");
@@ -102,9 +101,19 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
         logout(true);
     };
 
+    const isLoading = deleteAccountMutation.isPending || sendOTPMutation.isPending;
+
     return (
         <AlertDialog open={open} onOpenChange={handleClose}>
-            <AlertDialogContent className="bg-zinc-900 border-red-500/20 text-white max-w-md">
+            <AlertDialogContent
+                className="bg-zinc-900 border-red-500/20 text-white max-w-md"
+                onPointerDownOutside={(e) => {
+                    if (isLoading || step === "processing" || step === "success") e.preventDefault();
+                }}
+                onEscapeKeyDown={(e) => {
+                    if (isLoading || step === "processing" || step === "success") e.preventDefault();
+                }}
+            >
                 <AlertDialogHeader>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
@@ -178,9 +187,9 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
 
                             <Input
                                 value={confirmationText}
-                                onChange={(e) => setConfirmationText(e.target.value)}
+                                onChange={(e) => setConfirmationText(e.target.value.toUpperCase())}
                                 className="bg-white/5 border-white/10 text-white font-mono text-center tracking-widest uppercase"
-                                placeholder=""
+                                placeholder="Type DELETE"
                                 autoFocus
                             />
                         </div>
@@ -208,7 +217,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
                 {step === "auth" && (
                     <form onSubmit={handlePasswordSubmit} className="mt-4">
                         <div className="space-y-2 mb-6">
-                            <Label className="text-white/60">Enter Password to Confirm</Label>
+                            <Label className="text-white/60">Enter Password to Confirm <span className="text-red-400">*</span></Label>
                             <Input
                                 type="password"
                                 value={currentPassword}
@@ -217,6 +226,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
                                 placeholder="Current password"
                                 autoComplete="current-password"
                                 autoFocus
+                                required
                             />
                         </div>
 
@@ -225,15 +235,17 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
                                 type="button"
                                 variant="outline"
                                 onClick={() => setStep("confirm_text")}
+                                disabled={isLoading}
                                 className="border-white/10 text-white/60"
                             >
                                 Back
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={!currentPassword}
+                                disabled={!currentPassword || isLoading}
                                 className="bg-red-500 hover:bg-red-600 text-white"
                             >
+                                {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                 Permanently Delete
                             </Button>
                         </AlertDialogFooter>
@@ -246,7 +258,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
                         purpose="delete_account"
                         onComplete={handleOTPComplete}
                         onResend={() => sendOTPMutation.mutate()}
-                        isLoading={deleteAccountMutation.isPending}
+                        isLoading={isLoading}
                     />
                 )}
 
@@ -304,7 +316,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
                                 Close
                             </Button>
                             <Button
-                                onClick={() => setStep("confirm_text")} // Retry flow
+                                onClick={() => setStep("confirm_text")}
                                 className="flex-1 bg-red-500 hover:bg-red-600 text-white"
                             >
                                 Try Again

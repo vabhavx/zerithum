@@ -19,7 +19,7 @@ import OTPVerification from "./OTPVerification";
 
 export default function SignOutAllDevicesModal({ open, onOpenChange }) {
     const { user, logout } = useAuth();
-    const [step, setStep] = useState("confirm"); // confirm, auth, otp
+    const [step, setStep] = useState("confirm"); // confirm, auth, otp, processing
     const [currentPassword, setCurrentPassword] = useState("");
 
     // Check if user has password auth
@@ -53,6 +53,7 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
                 sendOTPMutation.mutate();
             } else {
                 toast.error(error.message || "Failed to revoke sessions");
+                setStep("confirm"); // Reset to allow retry
             }
         }
     });
@@ -67,28 +68,45 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
 
     const handlePasswordSubmit = (e) => {
         e.preventDefault();
+        setStep("processing");
         revokeSessionsMutation.mutate({ currentPassword });
     };
 
     const handleOTPComplete = (code) => {
+        setStep("processing");
         revokeSessionsMutation.mutate({ verificationCode: code });
     };
 
     const handleClose = () => {
+        // Prevent closing during processing
+        if (isLoading) return;
+
         setStep("confirm");
         setCurrentPassword("");
         onOpenChange(false);
     };
 
-    const isLoading = revokeSessionsMutation.isPending || sendOTPMutation.isPending;
+    const isLoading = revokeSessionsMutation.isPending || sendOTPMutation.isPending || step === "processing";
 
     return (
         <AlertDialog open={open} onOpenChange={handleClose}>
-            <AlertDialogContent className="bg-zinc-900 border-white/10 text-white max-w-md">
+            <AlertDialogContent
+                className="bg-zinc-900 border-white/10 text-white max-w-md"
+                onPointerDownOutside={(e) => {
+                    if (isLoading) e.preventDefault();
+                }}
+                onEscapeKeyDown={(e) => {
+                    if (isLoading) e.preventDefault();
+                }}
+            >
                 <AlertDialogHeader>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-orange-400/10 border border-orange-400/20 flex items-center justify-center">
-                            <LogOut className="w-5 h-5 text-orange-400" />
+                            {isLoading ? (
+                                <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
+                            ) : (
+                                <LogOut className="w-5 h-5 text-orange-400" />
+                            )}
                         </div>
                         <div>
                             <AlertDialogTitle className="text-white">Sign Out All Devices</AlertDialogTitle>
@@ -96,6 +114,7 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
                                 {step === "confirm" && "This will sign you out everywhere"}
                                 {step === "auth" && "Verify your identity to continue"}
                                 {step === "otp" && "Enter the verification code"}
+                                {step === "processing" && "Revoking all sessions..."}
                             </AlertDialogDescription>
                         </div>
                     </div>
@@ -138,7 +157,7 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
                 {step === "auth" && (
                     <form onSubmit={handlePasswordSubmit} className="mt-4">
                         <div className="space-y-2 mb-6">
-                            <Label className="text-white/60">Current Password</Label>
+                            <Label className="text-white/60">Current Password <span className="text-red-400">*</span></Label>
                             <Input
                                 type="password"
                                 value={currentPassword}
@@ -147,6 +166,7 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
                                 placeholder="Enter your password"
                                 autoComplete="current-password"
                                 autoFocus
+                                required
                             />
                         </div>
 
@@ -155,6 +175,7 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
                                 type="button"
                                 variant="outline"
                                 onClick={() => setStep("confirm")}
+                                disabled={isLoading}
                                 className="border-white/10 text-white/60"
                             >
                                 Back
@@ -179,6 +200,18 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
                         onResend={() => sendOTPMutation.mutate()}
                         isLoading={isLoading}
                     />
+                )}
+
+                {step === "processing" && (
+                    <div className="py-8 text-center">
+                        <div className="mx-auto w-12 h-12 mb-4 relative">
+                            <div className="absolute inset-0 border-4 border-white/5 rounded-full"></div>
+                            <div className="absolute inset-0 border-4 border-orange-500 rounded-full border-t-transparent animate-spin"></div>
+                        </div>
+                        <p className="text-white/60 text-sm">
+                            Signing out from all devices...
+                        </p>
+                    </div>
                 )}
             </AlertDialogContent>
         </AlertDialog>

@@ -264,7 +264,22 @@ export const functions = {
             body: params
         });
 
-        if (error) throw error;
+        // Handle Supabase function invocation errors
+        if (error) {
+            console.error(`Function ${functionName} error:`, error);
+            throw error;
+        }
+
+        // Check if the response indicates an error from the edge function
+        if (data && data.error) {
+            const err = new Error(data.error);
+            // Copy over any additional properties from the response
+            if (data.requiresReauth) err.requiresReauth = data.requiresReauth;
+            if (data.authMethod) err.authMethod = data.authMethod;
+            if (data.retryAfter) err.retryAfter = data.retryAfter;
+            throw err;
+        }
+
         return data;
     }
 };

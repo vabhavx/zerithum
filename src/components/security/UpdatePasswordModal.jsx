@@ -32,7 +32,7 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
         verificationCode: ""
     });
 
-    // Check if user has password auth
+    // Check if user signed up with password (has email provider)
     const hasPasswordAuth = user?.app_metadata?.provider === 'email' ||
         user?.app_metadata?.providers?.includes('email');
 
@@ -55,13 +55,15 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
 
     const passwordStrength = getPasswordStrength(formData.newPassword);
 
-    // Validation
+    // Validation - ALWAYS require current password for password users
     const isPasswordValid = formData.newPassword.length >= 12;
     const passwordsMatch = formData.newPassword === formData.confirmPassword;
+    // For password users: require current password
+    // For OAuth users: they need OTP verification instead
     const hasCurrentAuth = hasPasswordAuth ? formData.currentPassword.length > 0 : true;
     const canSubmit = isPasswordValid && passwordsMatch && hasCurrentAuth;
 
-    // Send OTP mutation
+    // Send OTP mutation (for OAuth users only)
     const sendOTPMutation = useMutation({
         mutationFn: () => base44.functions.invoke('sendVerificationCode', {
             purpose: 'password_change'
@@ -88,7 +90,7 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
         },
         onError: (error) => {
             if (error.requiresReauth && error.authMethod === 'otp') {
-                // Need OTP verification
+                // Need OTP verification (OAuth user)
                 sendOTPMutation.mutate();
             } else {
                 toast.error(error.message || "Failed to update password");
@@ -102,13 +104,13 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
         if (!canSubmit) return;
 
         if (hasPasswordAuth) {
-            // Password users - submit with current password
+            // Password users - submit with current password for verification
             updatePasswordMutation.mutate({
                 currentPassword: formData.currentPassword,
                 newPassword: formData.newPassword
             });
         } else {
-            // OAuth users - need OTP first
+            // OAuth users - need OTP verification first
             sendOTPMutation.mutate();
         }
     };
@@ -121,10 +123,11 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
     };
 
     const handleClose = () => {
-        if (step !== "success") {
-            setFormData({ currentPassword: "", newPassword: "", confirmPassword: "", verificationCode: "" });
-            setStep("form");
-        }
+        // Prevent closing during loading or success states
+        if (isLoading || step === "success") return;
+
+        setFormData({ currentPassword: "", newPassword: "", confirmPassword: "", verificationCode: "" });
+        setStep("form");
         onOpenChange(false);
     };
 
@@ -132,7 +135,17 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-md">
+            <DialogContent
+                className="bg-zinc-900 border-white/10 text-white max-w-md"
+                onPointerDownOutside={(e) => {
+                    // Prevent closing when clicking outside during loading
+                    if (isLoading || step === "success") e.preventDefault();
+                }}
+                onEscapeKeyDown={(e) => {
+                    // Prevent closing with Escape during loading
+                    if (isLoading || step === "success") e.preventDefault();
+                }}
+            >
                 <DialogHeader>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-orange-400/10 border border-orange-400/20 flex items-center justify-center">
@@ -151,7 +164,7 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
                     <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                         {hasPasswordAuth && (
                             <div className="space-y-2">
-                                <Label className="text-white/60">Current Password</Label>
+                                <Label className="text-white/60">Current Password <span className="text-red-400">*</span></Label>
                                 <div className="relative">
                                     <Input
                                         type={showCurrentPassword ? "text" : "password"}
@@ -160,6 +173,7 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
                                         className="bg-white/5 border-white/10 text-white pr-10"
                                         placeholder="Enter current password"
                                         autoComplete="current-password"
+                                        required
                                     />
                                     <button
                                         type="button"
@@ -174,12 +188,12 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
 
                         {!hasPasswordAuth && (
                             <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm">
-                                Since you signed in with Google, we'll send a verification code to your email.
+                                Since you signed in with Google, we'll send a verification code to your email for security.
                             </div>
                         )}
 
                         <div className="space-y-2">
-                            <Label className="text-white/60">New Password</Label>
+                            <Label className="text-white/60">New Password <span className="text-red-400">*</span></Label>
                             <div className="relative">
                                 <Input
                                     type={showNewPassword ? "text" : "password"}
@@ -188,6 +202,7 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
                                     className="bg-white/5 border-white/10 text-white pr-10"
                                     placeholder="Minimum 12 characters"
                                     autoComplete="new-password"
+                                    required
                                 />
                                 <button
                                     type="button"
@@ -228,7 +243,7 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-white/60">Confirm New Password</Label>
+                            <Label className="text-white/60">Confirm New Password <span className="text-red-400">*</span></Label>
                             <div className="relative">
                                 <Input
                                     type={showConfirmPassword ? "text" : "password"}
@@ -237,6 +252,7 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
                                     className="bg-white/5 border-white/10 text-white pr-10"
                                     placeholder="Confirm new password"
                                     autoComplete="new-password"
+                                    required
                                 />
                                 <button
                                     type="button"
@@ -259,6 +275,7 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
                                 type="button"
                                 variant="outline"
                                 onClick={handleClose}
+                                disabled={isLoading}
                                 className="border-white/10 text-white/60"
                             >
                                 Cancel
