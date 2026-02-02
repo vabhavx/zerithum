@@ -57,11 +57,11 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="min-h-screen flex items-center justify-center p-6 bg-[#0A0A0A]">
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-zteal-400 to-zteal-300 bg-clip-text text-transparent">
+                    <h1 className="text-2xl font-semibold text-white">
                         Zerithum
                     </h1>
                     <p className="text-white/40 mt-2">Welcome back</p>

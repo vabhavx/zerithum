@@ -10,6 +10,7 @@ import ConcentrationRiskAlert from "@/components/dashboard/ConcentrationRiskAler
 import LendingSignalsCard from "@/components/dashboard/LendingSignalsCard";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
 import AlertBanner from "@/components/dashboard/AlertBanner";
+import GlowingEffectDemo from "@/components/dashboard/GlowingEffectDemo";
 
 // Lazy load chart components for better performance
 const RevenueForecasting = React.lazy(() => import("@/components/dashboard/RevenueForecasting"));
@@ -202,20 +203,16 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
-      >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-white tracking-tight">Dashboard</h1>
           <p className="text-white/40 mt-1 text-sm">Your revenue at a glance</p>
         </div>
         <div className="flex gap-2">
           <Button
             onClick={handleGenerateInsights}
             disabled={generatingInsights}
-            className="rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white border-0 transition-colors text-sm h-9"
+            className="rounded-lg bg-zteal-400 hover:bg-zteal-500 text-white border-0 transition-colors text-sm h-9"
           >
             {generatingInsights ? (
               <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
@@ -227,13 +224,13 @@ export default function Dashboard() {
           <Button
             onClick={() => refetch()}
             disabled={isLoading}
-            className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition-all text-sm h-9"
+            className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm h-9"
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         </div>
-      </motion.div>
+      </div>
 
       {/* Alert Banners */}
       <AlertBanner
@@ -242,92 +239,65 @@ export default function Dashboard() {
       />
 
       {/* Concentration Risk Alert */}
-      <AnimatePresence>
-        {showRiskAlert && metrics.concentrationRisk && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-            animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
-            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ConcentrationRiskAlert
-              platform={metrics.concentrationRisk.platform}
-              percentage={metrics.concentrationRisk.percentage}
-              onDismiss={() => setShowRiskAlert(false)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showRiskAlert && metrics.concentrationRisk && (
+        <div className="mb-6">
+          <ConcentrationRiskAlert
+            platform={metrics.concentrationRisk.platform}
+            percentage={metrics.concentrationRisk.percentage}
+            onDismiss={() => setShowRiskAlert(false)}
+          />
+        </div>
+      )}
 
       {/* Revenue Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card-modern rounded-xl p-5 hover:scale-[1.02] transition-transform"
-        >
+        <div className="card-modern rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-zteal-400/20 border border-white/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-zteal-400/10 border border-white/10 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-zteal-400" />
             </div>
           </div>
           <p className="text-white/50 text-xs mb-1">This Month</p>
-          <p className="text-2xl font-bold text-white">${metrics.totalMRR.toFixed(0)}</p>
+          <p className="text-2xl font-semibold text-white">${metrics.totalMRR.toFixed(0)}</p>
           <p className={`text-xs mt-2 flex items-center gap-1 ${metrics.mrrTrend === 'up' ? 'text-emerald-400' : metrics.mrrTrend === 'down' ? 'text-red-400' : 'text-white/40'}`}>
             {metrics.mrrChange} vs last month
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card-modern rounded-xl p-5 hover:scale-[1.02] transition-transform"
-        >
+        <div className="card-modern rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-white/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-white/10 flex items-center justify-center">
               <FileText className="w-5 h-5 text-emerald-400" />
             </div>
           </div>
           <p className="text-white/50 text-xs mb-1">Transactions</p>
-          <p className="text-2xl font-bold text-white">{transactions.length}</p>
+          <p className="text-2xl font-semibold text-white">{transactions.length}</p>
           <p className="text-xs text-white/40 mt-2">All-time</p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="card-modern rounded-xl p-5 hover:scale-[1.02] transition-transform"
-        >
+        <div className="card-modern rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-white/10 flex items-center justify-center">
               <CircleDollarSign className="w-5 h-5 text-blue-400" />
             </div>
           </div>
           <p className="text-white/50 text-xs mb-1">Avg Transaction</p>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-semibold text-white">
             ${transactions.length > 0 ? (metrics.totalMRR / transactions.length).toFixed(0) : 0}
           </p>
           <p className="text-xs text-white/40 mt-2">Per transaction</p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="card-modern rounded-xl p-5 hover:scale-[1.02] transition-transform"
-        >
+        <div className="card-modern rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-white/10 flex items-center justify-center">
               <Link2 className="w-5 h-5 text-amber-400" />
             </div>
           </div>
           <p className="text-white/50 text-xs mb-1">Platforms</p>
-          <p className="text-2xl font-bold text-white">{metrics.platformBreakdown.length}</p>
+          <p className="text-2xl font-semibold text-white">{metrics.platformBreakdown.length}</p>
           <p className="text-xs text-white/40 mt-2">Connected sources</p>
-        </motion.div>
+        </div>
       </div>
 
       {/* Charts Row */}
@@ -361,6 +331,7 @@ export default function Dashboard() {
           />
         </div>
       </div>
+
     </div>
   );
 }

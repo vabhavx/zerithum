@@ -49,7 +49,7 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen bg-[#0A0A0A]">
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-effect px-4 py-3 flex items-center justify-between border-b border-white/5">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#0A0A0A] px-4 py-3 flex items-center justify-between border-b border-white/5">
         <div className="relative">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png"

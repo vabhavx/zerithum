@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { base44 } from "@/api/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -21,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import UpdatePasswordModal from "@/components/security/UpdatePasswordModal";
@@ -124,14 +124,10 @@ export default function Profile() {
         onOpenChange={setIsDeleteAccountModalOpen}
       />
 
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
+      <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent tracking-tight">Profile & Security</h1>
+            <h1 className="text-2xl font-semibold text-white tracking-tight">Profile & Security</h1>
             <p className="text-white/40 mt-1 text-sm flex items-center gap-2">
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
               Data Encrypted & Isolated
@@ -145,22 +141,17 @@ export default function Profile() {
             Sign Out
           </Button>
         </div>
-      </motion.div>
+      </div>
 
       <div className="grid grid-cols-1 gap-6">
         {/* Basic Information */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card-modern rounded-xl p-6 border-l-4 border-l-zteal-400"
-        >
+        <div className="card-modern rounded-xl p-6 border-l-2 border-l-zteal-400">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-zteal-400/10 border border-zteal-400/20 flex items-center justify-center">
               <User className="w-5 h-5 text-zteal-400" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Identity</h3>
+              <h3 className="text-base font-semibold text-white">Identity</h3>
               <p className="text-xs text-white/40">Personal details</p>
             </div>
           </div>
@@ -217,21 +208,16 @@ export default function Profile() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Security Section (New) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="card-modern rounded-xl p-6 border-l-4 border-l-orange-400"
-        >
+        <div className="card-modern rounded-xl p-6 border-l-2 border-l-orange-400">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-orange-400/10 border border-orange-400/20 flex items-center justify-center">
               <Lock className="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Security & Access</h3>
+              <h3 className="text-base font-semibold text-white">Security & Access</h3>
               <p className="text-xs text-white/40">Protect your financial data</p>
             </div>
           </div>
@@ -273,21 +259,16 @@ export default function Profile() {
               Sign out all devices
             </Button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Connected Platforms */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card-modern rounded-xl p-6 border-l-4 border-l-blue-400"
-        >
+        <div className="card-modern rounded-xl p-6 border-l-2 border-l-blue-400">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-blue-400/10 border border-blue-400/20 flex items-center justify-center">
               <Link2 className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Connected Platforms</h3>
+              <h3 className="text-base font-semibold text-white">Connected Platforms</h3>
               <p className="text-xs text-white/40">Manage your revenue sources</p>
             </div>
           </div>
@@ -304,7 +285,7 @@ export default function Profile() {
               {connectedPlatforms.map((platform) => (
                 <div
                   key={platform.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.03] transition-colors"
                 >
                   <div className="flex-1">
                     <p className="text-white font-medium text-sm">
@@ -340,16 +321,11 @@ export default function Profile() {
               ))}
             </div>
           )}
-        </motion.div>
+        </div>
 
         {/* Danger Zone */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-xl p-6 border border-red-500/20 bg-red-500/5"
-        >
-          <h3 className="text-lg font-bold text-red-500 mb-2">Danger Zone</h3>
+        <div className="rounded-xl p-6 border border-red-500/20 bg-red-500/5">
+          <h3 className="text-base font-semibold text-red-500 mb-2">Danger Zone</h3>
           <p className="text-red-400/60 text-sm mb-6">Irreversible actions regarding your account.</p>
 
           <div className="flex items-center justify-between">
@@ -365,7 +341,7 @@ export default function Profile() {
               Delete Account
             </Button>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

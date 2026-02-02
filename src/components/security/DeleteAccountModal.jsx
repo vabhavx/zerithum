@@ -39,7 +39,11 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
             toast.success("Verification code sent to your email");
         },
         onError: (error) => {
-            toast.error(error.message || "Failed to send verification code");
+            // If OTP service fails, show error and allow retry
+            const errorMessage = error.message || "Failed to send verification code. Please try again later.";
+            setErrorMsg(errorMessage);
+            setStep("failure");
+            toast.error(errorMessage);
         }
     });
 

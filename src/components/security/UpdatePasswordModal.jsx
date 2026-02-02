@@ -74,7 +74,9 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
             toast.success("Verification code sent to your email");
         },
         onError: (error) => {
-            toast.error(error.message || "Failed to send verification code");
+            // Show error message to user with helpful context
+            const errorMessage = error.message || "Failed to send verification code. Please try again later.";
+            toast.error(errorMessage);
         }
     });
 

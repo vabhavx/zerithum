@@ -290,52 +290,42 @@
     border-radius: 0.5rem;
   }
 
-  /* Card styles (extracted from Layout.jsx) */
+  /* Card styles - Professional, clean design */
   .card-modern {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(20px);
-    transition: background 0.15s ease, border-color 0.15s ease;
+    background: var(--z-bg-2);
+    border: 1px solid var(--z-border-1);
+    transition: border-color 0.15s ease;
   }
 
   .card-modern:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: var(--z-border-2);
   }
 
+  /* Glass effect - simplified for performance */
   .glass-effect {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--z-bg-1);
+    border: 1px solid var(--z-border-1);
   }
 
+  /* Accent styling without glow */
   .glow-accent {
-    box-shadow: 0 0 20px rgba(75, 163, 184, 0.3);
+    border-color: var(--z-accent);
   }
 
   .nav-item-active {
-    background: linear-gradient(90deg, rgba(75, 163, 184, 0.1) 0%, transparent 100%);
+    background: rgba(75, 163, 184, 0.08);
     border-left: 2px solid #4BA3B8;
   }
 
-  /* Shimmer animation */
-  @keyframes shimmer {
-    0% {
-      background-position: -1000px 0;
-    }
-
-    100% {
-      background-position: 1000px 0;
-    }
+  /* Loading state - simple pulse instead of shimmer */
+  @keyframes subtle-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.6; }
   }
 
   .shimmer {
-    background: linear-gradient(90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.03) 50%,
-        transparent 100%);
-    background-size: 2000px 100%;
-    animation: shimmer 3s infinite;
+    background: var(--z-bg-3);
+    animation: subtle-pulse 1.5s ease-in-out infinite;
   }
 
   /* Custom scrollbar */
