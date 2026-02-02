@@ -24,6 +24,9 @@ import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import UpdatePasswordModal from "@/components/security/UpdatePasswordModal";
+import SignOutAllDevicesModal from "@/components/security/SignOutAllDevicesModal";
+import DeleteAccountModal from "@/components/security/DeleteAccountModal";
 
 const PLATFORM_NAMES = {
   youtube: 'YouTube',
@@ -99,8 +102,28 @@ export default function Profile() {
     }
   };
 
+  // Modal states
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
+  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
+
   return (
     <div className="max-w-4xl mx-auto pb-20">
+      <UpdatePasswordModal
+        open={isPasswordModalOpen}
+        onOpenChange={setIsPasswordModalOpen}
+      />
+
+      <SignOutAllDevicesModal
+        open={isSignOutModalOpen}
+        onOpenChange={setIsSignOutModalOpen}
+      />
+
+      <DeleteAccountModal
+        open={isDeleteAccountModalOpen}
+        onOpenChange={setIsDeleteAccountModalOpen}
+      />
+
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -223,7 +246,11 @@ export default function Profile() {
                 <p className="text-white/40 text-xs mt-1">Change your login password securely.</p>
               </div>
             </div>
-            <Button variant="outline" className="text-white border-white/10 hover:bg-white/5">
+            <Button
+              variant="outline"
+              className="text-white border-white/10 hover:bg-white/5"
+              onClick={() => setIsPasswordModalOpen(true)}
+            >
               Change
             </Button>
           </div>
@@ -238,7 +265,11 @@ export default function Profile() {
                 <p className="text-white/40 text-xs mt-1">You are currently logged in on this device.</p>
               </div>
             </div>
-            <Button variant="ghost" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10">
+            <Button
+              variant="ghost"
+              className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10"
+              onClick={() => setIsSignOutModalOpen(true)}
+            >
               Sign out all devices
             </Button>
           </div>
@@ -326,7 +357,11 @@ export default function Profile() {
               <p className="text-white font-medium text-sm">Delete Account</p>
               <p className="text-white/40 text-xs mt-1">Permanently delete your account and all financial data.</p>
             </div>
-            <Button variant="destructive" className="bg-red-500 hover:bg-red-600 text-white border-none">
+            <Button
+              variant="destructive"
+              className="bg-red-500 hover:bg-red-600 text-white border-none"
+              onClick={() => setIsDeleteAccountModalOpen(true)}
+            >
               Delete Account
             </Button>
           </div>
