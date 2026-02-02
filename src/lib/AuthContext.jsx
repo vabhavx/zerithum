@@ -12,19 +12,159 @@ export const AuthProvider = ({ children }) => {
   const [appPublicSettings, setAppPublicSettings] = useState({ public_settings: {} });
 
   useEffect(() => {
-    checkUserAuth();
+    let isMounted = true;
 
-    // Listen for auth state changes
+    // Immediately check for session on mount
+    const initializeAuth = async () => {
+      console.log('[Auth] Initializing...');
+
+      try {
+        // Check for OAuth callback hash first
+        const hash = window.location.hash;
+        const isOAuthCallback = hash && hash.includes('access_token');
+
+        if (isOAuthCallback) {
+          console.log('[Auth] OAuth callback detected, waiting for Supabase to process...');
+          // For OAuth callbacks, wait for Supabase to process the hash
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        // Try to get session from Supabase
+        let session = null;
+        try {
+          const result = await supabase.auth.getSession();
+          session = result.data?.session;
+          console.log('[Auth] getSession succeeded');
+        } catch (err) {
+          console.warn('[Auth] getSession failed:', err.name, '- recovering from localStorage');
+
+          // Recover from localStorage directly
+          // Supabase stores session in localStorage with a specific key format
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const projectId = new URL(supabaseUrl).hostname.split('.')[0];
+          const storageKey = `sb-${projectId}-auth-token`;
+          const storedData = localStorage.getItem(storageKey);
+
+          if (storedData) {
+            try {
+              const parsed = JSON.parse(storedData);
+              if (parsed.access_token && parsed.user) {
+                session = parsed;
+                console.log('[Auth] Recovered session from localStorage');
+              }
+            } catch (parseError) {
+              console.warn('[Auth] Failed to parse stored session');
+            }
+          }
+
+          // If still no session and this is an OAuth callback, parse tokens from hash
+          if (!session && isOAuthCallback) {
+            console.log('[Auth] Parsing OAuth tokens from URL hash...');
+            try {
+              const hashParams = new URLSearchParams(hash.substring(1));
+              const accessToken = hashParams.get('access_token');
+              const refreshToken = hashParams.get('refresh_token');
+              const expiresAt = hashParams.get('expires_at');
+
+              if (accessToken) {
+                // Decode JWT payload (middle part of token)
+                const parts = accessToken.split('.');
+                if (parts.length === 3) {
+                  const payload = JSON.parse(atob(parts[1]));
+                  console.log('[Auth] Decoded JWT payload');
+
+                  // Create user object from JWT claims
+                  const user = {
+                    id: payload.sub,
+                    email: payload.email,
+                    phone: payload.phone || '',
+                    role: payload.role,
+                    user_metadata: payload.user_metadata || {},
+                    app_metadata: payload.app_metadata || {},
+                    aud: payload.aud,
+                    created_at: null,
+                    updated_at: null,
+                  };
+
+                  // Create session object
+                  session = {
+                    access_token: accessToken,
+                    refresh_token: refreshToken || '',
+                    expires_at: parseInt(expiresAt) || (Date.now() / 1000 + 3600),
+                    expires_in: 3600,
+                    token_type: 'bearer',
+                    user: user,
+                  };
+
+                  // Save to localStorage so Supabase can use it later
+                  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                  const projectId = new URL(supabaseUrl).hostname.split('.')[0];
+                  const storageKey = `sb-${projectId}-auth-token`;
+                  localStorage.setItem(storageKey, JSON.stringify(session));
+
+                  console.log('[Auth] Session created from JWT:', user.email);
+                }
+              }
+            } catch (parseError) {
+              console.error('[Auth] Failed to parse hash tokens:', parseError);
+            }
+          }
+        }
+
+        if (!isMounted) return;
+
+        if (session?.user) {
+          console.log('[Auth] Session found:', session.user.email);
+          setUser(session.user);
+          setIsAuthenticated(true);
+          fetchUserProfile(session.user).catch(console.error);
+        } else {
+          console.log('[Auth] No session found');
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+
+        // Clean up URL hash if present
+        if (isOAuthCallback) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+
+      } catch (error) {
+        if (!isMounted) return;
+        console.error('[Auth] Init error:', error);
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        if (isMounted) {
+          setIsLoadingAuth(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    // Listen for subsequent auth state changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
+      console.log('[Auth] State change:', event, session?.user?.email);
+
       if (event === 'SIGNED_IN' && session?.user) {
-        await fetchUserProfile(session.user);
+        setUser(session.user);
+        setIsAuthenticated(true);
+        fetchUserProfile(session.user).catch(console.error);
+        setIsLoadingAuth(false);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setIsAuthenticated(false);
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        setUser(session.user);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserProfile = async (authUser) => {
@@ -49,9 +189,49 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(true);
       setAuthError(null);
 
-      // Create a timeout promise
+      // Check if we have hash fragments from OAuth callback
+      const hash = window.location.hash;
+      const isOAuthCallback = hash && (hash.includes('access_token') || hash.includes('error'));
+
+      if (isOAuthCallback) {
+        // This is an OAuth callback - Supabase needs to process the hash
+        // CRITICAL: Do NOT clear the hash BEFORE getSession() - Supabase reads tokens from it!
+
+        console.log('[Auth] OAuth callback detected, processing tokens...');
+
+        // First call to getSession - Supabase will detect and process the hash tokens
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        // NOW we can clear the hash from URL for cleaner UX (after Supabase read it)
+        const cleanPath = window.location.pathname + window.location.search;
+        if (window.history.replaceState) {
+          window.history.replaceState(null, '', cleanPath);
+        }
+
+        if (error) {
+          console.error('[Auth] OAuth error:', error);
+          setAuthError({ type: 'auth_error', message: error.message });
+          setIsAuthenticated(false);
+          setUser(null);
+        } else if (session?.user) {
+          console.log('[Auth] OAuth successful, user:', session.user.email);
+          setIsAuthenticated(true);
+          setUser(session.user);
+          fetchUserProfile(session.user).catch(console.error);
+        } else {
+          console.warn('[Auth] OAuth callback but no session');
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+
+        setIsLoadingAuth(false);
+        return;
+      }
+
+      // Normal auth check (not OAuth callback)
+      const timeoutMs = 5000;
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Auth check timed out')), 5000)
+        setTimeout(() => reject(new Error('Auth check timed out')), timeoutMs)
       );
 
       // Race between actual auth check and timeout

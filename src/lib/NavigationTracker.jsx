@@ -7,11 +7,16 @@ import { pagesConfig } from '@/pages.config';
 export default function NavigationTracker() {
     const location = useLocation();
     const { isAuthenticated } = useAuth();
-    const { Pages, mainPage } = pagesConfig;
-    const mainPageKey = mainPage ?? Object.keys(Pages)[0];
+    const { Pages, mainPage } = pagesConfig || {};
+    const mainPageKey = mainPage ?? (Pages ? Object.keys(Pages)[0] : null);
 
     // Log user activity when navigating to a page
     useEffect(() => {
+        // Early return if Pages is not available
+        if (!Pages || Object.keys(Pages).length === 0) {
+            return;
+        }
+
         // Extract page name from pathname
         const pathname = location.pathname;
         let pageName;
@@ -31,7 +36,7 @@ export default function NavigationTracker() {
             pageName = matchedKey || null;
         }
 
-        if (isAuthenticated && pageName) {
+        if (isAuthenticated && pageName && base44.appLogs?.logUserInApp) {
             base44.appLogs.logUserInApp(pageName).catch(() => {
                 // Silently fail - logging shouldn't break the app
             });

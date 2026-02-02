@@ -7,7 +7,28 @@ if (!supabaseUrl || !supabaseAnonKey) {
     console.error('Missing Supabase environment variables');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Custom fetch wrapper to handle AbortError issues in development
+const customFetch = (url, options = {}) => {
+    // Clone options and remove signal to prevent abort issues
+    const { signal, ...restOptions } = options;
+    return fetch(url, restOptions);
+};
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        // Enable automatic detection of OAuth tokens in URL hash
+        detectSessionInUrl: true,
+        // Use implicit flow (hash-based) for OAuth
+        flowType: 'implicit',
+        // Automatically refresh tokens
+        autoRefreshToken: true,
+        // Persist session in localStorage
+        persistSession: true,
+    },
+    global: {
+        fetch: customFetch,
+    },
+});
 
 // ============================================================================
 // AUTH HELPERS (replaces base44.auth)
