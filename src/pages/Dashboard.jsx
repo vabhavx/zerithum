@@ -4,13 +4,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { RefreshCw, Sparkles, Loader2, TrendingUp, FileText, CircleDollarSign, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
 
 import ConcentrationRiskAlert from "@/components/dashboard/ConcentrationRiskAlert";
 import LendingSignalsCard from "@/components/dashboard/LendingSignalsCard";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
 import AlertBanner from "@/components/dashboard/AlertBanner";
-import GlowingEffectDemo from "@/components/dashboard/GlowingEffectDemo";
+import { GlowingEffect } from "@/components/ui/glowing-effect";
 
 // Lazy load chart components for better performance
 const RevenueForecasting = React.lazy(() => import("@/components/dashboard/RevenueForecasting"));
@@ -251,52 +250,92 @@ export default function Dashboard() {
 
       {/* Revenue Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="card-modern rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-zteal-400/10 border border-white/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-zteal-400" />
+        <div className="relative rounded-xl">
+          <GlowingEffect
+            spread={40}
+            glow={true}
+            disabled={false}
+            proximity={64}
+            inactiveZone={0.01}
+            borderWidth={2}
+          />
+          <div className="card-modern rounded-xl p-5 relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-zteal-400/10 border border-white/10 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-zteal-400" />
+              </div>
             </div>
+            <p className="text-white/50 text-xs mb-1">This Month</p>
+            <p className="text-2xl font-semibold text-white">${metrics.totalMRR.toFixed(0)}</p>
+            <p className={`text-xs mt-2 flex items-center gap-1 ${metrics.mrrTrend === 'up' ? 'text-emerald-400' : metrics.mrrTrend === 'down' ? 'text-red-400' : 'text-white/40'}`}>
+              {metrics.mrrChange} vs last month
+            </p>
           </div>
-          <p className="text-white/50 text-xs mb-1">This Month</p>
-          <p className="text-2xl font-semibold text-white">${metrics.totalMRR.toFixed(0)}</p>
-          <p className={`text-xs mt-2 flex items-center gap-1 ${metrics.mrrTrend === 'up' ? 'text-emerald-400' : metrics.mrrTrend === 'down' ? 'text-red-400' : 'text-white/40'}`}>
-            {metrics.mrrChange} vs last month
-          </p>
         </div>
 
-        <div className="card-modern rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-white/10 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-emerald-400" />
+        <div className="relative rounded-xl">
+          <GlowingEffect
+            spread={40}
+            glow={true}
+            disabled={false}
+            proximity={64}
+            inactiveZone={0.01}
+            borderWidth={2}
+          />
+          <div className="card-modern rounded-xl p-5 relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-white/10 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-emerald-400" />
+              </div>
             </div>
+            <p className="text-white/50 text-xs mb-1">Transactions</p>
+            <p className="text-2xl font-semibold text-white">{transactions.length}</p>
+            <p className="text-xs text-white/40 mt-2">All-time</p>
           </div>
-          <p className="text-white/50 text-xs mb-1">Transactions</p>
-          <p className="text-2xl font-semibold text-white">{transactions.length}</p>
-          <p className="text-xs text-white/40 mt-2">All-time</p>
         </div>
 
-        <div className="card-modern rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-white/10 flex items-center justify-center">
-              <CircleDollarSign className="w-5 h-5 text-blue-400" />
+        <div className="relative rounded-xl">
+          <GlowingEffect
+            spread={40}
+            glow={true}
+            disabled={false}
+            proximity={64}
+            inactiveZone={0.01}
+            borderWidth={2}
+          />
+          <div className="card-modern rounded-xl p-5 relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-white/10 flex items-center justify-center">
+                <CircleDollarSign className="w-5 h-5 text-blue-400" />
+              </div>
             </div>
+            <p className="text-white/50 text-xs mb-1">Avg Transaction</p>
+            <p className="text-2xl font-semibold text-white">
+              ${transactions.length > 0 ? (metrics.totalMRR / transactions.length).toFixed(0) : 0}
+            </p>
+            <p className="text-xs text-white/40 mt-2">Per transaction</p>
           </div>
-          <p className="text-white/50 text-xs mb-1">Avg Transaction</p>
-          <p className="text-2xl font-semibold text-white">
-            ${transactions.length > 0 ? (metrics.totalMRR / transactions.length).toFixed(0) : 0}
-          </p>
-          <p className="text-xs text-white/40 mt-2">Per transaction</p>
         </div>
 
-        <div className="card-modern rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-white/10 flex items-center justify-center">
-              <Link2 className="w-5 h-5 text-amber-400" />
+        <div className="relative rounded-xl">
+          <GlowingEffect
+            spread={40}
+            glow={true}
+            disabled={false}
+            proximity={64}
+            inactiveZone={0.01}
+            borderWidth={2}
+          />
+          <div className="card-modern rounded-xl p-5 relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-white/10 flex items-center justify-center">
+                <Link2 className="w-5 h-5 text-amber-400" />
+              </div>
             </div>
+            <p className="text-white/50 text-xs mb-1">Platforms</p>
+            <p className="text-2xl font-semibold text-white">{metrics.platformBreakdown.length}</p>
+            <p className="text-xs text-white/40 mt-2">Connected sources</p>
           </div>
-          <p className="text-white/50 text-xs mb-1">Platforms</p>
-          <p className="text-2xl font-semibold text-white">{metrics.platformBreakdown.length}</p>
-          <p className="text-xs text-white/40 mt-2">Connected sources</p>
         </div>
       </div>
 
