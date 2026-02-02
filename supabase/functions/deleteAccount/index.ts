@@ -1,0 +1,362 @@
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { logAudit } from '../_shared/utils/audit.ts';
+import {
+    checkRateLimit,
+    isValidOTPFormat,
+    RATE_LIMITS,
+    SECURITY_ACTIONS,
+    extractClientInfo,
+    sanitizeErrorMessage
+} from '../_shared/logic/security.ts';
+
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+// Tables to delete user data from (in order)
+const USER_DATA_TABLES = [
+    'sync_history',
+    'reconciliations',
+    'autopsy_events',
+    'insights',
+    'expenses',
+    'bank_transactions',
+    'transactions',
+    'revenue_transactions',
+    'tax_profiles',
+    'connected_platforms',
+    'platform_connections',
+    'verification_codes',
+    'audit_log', // Keep some audit trail - we'll anonymize instead of delete
+];
+
+Deno.serve(async (req) => {
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    };
+
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: corsHeaders });
+    }
+
+    let user: any = null;
+    const clientInfo = extractClientInfo(req);
+    let deletionRequestId: string | null = null;
+
+    try {
+        // Create client with user's token for auth
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
+        }
+
+        const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+            global: { headers: { Authorization: authHeader } }
+        });
+
+        // Get authenticated user
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        if (authError || !authUser) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
+        }
+        user = authUser;
+
+        // Parse request body
+        let body: {
+            confirmationText: string;
+            currentPassword?: string;
+            verificationCode?: string;
+        };
+        try {
+            body = await req.json();
+        } catch {
+            return Response.json({ error: 'Invalid JSON body' }, { status: 400, headers: corsHeaders });
+        }
+
+        const { confirmationText, currentPassword, verificationCode } = body;
+
+        // Validate confirmation text
+        if (confirmationText !== 'DELETE') {
+            return Response.json({
+                error: 'Please type DELETE to confirm account deletion'
+            }, { status: 400, headers: corsHeaders });
+        }
+
+        const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
+        // Check for existing deletion request (idempotency)
+        const { data: existingRequest } = await adminClient
+            .from('deletion_requests')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+        if (existingRequest) {
+            if (existingRequest.status === 'deleted') {
+                return Response.json({
+                    ok: true,
+                    message: 'Account has already been deleted'
+                }, { headers: corsHeaders });
+            }
+            if (existingRequest.status === 'processing') {
+                return Response.json({
+                    error: 'Account deletion is already in progress'
+                }, { status: 409, headers: corsHeaders });
+            }
+            // If failed, allow retry
+            deletionRequestId = existingRequest.id;
+        }
+
+        // Rate limiting
+        const rateLimitKey = `delete_account:${user.id}`;
+        const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.DELETE_ACCOUNT);
+
+        if (!rateLimitResult.allowed) {
+            await logAudit(null, {
+                action: SECURITY_ACTIONS.RATE_LIMIT_EXCEEDED,
+                actor_id: user.id,
+                status: 'warning',
+                details: { action_type: 'delete_account', ...clientInfo }
+            });
+
+            return Response.json({
+                error: 'Too many deletion attempts. Please wait before trying again.',
+                retryAfter: Math.ceil((rateLimitResult.resetAt.getTime() - Date.now()) / 1000)
+            }, { status: 429, headers: corsHeaders });
+        }
+
+        // Determine auth method and verify re-authentication
+        const hasPassword = user.app_metadata?.provider === 'email' ||
+            user.app_metadata?.providers?.includes('email');
+
+        if (hasPassword && currentPassword) {
+            // Verify via password
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: user.email!,
+                password: currentPassword
+            });
+
+            if (signInError) {
+                await logAudit(null, {
+                    action: SECURITY_ACTIONS.ACCOUNT_DELETE_FAILED,
+                    actor_id: user.id,
+                    status: 'failure',
+                    details: { reason: 'invalid_password', ...clientInfo }
+                });
+
+                return Response.json({
+                    error: 'Current password is incorrect'
+                }, { status: 401, headers: corsHeaders });
+            }
+        } else if (verificationCode) {
+            // Verify via OTP
+            if (!isValidOTPFormat(verificationCode)) {
+                return Response.json({
+                    error: 'Invalid verification code format'
+                }, { status: 400, headers: corsHeaders });
+            }
+
+            // Check verification code
+            const { data: codeData, error: codeError } = await adminClient
+                .from('verification_codes')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('code', verificationCode)
+                .eq('purpose', 'delete_account')
+                .is('used_at', null)
+                .gt('expires_at', new Date().toISOString())
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (codeError || !codeData) {
+                await logAudit(null, {
+                    action: SECURITY_ACTIONS.ACCOUNT_DELETE_FAILED,
+                    actor_id: user.id,
+                    status: 'failure',
+                    details: { reason: 'invalid_verification_code', ...clientInfo }
+                });
+
+                return Response.json({
+                    error: 'Invalid or expired verification code'
+                }, { status: 401, headers: corsHeaders });
+            }
+
+            // Mark code as used
+            await adminClient
+                .from('verification_codes')
+                .update({ used_at: new Date().toISOString() })
+                .eq('id', codeData.id);
+        } else {
+            // No re-authentication provided
+            return Response.json({
+                error: 'Re-authentication required. Please provide current password or verification code.',
+                requiresReauth: true,
+                authMethod: hasPassword ? 'password' : 'otp'
+            }, { status: 401, headers: corsHeaders });
+        }
+
+        // Audit: deletion requested
+        await logAudit(null, {
+            action: SECURITY_ACTIONS.ACCOUNT_DELETE_REQUESTED,
+            actor_id: user.id,
+            status: 'success',
+            details: clientInfo
+        });
+
+        // Create or update deletion request
+        const stepsCompleted: string[] = [];
+
+        if (!deletionRequestId) {
+            const { data: newRequest, error: createError } = await adminClient
+                .from('deletion_requests')
+                .insert({
+                    user_id: user.id,
+                    status: 'processing'
+                })
+                .select()
+                .single();
+
+            if (createError) {
+                throw new Error('Failed to create deletion request');
+            }
+            deletionRequestId = newRequest.id;
+        } else {
+            await adminClient
+                .from('deletion_requests')
+                .update({ status: 'processing', last_error: null })
+                .eq('id', deletionRequestId);
+        }
+
+        try {
+            // Step 1: Revoke all sessions
+            try {
+                await adminClient.auth.admin.signOut(user.id, 'global');
+                stepsCompleted.push('sessions_revoked');
+            } catch (e) {
+                console.error('Failed to revoke sessions:', e);
+                // Continue anyway
+            }
+
+            // Step 2: Delete OAuth tokens from connected_platforms
+            // (tokens are stored in oauth_token column)
+            const { data: platforms } = await adminClient
+                .from('connected_platforms')
+                .select('platform, oauth_token')
+                .eq('user_id', user.id);
+
+            if (platforms && platforms.length > 0) {
+                // TODO: Revoke OAuth tokens at provider level if API available
+                // For now, we just delete the records (tokens become orphaned)
+                stepsCompleted.push('oauth_tokens_noted');
+            }
+
+            // Step 3: Delete user data from all tables
+            for (const table of USER_DATA_TABLES) {
+                try {
+                    if (table === 'audit_log') {
+                        // Anonymize audit logs instead of deleting
+                        await adminClient
+                            .from(table)
+                            .update({
+                                user_id: null,
+                                details_json: { anonymized: true, original_user_deleted: true }
+                            })
+                            .eq('user_id', user.id);
+                        stepsCompleted.push(`${table}_anonymized`);
+                    } else {
+                        const { error } = await adminClient
+                            .from(table)
+                            .delete()
+                            .eq('user_id', user.id);
+
+                        if (error) {
+                            console.error(`Failed to delete from ${table}:`, error);
+                        } else {
+                            stepsCompleted.push(`${table}_deleted`);
+                        }
+                    }
+                } catch (e) {
+                    console.error(`Error deleting from ${table}:`, e);
+                }
+            }
+
+            // Step 4: Delete profile
+            try {
+                await adminClient
+                    .from('profiles')
+                    .delete()
+                    .eq('id', user.id);
+                stepsCompleted.push('profile_deleted');
+            } catch (e) {
+                console.error('Failed to delete profile:', e);
+            }
+
+            // Step 5: Delete user from auth.users
+            const { error: deleteUserError } = await adminClient.auth.admin.deleteUser(user.id);
+
+            if (deleteUserError) {
+                throw new Error('Failed to delete user account');
+            }
+            stepsCompleted.push('auth_user_deleted');
+
+            // Mark deletion as complete
+            await adminClient
+                .from('deletion_requests')
+                .update({
+                    status: 'deleted',
+                    completed_at: new Date().toISOString(),
+                    steps_completed: stepsCompleted
+                })
+                .eq('id', deletionRequestId);
+
+            // Final audit log (anonymized)
+            await logAudit(null, {
+                action: SECURITY_ACTIONS.ACCOUNT_DELETED,
+                actor_id: null, // Anonymized
+                status: 'success',
+                details: {
+                    deletion_request_id: deletionRequestId,
+                    steps_completed: stepsCompleted,
+                    ...clientInfo
+                }
+            });
+
+            return Response.json({
+                ok: true,
+                message: 'Your account has been permanently deleted'
+            }, { headers: corsHeaders });
+
+        } catch (deletionError: any) {
+            // Mark deletion as failed
+            await adminClient
+                .from('deletion_requests')
+                .update({
+                    status: 'failed',
+                    last_error: sanitizeErrorMessage(deletionError),
+                    steps_completed: stepsCompleted
+                })
+                .eq('id', deletionRequestId);
+
+            throw deletionError;
+        }
+
+    } catch (error: any) {
+        console.error('deleteAccount error:', error);
+
+        await logAudit(null, {
+            action: SECURITY_ACTIONS.ACCOUNT_DELETE_FAILED,
+            actor_id: user?.id,
+            status: 'failure',
+            details: {
+                error: sanitizeErrorMessage(error),
+                deletion_request_id: deletionRequestId,
+                ...clientInfo
+            }
+        });
+
+        return Response.json({
+            error: sanitizeErrorMessage(error)
+        }, { status: 500, headers: corsHeaders });
+    }
+});

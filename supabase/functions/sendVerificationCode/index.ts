@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { logAudit } from './utils/audit.ts';
+import { logAudit } from '../_shared/utils/audit.ts';
 import {
     generateOTPCode,
     checkRateLimit,
@@ -7,7 +7,7 @@ import {
     SECURITY_ACTIONS,
     extractClientInfo,
     sanitizeErrorMessage
-} from './logic/security.ts';
+} from '../_shared/logic/security.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
