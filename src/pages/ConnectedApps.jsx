@@ -13,7 +13,7 @@ const platformConfig = {
   patreon: { name: 'Patreon', icon: '💖', usesOAuth: true },
   gumroad: { name: 'Gumroad', icon: '📦', usesOAuth: false },
   stripe: { name: 'Stripe', icon: '⚡', usesOAuth: true },
-  instagram: { name: 'Instagram', icon: '📷', usesOAuth: true },
+
   tiktok: { name: 'TikTok', icon: '🎵', usesOAuth: true }
 };
 
@@ -40,7 +40,7 @@ export default function ConnectedApps() {
 
   const userConnections = connections.filter(c => c.created_by === user?.email);
   const allPlatforms = Object.keys(platformConfig);
-  
+
   // Get platforms that are not connected
   const connectedPlatforms = userConnections.map(c => c.platform);
   const notConnectedPlatforms = allPlatforms.filter(p => !connectedPlatforms.includes(p));
@@ -90,14 +90,14 @@ export default function ConnectedApps() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    background: "#fff", 
+                <Tooltip
+                  contentStyle={{
+                    background: "#fff",
                     border: "1px solid rgba(94, 82, 64, 0.12)",
                     borderRadius: "8px"
                   }}
                 />
-                <Legend 
+                <Legend
                   verticalAlign="bottom"
                   formatter={(value) => <span className="text-[#5E5240]/70 text-sm">{value}</span>}
                 />
@@ -123,14 +123,14 @@ export default function ConnectedApps() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    background: "#fff", 
+                <Tooltip
+                  contentStyle={{
+                    background: "#fff",
                     border: "1px solid rgba(94, 82, 64, 0.12)",
                     borderRadius: "8px"
                   }}
                 />
-                <Legend 
+                <Legend
                   verticalAlign="bottom"
                   formatter={(value) => <span className="text-[#5E5240]/70 text-sm">{value}</span>}
                 />
@@ -158,7 +158,7 @@ export default function ConnectedApps() {
                 userConnections.map((connection) => {
                   const config = platformConfig[connection.platform];
                   const isActive = connection.sync_status === 'active';
-                  
+
                   return (
                     <tr key={connection.id} className="border-t border-[#5E524012] hover:bg-[#5E5240]/5">
                       <td className="py-4 px-4">
@@ -233,7 +233,7 @@ export default function ConnectedApps() {
                   </td>
                 </tr>
               )}
-              
+
               {/* Not Connected Platforms */}
               {notConnectedPlatforms.map((platform) => {
                 const config = platformConfig[platform];
@@ -286,7 +286,7 @@ export default function ConnectedApps() {
               <option>Never (manual only)</option>
             </select>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <div className="font-medium text-[#5E5240]">Notify when token expires</div>

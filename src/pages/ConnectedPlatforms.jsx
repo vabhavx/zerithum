@@ -8,7 +8,7 @@ import {
   Users,
   CircleDollarSign,
   ShoppingBag,
-  Instagram,
+
   Music,
   Plus,
   Check,
@@ -91,18 +91,7 @@ const PLATFORMS = [
     requiresApiKey: false,
     clientId: "YOUR_STRIPE_CLIENT_ID"
   },
-  {
-    id: "instagram",
-    name: "Instagram",
-    icon: Instagram,
-    color: "bg-purple-500/10 border-purple-500/20 text-purple-400",
-    description: "Pull revenue from Instagram Insights and monetization",
-    oauthUrl: "https://www.facebook.com/v20.0/dialog/oauth",
-    scope: "instagram_basic,instagram_manage_insights,pages_read_engagement",
-    redirectUri: "https://zerithum.com/authcallback",
-    requiresApiKey: false,
-    clientId: "YOUR_META_APP_ID"
-  },
+
   {
     id: "tiktok",
     name: "TikTok",

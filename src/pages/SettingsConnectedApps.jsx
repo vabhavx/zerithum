@@ -44,11 +44,11 @@ export default function SettingsConnectedApps() {
     patreon: "Patreon",
     gumroad: "Gumroad",
     stripe: "Stripe",
-    instagram: "Instagram",
+
     tiktok: "TikTok",
   };
 
-  const allPlatforms = ["youtube", "patreon", "gumroad", "stripe", "instagram", "tiktok"];
+  const allPlatforms = ["youtube", "patreon", "gumroad", "stripe", "tiktok"];
 
   const handleRefresh = (connection) => {
     // Mock token refresh
@@ -117,8 +117,8 @@ export default function SettingsConnectedApps() {
                     {connection?.expires_at
                       ? format(new Date(connection.expires_at), "MMM d, yyyy")
                       : platform === "gumroad"
-                      ? "N/A (API key)"
-                      : "-"}
+                        ? "N/A (API key)"
+                        : "-"}
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center justify-end gap-2">

@@ -30,7 +30,7 @@ const PLATFORM_NAMES = {
   patreon: 'Patreon',
   stripe: 'Stripe',
   gumroad: 'Gumroad',
-  instagram: 'Instagram',
+
   tiktok: 'TikTok'
 };
 
