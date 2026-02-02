@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { base44 } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import OTPVerification from "./OTPVerification";
+import DopamineSuccess from "@/components/ui/DopamineSuccess";
 
 export default function DeleteAccountModal({ open, onOpenChange }) {
     const { user, logout } = useAuth();
@@ -60,7 +61,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
 
     const handleConfirmText = (e) => {
         e.preventDefault();
-        if (confirmationText !== "DELETE") return;
+        if (confirmationText.trim() !== "DELETE") return;
 
         if (hasPasswordAuth) {
             setStep("auth");
@@ -205,10 +206,10 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={confirmationText !== "DELETE"}
+                                disabled={confirmationText.trim() !== "DELETE" || isLoading}
                                 className="bg-red-500 hover:bg-red-600 text-white"
                             >
-                                Verify & Delete
+                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify & Delete"}
                             </Button>
                         </AlertDialogFooter>
                     </form>
@@ -278,21 +279,17 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
                 )}
 
                 {step === "success" && (
-                    <div className="py-6 text-center">
-                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Account Deleted</h3>
-                        <p className="text-white/40 text-sm mb-6">
-                            Your account has been successfully deleted. We're sorry to see you go.
-                        </p>
+                    <DopamineSuccess
+                        title="Account Deleted"
+                        message="Your account has been successfully deleted. We're sorry to see you go."
+                    >
                         <Button
                             onClick={handleFinalExit}
-                            className="w-full bg-white/10 hover:bg-white/20 text-white"
+                            className="w-full bg-white/10 hover:bg-white/20 text-white mt-4"
                         >
                             Return to Home
                         </Button>
-                    </div>
+                    </DopamineSuccess>
                 )}
 
                 {step === "failure" && (

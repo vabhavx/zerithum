@@ -17,6 +17,7 @@ import { base44 } from "@/api/supabaseClient";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
 import OTPVerification from "./OTPVerification";
+import DopamineSuccess from "@/components/ui/DopamineSuccess";
 
 export default function UpdatePasswordModal({ open, onOpenChange }) {
     const { user, logout } = useAuth();
@@ -303,15 +304,10 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
                 )}
 
                 {step === "success" && (
-                    <div className="text-center py-6">
-                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-                            <Check className="w-8 h-8 text-emerald-400" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Password Updated!</h3>
-                        <p className="text-white/40 text-sm">
-                            You will be redirected to login with your new password.
-                        </p>
-                    </div>
+                    <DopamineSuccess
+                        title="Password Updated!"
+                        message="You will be redirected to login with your new password."
+                    />
                 )}
             </DialogContent>
         </Dialog>
