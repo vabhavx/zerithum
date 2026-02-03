@@ -169,18 +169,26 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUserProfile = async (authUser) => {
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
         .single();
 
+      if (error || !profile) {
+        console.error('Failed to fetch profile (user might be deleted):', error);
+        // If profile is missing, the account is likely deleted or in a bad state.
+        // Force logout to ensure all sessions are invalidated.
+        await logout(true);
+        return;
+      }
+
       setUser({ ...authUser, ...profile });
       setIsAuthenticated(true);
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
-      setUser(authUser);
-      setIsAuthenticated(true);
+      console.error('Error in fetchUserProfile:', error);
+      // Safety net: invalid state -> logout
+      await logout(true);
     }
   };
 

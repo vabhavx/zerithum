@@ -255,15 +255,17 @@ Deno.serve(async (req) => {
             for (const table of USER_DATA_TABLES) {
                 try {
                     if (table === 'audit_log') {
-                        // Anonymize audit logs instead of deleting
-                        await adminClient
+                        // Delete audit logs as requested (hard delete)
+                        const { error } = await adminClient
                             .from(table)
-                            .update({
-                                user_id: null,
-                                details_json: { anonymized: true, original_user_deleted: true }
-                            })
+                            .delete()
                             .eq('user_id', user.id);
-                        stepsCompleted.push(`${table}_anonymized`);
+
+                        if (error) {
+                            console.error(`Failed to delete from ${table}:`, error);
+                        } else {
+                            stepsCompleted.push(`${table}_deleted`);
+                        }
                     } else {
                         const { error } = await adminClient
                             .from(table)
