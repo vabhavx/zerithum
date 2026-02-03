@@ -60,8 +60,7 @@ export const auth = {
 
         const { data, error } = await supabase
             .from('profiles')
-            .update(updates)
-            .eq('id', user.id)
+            .upsert({ id: user.id, ...updates })
             .select()
             .single();
 

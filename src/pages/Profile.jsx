@@ -36,7 +36,7 @@ const PLATFORM_NAMES = {
 
 export default function Profile() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, checkAppState } = useAuth();
 
   const { data: connectedPlatforms = [] } = useQuery({
     queryKey: ["connectedPlatforms"],
@@ -61,8 +61,8 @@ export default function Profile() {
 
   const updateProfileMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    onSuccess: async () => {
+      await checkAppState();
       toast.success("Profile updated successfully");
     },
     onError: () => {
