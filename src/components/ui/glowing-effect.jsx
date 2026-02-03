@@ -2,6 +2,47 @@ import { memo, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { animate } from "motion/react";
 
+// Singleton to track mouse position globally
+// This prevents having multiple 'pointermove' listeners on the body
+const mouseTracker = {
+  element: null,
+  listeners: new Set(),
+  x: 0,
+  y: 0,
+  initialized: false,
+
+  init() {
+    if (this.initialized) return;
+    if (typeof window === 'undefined') return;
+
+    this.initialized = true;
+
+    const handlePointerMove = (e) => {
+      this.x = e.clientX;
+      this.y = e.clientY;
+
+      // Notify all listeners
+      for (const listener of this.listeners) {
+        listener(this.x, this.y);
+      }
+    };
+
+    document.body.addEventListener("pointermove", handlePointerMove, { passive: true });
+
+    // Cleanup function if needed (though usually this persists for app life)
+    this.cleanup = () => {
+      document.body.removeEventListener("pointermove", handlePointerMove);
+      this.initialized = false;
+    };
+  },
+
+  addListener(listener) {
+    if (!this.initialized) this.init();
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+};
+
 const GlowingEffect = memo(
   ({
     blur = 0,
@@ -20,9 +61,10 @@ const GlowingEffect = memo(
     const animationFrameRef = useRef(0);
 
     const handleMove = useCallback(
-      (e) => {
+      (x, y) => {
         if (!containerRef.current) return;
 
+        // Cancel previous frame to avoid stacking
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
         }
@@ -32,10 +74,10 @@ const GlowingEffect = memo(
           if (!element) return;
 
           const { left, top, width, height } = element.getBoundingClientRect();
-          const mouseX = e?.x ?? lastPosition.current.x;
-          const mouseY = e?.y ?? lastPosition.current.y;
+          const mouseX = x ?? lastPosition.current.x;
+          const mouseY = y ?? lastPosition.current.y;
 
-          if (e) {
+          if (x !== undefined && y !== undefined) {
             lastPosition.current = { x: mouseX, y: mouseY };
           }
 
@@ -65,7 +107,7 @@ const GlowingEffect = memo(
             parseFloat(element.style.getPropertyValue("--start")) || 0;
           let targetAngle =
             (180 * Math.atan2(mouseY - center[1], mouseX - center[0])) /
-              Math.PI +
+            Math.PI +
             90;
 
           const angleDiff = ((targetAngle - currentAngle + 180) % 360) - 180;
@@ -86,20 +128,19 @@ const GlowingEffect = memo(
     useEffect(() => {
       if (disabled) return;
 
-      const handleScroll = () => handleMove();
-      const handlePointerMove = (e) => handleMove(e);
+      // Subscribe to global mouse tracker
+      const removeListener = mouseTracker.addListener(handleMove);
 
+      // Also handle scroll to update position relative to viewport
+      const handleScroll = () => handleMove(lastPosition.current.x, lastPosition.current.y);
       window.addEventListener("scroll", handleScroll, { passive: true });
-      document.body.addEventListener("pointermove", handlePointerMove, {
-        passive: true,
-      });
 
       return () => {
+        removeListener();
+        window.removeEventListener("scroll", handleScroll);
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
         }
-        window.removeEventListener("scroll", handleScroll);
-        document.body.removeEventListener("pointermove", handlePointerMove);
       };
     }, [handleMove, disabled]);
 

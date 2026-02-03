@@ -22,7 +22,9 @@ export default function Dashboard() {
 
   const { data: transactions = [], isLoading, refetch } = useQuery({
     queryKey: ["revenueTransactions"],
-    queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 500),
+    queryFn: () => base44.entities.RevenueTransaction.fetchAll({
+      // Filters (empty for now, unless we want to filter by user implicitly handled by RLS)
+    }, "-transaction_date"),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 

@@ -1,15 +1,12 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   User,
   Mail,
-  Bell,
-  Link2,
   Save,
-  CheckCircle2,
   Trash2,
   AlertCircle,
   Shield,
@@ -21,12 +18,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import UpdatePasswordModal from "@/components/security/UpdatePasswordModal";
 import SignOutAllDevicesModal from "@/components/security/SignOutAllDevicesModal";
 import DeleteAccountModal from "@/components/security/DeleteAccountModal";
+import DisconnectPlatformModal from "@/components/security/DisconnectPlatformModal";
 
 const PLATFORM_NAMES = {
   youtube: 'YouTube',
@@ -39,11 +36,7 @@ const PLATFORM_NAMES = {
 
 export default function Profile() {
   const queryClient = useQueryClient();
-
-  const { data: user } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: () => base44.auth.me(),
-  });
+  const { user } = useAuth();
 
   const { data: connectedPlatforms = [] } = useQuery({
     queryKey: ["connectedPlatforms"],
@@ -55,12 +48,7 @@ export default function Profile() {
     email: user?.email || "",
   });
 
-  const [notifications, setNotifications] = useState({
-    email_weekly_report: true,
-    email_tax_reminders: true,
-    email_platform_sync: false,
-    email_insights: true,
-  });
+
 
   React.useEffect(() => {
     if (user) {
@@ -96,9 +84,16 @@ export default function Profile() {
     });
   };
 
+  const [disconnectPlatform, setDisconnectPlatform] = useState(null);
+
   const handleDisconnect = (platform) => {
-    if (window.confirm(`Disconnect ${PLATFORM_NAMES[platform.platform]}? This will stop syncing data.`)) {
-      disconnectMutation.mutate(platform.id);
+    setDisconnectPlatform(platform);
+  };
+
+  const confirmDisconnect = () => {
+    if (disconnectPlatform) {
+      disconnectMutation.mutate(disconnectPlatform.id);
+      setDisconnectPlatform(null);
     }
   };
 
@@ -112,6 +107,14 @@ export default function Profile() {
       <UpdatePasswordModal
         open={isPasswordModalOpen}
         onOpenChange={setIsPasswordModalOpen}
+      />
+
+      <DisconnectPlatformModal
+        open={!!disconnectPlatform}
+        onOpenChange={(open) => !open && setDisconnectPlatform(null)}
+        platformName={disconnectPlatform ? (PLATFORM_NAMES[disconnectPlatform.platform] || disconnectPlatform.platform) : ''}
+        onConfirm={confirmDisconnect}
+        isPending={disconnectMutation.isPending}
       />
 
       <SignOutAllDevicesModal

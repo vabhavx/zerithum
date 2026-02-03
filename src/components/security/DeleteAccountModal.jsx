@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Trash2, Loader2, AlertTriangle, AlertOctagon, CheckCircle2 } from "lucide-react";
+import { Trash2, Loader2, AlertTriangle, AlertOctagon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

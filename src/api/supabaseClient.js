@@ -228,6 +228,47 @@ function createEntityHelper(tableName) {
 
             if (error) throw error;
             return true;
+        },
+
+        // Fetch all records (auto-pagination)
+        async fetchAll(filters = {}, orderBy = '-created_at', batchSize = 1000) {
+            const isDesc = orderBy.startsWith('-');
+            const column = orderBy.replace('-', '');
+            let allData = [];
+            let page = 0;
+            let hasMore = true;
+
+            while (hasMore) {
+                let query = supabase
+                    .from(tableName)
+                    .select('*');
+
+                // Apply filters
+                Object.entries(filters).forEach(([key, value]) => {
+                    query = query.eq(key, value);
+                });
+
+                query = query
+                    .order(column, { ascending: !isDesc })
+                    .range(page * batchSize, (page + 1) * batchSize - 1);
+
+                const { data, error } = await query;
+
+                if (error) throw error;
+
+                if (data.length > 0) {
+                    allData = [...allData, ...data];
+                    page++;
+                    // If we got fewer than batchSize, we're done
+                    if (data.length < batchSize) {
+                        hasMore = false;
+                    }
+                } else {
+                    hasMore = false;
+                }
+            }
+
+            return allData;
         }
     };
 }
