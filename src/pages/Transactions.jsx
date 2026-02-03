@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import TransactionRow from '@/components/TransactionRow';
+import { generateCSV, downloadCSV } from '@/utils/csvExport';
+import { format } from 'date-fns';
+import moment from 'moment';
 
 const SortIcon = ({ field, sortField, sortDirection }) => {
   if (sortField !== field) return null;
@@ -47,7 +50,7 @@ export default function Transactions() {
   // Filter and sort transactions
   const filteredTransactions = useMemo(() => transactions
     .filter(t => {
-      const matchesSearch = !searchTerm || 
+      const matchesSearch = !searchTerm ||
         t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.platform_transaction_id?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesPlatform = platformFilter === 'all' || t.platform === platformFilter;
@@ -81,6 +84,26 @@ export default function Transactions() {
     .filter(t => t.status === 'completed')
     .reduce((sum, t) => sum + (t.net_amount || t.amount), 0), [filteredTransactions]);
 
+  const handleExportCSV = () => {
+    const columns = [
+      { header: 'Transaction ID', key: 'platform_transaction_id' },
+      { header: 'Date', key: 'transaction_date', formatter: (item) => moment(item.transaction_date).format('YYYY-MM-DD HH:mm:ss') },
+      { header: 'Platform', key: 'platform' },
+      { header: 'Category', key: 'category' },
+      { header: 'Description', key: 'description' },
+      { header: 'Status', key: 'status' },
+      { header: 'Currency', key: 'currency', formatter: (item) => item.currency || 'USD' },
+      { header: 'Gross Amount', key: 'gross_amount', formatter: (item) => (item.gross_amount || item.amount).toFixed(2) },
+      { header: 'Fees', key: 'fees_amount', formatter: (item) => (item.fees_amount || item.platform_fee || 0).toFixed(2) },
+      { header: 'Net Amount', key: 'net_amount', formatter: (item) => (item.net_amount || (item.gross_amount || item.amount) - (item.fees_amount || item.platform_fee || 0)).toFixed(2) },
+      { header: 'Synced Date', key: 'synced_date', formatter: (item) => moment(item.synced_date || item.created_date).format('YYYY-MM-DD HH:mm:ss') }
+    ];
+
+    const csvContent = generateCSV(filteredTransactions, columns);
+    const filename = `transactions_export_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    downloadCSV(csvContent, filename);
+  };
+
   return (
     <div className="max-w-[1200px] mx-auto">
       {/* Header */}
@@ -89,7 +112,11 @@ export default function Transactions() {
           <h1 className="text-3xl font-bold text-[#5E5240] mb-2">Transactions</h1>
           <p className="text-[#5E5240]/60">View and manage all your revenue transactions</p>
         </div>
-        <Button className="bg-[#208D9E] text-white hover:bg-[#1A7B8A]">
+        <Button
+          className="bg-[#208D9E] text-white hover:bg-[#1A7B8A]"
+          onClick={handleExportCSV}
+          disabled={filteredTransactions.length === 0}
+        >
           <Download className="w-4 h-4 mr-2" />
           Export CSV
         </Button>
