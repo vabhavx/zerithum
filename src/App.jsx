@@ -14,15 +14,9 @@ const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
-const layoutlessRoutes = ["Onboarding3D"];
-
-const LayoutWrapper = ({ children, currentPageName }) => {
-  if (!Layout || layoutlessRoutes.includes(currentPageName)) {
-    return <>{children}</>;
-  }
-
-  return <Layout currentPageName={currentPageName}>{children}</Layout>;
-};
+const LayoutWrapper = ({ children, currentPageName }) => Layout ?
+  <Layout currentPageName={currentPageName}>{children}</Layout>
+  : <>{children}</>;
 
 // Simple loading component for Suspense fallback
 const PageLoader = () => (
