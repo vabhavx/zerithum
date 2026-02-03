@@ -14,11 +14,20 @@ Deno.serve(async (req) => {
     const year = taxYear || new Date().getFullYear();
 
     // Fetch transactions for the tax year
+    interface Transaction {
+      transaction_date: string;
+      amount?: number;
+      platform_fee?: number;
+      platform?: string;
+      category?: string;
+      description?: string;
+    }
+
     const transactions = await base44.entities.RevenueTransaction.filter({
       user_id: user.id
     });
 
-    const yearTransactions = transactions.filter(t => {
+    const yearTransactions: Transaction[] = transactions.filter((t: any) => {
       const txDate = new Date(t.transaction_date);
       return txDate.getFullYear() === year;
     });
@@ -31,8 +40,18 @@ Deno.serve(async (req) => {
     const taxProfile = taxProfiles[0] || null;
 
     // Group by platform and category
-    const platformSummary = {};
-    const categorySummary = {};
+    interface PlatformData {
+      revenue: number;
+      fees: number;
+      count: number;
+    }
+    interface CategoryData {
+      revenue: number;
+      count: number;
+    }
+
+    const platformSummary: Record<string, PlatformData> = {};
+    const categorySummary: Record<string, CategoryData> = {};
     let totalRevenue = 0;
     let totalFees = 0;
 
@@ -44,19 +63,21 @@ Deno.serve(async (req) => {
       totalFees += fee;
 
       // Platform summary
-      if (!platformSummary[t.platform]) {
-        platformSummary[t.platform] = { revenue: 0, fees: 0, count: 0 };
+      const platform = t.platform || 'Unknown';
+      if (!platformSummary[platform]) {
+        platformSummary[platform] = { revenue: 0, fees: 0, count: 0 };
       }
-      platformSummary[t.platform].revenue += amount;
-      platformSummary[t.platform].fees += fee;
-      platformSummary[t.platform].count += 1;
+      platformSummary[platform].revenue += amount;
+      platformSummary[platform].fees += fee;
+      platformSummary[platform].count += 1;
 
       // Category summary
-      if (!categorySummary[t.category]) {
-        categorySummary[t.category] = { revenue: 0, count: 0 };
+      const category = t.category || 'Uncategorized';
+      if (!categorySummary[category]) {
+        categorySummary[category] = { revenue: 0, count: 0 };
       }
-      categorySummary[t.category].revenue += amount;
-      categorySummary[t.category].count += 1;
+      categorySummary[category].revenue += amount;
+      categorySummary[category].count += 1;
     });
 
     const netIncome = totalRevenue - totalFees;
@@ -114,7 +135,7 @@ Deno.serve(async (req) => {
     csvLines.push(`Date,Platform,Category,Description,Amount,Fee,Net`);
 
     yearTransactions
-      .sort((a, b) => new Date(a.transaction_date) - new Date(b.transaction_date))
+      .sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime())
       .forEach(t => {
         const amount = t.amount || 0;
         const fee = t.platform_fee || 0;
@@ -133,8 +154,8 @@ Deno.serve(async (req) => {
       }
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Tax report export error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: error.message || 'Unknown error' }, { status: 500 });
   }
 });
