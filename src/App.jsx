@@ -14,9 +14,15 @@ const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
-const LayoutWrapper = ({ children, currentPageName }) => Layout ?
-  <Layout currentPageName={currentPageName}>{children}</Layout>
-  : <>{children}</>;
+const layoutlessRoutes = ["Onboarding3D"];
+
+const LayoutWrapper = ({ children, currentPageName }) => {
+  if (!Layout || layoutlessRoutes.includes(currentPageName)) {
+    return <>{children}</>;
+  }
+
+  return <Layout currentPageName={currentPageName}>{children}</Layout>;
+};
 
 // Simple loading component for Suspense fallback
 const PageLoader = () => (
@@ -48,14 +54,14 @@ const AuthenticatedApp = () => {
         <p className="text-white/50 text-sm animate-pulse mb-4">
           {isLoadingAuth ? 'Verifying authentication...' : 'Loading settings...'}
         </p>
-        
+
         {showSlowLoadingMessage && (
-           <button 
-             onClick={() => window.location.href = '/Login'}
-             className="text-xs text-zteal-400 hover:text-white underline transition-colors cursor-pointer"
-           >
-             Taking too long? Click here to Login
-           </button>
+          <button
+            onClick={() => window.location.href = '/Login'}
+            className="text-xs text-zteal-400 hover:text-white underline transition-colors cursor-pointer"
+          >
+            Taking too long? Click here to Login
+          </button>
         )}
       </div>
     );

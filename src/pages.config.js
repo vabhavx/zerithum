@@ -2,6 +2,7 @@ import AuthCallback from './pages/AuthCallback';
 import ConnectedApps from './pages/ConnectedApps';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Onboarding3D from './pages/Onboarding3D';
 import ConnectedPlatforms from './pages/ConnectedPlatforms';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
@@ -38,6 +39,7 @@ export const PAGES = {
     "Help": Help,
     "Login": Login,
     "Notifications": Notifications,
+    "Onboarding3D": Onboarding3D,
     "Platforms": Platforms,
     "Pricing": Pricing,
     "Privacy": Privacy,
@@ -61,7 +63,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "Dashboard",
+    mainPage: "Onboarding3D",
     Pages: PAGES,
     Layout: __Layout,
 };
