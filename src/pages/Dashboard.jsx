@@ -252,27 +252,25 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* No Platforms Connected Card */}
+      {/* No Platforms Connected Banner */}
       {connectedPlatforms.length === 0 && (
         <div className="mb-6">
-          <div className="card-modern rounded-xl p-6 border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
-                <Link2 className="w-6 h-6 text-amber-400" />
+          <div
+            onClick={() => navigate('/ConnectedPlatforms')}
+            className="group cursor-pointer card-modern rounded-lg p-3 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/30 transition-all duration-200"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                <Link2 className="w-4 h-4 text-amber-400" />
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white mb-1">No Platforms Connected</h3>
-                <p className="text-white/50 text-sm">
-                  Connect your revenue platforms to start tracking and analyzing your earnings across all sources.
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-white/70 group-hover:text-white transition-colors">
+                  No platforms connected. <span className="text-amber-400 font-medium">Connect now</span> to start tracking revenue.
                 </p>
               </div>
-              <Button
-                onClick={() => navigate('/ConnectedPlatforms')}
-                className="rounded-lg bg-amber-500 hover:bg-amber-600 text-white border-0 transition-colors text-sm h-10 px-5 font-medium"
-              >
-                <Link2 className="w-4 h-4 mr-2" />
-                Connect your platforms now!
-              </Button>
+              <div className="text-white/30 group-hover:text-amber-400 transition-colors">
+                →
+              </div>
             </div>
           </div>
         </div>
