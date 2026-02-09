@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Mail, Lock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function Login() {
+export default function SignIn() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
