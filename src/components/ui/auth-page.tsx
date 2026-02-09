@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from './button';
 import { Input } from './input';
 import { cn } from '@/lib/utils';
@@ -18,6 +17,7 @@ import {
 import { supabase } from '@/api/supabaseClient';
 import { toast } from 'sonner';
 import { useNavigate, Link } from 'react-router-dom';
+import ShaderBackground from './shader-background';
 
 interface AuthPageProps {
     initialMode?: 'signin' | 'signup';
@@ -134,26 +134,11 @@ export function AuthPage({ initialMode = 'signin' }: AuthPageProps) {
 
     return (
         <main className="relative md:h-screen md:overflow-hidden lg:grid lg:grid-cols-2">
-            <div className="bg-muted/60 relative hidden h-full flex-col border-r p-10 lg:flex">
-                <div className="from-background absolute inset-0 z-10 bg-gradient-to-t to-transparent" />
-                <div className="z-10 flex items-center gap-2">
+            <div className="relative hidden h-full flex-col p-10 lg:flex overflow-hidden">
+                <ShaderBackground />
+                <div className="z-10 flex items-center gap-2 text-white">
                     <Grid2x2Plus className="size-6" />
                     <p className="text-xl font-semibold">Zerithum</p>
-                </div>
-                <div className="z-10 mt-auto">
-                    <blockquote className="space-y-2">
-                        <p className="text-xl">
-                            &ldquo;This Platform has helped me to save time and serve my
-                            clients faster than ever before.&rdquo;
-                        </p>
-                        <footer className="font-mono text-sm font-semibold">
-                            ~ Ali Hassan
-                        </footer>
-                    </blockquote>
-                </div>
-                <div className="absolute inset-0">
-                    <FloatingPaths position={1} />
-                    <FloatingPaths position={-1} />
                 </div>
             </div>
             <div className="relative flex min-h-screen flex-col justify-center p-4 bg-background">
@@ -328,53 +313,6 @@ export function AuthPage({ initialMode = 'signin' }: AuthPageProps) {
                 </div>
             </div>
         </main>
-    );
-}
-
-function FloatingPaths({ position }: { position: number }) {
-    const paths = Array.from({ length: 36 }, (_, i) => ({
-        id: i,
-        d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
-            380 - i * 5 * position
-        } -${189 + i * 6} -${312 - i * 5 * position} ${216 - i * 6} ${
-            152 - i * 5 * position
-        } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
-            684 - i * 5 * position
-        } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
-        color: `rgba(15,23,42,${0.1 + i * 0.03})`,
-        width: 0.5 + i * 0.03,
-    }));
-
-    return (
-        <div className="pointer-events-none absolute inset-0">
-            <svg
-                className="h-full w-full text-slate-950 dark:text-white"
-                viewBox="0 0 696 316"
-                fill="none"
-            >
-                <title>Background Paths</title>
-                {paths.map((path) => (
-                    <motion.path
-                        key={path.id}
-                        d={path.d}
-                        stroke="currentColor"
-                        strokeWidth={path.width}
-                        strokeOpacity={0.1 + path.id * 0.03}
-                        initial={{ pathLength: 0.3, opacity: 0.6 }}
-                        animate={{
-                            pathLength: 1,
-                            opacity: [0.3, 0.6, 0.3],
-                            pathOffset: [0, 1, 0],
-                        }}
-                        transition={{
-                            duration: 20 + Math.random() * 10,
-                            repeat: Number.POSITIVE_INFINITY,
-                            ease: 'linear',
-                        }}
-                    />
-                ))}
-            </svg>
-        </div>
     );
 }
 
