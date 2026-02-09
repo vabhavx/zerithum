@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/supabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
@@ -29,6 +30,7 @@ export default function Dashboard() {
   });
 
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: insights = [] } = useQuery({
     queryKey: ["insights"],
@@ -249,6 +251,33 @@ export default function Dashboard() {
           />
         </div>
       )}
+
+      {/* No Platforms Connected Card */}
+      {connectedPlatforms.length === 0 && (
+        <div className="mb-6">
+          <div className="card-modern rounded-xl p-6 border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+                <Link2 className="w-6 h-6 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white mb-1">No Platforms Connected</h3>
+                <p className="text-white/50 text-sm">
+                  Connect your revenue platforms to start tracking and analyzing your earnings across all sources.
+                </p>
+              </div>
+              <Button
+                onClick={() => navigate('/ConnectedPlatforms')}
+                className="rounded-lg bg-amber-500 hover:bg-amber-600 text-white border-0 transition-colors text-sm h-10 px-5 font-medium"
+              >
+                <Link2 className="w-4 h-4 mr-2" />
+                Connect your platforms now!
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Revenue Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
