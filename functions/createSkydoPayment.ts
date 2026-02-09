@@ -33,6 +33,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Skydo API key not configured' }, { status: 500 });
     }
 
+    const appUrl = Deno.env.get('APP_URL');
+    if (!appUrl) {
+      return Response.json({ error: 'APP_URL not configured' }, { status: 500 });
+    }
+
     // Skydo payment link creation
     const skydoResponse = await fetch('https://api.skydo.com/v1/payment-links', {
       method: 'POST',
@@ -53,8 +58,8 @@ Deno.serve(async (req) => {
           plan: planName,
           billing_period: billingPeriod
         },
-        success_url: `${Deno.env.get('APP_URL') || 'https://zerithum-copy-36d43903.base44.app'}/pricing?payment=success`,
-        cancel_url: `${Deno.env.get('APP_URL') || 'https://zerithum-copy-36d43903.base44.app'}/pricing?payment=cancelled`
+        success_url: `${appUrl}/pricing?payment=success`,
+        cancel_url: `${appUrl}/pricing?payment=cancelled`
       })
     });
 
