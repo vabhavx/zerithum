@@ -20,16 +20,19 @@ export default function Landing() {
     const opacity1 = useTransform(scrollYProgress, [0, 0.2, 0.3], [1, 1, 0]);
     const scale1 = useTransform(scrollYProgress, [0, 0.2, 0.3], [1, 1, 0.95]);
     const pointerEvents1 = useTransform(scrollYProgress, (val) => val < 0.3 ? 'auto' : 'none');
+    const display1 = useTransform(scrollYProgress, (val) => val < 0.35 ? 'flex' : 'none');
 
     // Frame 2: Fades in, stays, fades out
     const opacity2 = useTransform(scrollYProgress, [0.2, 0.3, 0.5, 0.6], [0, 1, 1, 0]);
     const scale2 = useTransform(scrollYProgress, [0.2, 0.3, 0.5, 0.6], [0.95, 1, 1, 0.95]);
     const pointerEvents2 = useTransform(scrollYProgress, (val) => val > 0.2 && val < 0.6 ? 'auto' : 'none');
+    const display2 = useTransform(scrollYProgress, (val) => val > 0.15 && val < 0.65 ? 'flex' : 'none');
 
     // Frame 3: Fades in, stays
     const opacity3 = useTransform(scrollYProgress, [0.5, 0.6, 0.9], [0, 1, 1]);
     const scale3 = useTransform(scrollYProgress, [0.5, 0.6, 0.9], [0.95, 1, 1]);
     const pointerEvents3 = useTransform(scrollYProgress, (val) => val > 0.5 ? 'auto' : 'none');
+    const display3 = useTransform(scrollYProgress, (val) => val > 0.45 ? 'flex' : 'none');
 
 
     return (
@@ -99,7 +102,7 @@ export default function Landing() {
 
                     {/* Frame 1: Reconciliation */}
                     <motion.div
-                        style={{ opacity: opacity1, scale: scale1, pointerEvents: pointerEvents1 }}
+                        style={{ opacity: opacity1, scale: scale1, pointerEvents: pointerEvents1, display: display1 }}
                         className="absolute w-full flex justify-center items-center"
                     >
                         <LandingReconciliation />
@@ -107,7 +110,7 @@ export default function Landing() {
 
                     {/* Frame 2: Telemetry */}
                     <motion.div
-                        style={{ opacity: opacity2, scale: scale2, pointerEvents: pointerEvents2 }}
+                        style={{ opacity: opacity2, scale: scale2, pointerEvents: pointerEvents2, display: display2 }}
                         className="absolute w-full flex justify-center items-center"
                     >
                         <LandingTelemetry />
@@ -115,7 +118,7 @@ export default function Landing() {
 
                     {/* Frame 3: Export */}
                     <motion.div
-                        style={{ opacity: opacity3, scale: scale3, pointerEvents: pointerEvents3 }}
+                        style={{ opacity: opacity3, scale: scale3, pointerEvents: pointerEvents3, display: display3 }}
                         className="absolute w-full flex justify-center items-center"
                     >
                         <LandingExport />
