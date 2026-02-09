@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface AnimatedGradientBackgroundProps {
@@ -170,18 +170,18 @@ export function BeamsBackground({
     return (
         <div
             className={cn(
-                "relative min-h-screen w-full bg-neutral-950",
+                "relative min-h-screen w-full overflow-hidden bg-neutral-950",
                 className
             )}
         >
             <canvas
                 ref={canvasRef}
-                className="fixed inset-0 pointer-events-none"
+                className="absolute inset-0"
                 style={{ filter: "blur(15px)" }}
             />
 
             <motion.div
-                className="fixed inset-0 bg-neutral-950/5 pointer-events-none"
+                className="absolute inset-0 bg-neutral-950/5"
                 animate={{
                     opacity: [0.05, 0.15, 0.05],
                 }}
@@ -195,7 +195,7 @@ export function BeamsBackground({
                 }}
             />
 
-            <div className="relative z-10 flex h-full w-full flex-col">
+            <div className="relative z-10 w-full h-full">
                 {children}
             </div>
         </div>
