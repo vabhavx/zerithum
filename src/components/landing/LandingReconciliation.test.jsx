@@ -22,7 +22,7 @@ describe('LandingReconciliation', () => {
     // Check for consolidation/dashboard elements
     expect(screen.getByText('Processing Stream')).toBeInTheDocument();
     expect(screen.getByText('Normalization: Active')).toBeInTheDocument();
-    expect(screen.getByText('Zerithum // Main_View')).toBeInTheDocument();
+    expect(screen.getByText('Main_View')).toBeInTheDocument();
     expect(screen.getByText('Total Balance (Unified)')).toBeInTheDocument();
   });
 

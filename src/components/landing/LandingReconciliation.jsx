@@ -127,7 +127,6 @@ const sources = [
 ];
 
 // Generate a unified list of transactions for the "Dashboard" view
-// This simulates the "All in One" view
 const allTransactions = sources.flatMap(source =>
     source.details.map((detail, idx) => ({
         ...detail,
@@ -138,7 +137,7 @@ const allTransactions = sources.flatMap(source =>
         id: `${source.id}-${idx}`
     }))
 ).sort((a, b) => {
-    // Simple sort simulation based on label length to mix them up a bit visually, or just keep original order
+    // Simple sort simulation based on label length to mix them up a bit visually
     return a.label.length - b.label.length;
 });
 
@@ -163,7 +162,7 @@ export default function LandingReconciliation() {
                 const currentIndex = sources.findIndex(s => s.id === current.id);
                 return sources[(currentIndex + 1) % sources.length];
             });
-        }, 3500); // slightly faster rotation
+        }, 3500);
 
         return () => clearInterval(interval);
     }, [isHovering]);
@@ -171,28 +170,29 @@ export default function LandingReconciliation() {
     return (
         <div className="w-full max-w-7xl px-4 flex flex-col items-center">
 
-            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-0 bg-neutral-950/80 border border-white/10 rounded-xl backdrop-blur-md overflow-hidden shadow-2xl relative min-h-[600px]">
+            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-0 bg-neutral-950/80 border border-white/10 rounded-xl backdrop-blur-md overflow-hidden shadow-2xl relative min-h-[700px] lg:min-h-[600px]">
                 {/* Background Grid */}
                 <div className="absolute inset-0 z-0 pointer-events-none bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
-                {/* LEFT COLUMN: Sources List */}
-                <div className="lg:col-span-3 z-10 flex flex-col border-r border-white/5 bg-black/20 p-6">
-                    <h3 className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                {/* LEFT COLUMN: Sources List - Mobile: Horizontal Scroll, Desktop: Vertical List */}
+                <div className="col-span-1 lg:col-span-3 z-10 flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/20 p-4 lg:p-6 order-1">
+                    <h3 className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Globe className="w-3 h-3" /> Input Sources
                     </h3>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide snap-x snap-mandatory">
                         {sources.map((source) => (
                             <button
                                 key={source.id}
+                                onClick={() => setActiveSource(source)} // Add explicit click handler for mobile
                                 onMouseEnter={() => {
                                     setIsHovering(true);
                                     setActiveSource(source);
                                 }}
                                 onMouseLeave={() => setIsHovering(false)}
                                 className={cn(
-                                    "flex items-center gap-3 p-2 rounded-md transition-all duration-300 text-left relative overflow-hidden group z-10",
+                                    "flex items-center gap-3 p-2 rounded-md transition-all duration-300 text-left relative overflow-hidden group z-10 flex-shrink-0 w-36 lg:w-full snap-start border border-transparent",
                                     activeSource.id === source.id
-                                        ? "bg-white/10 text-white"
+                                        ? "bg-white/10 text-white border-white/10"
                                         : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
                                 )}
                             >
@@ -205,20 +205,24 @@ export default function LandingReconciliation() {
                                 <span className="text-[11px] font-mono truncate">{source.name}</span>
 
                                 {activeSource.id === source.id && (
-                                    <motion.div layoutId="active-indicator" className="w-0.5 h-full absolute left-0 top-0 bg-emerald-500 shadow-[0_0_10px_#10b981]" />
+                                    <motion.div layoutId="active-indicator" className="w-0.5 h-full absolute left-0 top-0 bg-emerald-500 shadow-[0_0_10px_#10b981] hidden lg:block" />
+                                )}
+                                {/* Mobile indicator at bottom */}
+                                {activeSource.id === source.id && (
+                                    <motion.div layoutId="active-indicator-mobile" className="h-0.5 w-full absolute bottom-0 left-0 bg-emerald-500 shadow-[0_0_10px_#10b981] lg:hidden" />
                                 )}
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* CENTER COLUMN: Processing Animation (The "Conduit") */}
-                <div className="lg:col-span-4 z-10 flex flex-col items-center justify-center relative py-10 lg:py-0 overflow-hidden bg-black/40">
+                {/* CENTER COLUMN: Processing Animation - Hidden/Compressed on Mobile */}
+                <div className="col-span-1 lg:col-span-4 z-10 flex flex-col items-center justify-center relative py-6 lg:py-0 overflow-hidden bg-black/40 border-b lg:border-b-0 lg:border-r border-white/5 order-2 h-24 lg:h-auto">
 
                     {/* Connecting Lines Context */}
-                    <div className="absolute inset-0 opacity-20">
+                    <div className="absolute inset-0 opacity-20 pointer-events-none">
                          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                         <div className="absolute left-1/2 top-0 h-full w-[1px] bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+                         <div className="absolute left-1/2 top-0 h-full w-[1px] bg-gradient-to-b from-transparent via-white/20 to-transparent hidden lg:block"></div>
                     </div>
 
                     {/* Data Packets Moving Left -> Right */}
@@ -249,31 +253,31 @@ export default function LandingReconciliation() {
                         </div>
                     </AnimatePresence>
 
-                    {/* Central Core Node */}
-                    <div className="relative group z-20">
-                        <div className="w-24 h-24 rounded-full border border-emerald-500/30 bg-black flex items-center justify-center relative z-10 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
+                    {/* Central Core Node - Smaller on Mobile */}
+                    <div className="relative group z-20 scale-75 lg:scale-100">
+                        <div className="w-16 h-16 lg:w-24 lg:h-24 rounded-full border border-emerald-500/30 bg-black flex items-center justify-center relative z-10 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
                              <div className="absolute inset-0 rounded-full border border-emerald-500/20 animate-[spin_4s_linear_infinite]"></div>
                              <div className="absolute inset-2 rounded-full border-t border-emerald-500 animate-[spin_2s_linear_infinite]"></div>
 
-                             <Activity className="w-8 h-8 text-emerald-500 animate-pulse" />
+                             <Activity className="w-6 h-6 lg:w-8 lg:h-8 text-emerald-500 animate-pulse" />
                         </div>
 
-                        {/* Text under core */}
-                        <div className="absolute top-28 left-1/2 -translate-x-1/2 text-center w-40">
+                        {/* Text under core - Hidden on very small screens, visible on desktop */}
+                        <div className="absolute top-20 lg:top-28 left-1/2 -translate-x-1/2 text-center w-40 hidden sm:block">
                              <div className="text-[9px] font-mono text-emerald-500 uppercase tracking-widest animate-pulse mb-1">Processing Stream</div>
                              <div className="text-[10px] text-neutral-400 font-mono">Normalization: Active</div>
                         </div>
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN: The Unified Dashboard */}
-                <div className="lg:col-span-5 z-20 flex flex-col bg-neutral-900 border-l border-white/10 relative">
+                {/* RIGHT COLUMN: The Unified Dashboard - Full Width on Mobile */}
+                <div className="col-span-1 lg:col-span-5 z-20 flex flex-col bg-neutral-900 lg:border-l border-white/10 relative order-3 min-h-[400px]">
 
                     {/* Dashboard Header Chrome */}
-                    <div className="h-10 border-b border-white/5 bg-black/40 flex items-center justify-between px-4">
+                    <div className="h-10 border-b border-white/5 bg-black/40 flex items-center justify-between px-4 sticky top-0 z-30 backdrop-blur-md">
                         <div className="flex items-center gap-2">
                              <Terminal className="w-3 h-3 text-neutral-500" />
-                             <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">Zerithum // Main_View</span>
+                             <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">Main_View</span>
                         </div>
                         <div className="flex items-center gap-2">
                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -282,13 +286,13 @@ export default function LandingReconciliation() {
                     </div>
 
                     {/* Dashboard Content Area */}
-                    <div className="flex-1 p-6 relative overflow-hidden flex flex-col">
+                    <div className="flex-1 p-4 lg:p-6 relative overflow-hidden flex flex-col">
 
                         {/* Total Balance / Key Metric Area */}
-                         <div className="mb-8 p-4 border border-white/5 bg-white/5 rounded-lg flex justify-between items-end">
+                         <div className="mb-6 p-4 border border-white/5 bg-white/5 rounded-lg flex justify-between items-end">
                             <div>
                                 <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">Total Balance (Unified)</div>
-                                <div className="text-2xl font-mono text-white tracking-tight">$45,200.00</div>
+                                <div className="text-xl lg:text-2xl font-mono text-white tracking-tight">$45,200.00</div>
                             </div>
                             <div className="text-right">
                                 <div className="text-[9px] font-mono text-emerald-500 uppercase bg-emerald-500/10 px-2 py-1 rounded">+12% vs last month</div>
@@ -323,21 +327,21 @@ export default function LandingReconciliation() {
                                                     isActive ? "border-white/10 shadow-lg" : "border-transparent"
                                                 )}
                                             >
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-3 overflow-hidden">
                                                     <div className={cn(
-                                                        "p-1.5 rounded",
+                                                        "p-1.5 rounded flex-shrink-0",
                                                         isActive ? "bg-black text-white" : "bg-white/5 text-neutral-500"
                                                     )}>
                                                         <tx.sourceIcon className="w-3 h-3" style={{ color: isActive ? tx.sourceColor : undefined }} />
                                                     </div>
-                                                    <div className="flex flex-col">
-                                                        <span className={cn("text-[11px] font-medium truncate max-w-[140px]", isActive ? "text-white" : "text-neutral-500")}>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className={cn("text-[11px] font-medium truncate block", isActive ? "text-white" : "text-neutral-500")}>
                                                             {tx.label}
                                                         </span>
-                                                        <span className="text-[9px] font-mono text-neutral-600">{tx.date} • {tx.sourceName}</span>
+                                                        <span className="text-[9px] font-mono text-neutral-600 truncate">{tx.date} • {tx.sourceName}</span>
                                                     </div>
                                                 </div>
-                                                <span className={cn("text-[11px] font-mono", isActive ? "text-white" : "text-neutral-600")}>
+                                                <span className={cn("text-[11px] font-mono ml-2 flex-shrink-0", isActive ? "text-white" : "text-neutral-600")}>
                                                     ${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                                 </span>
                                             </motion.div>
@@ -349,10 +353,10 @@ export default function LandingReconciliation() {
 
                          {/* Bottom status bar in dashboard */}
                          <div className="mt-auto pt-4 border-t border-white/5 flex justify-between items-center">
-                            <div className="text-[9px] font-mono text-neutral-600 uppercase">
+                            <div className="text-[9px] font-mono text-neutral-600 uppercase truncate mr-2">
                                 Syncing: <span className="text-white">{activeSource.name}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
+                            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex-shrink-0">
                                 <CheckCircle2 className="w-3 h-3" />
                                 <span className="text-[9px] font-bold uppercase tracking-widest">Reconciled</span>
                             </div>
@@ -363,8 +367,8 @@ export default function LandingReconciliation() {
             </div>
 
             {/* Footer Metadata - Outside the main container */}
-            <div className="w-full max-w-7xl mt-4 px-4 flex justify-between text-[9px] font-mono text-neutral-600 uppercase tracking-wider opacity-60">
-                <div className="flex gap-6">
+            <div className="w-full max-w-7xl mt-4 px-4 flex flex-col sm:flex-row justify-between text-[9px] font-mono text-neutral-600 uppercase tracking-wider opacity-60 gap-2 sm:gap-0 text-center sm:text-left">
+                <div className="flex gap-4 sm:gap-6 justify-center sm:justify-start">
                     <span>System Status: <span className="text-emerald-500">Operational</span></span>
                     <span>Uptime: <span className="text-neutral-400">99.99%</span></span>
                 </div>
@@ -373,9 +377,9 @@ export default function LandingReconciliation() {
                 </div>
             </div>
 
-            <div className="mt-12 text-center">
-                <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Unified Data Structure</h2>
-                <p className="text-neutral-400 max-w-md mx-auto text-lg font-light">
+            <div className="mt-12 text-center px-4">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">Unified Data Structure</h2>
+                <p className="text-neutral-400 max-w-md mx-auto text-base sm:text-lg font-light">
                     One dashboard for everything. We normalize, categorize, and verify every transaction from every source in real-time.
                 </p>
             </div>
