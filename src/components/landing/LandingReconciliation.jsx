@@ -14,7 +14,10 @@ import {
     ArrowRight,
     Play,
     Music,
-    Store
+    Store,
+    Layers,
+    Webhook,
+    CheckCircle2
 } from 'lucide-react';
 
 const sources = [
@@ -94,16 +97,29 @@ const sources = [
             { label: 'Live Gift Revenue', amount: 350.00, date: 'Oct 14' }
         ]
     },
+    {
+        id: 'integrations',
+        name: '20+ Integrations',
+        icon: Layers,
+        color: '#f59e0b',
+        total: 15000.00,
+        type: 'Ecosystem',
+        details: [
+            { label: 'Substack Newsletter', amount: 8000.00, date: 'Oct 01' },
+            { label: 'Kofi Donations', amount: 2500.00, date: 'Oct 12' },
+            { label: 'Shopify Store', amount: 4500.00, date: 'Oct 15' }
+        ]
+    },
      {
         id: 'custom',
-        name: 'Custom API',
-        icon: Database,
+        name: 'Connect Custom / API',
+        icon: Webhook,
         color: '#10b981',
         total: 4500.00,
-        type: 'External Source',
+        type: 'Universal Adapter',
         details: [
-            { label: 'Shopify Store (via API)', amount: 3000.00, date: 'Oct 02' },
-            { label: 'Direct Wire (Client X)', amount: 1500.00, date: 'Oct 28' }
+            { label: 'Legacy Shop System', amount: 3000.00, date: 'Oct 02' },
+            { label: 'Private Coaching Wire', amount: 1500.00, date: 'Oct 28' }
         ]
     }
 ];
@@ -129,16 +145,19 @@ export default function LandingReconciliation() {
     return (
         <div className="w-full max-w-6xl px-4 flex flex-col items-center">
 
-            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 bg-neutral-950/80 border border-white/10 rounded-xl backdrop-blur-md overflow-hidden shadow-2xl p-6 lg:p-10 relative min-h-[500px]">
+            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 bg-neutral-950/80 border border-white/10 rounded-xl backdrop-blur-md overflow-hidden shadow-2xl p-6 lg:p-10 relative min-h-[600px]">
                 {/* Background Grid */}
                 <div className="absolute inset-0 z-0 pointer-events-none bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
                 {/* LEFT COLUMN: Sources */}
-                <div className="lg:col-span-4 z-10 flex flex-col justify-center gap-3">
-                    <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Globe className="w-3 h-3" /> Connected Platforms
+                <div className="lg:col-span-4 z-10 flex flex-col justify-center gap-3 relative">
+                    <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-widest mb-4 flex items-center gap-2 pl-1">
+                        <Globe className="w-3 h-3" /> Input Sources
                     </h3>
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-1 gap-2 relative">
+                        {/* Connecting Line from active source to center */}
+                        <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-white/5 hidden lg:block" />
+
                         {sources.map((source) => (
                             <button
                                 key={source.id}
@@ -148,9 +167,9 @@ export default function LandingReconciliation() {
                                 }}
                                 onMouseLeave={() => setIsHovering(false)}
                                 className={cn(
-                                    "flex items-center gap-3 p-3 rounded-lg border transition-all duration-300 text-left relative overflow-hidden group",
+                                    "flex items-center gap-3 p-3 rounded-lg border transition-all duration-300 text-left relative overflow-hidden group z-10",
                                     activeSource.id === source.id
-                                        ? "bg-white/10 border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)]"
+                                        ? "bg-white/10 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)] translate-x-2"
                                         : "bg-transparent border-transparent hover:bg-white/5 hover:border-white/5 text-neutral-500"
                                 )}
                             >
@@ -175,7 +194,7 @@ export default function LandingReconciliation() {
                                     )}
                                 </div>
                                 {activeSource.id === source.id && (
-                                    <motion.div layoutId="active-indicator" className="w-1 h-full absolute left-0 top-0 bg-emerald-500" />
+                                    <motion.div layoutId="active-indicator" className="w-1 h-full absolute left-0 top-0 bg-emerald-500 shadow-[0_0_10px_#10b981]" />
                                 )}
                             </button>
                         ))}
@@ -183,7 +202,7 @@ export default function LandingReconciliation() {
                 </div>
 
                 {/* CENTER COLUMN: Processing Animation */}
-                <div className="lg:col-span-3 z-10 flex flex-col items-center justify-center relative py-10 lg:py-0">
+                <div className="lg:col-span-3 z-10 flex flex-col items-center justify-center relative py-10 lg:py-0 overflow-hidden">
 
                     {/* Data Flow Particles */}
                      <AnimatePresence mode="wait">
@@ -191,54 +210,75 @@ export default function LandingReconciliation() {
                             key={activeSource.id}
                             className="absolute inset-0 flex items-center justify-center pointer-events-none"
                         >
-                            {/* Particles flowing Right */}
-                            {[...Array(5)].map((_, i) => (
+                            {/* Particles flowing from Left to Center */}
+                            {[...Array(8)].map((_, i) => (
                                 <motion.div
                                     key={i}
-                                    className="absolute h-[1px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent w-24"
-                                    initial={{ x: -150, opacity: 0, scaleX: 0.5 }}
+                                    className="absolute h-[1px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent w-32"
+                                    initial={{ x: -200, opacity: 0, scaleX: 0.2 }}
                                     animate={{
-                                        x: 150,
+                                        x: 0,
                                         opacity: [0, 1, 0],
-                                        scaleX: [0.5, 1.5, 0.5]
+                                        scaleX: [0.2, 1, 0.2]
                                     }}
                                     transition={{
-                                        duration: 1.5,
+                                        duration: 2,
                                         repeat: Infinity,
-                                        delay: i * 0.2,
-                                        ease: "linear"
+                                        delay: i * 0.15,
+                                        ease: "easeInOut"
                                     }}
-                                    style={{ top: `${45 + (i * 5)}%` }}
+                                    style={{
+                                        top: `${40 + (i * 3) + (Math.random() * 10 - 5)}%`,
+                                        filter: 'blur(0.5px)'
+                                    }}
                                 />
                             ))}
                         </motion.div>
                     </AnimatePresence>
 
                     {/* Central Core Node */}
-                    <div className="relative">
-                        <div className="w-24 h-24 rounded-full border border-white/10 bg-black flex items-center justify-center relative z-10 shadow-[0_0_50px_rgba(16,185,129,0.1)]">
-                             <div className="absolute inset-0 rounded-full border border-emerald-500/30 animate-[spin_10s_linear_infinite]"></div>
-                             <div className="absolute inset-2 rounded-full border border-emerald-500/10 animate-[spin_7s_linear_infinite_reverse]"></div>
-                             <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_#10b981]"></div>
+                    <div className="relative group">
+                        <div className="w-32 h-32 rounded-full border border-white/10 bg-black flex items-center justify-center relative z-10 shadow-[0_0_60px_rgba(16,185,129,0.15)] transition-shadow duration-500 group-hover:shadow-[0_0_80px_rgba(16,185,129,0.25)]">
+                             <div className="absolute inset-0 rounded-full border border-emerald-500/20 animate-[spin_12s_linear_infinite]"></div>
+                             <div className="absolute inset-4 rounded-full border border-emerald-500/10 animate-[spin_8s_linear_infinite_reverse]"></div>
+
+                             {/* Core Pulse */}
+                             <div className="w-4 h-4 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_20px_#10b981]"></div>
+
+                             {/* Consolidation Rings */}
+                             <div className="absolute inset-0 rounded-full border border-white/5 animate-ping opacity-20" style={{ animationDuration: '3s' }}></div>
                         </div>
+
                         {/* Connecting Lines */}
-                        <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent -z-10"></div>
-                        <div className="absolute left-1/2 top-0 h-full w-[1px] bg-gradient-to-b from-transparent via-white/10 to-transparent -z-10"></div>
+                        <div className="absolute top-1/2 left-[-100px] w-[100px] h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent -z-10"></div>
+                        <div className="absolute top-1/2 right-[-100px] w-[100px] h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent -z-10"></div>
                     </div>
 
-                    <div className="mt-6 text-center">
-                        <div className="text-[10px] font-mono text-emerald-500 uppercase tracking-widest animate-pulse">Processing Stream</div>
-                        <div className="text-[10px] text-neutral-600 font-mono mt-1">Structurally Consolidating...</div>
+                    <div className="mt-8 text-center relative">
+                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-px h-6 bg-gradient-to-b from-white/10 to-transparent"></div>
+                        <div className="text-[10px] font-mono text-emerald-500 uppercase tracking-widest animate-pulse">Consolidating</div>
+                        <div className="text-xs text-white font-medium mt-1">Zerithum Core</div>
                     </div>
                 </div>
 
                 {/* RIGHT COLUMN: Financial Story */}
-                <div className="lg:col-span-5 z-10 flex flex-col justify-center">
-                    <div className="h-full border border-white/10 bg-black/40 rounded-lg p-6 flex flex-col relative overflow-hidden">
-                        {/* Header */}
-                        <div className="flex justify-between items-start border-b border-white/5 pb-4 mb-4">
+                <div className="lg:col-span-5 z-10 flex flex-col justify-center pl-0 lg:pl-6 relative">
+                    {/* Connecting Line from Center */}
+                    <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-white/5 hidden lg:block" />
+
+                    <div className="h-full border border-white/10 bg-black/40 rounded-lg p-6 flex flex-col relative overflow-hidden backdrop-blur-sm">
+                        {/* Dashboard Header UI */}
+                        <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
+                                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">Live Dashboard</span>
+                            </div>
+                            <div className="text-[10px] font-mono text-neutral-600">ID: {activeSource.id.toUpperCase()}-882</div>
+                        </div>
+
+                        <div className="flex justify-between items-start mb-6">
                             <div>
-                                <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">Source Analysis</div>
+                                <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">Source Stream</div>
                                 <motion.div
                                     key={activeSource.name}
                                     initial={{ opacity: 0, y: 5 }}
@@ -255,7 +295,7 @@ export default function LandingReconciliation() {
                                     key={activeSource.total}
                                     initial={{ opacity: 0, y: 5 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="text-xl font-mono text-emerald-400"
+                                    className="text-xl font-mono text-emerald-400 tabular-nums"
                                 >
                                     ${activeSource.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                 </motion.div>
@@ -264,7 +304,10 @@ export default function LandingReconciliation() {
 
                         {/* Detailed "Financial Story" List */}
                         <div className="flex-1 space-y-3 relative">
-                            <div className="text-[10px] font-mono text-neutral-600 uppercase mb-2">Transaction Breakdown (Layer 2)</div>
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-[10px] font-mono text-neutral-600 uppercase">Transaction Layer</span>
+                                <span className="text-[10px] font-mono text-neutral-700 uppercase">Auto-Tagging Active</span>
+                            </div>
 
                             <AnimatePresence mode="wait">
                                 <motion.div
@@ -281,13 +324,16 @@ export default function LandingReconciliation() {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: idx * 0.1 }}
-                                            className="flex justify-between items-center p-2 rounded bg-white/5 border border-white/5 hover:border-white/10 transition-colors"
+                                            className="flex justify-between items-center p-3 rounded bg-white/5 border border-white/5 hover:border-white/10 transition-colors group/item"
                                         >
                                             <div className="flex flex-col">
-                                                <span className="text-xs text-neutral-300 font-medium">{item.label}</span>
-                                                <span className="text-[10px] text-neutral-600 font-mono">{item.date}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-1 h-1 rounded-full bg-neutral-600 group-hover/item:bg-white transition-colors"></span>
+                                                    <span className="text-xs text-neutral-300 font-medium">{item.label}</span>
+                                                </div>
+                                                <span className="text-[10px] text-neutral-600 font-mono pl-3">{item.date}</span>
                                             </div>
-                                            <span className="text-xs font-mono text-white">
+                                            <span className="text-xs font-mono text-white tabular-nums">
                                                 ${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                             </span>
                                         </motion.div>
@@ -295,17 +341,30 @@ export default function LandingReconciliation() {
                                 </motion.div>
                             </AnimatePresence>
 
-                            {/* Fictional "Verified" Stamp */}
+                            {/* Enhanced Verified Badge */}
                             <motion.div
                                 key={activeSource.id + 'verified'}
-                                initial={{ opacity: 0, scale: 2, rotate: -20 }}
-                                animate={{ opacity: 1, scale: 1, rotate: -12 }}
-                                transition={{ delay: 0.5, type: "spring" }}
-                                className="absolute bottom-4 right-4 border-2 border-emerald-500/30 text-emerald-500/30 text-xs font-black uppercase px-2 py-1 tracking-widest rounded rotate-[-12deg] pointer-events-none"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.6 }}
+                                className="absolute bottom-2 right-2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500"
                             >
-                                Reconciled
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Verified</span>
                             </motion.div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Footer Status Bar */}
+                <div className="col-span-12 mt-6 pt-6 border-t border-white/5 flex justify-between text-[10px] font-mono text-neutral-600 uppercase tracking-wider">
+                    <div className="flex gap-6">
+                        <span>Status: <span className="text-emerald-500">Online</span></span>
+                        <span>Latency: <span className="text-neutral-400">24ms</span></span>
+                        <span>Sync Rate: <span className="text-neutral-400">99.9%</span></span>
+                    </div>
+                    <div>
+                        System Version 2.4.0
                     </div>
                 </div>
 
