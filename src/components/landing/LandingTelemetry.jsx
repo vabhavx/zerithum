@@ -18,11 +18,13 @@ const initialData = [
   { time: '20:00', revenue: 8600, cashflow: 3800 },
 ];
 
-export default function LandingTelemetry() {
+export default function LandingTelemetry({ isActive = true }) {
     const [data, setData] = useState(initialData);
 
     // Simulate subtle live data updates
     useEffect(() => {
+        if (!isActive) return;
+
         const interval = setInterval(() => {
             setData(prev => {
                 const last = prev[prev.length - 1];
@@ -42,7 +44,7 @@ export default function LandingTelemetry() {
             });
         }, 2000);
         return () => clearInterval(interval);
-    }, []);
+    }, [isActive]);
 
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {

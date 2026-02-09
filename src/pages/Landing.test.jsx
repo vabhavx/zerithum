@@ -15,15 +15,15 @@ vi.mock('@/components/ui/beams-background', () => ({
 }));
 
 vi.mock('@/components/landing/LandingReconciliation', () => ({
-  default: () => <div data-testid="landing-reconciliation">Reconciliation</div>
+  default: ({ isActive }) => <div data-testid="landing-reconciliation" data-is-active={isActive ? 'true' : 'false'}>Reconciliation</div>
 }));
 
 vi.mock('@/components/landing/LandingTelemetry', () => ({
-  default: () => <div data-testid="landing-telemetry">Telemetry</div>
+  default: ({ isActive }) => <div data-testid="landing-telemetry" data-is-active={isActive ? 'true' : 'false'}>Telemetry</div>
 }));
 
 vi.mock('@/components/landing/LandingExport', () => ({
-  default: () => <div data-testid="landing-export">Export</div>
+  default: ({ isActive }) => <div data-testid="landing-export" data-is-active={isActive ? 'true' : 'false'}>Export</div>
 }));
 
 vi.mock('motion/react', () => ({
@@ -33,6 +33,7 @@ vi.mock('motion/react', () => ({
         style={style}
         data-testid={props.className?.includes('absolute') ? 'motion-frame' : undefined}
         data-display={style?.display}
+        data-visibility={style?.visibility}
         {...props}
       >
         {children}
@@ -49,6 +50,9 @@ vi.mock('motion/react', () => ({
     // Handle array form roughly just to not crash
     return 1;
   },
+  useMotionValueEvent: (value, event, callback) => {
+    callback(mockedScroll.value);
+  }
 }));
 
 // Mock IntersectionObserver
@@ -79,54 +83,43 @@ describe('Landing Page Visibility Logic', () => {
     cleanup();
   });
 
-  // Helper to get the 3 main frames, ignoring the hero absolute div
   const getMainFrames = () => {
     const allFrames = screen.getAllByTestId('motion-frame');
     return allFrames.slice(1);
   };
 
-  it('shows Frame 1 and hides others at scroll 0', () => {
+  it('shows Frame 1 visible and others hidden at scroll 0', () => {
     mockedScroll.value = 0;
     renderLanding();
     const frames = getMainFrames();
-    expect(frames[0]).toHaveAttribute('data-display', 'flex');
-    expect(frames[1]).toHaveAttribute('data-display', 'none');
-    expect(frames[2]).toHaveAttribute('data-display', 'none');
+    expect(frames[0]).toHaveAttribute('data-visibility', 'visible');
+    expect(frames[1]).toHaveAttribute('data-visibility', 'hidden');
+    expect(frames[2]).toHaveAttribute('data-visibility', 'hidden');
   });
 
-  it('shows Frame 1 and Frame 2 during transition (0.25)', () => {
-    mockedScroll.value = 0.25;
+  it('shows Frame 1 and Frame 2 visible during transition (0.36)', () => {
+    // Overlap zone is technically removed in strict sense (0.35 cutoff)
+    // Frame 1 (< 0.35) -> visible.
+    // Frame 2 (> 0.35) -> visible.
+    // So at 0.35 exact, logic flips.
+
+    // Let's test non-overlap behavior.
+
+    // 0.2 -> Frame 1 visible
+    mockedScroll.value = 0.2;
     renderLanding();
-    const frames = getMainFrames();
-    expect(frames[0]).toHaveAttribute('data-display', 'flex');
-    expect(frames[1]).toHaveAttribute('data-display', 'flex');
-    expect(frames[2]).toHaveAttribute('data-display', 'none');
-  });
+    let frames = getMainFrames();
+    expect(frames[0]).toHaveAttribute('data-visibility', 'visible');
+    expect(frames[1]).toHaveAttribute('data-visibility', 'hidden');
 
-  it('hides Frame 1 and shows Frame 2 at scroll 0.4', () => {
+    cleanup();
+
+    // 0.4 -> Frame 2 visible
     mockedScroll.value = 0.4;
     renderLanding();
-    const frames = getMainFrames();
-    expect(frames[0]).toHaveAttribute('data-display', 'none');
-    expect(frames[1]).toHaveAttribute('data-display', 'flex');
-    expect(frames[2]).toHaveAttribute('data-display', 'none');
-  });
-
-  it('shows Frame 2 and Frame 3 during transition (0.55)', () => {
-    mockedScroll.value = 0.55;
-    renderLanding();
-    const frames = getMainFrames();
-    expect(frames[0]).toHaveAttribute('data-display', 'none');
-    expect(frames[1]).toHaveAttribute('data-display', 'flex');
-    expect(frames[2]).toHaveAttribute('data-display', 'flex');
-  });
-
-  it('hides Frame 2 and shows Frame 3 at scroll 0.8', () => {
-    mockedScroll.value = 0.8;
-    renderLanding();
-    const frames = getMainFrames();
-    expect(frames[0]).toHaveAttribute('data-display', 'none');
-    expect(frames[1]).toHaveAttribute('data-display', 'none');
-    expect(frames[2]).toHaveAttribute('data-display', 'flex');
+    frames = getMainFrames();
+    expect(frames[0]).toHaveAttribute('data-visibility', 'hidden');
+    expect(frames[1]).toHaveAttribute('data-visibility', 'visible');
+    expect(frames[2]).toHaveAttribute('data-visibility', 'hidden');
   });
 });

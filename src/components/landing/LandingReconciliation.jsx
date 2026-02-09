@@ -141,7 +141,7 @@ const allTransactions = sources.flatMap(source =>
     return a.label.length - b.label.length;
 });
 
-export default function LandingReconciliation() {
+export default function LandingReconciliation({ isActive = true }) {
     const [activeSource, setActiveSource] = useState(sources[0]);
     const [isHovering, setIsHovering] = useState(false);
 
@@ -155,7 +155,7 @@ export default function LandingReconciliation() {
 
     // Auto-rotate through sources if not hovering
     useEffect(() => {
-        if (isHovering) return;
+        if (isHovering || !isActive) return;
 
         const interval = setInterval(() => {
             setActiveSource((current) => {
@@ -165,7 +165,7 @@ export default function LandingReconciliation() {
         }, 3500);
 
         return () => clearInterval(interval);
-    }, [isHovering]);
+    }, [isHovering, isActive]);
 
     return (
         <div className="w-full max-w-7xl px-4 flex flex-col items-center">
@@ -226,7 +226,7 @@ export default function LandingReconciliation() {
                     </div>
 
                     {/* Data Packets Moving Left -> Right */}
-                     <AnimatePresence mode="wait">
+                    {isActive && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             {[...Array(6)].map((_, i) => (
                                 <motion.div
@@ -251,7 +251,7 @@ export default function LandingReconciliation() {
                                 />
                             ))}
                         </div>
-                    </AnimatePresence>
+                    )}
 
                     {/* Central Core Node - Smaller on Mobile */}
                     <div className="relative group z-20 scale-75 lg:scale-100">
