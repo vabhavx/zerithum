@@ -13,6 +13,7 @@ import { Loader2 } from 'lucide-react';
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+const LandingPage = Pages['Landing'] || (() => <></>);
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -29,10 +30,11 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated } = useAuth();
 
   // Public routes that don't require authentication
-  const publicRoutes = ['Login', 'Signup', 'AuthCallback'];
+  const publicRoutes = ['Login', 'Signup', 'AuthCallback', 'SignIn', 'Landing'];
   // Remove leading slash for matching
   const currentPath = window.location.pathname.substring(1);
   const isPublicRoute = publicRoutes.some(route => route.toLowerCase() === currentPath.toLowerCase());
+  const isRoot = currentPath === '';
 
   const [showSlowLoadingMessage, setShowSlowLoadingMessage] = React.useState(false);
 
@@ -76,7 +78,7 @@ const AuthenticatedApp = () => {
   }
 
   // Redirect to login if not authenticated and trying to access protected route
-  if (!isAuthenticated && !isPublicRoute && !isLoadingAuth) {
+  if (!isAuthenticated && !isPublicRoute && !isRoot && !isLoadingAuth) {
     navigateToLogin();
     return null;
   }
@@ -86,9 +88,13 @@ const AuthenticatedApp = () => {
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/" element={
-          <LayoutWrapper currentPageName={mainPageKey}>
-            <MainPage />
-          </LayoutWrapper>
+          isAuthenticated ? (
+            <LayoutWrapper currentPageName={mainPageKey}>
+              <MainPage />
+            </LayoutWrapper>
+          ) : (
+            <LandingPage />
+          )
         } />
         {Object.entries(Pages).map(([path, Page]) => (
           <Route

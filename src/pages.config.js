@@ -1,6 +1,7 @@
 import AuthCallback from './pages/AuthCallback';
 import ConnectedApps from './pages/ConnectedApps';
-import Login from './pages/Login';
+import Landing from './pages/Landing';
+import SignIn from './pages/SignIn';
 import Signup from './pages/Signup';
 import ConnectedPlatforms from './pages/ConnectedPlatforms';
 import Dashboard from './pages/Dashboard';
@@ -36,7 +37,9 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "Expenses": Expenses,
     "Help": Help,
-    "Login": Login,
+    "Login": Landing,
+    "Landing": Landing,
+    "SignIn": SignIn,
     "Notifications": Notifications,
     "Platforms": Platforms,
     "Pricing": Pricing,

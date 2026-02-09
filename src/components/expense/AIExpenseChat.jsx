@@ -3,7 +3,7 @@ import { base44 } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sparkles, Send, Loader2, Bot, User, Zap } from "lucide-react";
+import { Sparkles, Send, Loader2, Bot, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 
