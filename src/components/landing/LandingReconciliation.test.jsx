@@ -12,32 +12,34 @@ vi.mock('framer-motion', () => ({
 }));
 
 describe('LandingReconciliation', () => {
-  it('renders the component with new data sources', () => {
+  it('renders the component with unified dashboard elements', () => {
     render(<LandingReconciliation />);
 
-    // Check for new items
+    // Check for new items in the source list
     expect(screen.getByText('20+ Integrations')).toBeInTheDocument();
     expect(screen.getByText('Connect Custom / API')).toBeInTheDocument();
 
     // Check for consolidation/dashboard elements
-    expect(screen.getByText('Consolidating')).toBeInTheDocument();
-    expect(screen.getByText('Zerithum Core')).toBeInTheDocument();
-    expect(screen.getByText('Live Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Processing Stream')).toBeInTheDocument();
+    expect(screen.getByText('Normalization: Active')).toBeInTheDocument();
+    expect(screen.getByText('Zerithum // Main_View')).toBeInTheDocument();
+    expect(screen.getByText('Total Balance (Unified)')).toBeInTheDocument();
   });
 
-  it('updates active source on hover', async () => {
+  it('updates dashboard view on source hover', async () => {
     render(<LandingReconciliation />);
 
     const integrationsButton = screen.getByText('20+ Integrations').closest('button');
 
-    // Initial state (YouTube is usually first)
-    expect(screen.getByText('AdSense & Memberships')).toBeInTheDocument();
+    // Initial state: YouTube transactions should be visible (and highlighted/active)
+    // We check for a specific transaction label
+    expect(screen.getByText('Video: "My Studio Setup 2024"')).toBeInTheDocument();
 
     // Hover over Integrations
     fireEvent.mouseEnter(integrationsButton);
 
-    // Should now show Ecosystem details
-    expect(await screen.findByText('Ecosystem')).toBeInTheDocument();
+    // Wait for the UI to update and show the new transactions
+    // "Substack Newsletter" is a transaction under "20+ Integrations"
     expect(await screen.findByText('Substack Newsletter')).toBeInTheDocument();
   });
 });
