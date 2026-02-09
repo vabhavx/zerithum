@@ -311,7 +311,7 @@ export default function LandingReconciliation({ isActive = true }) {
                                         const isActive = tx.sourceId === activeSource.id;
                                         return (
                                             <motion.div
-                                                layout
+                                                // Removed 'layout' prop for better scroll performance during source switching
                                                 key={tx.id}
                                                 initial={{ opacity: 0, x: -20 }}
                                                 animate={{
@@ -321,7 +321,7 @@ export default function LandingReconciliation({ isActive = true }) {
                                                     backgroundColor: isActive ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0)"
                                                 }}
                                                 exit={{ opacity: 0, x: 20 }}
-                                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                                transition={{ duration: 0.2 }}
                                                 className={cn(
                                                     "flex justify-between items-center p-2.5 rounded border mb-2",
                                                     isActive ? "border-white/10 shadow-lg" : "border-transparent"

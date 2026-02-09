@@ -8,20 +8,15 @@ import LandingTelemetry from '@/components/landing/LandingTelemetry';
 import LandingExport from '@/components/landing/LandingExport';
 import { ArrowRight } from 'lucide-react';
 
-export default function Landing() {
+// Internal component to handle scroll state and logic
+// This isolates the re-renders caused by activeFrame state changes
+// so the heavy BeamsBackground (which is a parent in the main component) doesn't re-render.
+function LandingScrollSections() {
     const containerRef = useRef(null);
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ["start start", "end end"]
     });
-
-    // Use state to track active frame for children optimization
-    // (Using React state causes re-renders on scroll, which is bad for perf.
-    // Instead, we will pass the motion value or use a transform inside the child,
-    // OR just accept that we need to re-render strictly at transition points.
-    // A better approach for performance: Pass the raw motion value and let the child decide?
-    // No, child components need a boolean to start/stop intervals.
-    // Let's use useMotionValueEvent to update state only when crossing thresholds.)
 
     const [activeFrame, setActiveFrame] = React.useState(1);
 
@@ -35,26 +30,56 @@ export default function Landing() {
         }
     });
 
-    // Transform logic for 3 frames over a long scroll area
-    // Revised to prevent overlap (sequential visibility)
-    // Frame 1: 0 -> 0.3 (Visible). 0.3 -> 0.35 (Fade Out).
+    // Transform logic for 3 frames
     const opacity1 = useTransform(scrollYProgress, [0, 0.3, 0.35], [1, 1, 0]);
     const scale1 = useTransform(scrollYProgress, [0, 0.3, 0.35], [1, 1, 0.95]);
     const pointerEvents1 = useTransform(scrollYProgress, (val) => val < 0.35 ? 'auto' : 'none');
     const visibility1 = useTransform(scrollYProgress, (val) => val < 0.35 ? 'visible' : 'hidden');
 
-    // Frame 2: 0.35 -> 0.4 (Fade In). 0.4 -> 0.6 (Visible). 0.6 -> 0.65 (Fade Out).
     const opacity2 = useTransform(scrollYProgress, [0.35, 0.4, 0.6, 0.65], [0, 1, 1, 0]);
     const scale2 = useTransform(scrollYProgress, [0.35, 0.4, 0.6, 0.65], [0.95, 1, 1, 0.95]);
     const pointerEvents2 = useTransform(scrollYProgress, (val) => val > 0.35 && val < 0.65 ? 'auto' : 'none');
     const visibility2 = useTransform(scrollYProgress, (val) => val > 0.35 && val < 0.65 ? 'visible' : 'hidden');
 
-    // Frame 3: 0.65 -> 0.7 (Fade In). 0.7 -> 1.0 (Visible).
     const opacity3 = useTransform(scrollYProgress, [0.65, 0.7, 1.0], [0, 1, 1]);
     const scale3 = useTransform(scrollYProgress, [0.65, 0.7, 1.0], [0.95, 1, 1]);
     const pointerEvents3 = useTransform(scrollYProgress, (val) => val > 0.65 ? 'auto' : 'none');
     const visibility3 = useTransform(scrollYProgress, (val) => val > 0.65 ? 'visible' : 'hidden');
 
+    return (
+        <div ref={containerRef} className="relative h-[400vh] w-full z-10">
+            <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
+
+                {/* Frame 1: Reconciliation */}
+                <motion.div
+                    style={{ opacity: opacity1, scale: scale1, pointerEvents: pointerEvents1, visibility: visibility1 }}
+                    className="absolute w-full flex justify-center items-center will-change-transform"
+                >
+                    <LandingReconciliation isActive={activeFrame === 1} />
+                </motion.div>
+
+                {/* Frame 2: Telemetry */}
+                <motion.div
+                    style={{ opacity: opacity2, scale: scale2, pointerEvents: pointerEvents2, visibility: visibility2 }}
+                    className="absolute w-full flex justify-center items-center will-change-transform"
+                >
+                    <LandingTelemetry isActive={activeFrame === 2} />
+                </motion.div>
+
+                {/* Frame 3: Export */}
+                <motion.div
+                    style={{ opacity: opacity3, scale: scale3, pointerEvents: pointerEvents3, visibility: visibility3 }}
+                    className="absolute w-full flex justify-center items-center will-change-transform"
+                >
+                    <LandingExport isActive={activeFrame === 3} />
+                </motion.div>
+
+            </div>
+        </div>
+    );
+}
+
+export default function Landing() {
     return (
         <BeamsBackground className="overflow-visible" intensity="medium">
             {/* Tech Grid Overlay */}
@@ -116,36 +141,8 @@ export default function Landing() {
                 </motion.div>
             </div>
 
-            {/* Sticky Scroll Section for Features */}
-            <div ref={containerRef} className="relative h-[400vh] w-full z-10">
-                <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
-
-                    {/* Frame 1: Reconciliation */}
-                    <motion.div
-                        style={{ opacity: opacity1, scale: scale1, pointerEvents: pointerEvents1, visibility: visibility1 }}
-                        className="absolute w-full flex justify-center items-center will-change-transform"
-                    >
-                        <LandingReconciliation isActive={activeFrame === 1} />
-                    </motion.div>
-
-                    {/* Frame 2: Telemetry */}
-                    <motion.div
-                        style={{ opacity: opacity2, scale: scale2, pointerEvents: pointerEvents2, visibility: visibility2 }}
-                        className="absolute w-full flex justify-center items-center will-change-transform"
-                    >
-                        <LandingTelemetry isActive={activeFrame === 2} />
-                    </motion.div>
-
-                    {/* Frame 3: Export */}
-                    <motion.div
-                        style={{ opacity: opacity3, scale: scale3, pointerEvents: pointerEvents3, visibility: visibility3 }}
-                        className="absolute w-full flex justify-center items-center will-change-transform"
-                    >
-                        <LandingExport isActive={activeFrame === 3} />
-                    </motion.div>
-
-                </div>
-            </div>
+            {/* Sticky Scroll Logic Isolated */}
+            <LandingScrollSections />
 
             {/* Final CTA Section */}
             <div className="relative min-h-[70vh] flex flex-col items-center justify-center px-4 z-10 bg-gradient-to-b from-transparent via-neutral-950/50 to-neutral-950">
