@@ -40,6 +40,7 @@ export async function detectAnomalies(
     });
 
     const weeks = Object.entries(weeklyRevenue).sort();
+    let recentAutopsies: any[] | null = null;
 
     // Detect revenue drops/spikes
     for (let i = 1; i < weeks.length; i++) {
@@ -52,8 +53,10 @@ export async function detectAnomalies(
       const change = ((currAmount - prevAmount) / prevAmount) * 100;
 
       if (Math.abs(change) > 15) {
-        // Check if autopsy already exists recently
-        const recentAutopsies = await ctx.fetchRecentAutopsies(user.id, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+        // Check if autopsy already exists recently (lazy load and cache for this run)
+        if (!recentAutopsies) {
+          recentAutopsies = await ctx.fetchRecentAutopsies(user.id, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+        }
 
         if (recentAutopsies.length === 0) {
           // Perform causal reconstruction using LLM
