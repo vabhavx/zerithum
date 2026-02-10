@@ -139,7 +139,7 @@ export function BeamsBackground({
             if (!canvas || !ctx) return;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.filter = "blur(35px)";
+            // ctx.filter removed for performance - relying on CSS filter
 
             const totalBeams = beamsRef.current.length;
             beamsRef.current.forEach((beam, index) => {
