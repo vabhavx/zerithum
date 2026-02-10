@@ -271,7 +271,7 @@ export default function Pricing() {
               <Button
                 size="lg"
                 onClick={() => handlePlanSelect(plans[0])}
-                className="bg-zteal-400 text-white text-lg px-8 h-14 rounded-xl hover:bg-zteal-600 w-full sm:w-auto"
+                className="bg-zteal-400 text-white text-lg px-8 h-14 rounded-sm hover:bg-zteal-600 w-full sm:w-auto"
               >
                 Start free
               </Button>
@@ -279,7 +279,7 @@ export default function Pricing() {
                 size="lg"
                 variant="outline"
                 onClick={() => handleCTA("book_demo")}
-                className="border-white/20 text-white hover:bg-white/5 text-lg px-8 h-14 rounded-xl w-full sm:w-auto"
+                className="border-white/20 text-white hover:bg-white/5 text-lg px-8 h-14 rounded-sm w-full sm:w-auto"
               >
                 Book a demo
               </Button>
@@ -294,7 +294,7 @@ export default function Pricing() {
       {/* Plan Toggle */}
       <section className="py-8 px-6">
         <div className="max-w-7xl mx-auto flex justify-center">
-          <div className="inline-flex items-center gap-3 p-1.5 rounded-xl bg-white/5 border border-white/10">
+          <div className="inline-flex items-center gap-3 p-1.5 rounded-sm bg-white/5 border border-white/10">
             <button
               onClick={() => setBillingPeriod("monthly")}
               className={cn(
@@ -334,7 +334,7 @@ export default function Pricing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               className={cn(
-                "card-modern rounded-2xl p-8 relative",
+                "border border-border bg-card rounded-md p-8 relative",
                 plan.popular && "ring-2 ring-indigo-500/50"
               )}
             >
@@ -381,7 +381,7 @@ export default function Pricing() {
                 onClick={() => handlePlanSelect(plan)}
                 disabled={processingPayment === plan.name}
                 className={cn(
-                  "w-full mb-6 h-12 rounded-xl",
+                  "w-full mb-6 h-12 rounded-sm",
                   plan.popular
                     ? "bg-zteal-400 text-white hover:bg-zteal-600"
                     : "bg-white/5 text-white hover:bg-white/10 border border-white/10"
@@ -494,9 +494,9 @@ export default function Pricing() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="card-modern rounded-2xl p-8"
+                  className="border border-border bg-card rounded-md p-8"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-zteal-400/20 to-purple-500/20 border border-white/10 flex items-center justify-center mb-6">
+                  <div className="w-12 h-12 rounded-sm bg-gradient-to-br from-zteal-400/20 to-purple-500/20 border border-white/10 flex items-center justify-center mb-6">
                     <Icon className="w-6 h-6 text-zteal-400" />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-3">{block.title}</h3>
@@ -523,7 +523,7 @@ export default function Pricing() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="card-modern rounded-xl overflow-hidden"
+                className="border border-border bg-card rounded-sm overflow-hidden"
               >
                 <button
                   onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
@@ -553,7 +553,7 @@ export default function Pricing() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="card-modern rounded-2xl p-12"
+            className="border border-border bg-card rounded-md p-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
               Stop guessing where your money went
@@ -562,7 +562,7 @@ export default function Pricing() {
               <Button
                 size="lg"
                 onClick={() => handlePlanSelect(plans[0])}
-                className="bg-zteal-400 text-white text-lg px-8 h-14 rounded-xl hover:bg-zteal-600 w-full sm:w-auto"
+                className="bg-zteal-400 text-white text-lg px-8 h-14 rounded-sm hover:bg-zteal-600 w-full sm:w-auto"
               >
                 Start free
               </Button>
@@ -570,7 +570,7 @@ export default function Pricing() {
                 size="lg"
                 variant="outline"
                 onClick={() => handleCTA("book_demo")}
-                className="border-white/20 text-white hover:bg-white/5 text-lg px-8 h-14 rounded-xl w-full sm:w-auto"
+                className="border-white/20 text-white hover:bg-white/5 text-lg px-8 h-14 rounded-sm w-full sm:w-auto"
               >
                 Book a demo
               </Button>

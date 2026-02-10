@@ -120,7 +120,7 @@ export default function RevenueAutopsy() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card-modern rounded-xl p-4"
+          className="border border-border bg-card rounded-sm p-4"
         >
           <AlertTriangle className="w-5 h-5 text-red-400 mb-2" />
           <p className="text-xs text-white/50">Pending Review</p>
@@ -131,7 +131,7 @@ export default function RevenueAutopsy() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card-modern rounded-xl p-4"
+          className="border border-border bg-card rounded-sm p-4"
         >
           <CheckCircle2 className="w-5 h-5 text-emerald-400 mb-2" />
           <p className="text-xs text-white/50">Resolved</p>
@@ -142,7 +142,7 @@ export default function RevenueAutopsy() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card-modern rounded-xl p-4"
+          className="border border-border bg-card rounded-sm p-4"
         >
           <Target className="w-5 h-5 text-amber-400 mb-2" />
           <p className="text-xs text-white/50">Avg Exposure</p>
@@ -155,7 +155,7 @@ export default function RevenueAutopsy() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="card-modern rounded-xl p-4"
+          className="border border-border bg-card rounded-sm p-4"
         >
           <TrendingDown className="w-5 h-5 text-zteal-400 mb-2" />
           <p className="text-xs text-white/50">Total Impact</p>
@@ -195,7 +195,7 @@ export default function RevenueAutopsy() {
 
       {/* Decision Dialog */}
       <Dialog open={showDecisionDialog} onOpenChange={setShowDecisionDialog}>
-        <DialogContent className="card-modern rounded-2xl border max-w-lg">
+        <DialogContent className="border border-border bg-card rounded-md border max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-white">Record Your Decision</DialogTitle>
           </DialogHeader>

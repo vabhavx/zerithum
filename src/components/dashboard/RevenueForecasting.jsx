@@ -17,8 +17,8 @@ import { format, addMonths, startOfMonth } from 'date-fns';
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1A1A1A] border border-white/10 rounded-lg p-3 shadow-xl">
-        <p className="text-white text-sm font-semibold mb-2">{label}</p>
+      <div className="bg-popover border border-border rounded-lg p-3 shadow-xl">
+        <p className="text-foreground text-sm font-semibold mb-2">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} className="text-xs" style={{ color: entry.color }}>
             {entry.name}: ${entry.value.toFixed(0)}
@@ -78,20 +78,20 @@ export default function RevenueForecasting({ transactions }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card-modern rounded-xl p-6"
+      className="border border-border bg-card rounded-none p-6"
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-white/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-border flex items-center justify-center">
             <Activity className="w-5 h-5 text-purple-400" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Revenue Forecast</h3>
-            <p className="text-xs text-white/40">3-month projection based on trends</p>
+            <h3 className="text-lg font-bold text-foreground">Revenue Forecast</h3>
+            <p className="text-xs text-foreground/40">3-month projection based on trends</p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xs text-white/40">Projected (3mo)</p>
+          <p className="text-xs text-foreground/40">Projected (3mo)</p>
           <p className="text-xl font-bold text-purple-400">${totalForecast.toFixed(0)}</p>
         </div>
       </div>

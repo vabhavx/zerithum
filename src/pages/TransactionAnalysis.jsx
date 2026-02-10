@@ -157,7 +157,7 @@ export default function TransactionAnalysis() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card-modern rounded-xl p-4"
+          className="border border-border bg-card rounded-sm p-4"
         >
           <p className="text-white/50 text-xs mb-1">Total Transactions</p>
           <p className="text-2xl font-bold text-white">{filteredAndSorted.length}</p>
@@ -166,7 +166,7 @@ export default function TransactionAnalysis() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card-modern rounded-xl p-4"
+          className="border border-border bg-card rounded-sm p-4"
         >
           <p className="text-white/50 text-xs mb-1">Total Revenue</p>
           <p className="text-2xl font-bold text-emerald-400">${totalAmount.toFixed(0)}</p>
@@ -175,7 +175,7 @@ export default function TransactionAnalysis() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card-modern rounded-xl p-4"
+          className="border border-border bg-card rounded-sm p-4"
         >
           <p className="text-white/50 text-xs mb-1">Total Fees</p>
           <p className="text-2xl font-bold text-red-400">${totalFees.toFixed(0)}</p>
@@ -186,7 +186,7 @@ export default function TransactionAnalysis() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="card-modern rounded-xl p-6 mb-6"
+        className="border border-border bg-card rounded-sm p-6 mb-6"
       >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
@@ -241,7 +241,7 @@ export default function TransactionAnalysis() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="card-modern rounded-xl overflow-hidden"
+        className="border border-border bg-card rounded-sm overflow-hidden"
       >
         <div className="overflow-x-auto">
           <table className="w-full">

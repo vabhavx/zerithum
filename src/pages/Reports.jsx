@@ -314,7 +314,7 @@ export default function Reports() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="card-modern rounded-xl p-5 mb-6"
+        className="border border-border bg-card rounded-sm p-5 mb-6"
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -376,7 +376,7 @@ export default function Reports() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.15 }}
-          className="card-modern rounded-xl p-5"
+          className="border border-border bg-card rounded-sm p-5"
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em]">Total Revenue</p>
@@ -405,7 +405,7 @@ export default function Reports() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className="card-modern rounded-xl p-5"
+          className="border border-border bg-card rounded-sm p-5"
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em]">Total Fees</p>
@@ -421,7 +421,7 @@ export default function Reports() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.25 }}
-          className="card-modern rounded-xl p-5"
+          className="border border-border bg-card rounded-sm p-5"
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em]">Net Revenue</p>
@@ -437,7 +437,7 @@ export default function Reports() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 }}
-          className="card-modern rounded-xl p-5"
+          className="border border-border bg-card rounded-sm p-5"
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em]">Transactions</p>
@@ -457,7 +457,7 @@ export default function Reports() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="card-modern rounded-xl p-6"
+          className="border border-border bg-card rounded-sm p-6"
         >
           <h3 className="text-base font-semibold text-white mb-1">Revenue Over Time</h3>
           <p className="text-xs text-white/40 mb-6">Daily revenue breakdown</p>
@@ -501,7 +501,7 @@ export default function Reports() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="card-modern rounded-xl p-6"
+          className="border border-border bg-card rounded-sm p-6"
         >
           <h3 className="text-base font-semibold text-white mb-1">Platform Breakdown</h3>
           <p className="text-xs text-white/40 mb-6">Revenue by platform</p>
@@ -536,7 +536,7 @@ export default function Reports() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45 }}
-        className="card-modern rounded-xl p-6"
+        className="border border-border bg-card rounded-sm p-6"
       >
         <h3 className="text-base font-semibold text-white mb-1">Revenue by Category</h3>
         <p className="text-xs text-white/40 mb-6">Transaction type breakdown</p>

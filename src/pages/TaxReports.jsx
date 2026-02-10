@@ -135,7 +135,7 @@ export default function TaxReports() {
         </div>
         <div className="flex items-center gap-3">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-32 clay-sm rounded-xl border-0">
+            <SelectTrigger className="w-32 clay-sm rounded-sm border-0">
               <Calendar className="w-4 h-4 mr-2 text-slate-400" />
               <SelectValue />
             </SelectTrigger>
@@ -148,7 +148,7 @@ export default function TaxReports() {
           <Button
             onClick={handleExportCSV}
             disabled={exporting || yearTransactions.length === 0}
-            className="clay-sm hover:clay rounded-xl bg-gradient-to-r from-violet-500 to-indigo-600 text-white border-0"
+            className="clay-sm hover:clay rounded-sm bg-gradient-to-r from-violet-500 to-indigo-600 text-white border-0"
           >
             {exporting ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -169,7 +169,7 @@ export default function TaxReports() {
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="clay rounded-2xl p-5">
+            <div className="clay rounded-md p-5">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="w-4 h-4 text-emerald-500" />
                 <span className="text-xs font-medium text-slate-500 uppercase">Gross Revenue</span>
@@ -178,7 +178,7 @@ export default function TaxReports() {
                 ${summary.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
-            <div className="clay rounded-2xl p-5">
+            <div className="clay rounded-md p-5">
               <div className="flex items-center gap-2 mb-2">
                 <Percent className="w-4 h-4 text-red-500" />
                 <span className="text-xs font-medium text-slate-500 uppercase">Platform Fees</span>
@@ -187,7 +187,7 @@ export default function TaxReports() {
                 -${summary.totalFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
-            <div className="clay rounded-2xl p-5">
+            <div className="clay rounded-md p-5">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="w-4 h-4 text-violet-500" />
                 <span className="text-xs font-medium text-slate-500 uppercase">Net Revenue</span>
@@ -196,7 +196,7 @@ export default function TaxReports() {
                 ${summary.netRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
-            <div className="clay rounded-2xl p-5">
+            <div className="clay rounded-md p-5">
               <div className="flex items-center gap-2 mb-2">
                 <FileSpreadsheet className="w-4 h-4 text-blue-500" />
                 <span className="text-xs font-medium text-slate-500 uppercase">Transactions</span>
@@ -217,7 +217,7 @@ export default function TaxReports() {
                   .map(([category, data]) => {
                     const percentage = (data.amount / summary.totalRevenue) * 100;
                     return (
-                      <div key={category} className="clay-sm rounded-xl p-4">
+                      <div key={category} className="clay-sm rounded-sm p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium text-slate-800">
                             {CATEGORY_LABELS[category] || category}
@@ -255,7 +255,7 @@ export default function TaxReports() {
                 {Object.entries(summary.byPlatform)
                   .sort(([,a], [,b]) => b.amount - a.amount)
                   .map(([platform, data]) => (
-                    <div key={platform} className="clay-sm rounded-xl p-4">
+                    <div key={platform} className="clay-sm rounded-sm p-4">
                       <h4 className="font-semibold text-slate-800 capitalize mb-3">{platform}</h4>
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">

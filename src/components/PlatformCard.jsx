@@ -49,7 +49,7 @@ export default function PlatformCard({ platform, connection, onConnect, onSync, 
   const hasError = connection?.sync_status === 'error';
 
   return (
-    <div className="clay-card p-4 h-full flex flex-col bg-[#2a2a2a] rounded-xl border border-white/5">
+    <div className="clay-card p-4 h-full flex flex-col bg-[#2a2a2a] rounded-sm border border-white/5">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">

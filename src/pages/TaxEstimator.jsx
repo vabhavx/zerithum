@@ -243,7 +243,7 @@ export default function TaxEstimator() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3"
+          className="mb-6 p-4 rounded-sm bg-amber-500/10 border border-amber-500/20 flex items-start gap-3"
         >
           <Bell className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
@@ -262,7 +262,7 @@ export default function TaxEstimator() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card-modern rounded-xl p-6"
+          className="border border-border bg-card rounded-sm p-6"
         >
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
@@ -289,7 +289,7 @@ export default function TaxEstimator() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card-modern rounded-xl p-6"
+          className="border border-border bg-card rounded-sm p-6"
         >
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
@@ -307,7 +307,7 @@ export default function TaxEstimator() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="card-modern rounded-xl p-6"
+          className="border border-border bg-card rounded-sm p-6"
         >
           <div className="flex items-center gap-3 mb-4">
             <div className={cn(
@@ -333,7 +333,7 @@ export default function TaxEstimator() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="card-modern rounded-xl p-6 mb-8"
+        className="border border-border bg-card rounded-sm p-6 mb-8"
       >
         <h3 className="text-lg font-bold text-white mb-4">Income Breakdown ({currentYear})</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -365,7 +365,7 @@ export default function TaxEstimator() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="card-modern rounded-xl p-6"
+        className="border border-border bg-card rounded-sm p-6"
       >
         <h3 className="text-lg font-bold text-white mb-6">Quarterly Payments</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -381,7 +381,7 @@ export default function TaxEstimator() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.6 + idx * 0.1 }}
                 className={cn(
-                  "p-5 rounded-xl border",
+                  "p-5 rounded-sm border",
                   isPaid ? "bg-emerald-500/5 border-emerald-500/20" : isPast ? "bg-red-500/5 border-red-500/20" : "bg-white/[0.02] border-white/10"
                 )}
               >
@@ -426,7 +426,7 @@ export default function TaxEstimator() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.9 }}
-        className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-3"
+        className="mt-6 p-4 rounded-sm bg-blue-500/10 border border-blue-500/20 flex items-start gap-3"
       >
         <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
         <div className="text-sm text-blue-300">
@@ -438,7 +438,7 @@ export default function TaxEstimator() {
       </motion.div>
 
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="card-modern rounded-2xl border max-w-md">
+        <DialogContent className="border border-border bg-card rounded-md border max-w-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-white">Tax Settings</DialogTitle>
             <DialogDescription className="text-white/40 text-sm">

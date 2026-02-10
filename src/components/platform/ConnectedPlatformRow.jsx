@@ -98,7 +98,7 @@ const ConnectedPlatformRow = React.memo(({
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card-modern rounded-xl p-5 cursor-default"
+      className="border border-border bg-card rounded-sm p-5 cursor-default"
     >
       <div className="flex items-center gap-4">
         <div className={cn(

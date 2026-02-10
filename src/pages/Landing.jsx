@@ -1,188 +1,168 @@
-import React, { useRef, useMemo } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform, useMotionValueEvent } from 'motion/react';
-import { BeamsBackground } from '@/components/ui/beams-background';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import LandingReconciliation from '@/components/landing/LandingReconciliation';
-import LandingTelemetry from '@/components/landing/LandingTelemetry';
-import LandingExport from '@/components/landing/LandingExport';
-import { ArrowRight } from 'lucide-react';
-
-// Internal component to handle scroll state and logic
-// This isolates the re-renders caused by activeFrame state changes
-// so the heavy BeamsBackground (which is a parent in the main component) doesn't re-render.
-function LandingScrollSections() {
-    const containerRef = useRef(null);
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end end"]
-    });
-
-    const [activeFrame, setActiveFrame] = React.useState(1);
-
-    useMotionValueEvent(scrollYProgress, "change", (latest) => {
-        if (latest < 0.35) {
-            if (activeFrame !== 1) setActiveFrame(1);
-        } else if (latest >= 0.35 && latest < 0.65) {
-            if (activeFrame !== 2) setActiveFrame(2);
-        } else if (latest >= 0.65) {
-            if (activeFrame !== 3) setActiveFrame(3);
-        }
-    });
-
-    // Transform logic for 3 frames
-    const opacity1 = useTransform(scrollYProgress, [0, 0.3, 0.35], [1, 1, 0]);
-    const scale1 = useTransform(scrollYProgress, [0, 0.3, 0.35], [1, 1, 0.95]);
-    const pointerEvents1 = useTransform(scrollYProgress, (val) => val < 0.35 ? 'auto' : 'none');
-    const visibility1 = useTransform(scrollYProgress, (val) => val < 0.35 ? 'visible' : 'hidden');
-
-    const opacity2 = useTransform(scrollYProgress, [0.35, 0.4, 0.6, 0.65], [0, 1, 1, 0]);
-    const scale2 = useTransform(scrollYProgress, [0.35, 0.4, 0.6, 0.65], [0.95, 1, 1, 0.95]);
-    const pointerEvents2 = useTransform(scrollYProgress, (val) => val > 0.35 && val < 0.65 ? 'auto' : 'none');
-    const visibility2 = useTransform(scrollYProgress, (val) => val > 0.35 && val < 0.65 ? 'visible' : 'hidden');
-
-    const opacity3 = useTransform(scrollYProgress, [0.65, 0.7, 1.0], [0, 1, 1]);
-    const scale3 = useTransform(scrollYProgress, [0.65, 0.7, 1.0], [0.95, 1, 1]);
-    const pointerEvents3 = useTransform(scrollYProgress, (val) => val > 0.65 ? 'auto' : 'none');
-    const visibility3 = useTransform(scrollYProgress, (val) => val > 0.65 ? 'visible' : 'hidden');
-
-    return (
-        <div ref={containerRef} className="relative h-[400vh] w-full z-10">
-            <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
-
-                {/* Frame 1: Reconciliation */}
-                <motion.div
-                    style={{ opacity: opacity1, scale: scale1, pointerEvents: pointerEvents1, visibility: visibility1 }}
-                    className="absolute w-full flex justify-center items-center will-change-transform"
-                >
-                    <LandingReconciliation isActive={activeFrame === 1} />
-                </motion.div>
-
-                {/* Frame 2: Telemetry */}
-                <motion.div
-                    style={{ opacity: opacity2, scale: scale2, pointerEvents: pointerEvents2, visibility: visibility2 }}
-                    className="absolute w-full flex justify-center items-center will-change-transform"
-                >
-                    <LandingTelemetry isActive={activeFrame === 2} />
-                </motion.div>
-
-                {/* Frame 3: Export */}
-                <motion.div
-                    style={{ opacity: opacity3, scale: scale3, pointerEvents: pointerEvents3, visibility: visibility3 }}
-                    className="absolute w-full flex justify-center items-center will-change-transform"
-                >
-                    <LandingExport isActive={activeFrame === 3} />
-                </motion.div>
-
-            </div>
-        </div>
-    );
-}
+import { Badge } from '@/components/ui/badge';
+import LandingWedge from '@/components/landing/LandingWedge';
+import { FEATURES } from '@/data/mock_landing';
+import { ArrowRight, Check, Shield, Database, Lock } from 'lucide-react';
 
 export default function Landing() {
-    return (
-        <BeamsBackground className="overflow-visible" intensity="medium">
-            {/* Tech Grid Overlay */}
-            <div className="absolute inset-0 z-0 pointer-events-none bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+  return (
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-foreground selection:text-background">
 
-            {/* Navigation / Status Bar */}
-            <nav className="fixed top-0 left-0 right-0 z-50 w-full p-6 flex justify-between items-start max-w-7xl mx-auto mix-blend-difference">
-                 <div className="flex flex-col">
-                    <span className="text-[10px] font-mono text-neutral-400 tracking-widest uppercase mb-1">System Status: Online</span>
-                    <div className="text-white font-bold text-xl tracking-tight flex items-center gap-2">
-                        ZERITHUM <span className="text-neutral-500 font-normal">/ OPS</span>
-                    </div>
-                 </div>
-                 <Link to="/SignIn">
-                    <Button variant="outline" className="h-8 text-xs font-mono tracking-wide bg-black/20 backdrop-blur-md border-white/10 text-neutral-300 hover:text-white hover:bg-white/10 hover:border-white/20 rounded-sm">
-                        [ ACCESS TERMINAL ]
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border">
+         <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-primary text-primary-foreground flex items-center justify-center font-serif font-bold text-xs">Z</div>
+            <span className="font-serif font-bold text-lg tracking-tight">Zerithum</span>
+         </div>
+         <div className="flex items-center gap-4">
+             <Link to="/SignIn">
+                <Button variant="ghost" size="sm" className="text-xs font-mono uppercase tracking-wider">Log In</Button>
+             </Link>
+             <Link to="/Signup">
+                <Button variant="default" size="sm" className="hidden sm:flex text-xs font-mono uppercase tracking-wider">Start Now</Button>
+             </Link>
+         </div>
+      </nav>
+
+      {/* Hero Section - High Contrast, Serif */}
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center pt-20 px-6 overflow-hidden">
+        <div className="absolute inset-0 z-0 bg-grid-subtle opacity-20 pointer-events-none"></div>
+
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-center max-w-5xl mx-auto z-10"
+        >
+            <Badge variant="outline" className="mb-6 border-border text-muted-foreground font-mono uppercase tracking-[0.2em] py-1 px-3">
+                Financial Infrastructure v2.0
+            </Badge>
+
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-serif font-normal tracking-tight leading-[0.9] text-foreground mb-8">
+                The Truth About<br />
+                <span className="italic font-light opacity-90">Your Revenue</span>
+            </h1>
+
+            <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground leading-relaxed mb-10 font-light">
+                Platforms report what they earned. Banks report what you received.<br className="hidden md:block"/>
+                Zerithum reconciles the difference, creating an immutable audit trail for the serious creator economy.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link to="/Signup">
+                    <Button size="lg" className="h-14 px-8 text-sm font-semibold tracking-wide">
+                        Deploy Infrastructure <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                 </Link>
-            </nav>
-
-            {/* Hero Section */}
-            <div className="relative flex flex-col items-center justify-center min-h-screen px-4 text-center z-10">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className="mb-8 inline-flex items-center justify-center px-3 py-1 rounded border border-white/10 bg-white/5 backdrop-blur-sm"
-                >
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse shadow-[0_0_10px_#10b981]"></span>
-                    <span className="text-[10px] font-mono text-neutral-300 tracking-[0.2em] uppercase">Revenue Control Plane v1.0</span>
-                </motion.div>
-
-                <motion.h1
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="text-5xl md:text-7xl lg:text-8xl font-semibold text-white tracking-tighter leading-[0.9]"
-                >
-                    Complete Financial <br/> Visibility
-                </motion.h1>
-
-                <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                    className="mt-8 text-neutral-400 text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed"
-                >
-                    The operating system for creator revenue. Automated reconciliation, audit-ready logs, and real-time cashflow forecasting.
-                </motion.p>
-
-                <motion.div
-                     initial={{ opacity: 0 }}
-                     animate={{ opacity: 1 }}
-                     transition={{ duration: 1, delay: 0.8 }}
-                     className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
-                >
-                    <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Initialize System</div>
-                    <div className="w-[1px] h-16 bg-gradient-to-b from-transparent via-neutral-500 to-transparent animate-pulse"></div>
-                </motion.div>
+                <Link to="/SignIn">
+                    <Button variant="outline" size="lg" className="h-14 px-8 text-sm font-semibold tracking-wide border-input bg-transparent hover:bg-muted">
+                        View Demo
+                    </Button>
+                </Link>
             </div>
+        </motion.div>
+      </section>
 
-            {/* Sticky Scroll Logic Isolated */}
-            <LandingScrollSections />
+      {/* The Wedge Section - Visual Proof */}
+      <section className="py-24 px-6 bg-card border-y border-border relative">
+          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+              <div>
+                  <h2 className="text-4xl md:text-5xl font-serif mb-6 leading-tight">
+                      The Reconciliation Wedge
+                  </h2>
+                  <div className="w-24 h-1 bg-foreground mb-8"></div>
+                  <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                      Most dashboards are fiction. They report gross earnings before fees, holds, and refunds.
+                      Your bank account is reality.
+                  </p>
+                  <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                      The gap between them is the "Wedge". It contains lost revenue, hidden fees, and tax liabilities.
+                      We automate the forensic accounting required to close it.
+                  </p>
 
-            {/* Final CTA Section */}
-            <div className="relative min-h-[70vh] flex flex-col items-center justify-center px-4 z-10 bg-gradient-to-b from-transparent via-neutral-950/50 to-neutral-950">
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                    className="text-center max-w-3xl mx-auto"
-                >
-                    <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-neutral-500 to-transparent mx-auto mb-10"></div>
+                  <ul className="space-y-4 font-mono text-sm text-muted-foreground">
+                      <li className="flex items-center gap-3">
+                          <Check className="w-4 h-4 text-primary" />
+                          <span>Platform-to-Bank automated matching</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                          <Check className="w-4 h-4 text-primary" />
+                          <span>Fee and Refund isolation</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                          <Check className="w-4 h-4 text-primary" />
+                          <span>Audit-ready export formats</span>
+                      </li>
+                  </ul>
+              </div>
 
-                    <h2 className="text-4xl md:text-6xl font-semibold text-white mb-8 tracking-tight leading-tight">
-                        Deploy Your <br/> Financial Stack
-                    </h2>
+              <div className="relative">
+                  {/* Abstract structural lines */}
+                  <div className="absolute -inset-4 border border-border opacity-50 z-0"></div>
+                  <div className="absolute -inset-2 border border-border opacity-30 z-0"></div>
+                  <div className="relative z-10 shadow-2xl bg-background">
+                      <LandingWedge />
+                  </div>
+              </div>
+          </div>
+      </section>
 
-                    <p className="text-neutral-400 mb-12 text-lg md:text-xl font-light">
-                        Join the creators who treat their business like a business.
-                        <br/>Start your operations today.
-                    </p>
+      {/* Features Grid - Dense & Technical */}
+      <section className="py-24 px-6 bg-background">
+          <div className="max-w-7xl mx-auto">
+              <div className="mb-16">
+                  <h2 className="text-3xl md:text-4xl font-serif mb-4">Core Architecture</h2>
+                  <p className="text-muted-foreground font-mono uppercase tracking-wider text-sm">System Capabilities</p>
+              </div>
 
-                    <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                        <Link to="/Signup">
-                            <Button size="lg" className="bg-white text-black hover:bg-neutral-200 h-14 px-10 rounded-full font-medium text-sm tracking-wide transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105">
-                                Setup your zerithum <ArrowRight className="ml-2 w-4 h-4" />
-                            </Button>
-                        </Link>
-                         <Link to="/SignIn">
-                            <Button size="lg" variant="ghost" className="text-neutral-400 hover:text-white hover:bg-white/5 h-14 px-8 rounded-full font-mono text-xs tracking-widest border border-transparent hover:border-white/10">
-                                LOGIN // TERMINAL
-                            </Button>
-                        </Link>
-                    </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border">
+                  {FEATURES.map((feature, idx) => (
+                      <div key={idx} className="bg-background p-8 hover:bg-muted/5 transition-colors group">
+                          <div className="mb-6 w-10 h-10 border border-border flex items-center justify-center text-foreground group-hover:border-foreground transition-colors">
+                              {/* Simple icon mapping based on mock data strings, or default */}
+                              {feature.icon === 'Lock' && <Lock className="w-5 h-5" />}
+                              {feature.icon === 'Landmark' && <Database className="w-5 h-5" />}
+                              {feature.icon === 'Activity' && <Shield className="w-5 h-5" />}
+                              {feature.icon === 'FileText' && <Check className="w-5 h-5" />}
+                          </div>
+                          <h3 className="text-lg font-bold font-serif mb-3 group-hover:text-primary transition-colors">{feature.title}</h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                              {feature.description}
+                          </p>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      </section>
 
-                    <div className="mt-20 pt-8 border-t border-white/5 w-full flex justify-between text-[10px] text-neutral-600 font-mono uppercase tracking-wider">
-                         <span>© {new Date().getFullYear()} Zerithum Inc.</span>
-                         <span>System Status: Operational</span>
-                    </div>
-                </motion.div>
-            </div>
-        </BeamsBackground>
-    );
+      {/* Final CTA - Serious */}
+      <section className="py-32 px-6 bg-foreground text-background text-center relative overflow-hidden">
+          <div className="relative z-10 max-w-3xl mx-auto">
+              <h2 className="text-5xl md:text-7xl font-serif mb-8 leading-none">
+                  Stop Guessing. <br/>
+                  Start Auditing.
+              </h2>
+              <p className="text-lg md:text-xl opacity-80 mb-10 max-w-xl mx-auto font-light">
+                  Join the creators who treat their business like a corporation.
+                  Professional grade reconciliation is now standard.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                   <Link to="/Signup">
+                        <Button size="lg" className="h-16 px-10 text-base bg-background text-foreground hover:bg-background/90 border-transparent">
+                            Create Account
+                        </Button>
+                   </Link>
+              </div>
+              <div className="mt-16 pt-8 border-t border-background/20 flex justify-between text-[10px] font-mono uppercase tracking-widest opacity-60">
+                   <span>© 2024 Zerithum Inc.</span>
+                   <span>System Status: Operational</span>
+              </div>
+          </div>
+      </section>
+
+    </div>
+  );
 }

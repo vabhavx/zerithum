@@ -500,7 +500,7 @@ export default function ConnectedPlatforms() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="card-modern rounded-2xl p-6"
+              className="border border-border bg-card rounded-md p-6"
             >
               <h3 className="text-lg font-semibold text-white mb-4">Connection Status</h3>
               <ResponsiveContainer width="100%" height={200}>
@@ -541,7 +541,7 @@ export default function ConnectedPlatforms() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="card-modern rounded-2xl p-6"
+              className="border border-border bg-card rounded-md p-6"
             >
               <h3 className="text-lg font-semibold text-white mb-4">Sync Activity</h3>
               <ResponsiveContainer width="100%" height={200}>
@@ -578,7 +578,7 @@ export default function ConnectedPlatforms() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="rounded-xl p-4 mb-6 bg-zteal-400/10 border border-zteal-400/30 backdrop-blur-sm"
+          className="rounded-sm p-4 mb-6 bg-zteal-400/10 border border-zteal-400/30 backdrop-blur-sm"
         >
           <div className="flex items-center gap-3">
             <Loader2 className="w-5 h-5 animate-spin text-zteal-400" />
@@ -591,13 +591,13 @@ export default function ConnectedPlatforms() {
       )}
 
       {isLoading ? (
-        <div className="card-modern rounded-xl p-8 text-center">
+        <div className="border border-border bg-card rounded-sm p-8 text-center">
           <RefreshCw className="w-8 h-8 animate-spin text-white/30 mx-auto" />
           <p className="text-white/40 mt-4 text-sm">Loading platforms...</p>
         </div>
       ) : connectedPlatforms.length === 0 ? (
-        <div className="card-modern rounded-xl p-12 text-center">
-          <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/10">
+        <div className="border border-border bg-card rounded-sm p-12 text-center">
+          <div className="w-16 h-16 rounded-sm bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/10">
             <ExternalLink className="w-8 h-8 text-white/30" />
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">No platforms connected</h3>
@@ -634,7 +634,7 @@ export default function ConnectedPlatforms() {
 
       {/* Connect Dialog */}
       <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
-        <DialogContent className="card-modern rounded-2xl border max-w-2xl !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 max-h-[85vh] overflow-y-auto" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+        <DialogContent className="border border-border bg-card rounded-md border max-w-2xl !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 max-h-[85vh] overflow-y-auto" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-white">
               {selectedPlatform ? `Connect ${selectedPlatform.name}` : "Connect Platform"}
@@ -805,7 +805,7 @@ export default function ConnectedPlatforms() {
       />
 
       <Dialog open={showAuditDialog} onOpenChange={setShowAuditDialog}>
-        <DialogContent className="card-modern rounded-2xl border max-w-md !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+        <DialogContent className="border border-border bg-card rounded-md border max-w-md !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-400" />
@@ -865,7 +865,7 @@ export default function ConnectedPlatforms() {
       </Dialog>
 
       <Dialog open={!!disconnectPlatform} onOpenChange={(open) => !open && setDisconnectPlatform(null)}>
-        <DialogContent className="card-modern rounded-2xl border max-w-md !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 max-h-[85vh] overflow-y-auto" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+        <DialogContent className="border border-border bg-card rounded-md border max-w-md !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 max-h-[85vh] overflow-y-auto" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-white">Disconnect {disconnectPlatform?.name}?</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -896,7 +896,7 @@ export default function ConnectedPlatforms() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card-modern rounded-xl p-6 mt-8"
+          className="border border-border bg-card rounded-sm p-6 mt-8"
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">

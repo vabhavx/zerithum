@@ -110,7 +110,7 @@ export default function Expenses() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card-modern rounded-xl p-5"
+          className="border border-border bg-card rounded-sm p-5"
         >
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center">
@@ -126,7 +126,7 @@ export default function Expenses() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card-modern rounded-xl p-5"
+          className="border border-border bg-card rounded-sm p-5"
         >
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-white/10 flex items-center justify-center">
@@ -142,7 +142,7 @@ export default function Expenses() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card-modern rounded-xl p-5"
+          className="border border-border bg-card rounded-sm p-5"
         >
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center">
@@ -169,7 +169,7 @@ export default function Expenses() {
         </motion.div>
       )}
 
-      <div className="card-modern rounded-xl p-6">
+      <div className="border border-border bg-card rounded-sm p-6">
         <h3 className="text-lg font-bold text-white mb-4">Recent Expenses</h3>
         {isLoading ? (
           <div className="text-center py-8">
