@@ -12,21 +12,35 @@ import {
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-// Tables to delete user data from (in order)
-const USER_DATA_TABLES = [
-    'sync_history',
+// Define deletion batches based on foreign key dependencies to maximize parallelism.
+// BATCH 1: Independent tables and tables that reference others (Leaf nodes).
+// - reconciliations (references revenue_transactions & bank_transactions)
+// - sync_history (references connected_platforms)
+const BATCH_1_TABLES = [
     'reconciliations',
+    'sync_history',
     'autopsy_events',
     'insights',
     'expenses',
-    'bank_transactions',
     'transactions',
-    'revenue_transactions',
     'tax_profiles',
-    'connected_platforms',
     'platform_connections',
     'verification_codes',
-    'audit_log', // Keep some audit trail - we'll anonymize instead of delete
+    'audit_log' // Special handling: anonymize only
+];
+
+// BATCH 2: Tables referenced by Batch 1 but reference Batch 3.
+// - bank_transactions (references revenue_transactions via reconciled_with)
+// - connected_platforms (referenced by sync_history - now deleted)
+const BATCH_2_TABLES = [
+    'bank_transactions',
+    'connected_platforms'
+];
+
+// BATCH 3: Tables referenced by everything else.
+// - revenue_transactions (referenced by reconciliations & bank_transactions)
+const BATCH_3_TABLES = [
+    'revenue_transactions'
 ];
 
 Deno.serve(async (req) => {
@@ -251,8 +265,9 @@ Deno.serve(async (req) => {
                 stepsCompleted.push('oauth_tokens_noted');
             }
 
-            // Step 3: Delete user data from all tables
-            for (const table of USER_DATA_TABLES) {
+            // Step 3: Delete user data from all tables - Optimized Parallel Batches
+
+            const deleteTable = async (table: string) => {
                 try {
                     if (table === 'audit_log') {
                         // Anonymize audit logs instead of deleting
@@ -279,7 +294,11 @@ Deno.serve(async (req) => {
                 } catch (e) {
                     console.error(`Error deleting from ${table}:`, e);
                 }
-            }
+            };
+
+            await Promise.all(BATCH_1_TABLES.map(t => deleteTable(t)));
+            await Promise.all(BATCH_2_TABLES.map(t => deleteTable(t)));
+            await Promise.all(BATCH_3_TABLES.map(t => deleteTable(t)));
 
             // Step 4: Delete profile
             try {
