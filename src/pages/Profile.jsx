@@ -149,7 +149,7 @@ export default function Profile() {
 
       <div className="grid grid-cols-1 gap-6">
         {/* Basic Information */}
-        <div className="card-modern rounded-xl p-6 border-l-2 border-l-zteal-400">
+        <div className="border border-border bg-card rounded-sm p-6 border-l-2 border-l-zteal-400">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-zteal-400/10 border border-zteal-400/20 flex items-center justify-center">
               <User className="w-5 h-5 text-zteal-400" />
@@ -215,7 +215,7 @@ export default function Profile() {
         </div>
 
         {/* Security Section (New) */}
-        <div className="card-modern rounded-xl p-6 border-l-2 border-l-orange-400">
+        <div className="border border-border bg-card rounded-sm p-6 border-l-2 border-l-orange-400">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-orange-400/10 border border-orange-400/20 flex items-center justify-center">
               <Lock className="w-5 h-5 text-orange-400" />
@@ -266,7 +266,7 @@ export default function Profile() {
         </div>
 
         {/* Connected Platforms */}
-        <div className="card-modern rounded-xl p-6 border-l-2 border-l-blue-400">
+        <div className="border border-border bg-card rounded-sm p-6 border-l-2 border-l-blue-400">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-blue-400/10 border border-blue-400/20 flex items-center justify-center">
               <Link2 className="w-5 h-5 text-blue-400" />
@@ -328,7 +328,7 @@ export default function Profile() {
         </div>
 
         {/* Danger Zone */}
-        <div className="rounded-xl p-6 border border-red-500/20 bg-red-500/5">
+        <div className="rounded-sm p-6 border border-red-500/20 bg-red-500/5">
           <h3 className="text-base font-semibold text-red-500 mb-2">Danger Zone</h3>
           <p className="text-red-400/60 text-sm mb-6">Irreversible actions regarding your account.</p>
 

@@ -68,12 +68,12 @@ export default function SignIn() {
                 </div>
 
                 {/* Card */}
-                <div className="card-modern rounded-2xl p-8">
+                <div className="border border-border bg-card rounded-md p-8">
                     {/* Google Sign In */}
                     <Button
                         onClick={handleGoogleLogin}
                         disabled={isGoogleLoading}
-                        className="w-full bg-white text-slate-900 hover:bg-white/90 rounded-xl h-12 font-medium mb-6"
+                        className="w-full bg-white text-slate-900 hover:bg-white/90 rounded-sm h-12 font-medium mb-6"
                     >
                         {isGoogleLoading ? (
                             <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -112,7 +112,7 @@ export default function SignIn() {
 
                     {/* Error Alert */}
                     {error && (
-                        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
+                        <div className="mb-6 p-4 rounded-sm bg-red-500/10 border border-red-500/20 flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                             <p className="text-red-400 text-sm">{error}</p>
                         </div>
@@ -131,7 +131,7 @@ export default function SignIn() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    className="pl-10 h-12 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-white/30"
+                                    className="pl-10 h-12 bg-white/5 border-white/10 rounded-sm text-white placeholder:text-white/30"
                                 />
                             </div>
                         </div>
@@ -147,7 +147,7 @@ export default function SignIn() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    className="pl-10 h-12 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-white/30"
+                                    className="pl-10 h-12 bg-white/5 border-white/10 rounded-sm text-white placeholder:text-white/30"
                                 />
                             </div>
                         </div>
@@ -155,7 +155,7 @@ export default function SignIn() {
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-zteal-400 hover:bg-zteal-500 text-white rounded-xl h-12 font-medium mt-6"
+                            className="w-full bg-zteal-400 hover:bg-zteal-500 text-white rounded-sm h-12 font-medium mt-6"
                         >
                             {isLoading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

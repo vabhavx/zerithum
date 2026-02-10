@@ -9,7 +9,9 @@ import {
   TrendingUp,
   Percent,
   FileSpreadsheet,
-  Loader2
+  Loader2,
+  Receipt,
+  Printer
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +21,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS = {
   ad_revenue: "Ad Revenue",
@@ -75,22 +86,13 @@ export default function TaxReports() {
       byPlatform[t.platform].count += 1;
     });
 
-    // Monthly breakdown
-    const monthly = {};
-    yearTransactions.forEach(t => {
-      const month = format(new Date(t.transaction_date), "MMM");
-      if (!monthly[month]) monthly[month] = 0;
-      monthly[month] += t.amount || 0;
-    });
-
     return {
       totalRevenue,
       totalFees,
       netRevenue,
       transactionCount: yearTransactions.length,
       byCategory,
-      byPlatform,
-      monthly
+      byPlatform
     };
   }, [yearTransactions]);
 
@@ -126,34 +128,36 @@ export default function TaxReports() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">Export & Tax Reports</h1>
-          <p className="text-slate-500 mt-1">Generate reports for tax filing and analysis</p>
+          <h1 className="text-3xl font-serif text-foreground mb-1">Fiscal Reporting</h1>
+          <p className="text-sm text-muted-foreground font-mono">
+             TAX PREPARATION & EXPORT · {selectedYear}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-32 clay-sm rounded-xl border-0">
-              <Calendar className="w-4 h-4 mr-2 text-slate-400" />
+            <SelectTrigger className="w-32 rounded-none border-border bg-background font-mono text-xs">
+              <Calendar className="w-3 h-3 mr-2" />
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-none border-border">
               {years.map(year => (
-                <SelectItem key={year} value={year}>{year}</SelectItem>
+                <SelectItem key={year} value={year} className="font-mono text-xs">{year}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Button
             onClick={handleExportCSV}
             disabled={exporting || yearTransactions.length === 0}
-            className="clay-sm hover:clay rounded-xl bg-gradient-to-r from-violet-500 to-indigo-600 text-white border-0"
+            className="h-9 px-4 bg-foreground text-background hover:bg-foreground/90 font-mono text-xs uppercase tracking-wider rounded-none"
           >
             {exporting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-3 h-3 mr-2 animate-spin" />
             ) : (
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-3 h-3 mr-2" />
             )}
             Export CSV
           </Button>
@@ -161,126 +165,113 @@ export default function TaxReports() {
       </div>
 
       {isLoading ? (
-        <div className="clay rounded-3xl p-12 text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-slate-400 mx-auto" />
-          <p className="text-slate-500 mt-4">Loading transactions...</p>
+        <div className="flex items-center justify-center h-64 border border-border bg-background">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
       ) : (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="clay rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase">Gross Revenue</span>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border">
+            {[
+              { label: "Gross Revenue", value: summary.totalRevenue, icon: DollarSign, color: "text-emerald-500" },
+              { label: "Platform Fees", value: summary.totalFees, icon: Percent, color: "text-destructive" },
+              { label: "Net Earnings", value: summary.netRevenue, icon: TrendingUp, color: "text-foreground" },
+              { label: "Transaction Vol", value: summary.transactionCount, icon: FileSpreadsheet, color: "text-muted-foreground", isCount: true }
+            ].map((stat, i) => (
+               <div key={i} className="bg-background p-6">
+                  <div className="flex justify-between items-start mb-2">
+                      <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-wider">{stat.label}</span>
+                      <stat.icon className={cn("w-4 h-4", stat.color)} />
+                  </div>
+                  <div className="text-2xl font-serif font-medium">
+                      {stat.isCount ? stat.value : `$${stat.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  </div>
               </div>
-              <p className="text-2xl font-bold text-slate-800">
-                ${summary.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="clay rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <Percent className="w-4 h-4 text-red-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase">Platform Fees</span>
-              </div>
-              <p className="text-2xl font-bold text-red-600">
-                -${summary.totalFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="clay rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-violet-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase">Net Revenue</span>
-              </div>
-              <p className="text-2xl font-bold text-violet-600">
-                ${summary.netRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="clay rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <FileSpreadsheet className="w-4 h-4 text-blue-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase">Transactions</span>
-              </div>
-              <p className="text-2xl font-bold text-slate-800">{summary.transactionCount}</p>
-            </div>
+            ))}
           </div>
 
-          {/* Category Breakdown */}
-          <div className="clay rounded-3xl p-6 lg:p-8 mb-6">
-            <h3 className="text-lg font-semibold text-slate-800 mb-6">Revenue by Category</h3>
-            {Object.keys(summary.byCategory).length === 0 ? (
-              <p className="text-slate-500 text-center py-8">No transactions in {selectedYear}</p>
-            ) : (
-              <div className="space-y-4">
-                {Object.entries(summary.byCategory)
-                  .sort(([,a], [,b]) => b.amount - a.amount)
-                  .map(([category, data]) => {
-                    const percentage = (data.amount / summary.totalRevenue) * 100;
-                    return (
-                      <div key={category} className="clay-sm rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-slate-800">
-                            {CATEGORY_LABELS[category] || category}
-                          </span>
-                          <span className="font-semibold text-slate-800">
-                            ${data.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500"
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                          <span className="text-sm text-slate-500 w-16 text-right">
-                            {percentage.toFixed(1)}%
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-2">{data.count} transactions</p>
-                      </div>
-                    );
-                  })}
+          <div className="grid lg:grid-cols-2 gap-6">
+             {/* Category Breakdown */}
+            <div className="border border-border bg-background">
+               <div className="p-4 border-b border-border bg-muted/20 flex justify-between items-center">
+                  <h3 className="font-serif text-lg">Revenue by Category</h3>
+                  <Receipt className="w-4 h-4 text-muted-foreground" />
               </div>
-            )}
-          </div>
+              <Table>
+                  <TableHeader>
+                      <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
+                          <TableHead>Category</TableHead>
+                          <TableHead className="text-right">Volume</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                     {Object.keys(summary.byCategory).length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={3} className="text-center py-8 text-muted-foreground font-mono text-xs uppercase">No Data</TableCell>
+                        </TableRow>
+                     ) : (
+                         Object.entries(summary.byCategory)
+                          .sort(([,a], [,b]) => b.amount - a.amount)
+                          .map(([category, data]) => (
+                              <TableRow key={category} className="border-b border-border">
+                                  <TableCell className="font-medium text-xs font-mono uppercase">
+                                      {CATEGORY_LABELS[category] || category}
+                                  </TableCell>
+                                  <TableCell className="text-right text-xs font-mono">{data.count}</TableCell>
+                                  <TableCell className="text-right font-mono">
+                                      ${data.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                  </TableCell>
+                              </TableRow>
+                          ))
+                     )}
+                  </TableBody>
+              </Table>
+            </div>
 
-          {/* Platform Breakdown */}
-          <div className="clay rounded-3xl p-6 lg:p-8">
-            <h3 className="text-lg font-semibold text-slate-800 mb-6">Revenue by Platform</h3>
-            {Object.keys(summary.byPlatform).length === 0 ? (
-              <p className="text-slate-500 text-center py-8">No platform data for {selectedYear}</p>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {Object.entries(summary.byPlatform)
-                  .sort(([,a], [,b]) => b.amount - a.amount)
-                  .map(([platform, data]) => (
-                    <div key={platform} className="clay-sm rounded-xl p-4">
-                      <h4 className="font-semibold text-slate-800 capitalize mb-3">{platform}</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-500">Gross Revenue</span>
-                          <span className="font-medium text-slate-800">
-                            ${data.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-500">Platform Fees</span>
-                          <span className="font-medium text-red-600">
-                            -${data.fees.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                        <div className="border-t border-slate-200 pt-2 flex justify-between text-sm">
-                          <span className="text-slate-500">Net Revenue</span>
-                          <span className="font-semibold text-emerald-600">
-                            ${(data.amount - data.fees).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+            {/* Platform Breakdown */}
+            <div className="border border-border bg-background">
+               <div className="p-4 border-b border-border bg-muted/20 flex justify-between items-center">
+                  <h3 className="font-serif text-lg">Platform Performance</h3>
+                  <Printer className="w-4 h-4 text-muted-foreground" />
               </div>
-            )}
+              <Table>
+                  <TableHeader>
+                      <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
+                          <TableHead>Source</TableHead>
+                          <TableHead className="text-right">Gross</TableHead>
+                          <TableHead className="text-right">Fees</TableHead>
+                          <TableHead className="text-right">Net</TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                     {Object.keys(summary.byPlatform).length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={4} className="text-center py-8 text-muted-foreground font-mono text-xs uppercase">No Data</TableCell>
+                        </TableRow>
+                     ) : (
+                         Object.entries(summary.byPlatform)
+                          .sort(([,a], [,b]) => b.amount - a.amount)
+                          .map(([platform, data]) => (
+                              <TableRow key={platform} className="border-b border-border">
+                                  <TableCell className="font-medium text-xs font-mono uppercase">
+                                      {platform}
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono">
+                                      ${data.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                  </TableCell>
+                                   <TableCell className="text-right font-mono text-destructive">
+                                      -${data.fees.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono font-medium">
+                                      ${(data.amount - data.fees).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                  </TableCell>
+                              </TableRow>
+                          ))
+                     )}
+                  </TableBody>
+              </Table>
+            </div>
           </div>
         </>
       )}

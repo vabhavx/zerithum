@@ -51,7 +51,7 @@ const AutopsyEventCard = memo(({ event, onDecision }) => {
       layout
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className={cn("rounded-xl p-6 border-2", getSeverityColor(event.severity))}
+      className={cn("rounded-sm p-6 border-2", getSeverityColor(event.severity))}
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-4">

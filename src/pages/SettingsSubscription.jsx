@@ -133,7 +133,7 @@ export default function SettingsSubscription() {
 
               <div className="text-center mb-6">
                 {Icon && (
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center" style={{ background: `${plan.color}15` }}>
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-sm flex items-center justify-center" style={{ background: `${plan.color}15` }}>
                     <Icon className="w-6 h-6" style={{ color: plan.color }} />
                   </div>
                 )}

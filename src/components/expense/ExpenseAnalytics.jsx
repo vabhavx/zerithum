@@ -46,7 +46,7 @@ export default function ExpenseAnalytics({ expenses }) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card-modern rounded-xl p-4"
+          className="border border-border bg-card rounded-sm p-4"
         >
           <DollarSign className="w-5 h-5 text-emerald-400 mb-2" />
           <p className="text-xs text-white/50">Avg Expense</p>
@@ -57,7 +57,7 @@ export default function ExpenseAnalytics({ expenses }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card-modern rounded-xl p-4"
+          className="border border-border bg-card rounded-sm p-4"
         >
           <TrendingUp className="w-5 h-5 text-red-400 mb-2" />
           <p className="text-xs text-white/50">Highest</p>
@@ -65,7 +65,7 @@ export default function ExpenseAnalytics({ expenses }) {
         </motion.div>
       </div>
 
-      <div className="card-modern rounded-xl p-5">
+      <div className="border border-border bg-card rounded-sm p-5">
         <h4 className="text-sm font-semibold text-white mb-4">Spending by Category</h4>
         {analytics.categoryData.length > 0 ? (
           <ResponsiveContainer width="100%" height={200}>
@@ -91,7 +91,7 @@ export default function ExpenseAnalytics({ expenses }) {
         )}
       </div>
 
-      <div className="card-modern rounded-xl p-5">
+      <div className="border border-border bg-card rounded-sm p-5">
         <h4 className="text-sm font-semibold text-white mb-4">Monthly Trend</h4>
         {analytics.monthlyData.length > 0 ? (
           <ResponsiveContainer width="100%" height={180}>

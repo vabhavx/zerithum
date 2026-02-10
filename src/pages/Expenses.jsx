@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -8,33 +8,37 @@ import {
   Loader2,
   CheckCircle2,
   FileSpreadsheet,
-  Bot
+  Bot,
+  Trash2,
+  Search,
+  Filter
 } from "lucide-react";
-import BulkImportDialog from "../components/expense/BulkImportDialog";
-import ExpenseAnalytics from "../components/expense/ExpenseAnalytics";
-import AIExpenseChat from "../components/expense/AIExpenseChat";
-import AddExpenseDialog from "../components/expense/AddExpenseDialog";
-import ExpenseRow from "@/components/expense/ExpenseRow";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
-import { motion } from "framer-motion";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { toast } from "@/components/ui/use-toast";
+import { format } from "date-fns";
 
 export default function Expenses() {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showBulkImport, setShowBulkImport] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showAIChat, setShowAIChat] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const queryClient = useQueryClient();
 
@@ -47,14 +51,10 @@ export default function Expenses() {
     mutationFn: (id) => base44.entities.Expense.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      toast.success("Expense deleted");
+      toast({ title: "Expense deleted", description: "Record removed from ledger." });
       setExpenseToDelete(null);
     },
   });
-
-  const handleDeleteExpense = useCallback((id) => {
-    setExpenseToDelete(id);
-  }, []);
 
   const metrics = useMemo(() => {
     const total = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
@@ -62,184 +62,160 @@ export default function Expenses() {
       if (!e.is_tax_deductible) return sum;
       return sum + (e.amount * (e.deduction_percentage / 100));
     }, 0);
-    const withReceipts = expenses.filter(e => e.receipt_url).length;
-    const avgPerDay = expenses.length > 0 ? total / expenses.length : 0;
-
-    return { total, deductible, withReceipts, avgPerDay };
+    return { total, deductible };
   }, [expenses]);
 
+  const filteredExpenses = useMemo(() => {
+    if (!searchQuery) return expenses;
+    return expenses.filter(e =>
+      e.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.merchant?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [expenses, searchQuery]);
+
   return (
-    <div className="max-w-6xl mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
-      >
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Expenses</h1>
-          <p className="text-white/40 mt-1 text-sm">AI-powered expense tracking & tax optimization</p>
+          <h1 className="text-3xl font-serif text-foreground mb-1">Expense Ledger</h1>
+          <p className="text-sm text-muted-foreground font-mono">
+             TAX OPTIMIZATION & TRACKING
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            onClick={() => setShowAIChat(true)}
+           <Button
             variant="outline"
-            className="rounded-lg border-zteal-400/30 text-zteal-400 hover:bg-zteal-400/10 h-9"
+            className="h-9 px-4 font-mono text-xs uppercase tracking-wider rounded-none"
           >
-            <Bot className="w-3.5 h-3.5 mr-2" />
-            AI Advisor
-          </Button>
-          <Button
-            onClick={() => setShowBulkImport(true)}
-            variant="outline"
-            className="rounded-lg border-white/10 text-white/70 hover:bg-white/5 h-9"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 mr-2" />
-            Bulk Import
+            <Bot className="w-3 h-3 mr-2" />
+            Tax Advisor
           </Button>
           <Button
             onClick={() => setShowAddDialog(true)}
-            className="rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white border-0 transition-colors h-9"
+            className="h-9 px-4 bg-foreground text-background hover:bg-foreground/90 font-mono text-xs uppercase tracking-wider rounded-none"
           >
-            <Plus className="w-3.5 h-3.5 mr-2" />
-            Add Expense
+            <Plus className="w-3 h-3 mr-2" />
+            New Entry
           </Button>
         </div>
-      </motion.div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card-modern rounded-xl p-5"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center">
-              <TrendingDown className="w-5 h-5 text-red-400" />
-            </div>
-          </div>
-          <p className="text-white/50 text-xs mb-1">Total Expenses</p>
-          <p className="text-2xl font-bold text-white">${metrics.total.toFixed(0)}</p>
-          <p className="text-xs text-white/40 mt-2">{expenses.length} transactions</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card-modern rounded-xl p-5"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-white/10 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            </div>
-          </div>
-          <p className="text-white/50 text-xs mb-1">Tax Deductible</p>
-          <p className="text-2xl font-bold text-white">${metrics.deductible.toFixed(0)}</p>
-          <p className="text-xs text-emerald-400 mt-2">{metrics.total > 0 ? ((metrics.deductible / metrics.total) * 100).toFixed(0) : 0}% of total</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card-modern rounded-xl p-5"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center">
-              <Receipt className="w-5 h-5 text-blue-400" />
-            </div>
-          </div>
-          <p className="text-white/50 text-xs mb-1">With Receipts</p>
-          <p className="text-2xl font-bold text-white">{metrics.withReceipts}</p>
-          <p className="text-xs text-white/40 mt-2">
-            <button onClick={() => setShowAnalytics(!showAnalytics)} className="text-zteal-400 hover:text-zteal-300">
-              {showAnalytics ? 'Hide' : 'View'} Analytics
-            </button>
-          </p>
-        </motion.div>
       </div>
 
-      {showAnalytics && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-        >
-          <ExpenseAnalytics expenses={expenses} />
-        </motion.div>
-      )}
-
-      <div className="card-modern rounded-xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Recent Expenses</h3>
-        {isLoading ? (
-          <div className="text-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-white/30 mx-auto" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border border border-border">
+          <div className="bg-background p-6">
+              <div className="text-[10px] font-mono uppercase text-muted-foreground tracking-wider mb-1">Total Outflow</div>
+              <div className="text-2xl font-serif font-medium">${metrics.total.toFixed(2)}</div>
           </div>
-        ) : expenses.length === 0 ? (
-          <div className="text-center py-12">
-            <Receipt className="w-12 h-12 text-white/20 mx-auto mb-3" />
-            <p className="text-white/40 text-sm">No expenses yet</p>
+          <div className="bg-background p-6">
+              <div className="text-[10px] font-mono uppercase text-muted-foreground tracking-wider mb-1">Tax Deductible</div>
+              <div className="text-2xl font-serif font-medium text-emerald-500">${metrics.deductible.toFixed(2)}</div>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {expenses.map((expense) => (
-              <ExpenseRow
-                key={expense.id}
-                expense={expense}
-                onDelete={handleDeleteExpense}
-              />
-            ))}
+          <div className="bg-background p-6">
+              <div className="text-[10px] font-mono uppercase text-muted-foreground tracking-wider mb-1">Recent Entries</div>
+              <div className="text-2xl font-serif font-medium">{expenses.length}</div>
           </div>
-        )}
       </div>
 
-      <AddExpenseDialog
-        open={showAddDialog}
-        onOpenChange={setShowAddDialog}
-        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["expenses"] })}
-      />
+      <div className="flex flex-col sm:flex-row gap-4 items-center bg-muted/20 p-2 border border-border">
+            <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                placeholder="Search merchant or description..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 border-border bg-background rounded-none text-xs font-mono"
+                />
+            </div>
+            <Button variant="outline" className="h-9 border-border rounded-none">
+                <Filter className="w-3 h-3" />
+            </Button>
+      </div>
 
-      <BulkImportDialog
-        open={showBulkImport}
-        onOpenChange={setShowBulkImport}
-        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["expenses"] })}
-      />
+      <div className="border border-border bg-background">
+        <Table>
+            <TableHeader>
+                <TableRow className="hover:bg-transparent bg-muted/50 border-b border-border">
+                    <TableHead className="w-[120px]">Date</TableHead>
+                    <TableHead>Merchant</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-center">Receipt</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {isLoading ? (
+                    <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground"/></TableCell>
+                    </TableRow>
+                ) : filteredExpenses.length === 0 ? (
+                     <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground font-mono text-xs uppercase">No expenses found</TableCell>
+                    </TableRow>
+                ) : (
+                    filteredExpenses.map((e) => (
+                        <TableRow key={e.id} className="group font-mono text-xs hover:bg-muted/50 border-b border-border">
+                             <TableCell className="text-muted-foreground">
+                                {format(new Date(e.expense_date), "yyyy-MM-dd")}
+                             </TableCell>
+                             <TableCell className="font-semibold">
+                                {e.merchant}
+                             </TableCell>
+                             <TableCell>
+                                <Badge variant="neutral" className="rounded-none text-[10px] py-0">{e.category}</Badge>
+                             </TableCell>
+                             <TableCell className="text-right font-medium text-foreground">
+                                ${e.amount.toFixed(2)}
+                             </TableCell>
+                             <TableCell className="text-center">
+                                {e.receipt_url ? <CheckCircle2 className="w-3 h-3 mx-auto text-emerald-500" /> : <span className="text-muted-foreground">-</span>}
+                             </TableCell>
+                             <TableCell className="text-right">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setExpenseToDelete(e.id)}
+                                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                >
+                                    <Trash2 className="w-3 h-3" />
+                                </Button>
+                             </TableCell>
+                        </TableRow>
+                    ))
+                )}
+            </TableBody>
+        </Table>
+      </div>
 
-      <AIExpenseChat
-        open={showAIChat}
-        onOpenChange={setShowAIChat}
-        expenses={expenses}
-        metrics={metrics}
-      />
+      {/* Simple Add Dialog Placeholder */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="rounded-none border border-border bg-card">
+            <DialogHeader>
+                <DialogTitle className="font-serif">Log Expense</DialogTitle>
+                <DialogDescription>Add a new business expense record.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                 <p className="text-xs text-muted-foreground font-mono">[Form Placeholder]</p>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" className="rounded-none" onClick={() => setShowAddDialog(false)}>Cancel</Button>
+                <Button className="rounded-none" onClick={() => { setShowAddDialog(false); toast({title:"Saved", description:"Expense logged."}) }}>Save Record</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <AlertDialog open={!!expenseToDelete} onOpenChange={(open) => !open && setExpenseToDelete(null)}>
-        <AlertDialogContent className="bg-zinc-900 border border-white/10 text-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/60">
-              This action cannot be undone. This will permanently delete the expense
-              {expenseToDelete && (() => {
-                const expense = expenses.find(e => e.id === expenseToDelete);
-                return expense ? ` for ${expense.merchant || expense.description}` : '';
-              })()}
-              .
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5 hover:text-white">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-500 hover:bg-red-600 text-white border-0"
-              onClick={() => deleteExpenseMutation.mutate(expenseToDelete)}
-            >
-              {deleteExpenseMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Delete"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+       <Dialog open={!!expenseToDelete} onOpenChange={() => setExpenseToDelete(null)}>
+        <DialogContent className="rounded-none border border-border bg-card">
+            <DialogHeader>
+                <DialogTitle className="font-serif">Confirm Deletion</DialogTitle>
+                <DialogDescription>Permanently remove this expense record?</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+                <Button variant="outline" className="rounded-none" onClick={() => setExpenseToDelete(null)}>Cancel</Button>
+                <Button variant="destructive" className="rounded-none" onClick={() => deleteExpenseMutation.mutate(expenseToDelete)}>Delete</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

@@ -36,12 +36,12 @@ const PLATFORM_NAMES = {
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1A1A1A] border border-white/10 rounded-lg p-3 shadow-xl">
-        <p className="text-white text-sm font-semibold mb-1">{payload[0].payload.name}</p>
+      <div className="bg-popover border border-border rounded-lg p-3 shadow-xl">
+        <p className="text-foreground text-sm font-semibold mb-1">{payload[0].payload.name}</p>
         <p className="text-emerald-400 text-xs">
           ${payload[0].value.toFixed(0)} ({payload[0].payload.percentage}%)
         </p>
-        <p className="text-white/40 text-xs mt-1">
+        <p className="text-foreground/40 text-xs mt-1">
           {payload[0].payload.count} transactions
         </p>
       </div>
@@ -83,16 +83,16 @@ export default function InteractivePlatformChart({ transactions }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card-modern rounded-xl p-6"
+      className="border border-border bg-card rounded-none p-6"
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-white/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-border flex items-center justify-center">
             <Activity className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Platform Performance</h3>
-            <p className="text-xs text-white/40">Revenue distribution by source</p>
+            <h3 className="text-lg font-bold text-foreground">Platform Performance</h3>
+            <p className="text-xs text-foreground/40">Revenue distribution by source</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -100,7 +100,7 @@ export default function InteractivePlatformChart({ transactions }) {
             variant="ghost"
             size="sm"
             onClick={() => setChartType('bar')}
-            className={`h-8 px-3 ${chartType === 'bar' ? 'bg-white/10 text-white' : 'text-white/40'}`}
+            className={`h-8 px-3 ${chartType === 'bar' ? 'bg-muted text-foreground' : 'text-foreground/40'}`}
           >
             <BarChart3 className="w-4 h-4" />
           </Button>
@@ -108,7 +108,7 @@ export default function InteractivePlatformChart({ transactions }) {
             variant="ghost"
             size="sm"
             onClick={() => setChartType('pie')}
-            className={`h-8 px-3 ${chartType === 'pie' ? 'bg-white/10 text-white' : 'text-white/40'}`}
+            className={`h-8 px-3 ${chartType === 'pie' ? 'bg-muted text-foreground' : 'text-foreground/40'}`}
           >
             <PieChartIcon className="w-4 h-4" />
           </Button>
@@ -116,7 +116,7 @@ export default function InteractivePlatformChart({ transactions }) {
       </div>
 
       {platformData.length === 0 ? (
-        <div className="h-64 flex items-center justify-center text-white/40 text-sm">
+        <div className="h-64 flex items-center justify-center text-foreground/40 text-sm">
           No platform data available
         </div>
       ) : (
@@ -172,12 +172,12 @@ export default function InteractivePlatformChart({ transactions }) {
                   style={{ backgroundColor: platform.color }}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{platform.name}</p>
-                  <p className="text-white/40 text-xs">{platform.count} transactions</p>
+                  <p className="text-foreground text-sm font-medium truncate">{platform.name}</p>
+                  <p className="text-foreground/40 text-xs">{platform.count} transactions</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-white text-sm font-semibold">${platform.amount.toFixed(0)}</p>
-                  <p className="text-white/40 text-xs">{platform.percentage}%</p>
+                  <p className="text-foreground text-sm font-semibold">${platform.amount.toFixed(0)}</p>
+                  <p className="text-foreground/40 text-xs">{platform.percentage}%</p>
                 </div>
               </div>
             ))}

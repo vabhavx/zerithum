@@ -110,7 +110,7 @@ Please use this context to answer user questions accurately.
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="card-modern rounded-2xl border max-w-2xl h-[650px] flex flex-col p-0 overflow-hidden">
+      <DialogContent className="border border-border bg-card rounded-md border max-w-2xl h-[650px] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="p-4 border-b border-white/5 bg-zinc-900/50">
           <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-zteal-400/20 flex items-center justify-center">
@@ -165,7 +165,7 @@ Please use this context to answer user questions accurately.
                     </div>
                   )}
                   <div
-                    className={`max-w-[85%] rounded-2xl p-3.5 shadow-sm
+                    className={`max-w-[85%] rounded-md p-3.5 shadow-sm
                       ${msg.role === 'user'
                         ? 'bg-zteal-500 text-white rounded-tr-sm'
                         : 'bg-white/5 text-white/90 rounded-tl-sm border border-white/5'
@@ -187,7 +187,7 @@ Please use this context to answer user questions accurately.
                   <div className="w-8 h-8 rounded-full bg-zteal-400/20 flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4 text-zteal-400" />
                   </div>
-                  <div className="bg-white/5 rounded-2xl rounded-tl-sm p-4 flex items-center gap-1">
+                  <div className="bg-white/5 rounded-md rounded-tl-sm p-4 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '300ms' }} />

@@ -8,10 +8,12 @@ import {
   Download, 
   ArrowUpDown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -19,24 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion } from "framer-motion";
-
-const PLATFORM_NAMES = {
-  youtube: 'YouTube',
-  patreon: 'Patreon',
-  stripe: 'Stripe',
-  gumroad: 'Gumroad',
-  instagram: 'Instagram',
-  tiktok: 'TikTok'
-};
-
-const CATEGORY_NAMES = {
-  ad_revenue: 'Ad Revenue',
-  sponsorship: 'Sponsorship',
-  affiliate: 'Affiliate',
-  product_sale: 'Product Sale',
-  membership: 'Membership'
-};
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function TransactionAnalysis() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,7 +37,7 @@ export default function TransactionAnalysis() {
   const [sortField, setSortField] = useState("transaction_date");
   const [sortOrder, setSortOrder] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 50; // High density default
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["revenueTransactions"],
@@ -55,7 +47,6 @@ export default function TransactionAnalysis() {
   const filteredAndSorted = useMemo(() => {
     let filtered = [...transactions];
 
-    // Search filter
     if (searchQuery) {
       filtered = filtered.filter(t => 
         t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,31 +54,18 @@ export default function TransactionAnalysis() {
       );
     }
 
-    // Platform filter
-    if (platformFilter !== "all") {
-      filtered = filtered.filter(t => t.platform === platformFilter);
-    }
+    if (platformFilter !== "all") filtered = filtered.filter(t => t.platform === platformFilter);
+    if (categoryFilter !== "all") filtered = filtered.filter(t => t.category === categoryFilter);
 
-    // Category filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter(t => t.category === categoryFilter);
-    }
-
-    // Sorting
     filtered.sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
-
       if (sortField === "transaction_date") {
         aVal = new Date(aVal).getTime();
         bVal = new Date(bVal).getTime();
       }
-
-      if (sortOrder === "asc") {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
-      }
+      if (sortOrder === "asc") return aVal > bVal ? 1 : -1;
+      return aVal < bVal ? 1 : -1;
     });
 
     return filtered;
@@ -120,7 +98,6 @@ export default function TransactionAnalysis() {
       t.platform_fee || 0,
       t.amount - (t.platform_fee || 0)
     ]);
-
     const csv = [headers, ...rows].map(row => row.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
@@ -130,224 +107,144 @@ export default function TransactionAnalysis() {
     a.click();
   };
 
-  const totalAmount = filteredAndSorted.reduce((sum, t) => sum + (t.amount || 0), 0);
-  const totalFees = filteredAndSorted.reduce((sum, t) => sum + (t.platform_fee || 0), 0);
-
   return (
-    <div className="max-w-7xl mx-auto">
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
-      >
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Transaction Analysis</h1>
-          <p className="text-white/40 mt-1 text-sm">Detailed view with filtering and sorting</p>
+          <h1 className="text-3xl font-serif text-foreground mb-1">Transaction Ledger</h1>
+          <p className="text-sm text-muted-foreground font-mono">
+             RAW DATA ACCESS · {filteredAndSorted.length} RECORDS
+          </p>
         </div>
         <Button
           onClick={exportToCSV}
-          className="rounded-lg bg-zteal-400 text-white h-9"
+          className="h-9 px-4 bg-foreground text-background hover:bg-foreground/90 font-mono text-xs uppercase tracking-wider rounded-none"
         >
-          <Download className="w-3.5 h-3.5 mr-2" />
+          <Download className="w-3 h-3 mr-2" />
           Export CSV
         </Button>
-      </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card-modern rounded-xl p-4"
-        >
-          <p className="text-white/50 text-xs mb-1">Total Transactions</p>
-          <p className="text-2xl font-bold text-white">{filteredAndSorted.length}</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card-modern rounded-xl p-4"
-        >
-          <p className="text-white/50 text-xs mb-1">Total Revenue</p>
-          <p className="text-2xl font-bold text-emerald-400">${totalAmount.toFixed(0)}</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card-modern rounded-xl p-4"
-        >
-          <p className="text-white/50 text-xs mb-1">Total Fees</p>
-          <p className="text-2xl font-bold text-red-400">${totalFees.toFixed(0)}</p>
-        </motion.div>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="card-modern rounded-xl p-6 mb-6"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+      <div className="flex flex-col sm:flex-row gap-4 items-center bg-muted/20 p-2 border border-border">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search transactions..."
+              placeholder="Search ID, description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/5 border-white/10 text-white"
+              className="pl-9 h-9 border-border bg-background rounded-none text-xs font-mono"
             />
           </div>
-
           <Select value={platformFilter} onValueChange={setPlatformFilter}>
-            <SelectTrigger className="bg-white/5 border-white/10 text-white">
-              <SelectValue placeholder="All Platforms" />
+            <SelectTrigger className="w-[180px] h-9 border-border bg-background rounded-none text-xs font-mono uppercase">
+              <SelectValue placeholder="PLATFORM" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-none border-border">
               <SelectItem value="all">All Platforms</SelectItem>
-              {Object.entries(PLATFORM_NAMES).map(([key, name]) => (
-                <SelectItem key={key} value={key}>{name}</SelectItem>
-              ))}
+              <SelectItem value="youtube">YouTube</SelectItem>
+              <SelectItem value="patreon">Patreon</SelectItem>
+              <SelectItem value="stripe">Stripe</SelectItem>
             </SelectContent>
           </Select>
-
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="bg-white/5 border-white/10 text-white">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {Object.entries(CATEGORY_NAMES).map(([key, name]) => (
-                <SelectItem key={key} value={key}>{name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button
+           <Button
             onClick={() => {
               setSearchQuery("");
               setPlatformFilter("all");
               setCategoryFilter("all");
             }}
-            className="bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+            variant="outline"
+            className="h-9 border-border rounded-none"
           >
-            <Filter className="w-4 h-4 mr-2" />
-            Clear Filters
+            <Filter className="w-3 h-3" />
           </Button>
-        </div>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="card-modern rounded-xl overflow-hidden"
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-white/[0.02] border-b border-white/5">
-              <tr>
-                <th 
-                  className="text-left p-4 text-xs font-semibold text-white/60 cursor-pointer hover:text-white transition-colors"
-                  onClick={() => handleSort("transaction_date")}
-                >
-                  <div className="flex items-center gap-2">
-                    Date
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th 
-                  className="text-left p-4 text-xs font-semibold text-white/60 cursor-pointer hover:text-white transition-colors"
-                  onClick={() => handleSort("platform")}
-                >
-                  <div className="flex items-center gap-2">
-                    Platform
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th className="text-left p-4 text-xs font-semibold text-white/60">Category</th>
-                <th className="text-left p-4 text-xs font-semibold text-white/60">Description</th>
-                <th 
-                  className="text-right p-4 text-xs font-semibold text-white/60 cursor-pointer hover:text-white transition-colors"
-                  onClick={() => handleSort("amount")}
-                >
-                  <div className="flex items-center justify-end gap-2">
-                    Amount
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th className="text-right p-4 text-xs font-semibold text-white/60">Fee</th>
-                <th className="text-right p-4 text-xs font-semibold text-white/60">Net</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.map((transaction, idx) => (
-                <motion.tr
-                  key={transaction.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: idx * 0.02 }}
-                  className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
-                >
-                  <td className="p-4 text-sm text-white">
-                    {format(new Date(transaction.transaction_date), "MMM d, yyyy")}
-                  </td>
-                  <td className="p-4">
-                    <span className="text-sm text-white capitalize">
-                      {PLATFORM_NAMES[transaction.platform] || transaction.platform}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className="text-xs px-2 py-1 rounded-md bg-white/5 text-white/70">
-                      {CATEGORY_NAMES[transaction.category] || transaction.category}
-                    </span>
-                  </td>
-                  <td className="p-4 text-sm text-white/70 max-w-xs truncate">
-                    {transaction.description || '-'}
-                  </td>
-                  <td className="p-4 text-sm text-white text-right font-semibold">
-                    ${transaction.amount.toFixed(2)}
-                  </td>
-                  <td className="p-4 text-sm text-red-400 text-right">
-                    ${(transaction.platform_fee || 0).toFixed(2)}
-                  </td>
-                  <td className="p-4 text-sm text-emerald-400 text-right font-semibold">
-                    ${(transaction.amount - (transaction.platform_fee || 0)).toFixed(2)}
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="border border-border bg-background">
+        <Table>
+            <TableHeader>
+                <TableRow className="hover:bg-transparent bg-muted/50 border-b border-border">
+                    <TableHead className="w-[120px] cursor-pointer" onClick={() => handleSort("transaction_date")}>
+                         Date <ArrowUpDown className="w-3 h-3 inline ml-1" />
+                    </TableHead>
+                    <TableHead className="w-[120px] cursor-pointer" onClick={() => handleSort("platform")}>
+                         Platform <ArrowUpDown className="w-3 h-3 inline ml-1" />
+                    </TableHead>
+                    <TableHead className="w-[140px]">Category</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right cursor-pointer" onClick={() => handleSort("amount")}>
+                        Gross <ArrowUpDown className="w-3 h-3 inline ml-1" />
+                    </TableHead>
+                    <TableHead className="text-right">Fee</TableHead>
+                    <TableHead className="text-right">Net</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {isLoading ? (
+                    <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground"/></TableCell>
+                    </TableRow>
+                ) : paginatedData.length === 0 ? (
+                     <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground font-mono text-xs uppercase">No records found</TableCell>
+                    </TableRow>
+                ) : (
+                    paginatedData.map((t) => (
+                        <TableRow key={t.id} className="group font-mono text-xs hover:bg-muted/50 border-b border-border">
+                             <TableCell className="text-muted-foreground">
+                                {format(new Date(t.transaction_date), "yyyy-MM-dd")}
+                             </TableCell>
+                             <TableCell>
+                                <span className="uppercase tracking-wider text-[10px] font-semibold">{t.platform}</span>
+                             </TableCell>
+                             <TableCell>
+                                <Badge variant="neutral" className="rounded-none text-[10px] py-0">{t.category}</Badge>
+                             </TableCell>
+                             <TableCell className="text-foreground max-w-[300px] truncate" title={t.description}>
+                                {t.description || "-"}
+                             </TableCell>
+                             <TableCell className="text-right font-medium">
+                                {t.amount.toFixed(2)}
+                             </TableCell>
+                             <TableCell className="text-right text-destructive">
+                                {(t.platform_fee || 0).toFixed(2)}
+                             </TableCell>
+                             <TableCell className="text-right text-emerald-500 font-bold">
+                                {(t.amount - (t.platform_fee || 0)).toFixed(2)}
+                             </TableCell>
+                        </TableRow>
+                    ))
+                )}
+            </TableBody>
+        </Table>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 border-t border-white/5">
-            <p className="text-sm text-white/40">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSorted.length)} of {filteredAndSorted.length}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="border-white/10 text-white/70 hover:bg-white/5"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="border-white/10 text-white/70 hover:bg-white/5"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
+            <div className="flex items-center justify-between p-2 border-t border-border bg-muted/20">
+                <span className="text-[10px] font-mono text-muted-foreground uppercase pl-2">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <div className="flex gap-1">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="h-7 w-7 rounded-none"
+                    >
+                        <ChevronLeft className="w-3 h-3" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="h-7 w-7 rounded-none"
+                    >
+                        <ChevronRight className="w-3 h-3" />
+                    </Button>
+                </div>
             </div>
-          </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }

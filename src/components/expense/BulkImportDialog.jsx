@@ -165,7 +165,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="card-modern rounded-2xl border max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+      <DialogContent className="border border-border bg-card rounded-md border max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5 text-zteal-400" />
@@ -189,7 +189,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }) {
                 </div>
 
                 <div
-                  className="border-2 border-dashed border-white/10 rounded-xl p-12 text-center hover:border-zteal-400/50 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                  className="border-2 border-dashed border-white/10 rounded-sm p-12 text-center hover:border-zteal-400/50 hover:bg-white/[0.02] transition-colors cursor-pointer"
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onClick={() => document.getElementById('bulk-upload').click()}

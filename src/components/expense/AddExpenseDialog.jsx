@@ -145,7 +145,7 @@ export default function AddExpenseDialog({ open, onOpenChange, onSuccess }) {
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="card-modern rounded-2xl border max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+            <DialogContent className="border border-border bg-card rounded-md border max-w-2xl max-h-[90vh] overflow-y-auto p-0">
                 <DialogHeader className="p-6 pb-2 border-b border-white/5 bg-zinc-900/50 sticky top-0 z-10 backdrop-blur-xl">
                     <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
                         Add Expense
@@ -155,7 +155,7 @@ export default function AddExpenseDialog({ open, onOpenChange, onSuccess }) {
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6 pt-4 space-y-5">
                     {/* Smart Receipt Uploader */}
                     <div
-                        className={`relative rounded-xl border-2 border-dashed transition-all duration-200 
+                        className={`relative rounded-sm border-2 border-dashed transition-all duration-200
               ${dragActive ? 'border-zteal-400 bg-zteal-400/5' : 'border-white/10 bg-white/[0.02]'} 
               ${receiptUrl ? 'p-4' : 'p-8 text-center hover:border-zteal-400/30'}`}
                         onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}

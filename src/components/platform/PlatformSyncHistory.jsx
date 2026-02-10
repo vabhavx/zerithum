@@ -33,7 +33,7 @@ export default function PlatformSyncHistory({ platform, open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="card-modern rounded-2xl border max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="border border-border bg-card rounded-md border max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold text-white">
             {platform?.name} - Sync History

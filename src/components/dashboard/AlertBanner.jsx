@@ -32,7 +32,7 @@ export default function AlertBanner({ alerts = [], onDismiss }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className={cn(
-              "rounded-xl p-4 mb-4 border-2 flex items-center justify-between",
+              "rounded-sm p-4 mb-4 border-2 flex items-center justify-between",
               colors[alert.type] || colors.warning
             )}
           >
@@ -48,7 +48,7 @@ export default function AlertBanner({ alerts = [], onDismiss }) {
             {alert.dismissible && onDismiss && (
               <button
                 onClick={() => onDismiss(alert.id)}
-                className="ml-4 p-1 hover:bg-white/10 rounded transition-colors"
+                className="ml-4 p-1 hover:bg-muted rounded transition-colors"
                 aria-label={`Dismiss ${alert.title}`}
               >
                 <X className="w-4 h-4" />

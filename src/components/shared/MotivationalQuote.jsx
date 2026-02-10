@@ -35,7 +35,7 @@ export default function MotivationalQuote({ className = "" }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-zteal-400/10 via-purple-500/10 to-pink-500/10 border border-white/10"
+          className="flex items-center gap-3 p-4 rounded-sm bg-gradient-to-r from-zteal-400/10 via-purple-500/10 to-pink-500/10 border border-white/10"
         >
           <div className={`w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center ${quote.color}`}>
             <Icon className="w-5 h-5" />
