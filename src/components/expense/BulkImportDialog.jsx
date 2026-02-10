@@ -11,9 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Upload, FileSpreadsheet, Loader2, CheckCircle2, Trash2 } from "lucide-react";
+import { Upload, FileSpreadsheet, Loader2, CheckCircle2, AlertCircle, X, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
 
 export default function BulkImportDialog({ open, onOpenChange, onSuccess }) {
   const [step, setStep] = useState("upload"); // upload, preview, processing, success
