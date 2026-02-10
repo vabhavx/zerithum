@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface AnimatedGradientBackgroundProps {
@@ -139,7 +139,7 @@ export function BeamsBackground({
             if (!canvas || !ctx) return;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // ctx.filter removed for performance - relying on CSS filter
+            // ctx.filter = "blur(35px)"; // Removed for performance
 
             const totalBeams = beamsRef.current.length;
             beamsRef.current.forEach((beam, index) => {
@@ -170,18 +170,18 @@ export function BeamsBackground({
     return (
         <div
             className={cn(
-                "relative min-h-screen w-full bg-neutral-950",
+                "relative min-h-screen w-full overflow-hidden bg-neutral-950",
                 className
             )}
         >
             <canvas
                 ref={canvasRef}
-                className="fixed inset-0 pointer-events-none"
-                style={{ filter: "blur(15px)" }}
+                className="absolute inset-0"
+                style={{ filter: "blur(25px)" }}
             />
 
             <motion.div
-                className="fixed inset-0 bg-neutral-950/5 pointer-events-none"
+                className="absolute inset-0 bg-neutral-950/5"
                 animate={{
                     opacity: [0.05, 0.15, 0.05],
                 }}
@@ -191,11 +191,11 @@ export function BeamsBackground({
                     repeat: Number.POSITIVE_INFINITY,
                 }}
                 style={{
-                    backdropFilter: "blur(50px)",
+                    // Removed heavy backdrop blur for performance
                 }}
             />
 
-            <div className="relative z-10 flex h-full w-full flex-col">
+            <div className="relative z-10 w-full h-full">
                 {children}
             </div>
         </div>

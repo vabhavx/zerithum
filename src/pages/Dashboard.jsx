@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/supabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
@@ -30,7 +29,6 @@ export default function Dashboard() {
   });
 
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const { data: insights = [] } = useQuery({
     queryKey: ["insights"],
@@ -251,31 +249,6 @@ export default function Dashboard() {
           />
         </div>
       )}
-
-      {/* No Platforms Connected Banner */}
-      {connectedPlatforms.length === 0 && (
-        <div className="mb-6">
-          <div
-            onClick={() => navigate('/ConnectedPlatforms')}
-            className="group cursor-pointer card-modern rounded-lg p-3 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/30 transition-all duration-200"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-500/20 transition-colors">
-                <Link2 className="w-4 h-4 text-amber-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-white/70 group-hover:text-white transition-colors">
-                  No platforms connected. <span className="text-amber-400 font-medium">Connect now</span> to start tracking revenue.
-                </p>
-              </div>
-              <div className="text-white/30 group-hover:text-amber-400 transition-colors">
-                →
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
 
       {/* Revenue Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
