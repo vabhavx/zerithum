@@ -15,6 +15,11 @@ export async function detectAnomalies(
   let transactionCount = 0;
 
   try {
+    // Start fetching autopsies in background, catching errors to avoid unhandled rejections
+    const recentAutopsiesPromise = ctx.fetchRecentAutopsies(user.id, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+      .then(data => ({ data, error: null }))
+      .catch(error => ({ data: null, error }));
+
     // Fetch revenue transactions for the last 90 days (approx via limit)
     const transactions = await ctx.fetchRecentTransactions(user.id, 1000);
     transactionCount = transactions.length;
@@ -55,10 +60,12 @@ export async function detectAnomalies(
       if (Math.abs(change) > 15) {
         // Check if autopsy already exists recently (lazy load and cache for this run)
         if (!recentAutopsies) {
-          recentAutopsies = await ctx.fetchRecentAutopsies(user.id, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+          const { data, error } = await recentAutopsiesPromise;
+          if (error) throw error;
+          recentAutopsies = data;
         }
 
-        if (recentAutopsies.length === 0) {
+        if (recentAutopsies!.length === 0) {
           // Perform causal reconstruction using LLM
           const causalAnalysis = await ctx.invokeLLM(
             `Analyze this revenue anomaly for a creator:
