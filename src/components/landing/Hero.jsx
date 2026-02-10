@@ -19,7 +19,7 @@ export function Hero() {
               </span>
             </h1>
             <p className="text-neutral-400 max-w-2xl mx-auto text-lg md:text-xl font-mono mb-10 text-center leading-relaxed">
-              Multi-platform income, reconciled weekly, tax-ready exports for accountants.
+              Multi platform income, reconciled weekly, tax ready exports for accountants.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-20">
                <Link to="/Signup">

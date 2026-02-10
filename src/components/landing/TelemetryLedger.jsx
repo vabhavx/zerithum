@@ -7,7 +7,7 @@ const LOG_SEQUENCE = [
   { type: 'info', text: 'ingest.youtube: fetch_revenue_api success', delay: 500 },
   { type: 'info', text: 'ingest.bank: fetch_plaid_transactions success', delay: 600 },
   { type: 'warn', text: 'match.init: discrepancy_detected (id: tx_8f2a)', delay: 400 },
-  { type: 'process', text: 'analyze.gap: platform_amount=$1800.00 bank_amount=$1650.00', delay: 700 },
+  { type: 'process', text: 'analyze.gap: platform_amount=USD 1800.00 bank_amount=USD 1650.00', delay: 700 },
   { type: 'match', text: 'resolve.auto: fee_deduction_pattern_match (conf: 0.98)', delay: 500, stat: 'auto' },
   { type: 'audit', text: 'audit.write: ledger_entry_created hash:0x7b...9c', delay: 600 },
   { type: 'success', text: 'sync.complete: reconciliation_finalized', delay: 800 },
@@ -66,9 +66,9 @@ export function TelemetryLedger() {
         {/* Left Column: Visual Flow */}
         <div className="flex flex-col items-center justify-center">
             <div className="mb-8 text-center">
-                <h3 className="text-2xl font-bold text-white mb-2 font-mono">Real-Time Ingestion</h3>
-                <p className="text-neutral-400 text-sm max-w-md">
-                    Normalization of disparate platform data into a single immutable ledger.
+                <h3 className="text-2xl font-bold text-white mb-4 font-mono">Real-Time Ingestion</h3>
+                <p className="text-neutral-400 text-sm max-w-md leading-relaxed">
+                    Platform pulls both sides of the equation: platform APIs report what they claim happened, Plaid reports what the bank actually received, and your reconciliation engine fuzzy matches them with confidence scoring.
                 </p>
             </div>
 

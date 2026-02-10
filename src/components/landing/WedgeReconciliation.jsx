@@ -25,7 +25,7 @@ export function WedgeReconciliation() {
                 <CardTitle className="text-xl text-white font-mono tracking-tight">Bank Reconciliation</CardTitle>
               </CardHeader>
               <CardContent className="text-neutral-400 leading-relaxed text-sm">
-                YouTube reports <span className="text-white font-mono">$1,800</span>, bank shows <span className="text-white font-mono">$1,650</span>. We flag the <span className="text-red-400 font-mono">$150</span> gap and explain why.
+                YouTube reports <span className="text-white font-mono">USD 1,800</span>, bank shows <span className="text-white font-mono">USD 1,650</span>. We flag the <span className="text-red-400 font-mono">USD 150</span> gap and explain why.
               </CardContent>
             </Card>
           </motion.div>
@@ -45,7 +45,7 @@ export function WedgeReconciliation() {
                 <CardTitle className="text-xl text-white font-mono tracking-tight">Anomaly Alerts</CardTitle>
               </CardHeader>
               <CardContent className="text-neutral-400 leading-relaxed text-sm">
-                <span className="text-white font-mono">$5,000</span> wire from unknown brand flagged for review. Fraud protection built in.
+                <span className="text-white font-mono">USD 5,000</span> wire from unknown brand flagged for review. Fraud protection built in.
               </CardContent>
             </Card>
           </motion.div>
@@ -70,10 +70,10 @@ export function WedgeReconciliation() {
               </CardHeader>
               <CardContent className="text-neutral-400 leading-relaxed text-sm space-y-4">
                 <p>
-                  <span className="text-white font-semibold">Platforms lie.</span> YouTube reports $1,800 earned but deposits $1,650 after fees and holds. Patreon shows $1,200 but the bank receives $1,150 because of processing delays.
+                  <span className="text-white font-semibold">Platforms lie.</span> YouTube reports USD 1,800 earned but deposits USD 1,650 after fees and holds. Patreon shows USD 1,200 but the bank receives USD 1,150 because of processing delays.
                 </p>
                 <p>
-                  Stripe fires webhooks for charges that later get refunded or disputed. Zerithum exposes the gap between reported revenue and cash reality.
+                  Stripe fires webhooks for charges that later get refunded or disputed.
                 </p>
               </CardContent>
             </Card>
