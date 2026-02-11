@@ -57,7 +57,7 @@ const ProductExport = () => {
             </div>
 
             {/* Animation Container */}
-            <div className="md:w-2/3 w-full bg-zinc-950 rounded-xl border border-zinc-800 p-8 h-[450px] relative overflow-hidden flex items-center justify-center">
+            <div className="md:w-2/3 w-full bg-zinc-950 rounded-xl border border-zinc-800 p-8 h-[650px] md:h-[450px] relative overflow-hidden flex items-center justify-center">
 
                 {/* Background Grid */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>

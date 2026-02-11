@@ -11,16 +11,17 @@ const AccuracySpecs = () => {
                     </p>
                 </div>
 
-                <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/80">
-                    <div className="grid grid-cols-4 bg-zinc-900/50 p-4 border-b border-zinc-800 text-xs font-mono text-zinc-500 uppercase tracking-wider">
-                        <div>Match Rule</div>
-                        <div>Conditions</div>
-                        <div>Confidence</div>
-                        <div>System Action</div>
-                    </div>
+                <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/80 overflow-x-auto">
+                    <div className="min-w-[700px]">
+                        <div className="grid grid-cols-4 bg-zinc-900/50 p-4 border-b border-zinc-800 text-xs font-mono text-zinc-500 uppercase tracking-wider">
+                            <div>Match Rule</div>
+                            <div>Conditions</div>
+                            <div>Confidence</div>
+                            <div>System Action</div>
+                        </div>
 
-                    <AccuracyRow
-                        rule="Exact Match"
+                        <AccuracyRow
+                            rule="Exact Match"
                         condition="Amount match, Date match"
                         confidence="0.99"
                         action="Auto-reconcile"
@@ -44,9 +45,10 @@ const AccuracySpecs = () => {
                         rule="Manual Override"
                         condition="User confirmed"
                         confidence="1.00"
-                        action="Audit Log Append"
-                        color="text-blue-500"
-                    />
+                            action="Audit Log Append"
+                            color="text-blue-500"
+                        />
+                    </div>
                 </div>
 
                 <div className="mt-8 flex justify-center">

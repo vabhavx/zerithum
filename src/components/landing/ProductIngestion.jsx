@@ -92,14 +92,14 @@ const ProductIngestion = () => {
       </div>
 
       {/* Animation Container */}
-      <div className="md:w-2/3 w-full bg-zinc-900/50 rounded-xl border border-zinc-800 p-8 relative overflow-hidden h-[400px] flex flex-col">
+      <div className="md:w-2/3 w-full bg-zinc-900/50 rounded-xl border border-zinc-800 p-8 relative overflow-hidden h-auto min-h-[500px] md:h-[400px] flex flex-col">
         {/* Header */}
         <div className="flex justify-between text-xs font-mono text-zinc-500 mb-8 border-b border-zinc-800 pb-2">
             <span>PLATFORM_INGESTION_STREAM</span>
             <span>LIVE_RECONCILIATION</span>
         </div>
 
-        <div className="flex-1 relative flex items-center justify-between px-4 md:px-12">
+        <div className="flex-1 relative flex flex-col md:flex-row items-center justify-center md:justify-between px-4 md:px-12 gap-12 md:gap-0">
             {/* Left: Platform */}
             <AnimatePresence mode="wait">
                 <motion.div
@@ -108,7 +108,7 @@ const ProductIngestion = () => {
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: 50, opacity: 0 }} // Move towards center then fade
                     transition={{ duration: 0.5 }}
-                    className="w-48 bg-zinc-950 border border-zinc-800 p-4 rounded-lg shadow-xl z-10"
+                    className="w-full md:w-48 bg-zinc-950 border border-zinc-800 p-4 rounded-lg shadow-xl z-10"
                 >
                     <div className="flex items-center gap-3 mb-2">
                         <div className={`w-8 h-8 rounded ${steps[currentStep].color} flex items-center justify-center font-bold text-white text-xs`}>
@@ -125,7 +125,8 @@ const ProductIngestion = () => {
 
             {/* Center: Match Logic */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                 <div className="w-full h-[1px] bg-zinc-800"></div>
+                 <div className="hidden md:block w-full h-[1px] bg-zinc-800"></div>
+                 <div className="md:hidden h-full w-[1px] bg-zinc-800"></div>
                  <AnimatePresence mode="wait">
                     <motion.div
                          key={`match-${currentStep}`}
@@ -152,7 +153,7 @@ const ProductIngestion = () => {
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: -50, opacity: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="w-48 bg-zinc-950 border border-zinc-800 p-4 rounded-lg shadow-xl z-10 text-right"
+                    className="w-full md:w-48 bg-zinc-950 border border-zinc-800 p-4 rounded-lg shadow-xl z-10 text-right"
                 >
                     <div className="flex items-center justify-end gap-3 mb-2">
                         <div className="text-zinc-200 font-medium">Bank Deposit</div>
