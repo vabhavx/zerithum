@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Database, Banknote, ShieldCheck } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const examples = [
     {
@@ -85,11 +85,14 @@ const examples = [
     }
 ];
 
-const ProductAutopsy = () => {
+const AutopsyVisual = () => {
     const [currentExample, setCurrentExample] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
 
     useEffect(() => {
+        // Auto-play on mount
+        setIsPlaying(true);
+
         let interval;
         if (isPlaying) {
             interval = setInterval(() => {
@@ -102,34 +105,7 @@ const ProductAutopsy = () => {
     const example = examples[currentExample];
 
     return (
-        <motion.div
-            className="w-full max-w-6xl mx-auto py-20 px-4 flex flex-col md:flex-row-reverse items-center gap-12"
-            onViewportEnter={() => setIsPlaying(true)}
-            onViewportLeave={() => setIsPlaying(false)}
-        >
-            {/* Text Content */}
-            <div className="md:w-1/3 space-y-6 text-right md:text-left">
-                <h2 className="text-3xl md:text-4xl font-serif font-semibold text-white">
-                    Revenue autopsy <br/> for every payout.
-                </h2>
-                <p className="text-zinc-400 leading-relaxed">
-                    Trace every dollar from source to bank. Zerithum ingests metadata when provided by the platform, giving you a complete lineage for tax defense.
-                </p>
-                <div className="flex flex-col gap-2 items-end md:items-start text-xs font-mono text-zinc-500">
-                     <div className="flex items-center gap-2">
-                        <Database className="w-4 h-4" /> Source Metadata
-                     </div>
-                     <div className="flex items-center gap-2">
-                        <Banknote className="w-4 h-4" /> Bank Truth
-                     </div>
-                     <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4" /> Audit Defense
-                     </div>
-                </div>
-            </div>
-
-            {/* Animation Container */}
-            <div className="md:w-2/3 w-full bg-zinc-900/50 rounded-xl border border-zinc-800 p-8 min-h-[500px] relative">
+        <div className="w-full bg-zinc-900/50 rounded-xl border border-zinc-800 p-8 min-h-[500px] relative">
                  <div className="absolute top-4 right-4 text-xs font-mono text-zinc-600">
                     TRANSACTION_ID: {Math.random().toString(36).substring(7).toUpperCase()}
                  </div>
@@ -244,8 +220,7 @@ const ProductAutopsy = () => {
                     </motion.div>
                  </AnimatePresence>
             </div>
-        </motion.div>
     );
 };
 
-export default ProductAutopsy;
+export default AutopsyVisual;

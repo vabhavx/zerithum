@@ -53,16 +53,19 @@ const steps = [
   }
 ];
 
-const ProductIngestion = () => {
+const IngestionVisual = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false); // Start paused, useInView will trigger
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
+    // Start playing immediately on mount for tab switching context
+    setIsPlaying(true);
+
     let interval;
     if (isPlaying) {
       interval = setInterval(() => {
         setCurrentStep((prev) => (prev + 1) % steps.length);
-      }, 2000); // 2s per step for 8s total loop
+      }, 2000);
     }
     return () => clearInterval(interval);
   }, [isPlaying]);
@@ -70,29 +73,7 @@ const ProductIngestion = () => {
   const CurrentIcon = steps[currentStep].icon;
 
   return (
-    <motion.div
-      className="w-full max-w-6xl mx-auto py-20 px-4 flex flex-col md:flex-row items-center gap-12"
-      onViewportEnter={() => setIsPlaying(true)}
-      onViewportLeave={() => setIsPlaying(false)}
-    >
-      {/* Text Content */}
-      <div className="md:w-1/3 space-y-6">
-        <h2 className="text-3xl md:text-4xl font-serif font-semibold text-white">
-          Multi platform in. <br/> Bank truth out.
-        </h2>
-        <p className="text-zinc-400 leading-relaxed">
-          Zerithum draws match lines between platform transactions and bank deposits. Discrepancies show as red flags with reason codes like fee deduction, hold period, or refund.
-        </p>
-        <div className="flex flex-wrap gap-2 text-xs font-mono text-zinc-500 uppercase">
-          <span className="px-2 py-1 border border-zinc-800 rounded">YouTube</span>
-          <span className="px-2 py-1 border border-zinc-800 rounded">Stripe</span>
-          <span className="px-2 py-1 border border-zinc-800 rounded">Patreon</span>
-          <span className="px-2 py-1 border border-zinc-800 rounded">20+ More</span>
-        </div>
-      </div>
-
-      {/* Animation Container */}
-      <div className="md:w-2/3 w-full bg-zinc-900/50 rounded-xl border border-zinc-800 p-8 relative overflow-hidden h-auto min-h-[500px] md:h-[400px] flex flex-col">
+    <div className="w-full bg-zinc-900/50 rounded-xl border border-zinc-800 p-8 relative overflow-hidden h-auto min-h-[500px] md:h-[400px] flex flex-col">
         {/* Header */}
         <div className="flex justify-between text-xs font-mono text-zinc-500 mb-8 border-b border-zinc-800 pb-2">
             <span>PLATFORM_INGESTION_STREAM</span>
@@ -186,8 +167,7 @@ const ProductIngestion = () => {
              </AnimatePresence>
         </div>
       </div>
-    </motion.div>
   );
 };
 
-export default ProductIngestion;
+export default IngestionVisual;

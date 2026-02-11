@@ -8,9 +8,7 @@ import { Menu, X } from 'lucide-react';
 
 // Sections
 import HeroSection from '@/components/landing/HeroSection';
-import ProductIngestion from '@/components/landing/ProductIngestion';
-import ProductAutopsy from '@/components/landing/ProductAutopsy';
-import ProductExport from '@/components/landing/ProductExport';
+import ProductShowcase from '@/components/landing/ProductShowcase';
 import HowItWorks from '@/components/landing/HowItWorks';
 import AccuracySpecs from '@/components/landing/AccuracySpecs';
 import SecuritySection from '@/components/landing/SecuritySection';
@@ -105,11 +103,7 @@ const Landing = () => {
             <main className="relative z-10">
                 <HeroSection />
 
-                <div id="product" className="space-y-0">
-                    <ProductIngestion />
-                    <ProductAutopsy />
-                    <ProductExport />
-                </div>
+                <ProductShowcase />
 
                 <HowItWorks />
                 <AccuracySpecs />
