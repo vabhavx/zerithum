@@ -9,7 +9,7 @@ import { Menu, X } from 'lucide-react';
 // Sections
 import HeroSection from '@/components/landing/HeroSection';
 import ProductShowcase from '@/components/landing/ProductShowcase';
-import HowItWorks from '@/components/landing/HowItWorks';
+import ReconciliationMethodology from '@/components/landing/ReconciliationMethodology';
 import AccuracySpecs from '@/components/landing/AccuracySpecs';
 import SecuritySection from '@/components/landing/SecuritySection';
 import Footer from '@/components/landing/Footer';
@@ -105,7 +105,7 @@ const Landing = () => {
 
                 <ProductShowcase />
 
-                <HowItWorks />
+                <ReconciliationMethodology />
                 <AccuracySpecs />
                 <SecuritySection />
             </main>
