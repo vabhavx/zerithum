@@ -3,7 +3,7 @@ import { ContainerScroll } from '../ui/container-scroll-animation';
 import { Button } from '../ui/button';
 import { CheckCircle2, ShieldCheck, FileText, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import MockConsole from './MockConsole';
+import DashboardPreview from './DashboardPreview';
 
 const HeroSection = () => {
   const scrollToProduct = () => {
@@ -66,7 +66,7 @@ const HeroSection = () => {
           </div>
         }
       >
-        <MockConsole />
+        <DashboardPreview />
       </ContainerScroll>
     </div>
   );

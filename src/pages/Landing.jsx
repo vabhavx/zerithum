@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
 import { Link } from 'react-router-dom';
-import { ShaderPlane } from '@/components/ui/background-paper-shaders';
+import { MeshGradient, DotOrbit } from "@paper-design/shaders-react";
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 
@@ -39,12 +38,23 @@ const Landing = () => {
         <div className="relative min-h-screen bg-zinc-950 text-white overflow-hidden font-sans selection:bg-emerald-500/30">
             {/* Background Layer */}
             <div className="fixed inset-0 z-0 pointer-events-none">
-                <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
-                    <ambientLight intensity={0.5} />
-                    <ShaderPlane position={[0, 0, 0]} color1="#18181b" color2="#09090b" />
-                </Canvas>
-                {/* Overlay Gradient for readability */}
-                <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-[2px]"></div>
+                 <MeshGradient
+                    className="w-full h-full absolute inset-0"
+                    colors={["#000000", "#1a1a1a", "#333333", "#ffffff"]}
+                    speed={0.5}
+                    backgroundColor="#000000"
+                  />
+                  <div className="w-full h-full absolute inset-0 opacity-30">
+                    <DotOrbit
+                      className="w-full h-full"
+                      dotColor="#444444"
+                      orbitColor="#222222"
+                      speed={1.0}
+                      intensity={1.0}
+                    />
+                  </div>
+                {/* Overlay Gradient for readability - adjusted to be slightly more transparent to show bg */}
+                <div className="absolute inset-0 bg-zinc-950/70 backdrop-blur-[1px]"></div>
             </div>
 
             {/* Navbar */}

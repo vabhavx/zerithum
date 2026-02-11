@@ -55,105 +55,146 @@
 
     /* ═══════════════════════════════════════════════════════════════════════════
        TAILWIND/SHADCN COMPATIBILITY LAYER
-       Maps Zerithum tokens to standard shadcn variables
+       Maps Zerithum tokens to standard shadcn variables (Legacy HSL)
        ═══════════════════════════════════════════════════════════════════════════ */
 
-    --background: 220 6% 4%;
+    --background: hsl(220 6% 4%);
     /* #0A0A0B */
-    --foreground: 0 0% 92%;
+    --foreground: hsl(0 0% 92%);
     /* --z-text-1 equiv */
-    --card: 220 6% 8%;
+    --card: hsl(220 6% 8%);
     /* #15161A */
-    --card-foreground: 0 0% 92%;
-    --popover: 220 6% 6%;
+    --card-foreground: hsl(0 0% 92%);
+    --popover: hsl(220 6% 6%);
     /* #0F1012 */
-    --popover-foreground: 0 0% 92%;
-    --primary: 190 42% 51%;
+    --popover-foreground: hsl(0 0% 92%);
+    --primary: hsl(190 42% 51%);
     /* #4BA3B8 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 6% 10%;
+    --primary-foreground: hsl(0 0% 100%);
+    --secondary: hsl(220 6% 10%);
     /* #1A1B1F */
-    --secondary-foreground: 0 0% 92%;
-    --muted: 220 6% 10%;
-    --muted-foreground: 0 0% 56%;
+    --secondary-foreground: hsl(0 0% 92%);
+    --muted: hsl(220 6% 10%);
+    --muted-foreground: hsl(0 0% 56%);
     /* --z-text-3 equiv */
-    --accent: 190 42% 51%;
+    --accent: hsl(190 42% 51%);
     /* #4BA3B8 */
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --accent-foreground: hsl(0 0% 100%);
+    --destructive: hsl(0 84% 60%);
     /* #EF4444 */
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 100% / 0.08;
+    --destructive-foreground: hsl(0 0% 100%);
+    --border: hsl(0 0% 100% / 0.08);
     /* --z-border-1 */
-    --input: 0 0% 100% / 0.08;
-    --ring: 190 42% 51%;
+    --input: hsl(0 0% 100% / 0.08);
+    --ring: hsl(190 42% 51%);
     /* #4BA3B8 */
 
     /* Chart colors - updated for dark theme */
-    --chart-1: 190 42% 51%;
+    --chart-1: hsl(190 42% 51%);
     /* teal */
-    --chart-2: 38 92% 50%;
+    --chart-2: hsl(38 92% 50%);
     /* amber */
-    --chart-3: 0 84% 60%;
+    --chart-3: hsl(0 84% 60%);
     /* red */
-    --chart-4: 262 52% 47%;
+    --chart-4: hsl(262 52% 47%);
     /* purple */
-    --chart-5: 142 71% 45%;
+    --chart-5: hsl(142 71% 45%);
     /* green */
 
     --radius: 0.5rem;
 
     /* Sidebar - mapped to Zerithum palette */
-    --sidebar-background: 220 6% 4%;
-    --sidebar-foreground: 0 0% 92%;
-    --sidebar-primary: 190 42% 51%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 6% 10%;
-    --sidebar-accent-foreground: 0 0% 92%;
-    --sidebar-border: 0 0% 100% / 0.08;
-    --sidebar-ring: 190 42% 51%;
+    --sidebar-background: hsl(220 6% 4%);
+    --sidebar-foreground: hsl(0 0% 92%);
+    --sidebar-primary: hsl(190 42% 51%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(220 6% 10%);
+    --sidebar-accent-foreground: hsl(0 0% 92%);
+    --sidebar-border: hsl(0 0% 100% / 0.08);
+    --sidebar-ring: hsl(190 42% 51%);
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       NEW ADVANCED THEME (OKLCH) - Overrides for Advanced UI
+       ═══════════════════════════════════════════════════════════════════════════ */
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --background: oklch(0 0 0);
+    --foreground: oklch(1 0 0);
+    --card: oklch(0.1 0 0 / 0.1);
+    --card-foreground: oklch(1 0 0);
+    --popover: oklch(0 0 0 / 0.8);
+    --popover-foreground: oklch(1 0 0);
+    --primary: oklch(1 0 0);
+    --primary-foreground: oklch(0 0 0);
+    --secondary: oklch(0.65 0.25 25);
+    --secondary-foreground: oklch(1 0 0);
+    --muted: oklch(1 0 0 / 0.5);
+    --muted-foreground: oklch(0.7 0 0);
+    --accent: oklch(0.65 0.25 25);
+    --accent-foreground: oklch(1 0 0);
+    --destructive: oklch(0.6 0.25 15);
+    --destructive-foreground: oklch(1 0 0);
+    --border: oklch(1 0 0 / 0.2);
+    --input: oklch(1 0 0 / 0.1);
+    --ring: oklch(1 0 0 / 0.3);
+    --chart-1: oklch(0.65 0.25 25);
+    --chart-2: oklch(0.8 0.15 85);
+    --chart-3: oklch(0.7 0.2 140);
+    --chart-4: oklch(0.7 0.2 240);
+    --chart-5: oklch(0.6 0.25 300);
+    --sidebar: oklch(0 0 0 / 0.9);
+    --sidebar-foreground: oklch(1 0 0);
+    --sidebar-primary: oklch(0.65 0.25 25);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.65 0.25 25);
+    --sidebar-accent-foreground: oklch(1 0 0);
+    --sidebar-border: oklch(1 0 0 / 0.2);
+    --sidebar-ring: oklch(1 0 0 / 0.3);
+    --font-geist-sans: "Geist Sans", sans-serif;
+    --font-geist-mono: "Geist Mono", monospace;
   }
 
   /* Dark class - same as root for always-dark theme */
   .dark {
-    --background: 220 6% 4%;
-    --foreground: 0 0% 92%;
-    --card: 220 6% 8%;
-    --card-foreground: 0 0% 92%;
-    --popover: 220 6% 6%;
-    --popover-foreground: 0 0% 92%;
-    --primary: 190 42% 51%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 6% 10%;
-    --secondary-foreground: 0 0% 92%;
-    --muted: 220 6% 10%;
-    --muted-foreground: 0 0% 56%;
-    --accent: 190 42% 51%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 100% / 0.08;
-    --input: 0 0% 100% / 0.08;
-    --ring: 190 42% 51%;
-    --chart-1: 190 42% 51%;
-    --chart-2: 38 92% 50%;
-    --chart-3: 0 84% 60%;
-    --chart-4: 262 52% 47%;
-    --chart-5: 142 71% 45%;
-    --sidebar-background: 220 6% 4%;
-    --sidebar-foreground: 0 0% 92%;
-    --sidebar-primary: 190 42% 51%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 6% 10%;
-    --sidebar-accent-foreground: 0 0% 92%;
-    --sidebar-border: 0 0% 100% / 0.08;
-    --sidebar-ring: 190 42% 51%;
+    --background: oklch(0 0 0);
+    --foreground: oklch(1 0 0);
+    --card: oklch(0.1 0 0 / 0.1);
+    --card-foreground: oklch(1 0 0);
+    --popover: oklch(0 0 0 / 0.8);
+    --popover-foreground: oklch(1 0 0);
+    --primary: oklch(1 0 0);
+    --primary-foreground: oklch(0 0 0);
+    --secondary: oklch(0.65 0.25 25);
+    --secondary-foreground: oklch(1 0 0);
+    --muted: oklch(1 0 0 / 0.5);
+    --muted-foreground: oklch(0.7 0 0);
+    --accent: oklch(0.65 0.25 25);
+    --accent-foreground: oklch(1 0 0);
+    --destructive: oklch(0.6 0.25 15);
+    --destructive-foreground: oklch(1 0 0);
+    --border: oklch(1 0 0 / 0.2);
+    --input: oklch(1 0 0 / 0.1);
+    --ring: oklch(1 0 0 / 0.3);
+    --chart-1: oklch(0.65 0.25 25);
+    --chart-2: oklch(0.8 0.15 85);
+    --chart-3: oklch(0.7 0.2 140);
+    --chart-4: oklch(0.7 0.2 240);
+    --chart-5: oklch(0.6 0.25 300);
+    --sidebar: oklch(0 0 0 / 0.9);
+    --sidebar-foreground: oklch(1 0 0);
+    --sidebar-primary: oklch(0.65 0.25 25);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.65 0.25 25);
+    --sidebar-accent-foreground: oklch(1 0 0);
+    --sidebar-border: oklch(1 0 0 / 0.2);
+    --sidebar-ring: oklch(1 0 0 / 0.3);
   }
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
 
   html {
@@ -331,6 +372,32 @@
   .shimmer {
     background: var(--z-bg-3);
     animation: subtle-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+  }
+
+  @keyframes scanline {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+
+  .animate-scanline {
+    animation: scanline 4s linear infinite;
   }
 
   /* Custom scrollbar */

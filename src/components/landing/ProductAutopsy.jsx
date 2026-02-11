@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ArrowRight, CornerDownRight, Database, Banknote, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Database, Banknote, ShieldCheck } from 'lucide-react';
 
 const examples = [
     {
