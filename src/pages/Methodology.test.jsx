@@ -1,36 +1,70 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import '@testing-library/jest-dom'; // Import matchers
+import * as matchers from '@testing-library/jest-dom/matchers';
 import Methodology from './Methodology';
 
-// Mock components if necessary
-vi.mock('@/components/ui/button', () => ({ Button: ({ children }) => <button>{children}</button> }));
-// Mock Lucide icons
-vi.mock('lucide-react', () => ({
-  ArrowLeft: () => <span>ArrowLeft</span>,
-  CheckCircle2: () => <span>CheckCircle2</span>,
-  AlertTriangle: () => <span>AlertTriangle</span>,
-  FileText: () => <span>FileText</span>,
-  Lock: () => <span>Lock</span>
+// Extend Vitest's expect with jest-dom matchers
+expect.extend(matchers);
+
+// Mock animations because they use hooks/intervals that might be tricky in JSDOM or just noise
+vi.mock('@/components/landing/methodology/MethodologyAnimations', () => ({
+  default: ({ type }) => <div data-testid={`animation-${type}`}>Animation: {type}</div>,
 }));
 
+vi.mock('@/components/landing/Footer', () => ({ default: () => <div data-testid="footer">Footer</div> }));
+
 describe('Methodology Page', () => {
-  it('renders key sections', () => {
+  it('renders the main headline', () => {
+    render(
+      <BrowserRouter>
+        <Methodology />
+      </BrowserRouter>
+    );
+    expect(screen.getByText('How reconciliation works')).toBeInTheDocument();
+  });
+
+  it('renders the toggle buttons', () => {
+    render(
+      <BrowserRouter>
+        <Methodology />
+      </BrowserRouter>
+    );
+    // Use getAllByText because buttons might be rendered multiple times or similar text exists
+    expect(screen.getAllByText('Simple explanation')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Full methodology')[0]).toBeInTheDocument();
+  });
+
+  it('shows simple view by default', async () => {
+    render(
+      <BrowserRouter>
+        <Methodology />
+      </BrowserRouter>
+    );
+    // Unique text in Simple View
+    expect(await screen.findByText('What a mismatch looks like')).toBeInTheDocument();
+  });
+
+  it('switches to full view when toggle is clicked', async () => {
     render(
       <BrowserRouter>
         <Methodology />
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/Technical Paper/i)).toBeInTheDocument();
+    const { fireEvent } = await import('@testing-library/react');
 
-    // Use headings to be more specific and avoid "multiple elements found" error
-    expect(screen.getByRole('heading', { name: /Reconciliation Methodology/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Data Inputs/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Matching Logic/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Reason Codes/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Review Workflow/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Known Limitations/i })).toBeInTheDocument();
+    const fullToggle = screen.getAllByText('Full methodology')[0];
+    fireEvent.click(fullToggle);
+
+    // Wait for state update
+    // Check for Full View unique text
+    expect(await screen.findByText('Inputs we use')).toBeInTheDocument();
+
+    // Check animations
+    expect(screen.getByTestId('animation-matching')).toBeInTheDocument();
+    expect(screen.getByTestId('animation-scoring')).toBeInTheDocument();
+    expect(screen.getByTestId('animation-audit')).toBeInTheDocument();
   });
 });
