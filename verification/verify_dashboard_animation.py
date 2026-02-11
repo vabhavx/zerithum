@@ -5,6 +5,10 @@ def run():
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
 
+        # Capture console logs
+        page.on("console", lambda msg: print(f"Console: {msg.text}"))
+        page.on("pageerror", lambda err: print(f"Page Error: {err}"))
+
         # Set viewport size to ensure dashboard is visible
         page.set_viewport_size({"width": 1280, "height": 1024})
 
@@ -30,55 +34,40 @@ def run():
             # Wait a bit for any initial render/layout stability
             page.wait_for_timeout(2000)
 
-            # The animation loops. We need to synchronize with it.
-            # We can't easily control the react state from outside without exposing it.
-            # So we'll just take screenshots at intervals or wait for specific text to appear.
+            # Capture initial state (Ingestion Stream)
+            page.screenshot(path="verification/1_ingestion_stream.png")
+            print("Captured Ingestion Stream.")
 
-            # 1. Ingesting
-            print("Looking for Ingesting stage...")
-            # Ingesting is the default start, but we might have joined late.
-            # Let's wait for the "Ingesting batch" text to become fully opaque (opacity 1)
-            # OR just take a shot now as it cycles quickly.
-            # Actually, let's just wait for the loop to restart if we missed it.
-            # The loop is: Ingest(3s) -> Scan(2s) -> Anomaly(3.5s) -> Report(2.5s) = 11s total.
+            # Wait for "ANALYZING PAYLOAD..."
+            print("Waiting for Analyzing stage...")
+            try:
+                page.wait_for_selector("text=ANALYZING PAYLOAD...", timeout=20000)
+                page.screenshot(path="verification/2_analyzing.png")
+                print("Captured Analyzing.")
+            except:
+                print("Could not catch 'ANALYZING PAYLOAD...' in time.")
 
-            # Let's try to capture the "Ingesting" state by waiting for the text "Ingesting batch" to be visible
-            # Note: The text is always there but opacity changes.
-            # Playwright's is_visible() checks for opacity > 0? No, checking styles is hard.
-            # But the 'particle' elements are conditional!
-            # The red particle: absolute right-0 top-1/2 w-2 h-2 bg-red-500 rounded-full blur-[2px]
-            # This is only rendered when stage === 'ingesting'.
+            # Wait for "COMPARING LEDGERS..."
+            print("Waiting for Comparing stage...")
+            try:
+                page.wait_for_selector("text=COMPARING LEDGERS...", timeout=20000)
+                page.screenshot(path="verification/3_comparing.png")
+                print("Captured Comparing.")
+            except:
+                print("Could not catch 'COMPARING LEDGERS...' in time.")
 
-            # Wait for red particle in the first source box
-            print("Waiting for Ingesting particle...")
-            page.wait_for_selector(".bg-red-500.rounded-full.blur-\\[2px\\]", timeout=15000)
-            page.wait_for_timeout(500) # Wait a bit for it to move
-            page.screenshot(path="verification/1_ingestion.png")
-            print("Captured Ingestion.")
-
-            # 2. Scanning
-            print("Waiting for Scanning stage...")
-            # Wait for the blue scanning beam: .bg-blue-500\/50.blur-sm
-            page.wait_for_selector(".bg-blue-500\\/50.blur-sm", timeout=15000)
-            page.wait_for_timeout(500)
-            page.screenshot(path="verification/2_scanning.png")
-            print("Captured Scanning.")
-
-            # 3. Anomaly
-            print("Waiting for Anomaly stage...")
-            # Wait for DISCREPANCY DETECTED text
-            page.wait_for_selector("text=DISCREPANCY DETECTED", timeout=15000)
-            page.wait_for_timeout(500)
-            page.screenshot(path="verification/3_anomaly.png")
-            print("Captured Anomaly.")
-
-            # 4. Reporting
-            print("Waiting for Reporting stage...")
-            # Wait for Reconciled text
-            page.wait_for_selector("text=Reconciled", timeout=15000)
-            page.wait_for_timeout(500)
-            page.screenshot(path="verification/4_reporting.png")
-            print("Captured Reporting.")
+            # Wait for result ("DISCREPANCY DETECTED" or "RECONCILIATION COMPLETE")
+            print("Waiting for Result stage...")
+            try:
+                # Wait for either result
+                page.wait_for_function(
+                    "document.body.innerText.includes('DISCREPANCY DETECTED') || document.body.innerText.includes('RECONCILIATION COMPLETE')",
+                    timeout=20000
+                )
+                page.screenshot(path="verification/4_result.png")
+                print("Captured Result.")
+            except:
+                print("Could not catch result in time.")
 
             print("All stages captured successfully.")
 

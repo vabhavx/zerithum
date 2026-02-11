@@ -1,6 +1,8 @@
+/* eslint-disable react/no-unknown-property */
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MeshGradient, DotOrbit } from "@paper-design/shaders-react";
+import { Canvas } from "@react-three/fiber";
+import { ShaderPlane } from "@/components/ui/background-paper-shaders";
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 
@@ -37,24 +39,18 @@ const Landing = () => {
     return (
         <div className="relative min-h-screen bg-zinc-950 text-white overflow-hidden font-sans selection:bg-emerald-500/30">
             {/* Background Layer */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
-                 <MeshGradient
-                    className="w-full h-full absolute inset-0"
-                    colors={["#000000", "#1a1a1a", "#333333", "#ffffff"]}
-                    speed={0.5}
-                    backgroundColor="#000000"
-                  />
-                  <div className="w-full h-full absolute inset-0 opacity-30">
-                    <DotOrbit
-                      className="w-full h-full"
-                      dotColor="#444444"
-                      orbitColor="#222222"
-                      speed={1.0}
-                      intensity={1.0}
+            <div className="fixed inset-0 z-0 pointer-events-none w-full h-full">
+                <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
+                    <color attach="background" args={["#000000"]} />
+                    <ShaderPlane
+                        position={[0, 0, 0]}
+                        color1="#18181b"
+                        color2="#09090b"
                     />
-                  </div>
-                {/* Overlay Gradient for readability - adjusted to be slightly more transparent to show bg */}
-                <div className="absolute inset-0 bg-zinc-950/70 backdrop-blur-[1px]"></div>
+                    <ambientLight intensity={0.5} />
+                </Canvas>
+                {/* Overlay for readability */}
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-[0px]"></div>
             </div>
 
             {/* Navbar */}
