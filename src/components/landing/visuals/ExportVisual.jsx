@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Download, Share2, CheckCircle2, FileJson, FileSpreadsheet } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
-const ProductExport = () => {
+const ExportVisual = () => {
     const [step, setStep] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
 
     useEffect(() => {
+        // Auto-play on mount
+        setIsPlaying(true);
+
         let interval;
         if (isPlaying) {
             // Sequence:
@@ -30,34 +33,7 @@ const ProductExport = () => {
     }, [isPlaying]);
 
     return (
-        <motion.div
-            className="w-full max-w-6xl mx-auto py-20 px-4 flex flex-col md:flex-row items-center gap-12"
-            onViewportEnter={() => setIsPlaying(true)}
-            onViewportLeave={() => setIsPlaying(false)}
-        >
-             {/* Text Content */}
-             <div className="md:w-1/3 space-y-6">
-                <h2 className="text-3xl md:text-4xl font-serif font-semibold text-white">
-                    Export a reconciled <br/> month, with evidence.
-                </h2>
-                <p className="text-zinc-400 leading-relaxed">
-                    Close the books with confidence. Zerithum packages revenue by platform, category breakdowns, and a detailed transaction list with reconciliation notes for audit defense.
-                </p>
-                <ul className="space-y-3 mt-4 text-sm text-zinc-300">
-                    <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Revenue by Platform (CSV)
-                    </li>
-                    <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Reconciliation Notes (PDF)
-                    </li>
-                    <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Accountant Access Link
-                    </li>
-                </ul>
-            </div>
-
-            {/* Animation Container */}
-            <div className="md:w-2/3 w-full bg-zinc-950 rounded-xl border border-zinc-800 p-8 h-[650px] md:h-[450px] relative overflow-hidden flex items-center justify-center">
+        <div className="w-full bg-zinc-950 rounded-xl border border-zinc-800 p-8 h-[650px] md:h-[450px] relative overflow-hidden flex items-center justify-center">
 
                 {/* Background Grid */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -193,8 +169,7 @@ const ProductExport = () => {
                     )}
                  </AnimatePresence>
             </div>
-        </motion.div>
     );
 };
 
-export default ProductExport;
+export default ExportVisual;
