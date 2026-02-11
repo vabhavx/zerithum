@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Youtube, CreditCard, ShoppingBag, Video, Mail, Globe,
   Smartphone, Box, DollarSign, Code,
-  Search, CheckCircle2, AlertCircle, FileJson,
-  Database, Shield, Zap, Terminal
+  Search, CheckCircle2, Shield, Zap, Terminal, XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,7 +30,7 @@ const PLATFORMS = [
     { id: 'kaj', name: "Kajabi", icon: Box, color: "text-blue-500", bg: "bg-blue-500/10" },
 ];
 
-const STREAM_SPEED = 10; // Faster stream
+const STREAM_SPEED = 8; // Faster stream
 
 const DashboardPreview = () => {
   const [activeAnalysis, setActiveAnalysis] = useState(null);
@@ -50,7 +49,7 @@ const DashboardPreview = () => {
               ref: `ACH_${Math.floor(Math.random() * 999999)}`
           };
           setBankDeposits(prev => [newDeposit, ...prev].slice(0, 6));
-      }, 2000);
+      }, 1500);
       return () => { mounted = false; clearInterval(interval); };
   }, []);
 
@@ -62,7 +61,7 @@ const DashboardPreview = () => {
 
         // Pick a random platform
         const platform = PLATFORMS[Math.floor(Math.random() * PLATFORMS.length)];
-        const isAnomaly = Math.random() > 0.7; // 30% chance of anomaly
+        const isAnomaly = Math.random() > 0.6; // 40% chance of anomaly
 
         setActiveAnalysis({
             ...platform,
@@ -73,11 +72,11 @@ const DashboardPreview = () => {
         setAnalyzingStage('scanning');
 
         // Sequence
-        setTimeout(() => mounted && setAnalyzingStage('diffing'), 800);
-        setTimeout(() => mounted && setAnalyzingStage('resolved'), 2000);
-        setTimeout(() => mounted && setActiveAnalysis(null), 3500);
+        setTimeout(() => mounted && setAnalyzingStage('diffing'), 600);
+        setTimeout(() => mounted && setAnalyzingStage('resolved'), 1800);
+        setTimeout(() => mounted && setActiveAnalysis(null), 3200);
 
-    }, 3800); // Faster cycle
+    }, 3500); // Faster cycle
 
     return () => {
         mounted = false;
@@ -107,7 +106,7 @@ const DashboardPreview = () => {
       <div className="flex-1 flex overflow-hidden relative">
 
         {/* LEFT COLUMN: INGESTION STREAM */}
-        <div className="w-64 border-r border-zinc-800 bg-[#0a0a0b] flex flex-col relative z-10">
+        <div className="w-64 border-r border-zinc-800 bg-[#0a0a0b] flex flex-col relative z-10 hidden md:flex">
             <div className="p-3 border-b border-zinc-800 text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex justify-between items-center">
                 <span>Ingestion Stream</span>
                 <span className="text-emerald-500 flex items-center gap-1"><Zap className="w-3 h-3" /> LIVE</span>
@@ -140,157 +139,172 @@ const DashboardPreview = () => {
         </div>
 
         {/* CENTER COLUMN: AUTOPSY ENGINE */}
-        <div className="flex-1 bg-[#09090b] relative flex flex-col">
+        <div className="flex-1 bg-[#09090b] relative flex flex-col items-center justify-center">
             {/* Grid Background */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
 
-            <div className="p-3 border-b border-zinc-800 text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex justify-between items-center z-20 bg-[#09090b]/80 backdrop-blur">
-                <span>Live Autopsy Engine</span>
-                <div className="flex gap-4">
-                    <span>Latency: <span className="text-zinc-300">12ms</span></span>
-                    <span>Queue: <span className="text-zinc-300">0</span></span>
-                </div>
-            </div>
-
-            <div className="flex-1 flex items-center justify-center p-8 relative z-10">
-                <AnimatePresence mode="wait">
-                    {!activeAnalysis ? (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center gap-4 text-zinc-700"
-                        >
-                            <div className="w-16 h-16 rounded-full border-2 border-zinc-800 flex items-center justify-center relative">
-                                <div className="w-full h-full absolute inset-0 animate-ping opacity-20 bg-zinc-800 rounded-full"></div>
-                                <Search className="w-6 h-6" />
-                            </div>
-                            <div className="text-xs tracking-widest uppercase">Scanning for transactions...</div>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key={activeAnalysis.id}
-                            className="w-full max-w-2xl bg-[#0c0c0e] border border-zinc-800 rounded-lg overflow-hidden shadow-2xl relative"
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, filter: "blur(10px)" }}
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        >
-                            {/* Scanning Laser */}
-                            {analyzingStage === 'scanning' && (
+            <AnimatePresence mode="wait">
+                {!activeAnalysis ? (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex flex-col items-center gap-6 text-zinc-700 relative z-10"
+                    >
+                        <div className="w-24 h-24 rounded-full border border-zinc-800 flex items-center justify-center relative bg-zinc-900/50 backdrop-blur-sm">
+                            <div className="w-full h-full absolute inset-0 animate-ping opacity-20 bg-emerald-500 rounded-full"></div>
+                            <div className="absolute inset-0 border-t border-emerald-500/50 rounded-full animate-spin"></div>
+                            <Search className="w-8 h-8 text-emerald-500" />
+                        </div>
+                        <div className="text-xs tracking-[0.2em] uppercase text-emerald-500/50 font-bold animate-pulse">
+                            Awaiting Transaction
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key={activeAnalysis.id}
+                        className="w-full max-w-3xl px-4 relative z-10"
+                        initial={{ scale: 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.95, opacity: 0, filter: "blur(10px)" }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    >
+                        <div className="bg-[#0c0c0e] border border-zinc-800 rounded-xl overflow-hidden shadow-2xl relative">
+                             {/* Scanning Laser Beam */}
+                             {analyzingStage === 'scanning' && (
                                 <motion.div
-                                    className="absolute top-0 left-0 right-0 h-1 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.8)] z-50"
-                                    animate={{ top: ["0%", "100%"] }}
-                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                    className="absolute inset-x-0 h-[2px] bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,1)] z-50 pointer-events-none"
+                                    initial={{ top: 0 }}
+                                    animate={{ top: "100%" }}
+                                    transition={{ duration: 0.8, ease: "linear", repeat: Infinity }}
                                 />
                             )}
 
-                            {/* Card Header */}
-                            <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
+                            {/* Header */}
+                            <div className="h-12 bg-zinc-900/80 border-b border-zinc-800 flex items-center justify-between px-4 backdrop-blur-md">
                                 <div className="flex items-center gap-3">
-                                    <div className={cn("w-8 h-8 rounded flex items-center justify-center", activeAnalysis.bg, activeAnalysis.color)}>
-                                        <activeAnalysis.icon className="w-4 h-4" />
+                                    <div className={cn("w-6 h-6 rounded flex items-center justify-center", activeAnalysis.bg, activeAnalysis.color)}>
+                                        <activeAnalysis.icon className="w-3 h-3" />
                                     </div>
-                                    <div>
-                                        <div className="text-zinc-200 font-bold">{activeAnalysis.name} Payload</div>
-                                        <div className="text-[10px] text-zinc-500 font-mono">{activeAnalysis.id}</div>
+                                    <div className="flex flex-col">
+                                        <span className="text-zinc-200 font-bold text-xs uppercase tracking-wider">{activeAnalysis.name} Payload</span>
+                                        <span className="text-[10px] text-zinc-500 font-mono">{activeAnalysis.id}</span>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <div className="text-zinc-400 text-[10px] uppercase">Amount</div>
-                                    <div className="text-zinc-200 font-mono font-bold">${activeAnalysis.amount}</div>
+                                <div className="flex items-center gap-2">
+                                    <span className={cn(
+                                        "text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider transition-colors duration-300",
+                                        analyzingStage === 'idle' ? "bg-zinc-800 text-zinc-500" :
+                                        analyzingStage === 'scanning' ? "bg-blue-500/10 text-blue-500 animate-pulse" :
+                                        analyzingStage === 'diffing' ? "bg-purple-500/10 text-purple-500" :
+                                        activeAnalysis.isAnomaly ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"
+                                    )}>
+                                        {analyzingStage === 'idle' && "Queued"}
+                                        {analyzingStage === 'scanning' && "Scanning"}
+                                        {analyzingStage === 'diffing' && "Comparing"}
+                                        {analyzingStage === 'resolved' && (activeAnalysis.isAnomaly ? "Anomaly" : "Matched")}
+                                    </span>
                                 </div>
                             </div>
 
-                            {/* Autopsy Split View */}
-                            <div className="grid grid-cols-2 divide-x divide-zinc-800 bg-[#0a0a0b] h-64">
-                                {/* Left: Platform Data */}
-                                <div className="p-4 font-mono text-[10px] text-zinc-400 overflow-hidden relative">
-                                    <div className="text-blue-500 mb-2 font-bold flex items-center gap-1">
-                                        <FileJson className="w-3 h-3" /> PLATFORM_DATA
+                            {/* Split Diff View */}
+                            <div className="grid grid-cols-2 divide-x divide-zinc-800 bg-[#0a0a0b] font-mono text-[10px] md:text-xs">
+                                {/* Left: Source JSON */}
+                                <div className="p-4 relative">
+                                    <div className="absolute top-2 right-2 text-[9px] text-zinc-600 uppercase font-bold tracking-wider">Source</div>
+                                    <div className="space-y-1 opacity-80">
+                                        <div className="text-zinc-500">{`{`}</div>
+                                        <div className="pl-4 text-zinc-400"><span className="text-blue-400">"id"</span>: <span className="text-amber-400">"{activeAnalysis.id}"</span>,</div>
+                                        <div className="pl-4 text-zinc-400"><span className="text-blue-400">"platform"</span>: <span className="text-amber-400">"{activeAnalysis.name}"</span>,</div>
+
+                                        {/* Dynamic Amount Line */}
+                                        <motion.div
+                                            className="pl-4 text-zinc-400 relative"
+                                            animate={analyzingStage === 'resolved' && activeAnalysis.isAnomaly ? {
+                                                color: "#f87171", // red-400
+                                                backgroundColor: "rgba(248, 113, 113, 0.1)",
+                                            } : {}}
+                                        >
+                                            <span className="text-blue-400">"amount"</span>: <span className="text-emerald-400">{activeAnalysis.amount}</span>,
+                                        </motion.div>
+
+                                        <div className="pl-4 text-zinc-400"><span className="text-blue-400">"currency"</span>: <span className="text-amber-400">"USD"</span></div>
+                                        <div className="text-zinc-500">{`}`}</div>
                                     </div>
-                                    <pre className="opacity-70">
-                                        {`{
-  "id": "${activeAnalysis.id}",
-  "source": "${activeAnalysis.name}",
-  "amount_gross": ${activeAnalysis.amount},
-  "currency": "USD",
-  "status": "paid",
-  "payout_date": "${new Date().toISOString().split('T')[0]}"
-}`}
-                                    </pre>
                                 </div>
 
-                                {/* Right: Bank Data */}
-                                <div className="p-4 font-mono text-[10px] text-zinc-400 overflow-hidden relative">
-                                     <div className="text-emerald-500 mb-2 font-bold flex items-center gap-1">
-                                        <Database className="w-3 h-3" /> BANK_DEPOSIT
-                                    </div>
+                                {/* Right: Bank JSON */}
+                                <div className="p-4 relative bg-zinc-900/20">
+                                    <div className="absolute top-2 right-2 text-[9px] text-zinc-600 uppercase font-bold tracking-wider">Bank Ledger</div>
                                     {analyzingStage === 'scanning' ? (
-                                        <div className="h-full flex flex-col items-center justify-center text-zinc-600 gap-2">
-                                            <div className="w-4 h-4 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin"></div>
-                                            fetching...
+                                        <div className="h-full flex items-center justify-center text-zinc-600 gap-2">
+                                            <div className="w-3 h-3 border border-zinc-600 border-t-transparent rounded-full animate-spin"></div>
+                                            Fetching...
                                         </div>
                                     ) : (
                                         <motion.div
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
+                                            className="space-y-1 opacity-80"
                                         >
-                                            <pre className="opacity-70 text-zinc-300">
-                                        {`{
-  "trace_id": "BK_${activeAnalysis.id.split('_')[1]}",
-  "amount": ${activeAnalysis.isAnomaly ? (parseFloat(activeAnalysis.amount) * 0.95).toFixed(2) : activeAnalysis.amount},
-  "currency": "USD",
-  "val_date": "${new Date().toISOString().split('T')[0]}"
-}`}
-                                            </pre>
+                                            <div className="text-zinc-500">{`{`}</div>
+                                            <div className="pl-4 text-zinc-400"><span className="text-purple-400">"ref"</span>: <span className="text-amber-400">"ACH_{Math.floor(Math.random()*9999)}"</span>,</div>
+                                            <div className="pl-4 text-zinc-400"><span className="text-purple-400">"status"</span>: <span className="text-amber-400">"CLEARED"</span>,</div>
 
-                                            {/* Discrepancy Highlight */}
-                                            {activeAnalysis.isAnomaly && analyzingStage !== 'idle' && (
-                                                <motion.div
-                                                    initial={{ scaleX: 0 }}
-                                                    animate={{ scaleX: 1 }}
-                                                    className="absolute top-20 left-4 right-4 h-6 bg-red-500/20 border border-red-500/50 rounded flex items-center px-2 origin-left"
-                                                >
-                                                    <span className="text-red-400 font-bold ml-auto">
-                                                        Diff: -${(parseFloat(activeAnalysis.amount) * 0.05).toFixed(2)}
-                                                    </span>
-                                                </motion.div>
-                                            )}
+                                            {/* Dynamic Amount Line */}
+                                            <motion.div
+                                                className="pl-4 text-zinc-400 relative"
+                                                animate={analyzingStage === 'resolved' && activeAnalysis.isAnomaly ? {
+                                                    color: "#f87171", // red-400
+                                                    backgroundColor: "rgba(248, 113, 113, 0.1)",
+                                                } : {}}
+                                            >
+                                                <span className="text-purple-400">"amount"</span>: <span className="text-emerald-400">
+                                                    {activeAnalysis.isAnomaly
+                                                        ? (parseFloat(activeAnalysis.amount) * 0.95).toFixed(2)
+                                                        : activeAnalysis.amount
+                                                    }
+                                                </span>,
+                                            </motion.div>
+
+                                            <div className="pl-4 text-zinc-400"><span className="text-purple-400">"currency"</span>: <span className="text-amber-400">"USD"</span></div>
+                                            <div className="text-zinc-500">{`}`}</div>
                                         </motion.div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Status Footer */}
-                            <div className={cn(
-                                "h-12 flex items-center justify-center gap-2 font-bold text-sm transition-colors duration-500",
-                                analyzingStage === 'resolved'
-                                    ? (activeAnalysis.isAnomaly ? "bg-red-500/10 text-red-500 border-t border-red-500/20" : "bg-emerald-500/10 text-emerald-500 border-t border-emerald-500/20")
-                                    : "bg-zinc-900 border-t border-zinc-800 text-zinc-500"
-                            )}>
-                                {analyzingStage === 'scanning' && "ANALYZING PAYLOAD..."}
-                                {analyzingStage === 'diffing' && "COMPARING LEDGERS..."}
-                                {analyzingStage === 'resolved' && (
-                                    activeAnalysis.isAnomaly ? (
-                                        <>
-                                            <AlertCircle className="w-4 h-4" /> DISCREPANCY DETECTED
-                                        </>
-                                    ) : (
-                                        <>
-                                            <CheckCircle2 className="w-4 h-4" /> RECONCILIATION COMPLETE
-                                        </>
-                                    )
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                            {/* Result Footer - Inline, Non-Overlapping */}
+                            <motion.div
+                                className="border-t border-zinc-800 bg-zinc-900/50 backdrop-blur"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={analyzingStage === 'resolved' ? { height: "auto", opacity: 1 } : { height: 0, opacity: 0 }}
+                            >
+                                <div className={cn(
+                                    "p-3 flex items-center justify-between text-xs font-medium",
+                                    activeAnalysis.isAnomaly ? "text-red-400" : "text-emerald-400"
+                                )}>
+                                    <div className="flex items-center gap-2">
+                                        {activeAnalysis.isAnomaly ? <XCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                                        <span className="uppercase tracking-wider">
+                                            {activeAnalysis.isAnomaly ? "Discrepancy Detected" : "Reconciliation Successful"}
+                                        </span>
+                                    </div>
+                                    {activeAnalysis.isAnomaly && (
+                                        <div className="font-mono bg-red-500/10 px-2 py-1 rounded border border-red-500/20">
+                                            DIFF: -${(parseFloat(activeAnalysis.amount) * 0.05).toFixed(2)}
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
 
         {/* RIGHT COLUMN: BANK FEED */}
-        <div className="w-64 border-l border-zinc-800 bg-[#0a0a0b] flex flex-col relative z-10">
+        <div className="w-64 border-l border-zinc-800 bg-[#0a0a0b] flex flex-col relative z-10 hidden md:flex">
             <div className="p-3 border-b border-zinc-800 text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex justify-between items-center">
                 <span>True Bank Deposit</span>
                 <span className="text-emerald-500 flex items-center gap-1"><Shield className="w-3 h-3" /> SECURE</span>
@@ -304,14 +318,16 @@ const DashboardPreview = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ duration: 0.3 }}
-                            className="bg-zinc-900/50 border border-zinc-800 rounded p-3 flex flex-col gap-1 mb-3"
+                            className="bg-zinc-900/50 border border-zinc-800 rounded p-3 flex flex-col gap-1 mb-3 hover:border-zinc-700 transition-colors cursor-default"
                         >
                             <div className="flex justify-between items-center">
-                                <span className="text-zinc-400 text-[10px]">{deposit.bank}</span>
-                                <span className="text-emerald-500 text-[10px]">VERIFIED</span>
+                                <span className="text-zinc-400 text-[10px] uppercase font-bold tracking-wider">Deposit</span>
+                                <span className="text-emerald-500 text-[10px] bg-emerald-500/10 px-1 rounded">VERIFIED</span>
                             </div>
-                            <div className="text-zinc-200 font-mono font-medium">${deposit.amount}</div>
-                            <div className="text-zinc-600 text-[10px]">{deposit.ref}</div>
+                            <div className="flex justify-between items-end mt-1">
+                                <div className="text-zinc-200 font-mono font-bold text-sm">${deposit.amount}</div>
+                                <div className="text-zinc-600 text-[9px] font-mono">{deposit.ref}</div>
+                            </div>
                         </motion.div>
                     ))}
                 </AnimatePresence>
@@ -327,7 +343,7 @@ const DashboardPreview = () => {
         <div className="flex-1 flex gap-8 whitespace-nowrap overflow-hidden">
              <motion.div
                 animate={{ x: ["0%", "-50%"] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
                 className="flex gap-8"
              >
                 <span>[SYSTEM] Connected to 24 data streams</span>

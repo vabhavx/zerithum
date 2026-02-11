@@ -44,13 +44,13 @@ const Landing = () => {
                     <color attach="background" args={["#000000"]} />
                     <ShaderPlane
                         position={[0, 0, 0]}
-                        color1="#18181b"
-                        color2="#09090b"
+                        color1="#3b82f6"
+                        color2="#10b981"
                     />
-                    <ambientLight intensity={0.5} />
+                    <ambientLight intensity={1.5} />
                 </Canvas>
-                {/* Overlay for readability */}
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-[0px]"></div>
+                {/* Overlay for readability - Gradient Mask */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80 backdrop-blur-[1px]"></div>
             </div>
 
             {/* Navbar */}
