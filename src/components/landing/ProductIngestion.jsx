@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, AlertTriangle, AlertCircle, Clock } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 
 const steps = [
   {

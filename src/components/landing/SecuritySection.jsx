@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Lock, FileCheck, Server, AlertCircle } from 'lucide-react';
+import { Shield, Lock, FileCheck, Server } from 'lucide-react';
 
 const SecuritySection = () => {
     return (

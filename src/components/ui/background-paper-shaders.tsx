@@ -3,7 +3,6 @@
 import { useRef, useMemo } from "react"
 import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
-
 // Custom shader material for advanced effects
 const vertexShader = `
   uniform float time;
@@ -55,7 +54,7 @@ export function ShaderPlane({
   color1 = "#ff5722",
   color2 = "#ffffff",
 }: {
-  position?: [number, number, number]
+  position: [number, number, number]
   color1?: string
   color2?: string
 }) {
@@ -103,9 +102,8 @@ export function EnergyRing({
 
   useFrame((state) => {
     if (mesh.current) {
-      // @ts-ignore
       mesh.current.rotation.z = state.clock.elapsedTime
-      // mesh.current.material.opacity = 0.5 + Math.sin(state.clock.elapsedTime * 3) * 0.3
+      mesh.current.material.opacity = 0.5 + Math.sin(state.clock.elapsedTime * 3) * 0.3
     }
   })
 

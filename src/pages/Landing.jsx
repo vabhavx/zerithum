@@ -1,7 +1,8 @@
+/* eslint-disable react/no-unknown-property */
 import React, { useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
 import { Link } from 'react-router-dom';
-import { ShaderPlane } from '@/components/ui/background-paper-shaders';
+import { Canvas } from "@react-three/fiber";
+import { ShaderPlane } from "@/components/ui/background-paper-shaders";
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 
@@ -38,13 +39,18 @@ const Landing = () => {
     return (
         <div className="relative min-h-screen bg-zinc-950 text-white overflow-hidden font-sans selection:bg-emerald-500/30">
             {/* Background Layer */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
-                <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
-                    <ambientLight intensity={0.5} />
-                    <ShaderPlane position={[0, 0, 0]} color1="#18181b" color2="#09090b" />
+            <div className="fixed inset-0 z-0 pointer-events-none w-full h-full">
+                <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
+                    <color attach="background" args={["#000000"]} />
+                    <ShaderPlane
+                        position={[0, 0, 0]}
+                        color1="#3b82f6"
+                        color2="#10b981"
+                    />
+                    <ambientLight intensity={1.5} />
                 </Canvas>
-                {/* Overlay Gradient for readability */}
-                <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-[2px]"></div>
+                {/* Overlay for readability - Gradient Mask */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80 backdrop-blur-[1px]"></div>
             </div>
 
             {/* Navbar */}

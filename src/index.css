@@ -4,351 +4,66 @@
 
 @layer base {
   :root {
-    /* ═══════════════════════════════════════════════════════════════════════════
-       ZERITHUM DARK INDUSTRIAL DESIGN SYSTEM
-       ═══════════════════════════════════════════════════════════════════════════ */
-
-    /* Grayscale surfaces (dark industrial) */
-    --z-bg-0: #0A0A0B;
-    /* page background */
-    --z-bg-1: #0F1012;
-    /* raised surfaces */
-    --z-bg-2: #15161A;
-    /* cards */
-    --z-bg-3: #1A1B1F;
-    /* elevated panels */
-
-    /* Borders */
-    --z-border-1: rgba(255, 255, 255, 0.08);
-    --z-border-2: rgba(255, 255, 255, 0.12);
-
-    /* Text hierarchy */
-    --z-text-1: rgba(255, 255, 255, 0.92);
-    --z-text-2: rgba(255, 255, 255, 0.72);
-    --z-text-3: rgba(255, 255, 255, 0.56);
-
-    /* Accents */
-    --z-accent: #4BA3B8;
-    /* desaturated teal/blue */
-    --z-accent-2: #2C6B7A;
-    /* deeper teal for hover/active */
-    --z-warn: #F59E0B;
-    /* amber/orange */
-    --z-danger: #EF4444;
-    /* for errors only */
-
-    /* Typography */
-    --z-font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
-    --z-font-serif: 'Libre Baskerville', Georgia, Cambria, 'Times New Roman', Times, serif;
-    --z-fs-11: 11px;
-    --z-fs-13: 13px;
-    --z-fs-15: 15px;
-    --z-fs-18: 18px;
-    --z-fs-24: 24px;
-
-    --z-fw-400: 400;
-    --z-fw-500: 500;
-    --z-fw-600: 600;
-
-    --z-ls-tight: -0.02em;
-    /* apply to headings >= 18px */
-
-    /* ═══════════════════════════════════════════════════════════════════════════
-       TAILWIND/SHADCN COMPATIBILITY LAYER
-       Maps Zerithum tokens to standard shadcn variables
-       ═══════════════════════════════════════════════════════════════════════════ */
-
-    --background: 220 6% 4%;
-    /* #0A0A0B */
-    --foreground: 0 0% 92%;
-    /* --z-text-1 equiv */
-    --card: 220 6% 8%;
-    /* #15161A */
-    --card-foreground: 0 0% 92%;
-    --popover: 220 6% 6%;
-    /* #0F1012 */
-    --popover-foreground: 0 0% 92%;
-    --primary: 190 42% 51%;
-    /* #4BA3B8 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 6% 10%;
-    /* #1A1B1F */
-    --secondary-foreground: 0 0% 92%;
-    --muted: 220 6% 10%;
-    --muted-foreground: 0 0% 56%;
-    /* --z-text-3 equiv */
-    --accent: 190 42% 51%;
-    /* #4BA3B8 */
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    /* #EF4444 */
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 100% / 0.08;
-    /* --z-border-1 */
-    --input: 0 0% 100% / 0.08;
-    --ring: 190 42% 51%;
-    /* #4BA3B8 */
-
-    /* Chart colors - updated for dark theme */
-    --chart-1: 190 42% 51%;
-    /* teal */
-    --chart-2: 38 92% 50%;
-    /* amber */
-    --chart-3: 0 84% 60%;
-    /* red */
-    --chart-4: 262 52% 47%;
-    /* purple */
-    --chart-5: 142 71% 45%;
-    /* green */
-
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
-
-    /* Sidebar - mapped to Zerithum palette */
-    --sidebar-background: 220 6% 4%;
-    --sidebar-foreground: 0 0% 92%;
-    --sidebar-primary: 190 42% 51%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 6% 10%;
-    --sidebar-accent-foreground: 0 0% 92%;
-    --sidebar-border: 0 0% 100% / 0.08;
-    --sidebar-ring: 190 42% 51%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
   }
 
-  /* Dark class - same as root for always-dark theme */
   .dark {
-    --background: 220 6% 4%;
-    --foreground: 0 0% 92%;
-    --card: 220 6% 8%;
-    --card-foreground: 0 0% 92%;
-    --popover: 220 6% 6%;
-    --popover-foreground: 0 0% 92%;
-    --primary: 190 42% 51%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 6% 10%;
-    --secondary-foreground: 0 0% 92%;
-    --muted: 220 6% 10%;
-    --muted-foreground: 0 0% 56%;
-    --accent: 190 42% 51%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 100% / 0.08;
-    --input: 0 0% 100% / 0.08;
-    --ring: 190 42% 51%;
-    --chart-1: 190 42% 51%;
-    --chart-2: 38 92% 50%;
-    --chart-3: 0 84% 60%;
-    --chart-4: 262 52% 47%;
-    --chart-5: 142 71% 45%;
-    --sidebar-background: 220 6% 4%;
-    --sidebar-foreground: 0 0% 92%;
-    --sidebar-primary: 190 42% 51%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 6% 10%;
-    --sidebar-accent-foreground: 0 0% 92%;
-    --sidebar-border: 0 0% 100% / 0.08;
-    --sidebar-ring: 190 42% 51%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
-
-  html {
-    font-family: var(--z-font);
-  }
-
   body {
     @apply bg-background text-foreground;
-    background-color: var(--z-bg-0);
-    color: var(--z-text-1);
-    font-family: var(--z-font);
-    font-size: var(--z-fs-15);
-    font-weight: var(--z-fw-400);
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  /* Links and primary actions */
-  a {
-    color: var(--z-accent);
-    text-decoration: none;
-    transition: color 150ms ease;
-  }
-
-  a:hover {
-    color: var(--z-accent-2);
-  }
-
-  /* Heading typography */
-  h1 {
-    font-family: var(--z-font-serif);
-    font-size: var(--z-fs-24);
-    font-weight: var(--z-fw-600);
-    letter-spacing: var(--z-ls-tight);
-    color: var(--z-text-1);
-    line-height: 1.2;
-  }
-
-  h2 {
-    font-family: var(--z-font-serif);
-    font-size: var(--z-fs-18);
-    font-weight: var(--z-fw-600);
-    letter-spacing: var(--z-ls-tight);
-    color: var(--z-text-1);
-    line-height: 1.3;
-  }
-
-  h3 {
-    font-family: var(--z-font-serif);
-    font-size: var(--z-fs-15);
-    font-weight: var(--z-fw-600);
-    color: var(--z-text-1);
-    line-height: 1.4;
-  }
-
-  h4,
-  h5,
-  h6 {
-    font-family: var(--z-font-serif);
-    font-size: var(--z-fs-13);
-    font-weight: var(--z-fw-500);
-    color: var(--z-text-1);
-  }
-
-  /* Small UI labels */
-  small,
-  .text-muted {
-    font-size: var(--z-fs-13);
-    color: var(--z-text-2);
-  }
-
-  .text-xs {
-    font-size: var(--z-fs-11);
-    color: var(--z-text-3);
-  }
-}
-
-/* Utility classes for Zerithum design system */
-@layer utilities {
-  .z-surface-0 {
-    background-color: var(--z-bg-0);
-  }
-
-  .z-surface-1 {
-    background-color: var(--z-bg-1);
-  }
-
-  .z-surface-2 {
-    background-color: var(--z-bg-2);
-  }
-
-  .z-surface-3 {
-    background-color: var(--z-bg-3);
-  }
-
-  .z-border {
-    border-color: var(--z-border-1);
-  }
-
-  .z-border-strong {
-    border-color: var(--z-border-2);
-  }
-
-  .z-text-primary {
-    color: var(--z-text-1);
-  }
-
-  .z-text-secondary {
-    color: var(--z-text-2);
-  }
-
-  .z-text-muted {
-    color: var(--z-text-3);
-  }
-
-  .z-text-accent {
-    color: var(--z-accent);
-  }
-
-  .z-text-warn {
-    color: var(--z-warn);
-  }
-
-  .z-text-danger {
-    color: var(--z-danger);
-  }
-
-  /* Card/panel styling */
-  .z-card {
-    background-color: var(--z-bg-2);
-    border: 1px solid var(--z-border-1);
-    border-radius: 0.5rem;
-  }
-
-  .z-panel {
-    background-color: var(--z-bg-3);
-    border: 1px solid var(--z-border-1);
-    border-radius: 0.5rem;
-  }
-
-  /* Card styles - Professional, clean design */
-  .card-modern {
-    background: var(--z-bg-2);
-    border: 1px solid var(--z-border-1);
-    transition: border-color 0.15s ease;
-  }
-
-  .card-modern:hover {
-    border-color: var(--z-border-2);
-  }
-
-  /* Glass effect - simplified for performance */
-  .glass-effect {
-    background: var(--z-bg-1);
-    border: 1px solid var(--z-border-1);
-  }
-
-  /* Accent styling without glow */
-  .glow-accent {
-    border-color: var(--z-accent);
-  }
-
-  .nav-item-active {
-    background: rgba(75, 163, 184, 0.08);
-    border-left: 2px solid #4BA3B8;
-  }
-
-  /* Loading state - simple pulse instead of shimmer */
-  @keyframes subtle-pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.6; }
-  }
-
-  .shimmer {
-    background: var(--z-bg-3);
-    animation: subtle-pulse 1.5s ease-in-out infinite;
-  }
-
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
   }
 }

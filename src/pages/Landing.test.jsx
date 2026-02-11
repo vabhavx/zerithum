@@ -13,6 +13,11 @@ vi.mock('@/components/ui/background-paper-shaders', () => ({
   ShaderPlane: () => <div data-testid="mock-shader-plane" />,
 }));
 
+vi.mock('@paper-design/shaders-react', () => ({
+  MeshGradient: () => <div data-testid="mock-mesh-gradient" />,
+  DotOrbit: () => <div data-testid="mock-dot-orbit" />,
+}));
+
 // Mock the components that use canvas or complex animations to avoid JSDOM issues
 vi.mock('@/components/landing/HeroSection', () => ({ default: () => <div data-testid="hero-section">Hero Section</div> }));
 vi.mock('@/components/landing/ProductIngestion', () => ({ default: () => <div data-testid="product-ingestion">Product Ingestion</div> }));

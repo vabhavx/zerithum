@@ -9,11 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Sparkles, Upload, Receipt, X } from "lucide-react";
+import { Loader2, Plus, Sparkles, Receipt, X } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORIES } from "@/lib/expenseCategories";
 import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
 
 const expenseSchema = z.object({
     amount: z.coerce.number().min(0.01, "Amount must be greater than 0"),
