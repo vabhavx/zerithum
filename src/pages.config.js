@@ -28,6 +28,7 @@ import TaxReports from './pages/TaxReports';
 import TransactionAnalysis from './pages/TransactionAnalysis';
 import Transactions from './pages/Transactions';
 import Methodology from './pages/Methodology';
+import Security from './pages/Security';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +43,7 @@ export const PAGES = {
     "Landing": Landing,
     "SignIn": SignIn,
     "Methodology": Methodology,
+    "Security": Security,
     "Notifications": Notifications,
     "Platforms": Platforms,
     "Pricing": Pricing,

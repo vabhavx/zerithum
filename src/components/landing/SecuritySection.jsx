@@ -1,5 +1,7 @@
 import React from 'react';
-import { Shield, Lock, FileCheck, Server } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Shield, Lock, FileCheck, Server, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const SecuritySection = () => {
     return (
@@ -35,13 +37,20 @@ const SecuritySection = () => {
                     />
                 </div>
 
-                <div className="mt-12 flex justify-center">
+                <div className="mt-12 flex flex-col items-center gap-8">
                     <div className="p-4 bg-emerald-900/10 border border-emerald-900/30 rounded-lg flex items-start gap-3 max-w-lg">
                         <Shield className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                         <div className="text-sm text-emerald-100/80">
                             <strong>Security First:</strong> Zerithum is designed for zero-trust environments. We assume all networks are hostile and verify every request signature.
                         </div>
                     </div>
+
+                    <Link to="/Security">
+                        <Button variant="outline" className="group border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800">
+                            View full security details
+                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                    </Link>
                 </div>
              </div>
         </section>
