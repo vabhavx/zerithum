@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { animate } from "motion/react";
 
 // Singleton to track mouse position globally
-// This prevents having multiple 'pointermove' listeners on the body
 const mouseTracker = {
   element: null,
   listeners: new Set(),
@@ -20,8 +19,6 @@ const mouseTracker = {
     const handlePointerMove = (e) => {
       this.x = e.clientX;
       this.y = e.clientY;
-
-      // Notify all listeners
       for (const listener of this.listeners) {
         listener(this.x, this.y);
       }
@@ -29,7 +26,6 @@ const mouseTracker = {
 
     document.body.addEventListener("pointermove", handlePointerMove, { passive: true });
 
-    // Cleanup function if needed (though usually this persists for app life)
     this.cleanup = () => {
       document.body.removeEventListener("pointermove", handlePointerMove);
       this.initialized = false;
@@ -63,11 +59,7 @@ const GlowingEffect = memo(
     const handleMove = useCallback(
       (x, y) => {
         if (!containerRef.current) return;
-
-        // Cancel previous frame to avoid stacking
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-        }
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
 
         animationFrameRef.current = requestAnimationFrame(() => {
           const element = containerRef.current;
@@ -82,10 +74,7 @@ const GlowingEffect = memo(
           }
 
           const center = [left + width * 0.5, top + height * 0.5];
-          const distanceFromCenter = Math.hypot(
-            mouseX - center[0],
-            mouseY - center[1]
-          );
+          const distanceFromCenter = Math.hypot(mouseX - center[0], mouseY - center[1]);
           const inactiveRadius = 0.5 * Math.min(width, height) * inactiveZone;
 
           if (distanceFromCenter < inactiveRadius) {
@@ -103,13 +92,8 @@ const GlowingEffect = memo(
 
           if (!isActive) return;
 
-          const currentAngle =
-            parseFloat(element.style.getPropertyValue("--start")) || 0;
-          let targetAngle =
-            (180 * Math.atan2(mouseY - center[1], mouseX - center[0])) /
-            Math.PI +
-            90;
-
+          const currentAngle = parseFloat(element.style.getPropertyValue("--start")) || 0;
+          let targetAngle = (180 * Math.atan2(mouseY - center[1], mouseX - center[0])) / Math.PI + 90;
           const angleDiff = ((targetAngle - currentAngle + 180) % 360) - 180;
           const newAngle = currentAngle + angleDiff;
 
@@ -127,20 +111,13 @@ const GlowingEffect = memo(
 
     useEffect(() => {
       if (disabled) return;
-
-      // Subscribe to global mouse tracker
       const removeListener = mouseTracker.addListener(handleMove);
-
-      // Also handle scroll to update position relative to viewport
       const handleScroll = () => handleMove(lastPosition.current.x, lastPosition.current.y);
       window.addEventListener("scroll", handleScroll, { passive: true });
-
       return () => {
         removeListener();
         window.removeEventListener("scroll", handleScroll);
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-        }
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
       };
     }, [handleMove, disabled]);
 
@@ -170,17 +147,15 @@ const GlowingEffect = memo(
                   var(--black),
                   var(--black) calc(25% / var(--repeating-conic-gradient-times))
                 )`
-                : `radial-gradient(circle, #dd7bbb 10%, #dd7bbb00 20%),
-                radial-gradient(circle at 40% 40%, #d79f1e 5%, #d79f1e00 15%),
-                radial-gradient(circle at 60% 60%, #5a922c 10%, #5a922c00 20%),
-                radial-gradient(circle at 40% 60%, #4c7894 10%, #4c789400 20%),
+                : `radial-gradient(circle, hsl(var(--primary)) 10%, transparent 20%),
+                radial-gradient(circle at 40% 40%, hsl(var(--accent)) 5%, transparent 15%),
                 repeating-conic-gradient(
                   from 236.84deg at 50% 50%,
-                  #dd7bbb 0%,
-                  #d79f1e calc(25% / var(--repeating-conic-gradient-times)),
-                  #5a922c calc(50% / var(--repeating-conic-gradient-times)),
-                  #4c7894 calc(75% / var(--repeating-conic-gradient-times)),
-                  #dd7bbb calc(100% / var(--repeating-conic-gradient-times))
+                  hsl(var(--primary)) 0%,
+                  hsl(var(--accent)) calc(25% / var(--repeating-conic-gradient-times)),
+                  hsl(var(--primary)) calc(50% / var(--repeating-conic-gradient-times)),
+                  hsl(var(--accent)) calc(75% / var(--repeating-conic-gradient-times)),
+                  hsl(var(--primary)) calc(100% / var(--repeating-conic-gradient-times))
                 )`,
           }}
           className={cn(
