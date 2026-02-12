@@ -10,7 +10,6 @@ const Footer = () => {
                         <div className="text-2xl font-serif font-bold tracking-tight">Zerithum.</div>
                         <p className="text-zinc-500 max-w-xs text-sm leading-relaxed">
                             The operating system for creator revenue operations.
-                            San Francisco, CA.
                         </p>
                         <div className="flex gap-4 text-sm font-medium">
                             <Link to="/methodology" className="hover:text-emerald-600 transition-colors">Methodology</Link>
@@ -33,7 +32,6 @@ const Footer = () => {
                             <ul className="space-y-2 text-zinc-500">
                                 <li><Link to="/privacy" className="hover:text-zinc-900 transition-colors">Privacy Policy</Link></li>
                                 <li><Link to="/terms" className="hover:text-zinc-900 transition-colors">Terms of Service</Link></li>
-                                <li><Link to="/security" className="hover:text-zinc-900 transition-colors">Security</Link></li>
                                 <li><Link to="/contact" className="hover:text-zinc-900 transition-colors">Contact</Link></li>
                             </ul>
                         </div>
