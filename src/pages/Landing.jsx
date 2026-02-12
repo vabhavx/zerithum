@@ -63,7 +63,7 @@ const Landing = () => {
                         <button onClick={() => scrollToSection('product')} className="hover:text-white transition-colors">Product</button>
                         <button onClick={() => scrollToSection('how-it-works')} className="hover:text-white transition-colors">How it works</button>
                         <button onClick={() => scrollToSection('accuracy')} className="hover:text-white transition-colors">Accuracy</button>
-                        <button onClick={() => scrollToSection('security')} className="hover:text-white transition-colors">Security</button>
+                        <Link to="/Security" className="hover:text-white transition-colors">Security</Link>
                         <Link to="/methodology" className="hover:text-white transition-colors">Methodology</Link>
                     </div>
 
@@ -88,7 +88,7 @@ const Landing = () => {
                         <button onClick={() => scrollToSection('product')} className="text-left text-zinc-400 hover:text-white">Product</button>
                         <button onClick={() => scrollToSection('how-it-works')} className="text-left text-zinc-400 hover:text-white">How it works</button>
                         <button onClick={() => scrollToSection('accuracy')} className="text-left text-zinc-400 hover:text-white">Accuracy</button>
-                        <button onClick={() => scrollToSection('security')} className="text-left text-zinc-400 hover:text-white">Security</button>
+                        <Link to="/Security" className="text-zinc-400 hover:text-white">Security</Link>
                         <Link to="/methodology" className="text-zinc-400 hover:text-white">Methodology</Link>
                         <div className="h-[1px] bg-zinc-800 w-full"></div>
                         <Link to="/SignIn" className="text-zinc-400 hover:text-white">Sign in</Link>
