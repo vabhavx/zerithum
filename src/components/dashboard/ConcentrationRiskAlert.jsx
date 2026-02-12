@@ -1,6 +1,7 @@
 import React from "react";
-import { AlertTriangle, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle, ShieldCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const PLATFORM_LABELS = {
   youtube: "YouTube",
@@ -9,35 +10,42 @@ const PLATFORM_LABELS = {
   gumroad: "Gumroad"
 };
 
-export default function ConcentrationRiskAlert({ platform, percentage, onDismiss }) {
-  if (!platform || percentage < 70) return null;
+export default function ConcentrationRiskAlert({ platform, percentage }) {
+  // If no risk (percentage < 50), show "Diversified" state
+  const isRisk = percentage >= 50;
+  const isHighRisk = percentage >= 70;
 
   return (
-    <div className="rounded-xl p-4 bg-amber-500/10 border border-amber-500/30 backdrop-blur-sm">
-      <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0 border border-amber-500/30">
-          <AlertTriangle className="w-4 h-4 text-amber-400" />
-        </div>
-        <div className="flex-1">
-          <h4 className="font-semibold text-amber-400 mb-1 text-sm">Revenue Concentration Risk</h4>
-          <p className="text-xs text-amber-300/80">
-            <span className="font-medium">{percentage.toFixed(1)}%</span> of your revenue comes from{" "}
-            <span className="font-medium">{PLATFORM_LABELS[platform] || platform}</span>. 
-            Consider diversifying your income streams to reduce platform dependency risk.
-          </p>
-        </div>
-        {onDismiss && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-amber-400 hover:bg-amber-500/20 -mt-1 -mr-1 h-8 w-8"
-            onClick={onDismiss}
-            aria-label="Dismiss risk alert"
-          >
-            <X className="w-3.5 h-3.5" />
-          </Button>
+    <Card className="h-full border-l-4 border-l-warning">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Revenue Concentration</CardTitle>
+        {isRisk ? (
+          <AlertTriangle className={cn("h-4 w-4", isHighRisk ? "text-destructive" : "text-warning")} />
+        ) : (
+          <ShieldCheck className="h-4 w-4 text-emerald-500" />
         )}
-      </div>
-    </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold font-mono-numbers">
+          {percentage.toFixed(1)}%
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          from <span className="font-semibold text-foreground">{PLATFORM_LABELS[platform] || platform || "Top Source"}</span>
+        </p>
+
+        <div className="mt-4 flex items-center">
+          <span className={cn(
+            "text-xs font-medium px-2 py-1 rounded-full",
+            isHighRisk
+              ? "bg-destructive/10 text-destructive"
+              : isRisk
+                ? "bg-warning/10 text-warning"
+                : "bg-emerald-500/10 text-emerald-600"
+          )}>
+            {isHighRisk ? "High Risk" : isRisk ? "Moderate Risk" : "Diversified"}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

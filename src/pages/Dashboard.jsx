@@ -1,378 +1,318 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { base44 } from "@/api/supabaseClient";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
-import { RefreshCw, Sparkles, Loader2, TrendingUp, FileText, CircleDollarSign, Link2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  format,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  subDays,
+  isSameDay,
+  addDays,
+  startOfDay,
+  isAfter
+} from "date-fns";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-import ConcentrationRiskAlert from "@/components/dashboard/ConcentrationRiskAlert";
-import LendingSignalsCard from "@/components/dashboard/LendingSignalsCard";
-import InsightsPanel from "@/components/dashboard/InsightsPanel";
-import AlertBanner from "@/components/dashboard/AlertBanner";
-import { GlowingEffect } from "@/components/ui/glowing-effect";
-
-// Lazy load chart components for better performance
-const RevenueForecasting = React.lazy(() => import("@/components/dashboard/RevenueForecasting"));
-const InteractivePlatformChart = React.lazy(() => import("@/components/dashboard/InteractivePlatformChart"));
+// Components
+import RevenueSummaryCard from "@/components/dashboard/RevenueSummaryCard";
+import ReconciliationCard from "@/components/dashboard/ReconciliationCard";
+import ConcentrationRiskCard from "@/components/dashboard/ConcentrationRiskAlert";
+import NextPayoutCard from "@/components/dashboard/NextPayoutCard";
+import InteractivePlatformChart from "@/components/dashboard/InteractivePlatformChart";
+import ActionItemsPanel from "@/components/dashboard/ActionItemsPanel";
+import PlatformBreakdownTable from "@/components/dashboard/PlatformBreakdownTable";
 
 export default function Dashboard() {
-  const [showRiskAlert, setShowRiskAlert] = useState(true);
-  const [generatingInsights, setGeneratingInsights] = useState(false);
-  const [alerts, setAlerts] = useState([]);
-
-  const { data: transactions = [], isLoading, refetch } = useQuery({
+  const { data: transactions = [], isLoading: isLoadingTxns, refetch: refetchTxns } = useQuery({
     queryKey: ["revenueTransactions"],
-    queryFn: () => base44.entities.RevenueTransaction.fetchAll({
-      // Filters (empty for now, unless we want to filter by user implicitly handled by RLS)
-    }, "-transaction_date"),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    queryFn: () => base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
+    staleTime: 1000 * 60 * 5,
   });
 
-  const queryClient = useQueryClient();
-
-  const { data: insights = [] } = useQuery({
-    queryKey: ["insights"],
-    queryFn: () => base44.entities.Insight.list("-created_date", 10),
-    staleTime: 1000 * 60 * 10, // 10 minutes
+  const { data: reconciliations = [], isLoading: isLoadingRecs } = useQuery({
+    queryKey: ["reconciliations"],
+    queryFn: () => base44.entities.Reconciliation.fetchAll(),
+    staleTime: 1000 * 60 * 5,
   });
 
-  const { data: user } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: () => base44.auth.me(),
-  });
-
-  const { data: autopsyEvents = [] } = useQuery({
-    queryKey: ["autopsyEvents"],
-    queryFn: async () => {
-      const user = await base44.auth.me();
-      return base44.entities.AutopsyEvent.filter({ user_id: user.id, status: 'pending_review' }, "-detected_at", 5);
-    },
-  });
-
-  const { data: connectedPlatforms = [] } = useQuery({
+  const { data: connectedPlatforms = [], isLoading: isLoadingPlatforms } = useQuery({
     queryKey: ["connectedPlatforms"],
-    queryFn: async () => {
-      const user = await base44.auth.me();
-      return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
-    },
+    queryFn: () => base44.entities.ConnectedPlatform.fetchAll(),
+    staleTime: 1000 * 60 * 5,
   });
 
-  useEffect(() => {
-    const newAlerts = [];
+  // --- Metrics Calculation ---
 
-    // Autopsy alerts
-    if (autopsyEvents.length > 0) {
-      newAlerts.push({
-        id: 'autopsy',
-        type: 'error',
-        title: `⚠️ ${autopsyEvents.length} Revenue Anomal${autopsyEvents.length > 1 ? 'ies' : 'y'} Detected`,
-        description: 'Critical events require your decision. Review now to understand impact.',
-        dismissible: false
-      });
-    }
-
-    // Sync alerts
-    const failedSyncs = connectedPlatforms.filter(p => p.sync_status === 'error');
-    if (failedSyncs.length > 0) {
-      newAlerts.push({
-        id: 'sync',
-        type: 'sync',
-        title: `⏰ ${failedSyncs.length} Platform${failedSyncs.length > 1 ? 's' : ''} Failed to Sync`,
-        description: 'Go to Connected Platforms to reconnect.',
-        dismissible: true
-      });
-    }
-
-    // AI insights available
-    if (insights.length > 3) {
-      newAlerts.push({
-        id: 'insights',
-        type: 'info',
-        title: '✨ New AI Insights Available',
-        description: `${insights.length} insights ready for review.`,
-        dismissible: true
-      });
-    }
-
-    setAlerts(newAlerts);
-  }, [autopsyEvents, connectedPlatforms, insights]);
-
-  const handleGenerateInsights = async () => {
-    setGeneratingInsights(true);
-    try {
-      await base44.functions.invoke('generateInsights');
-      await queryClient.invalidateQueries({ queryKey: ['insights'] });
-    } catch (error) {
-      console.error('Failed to generate insights:', error);
-    } finally {
-      setGeneratingInsights(false);
-    }
-  };
-
-  // Calculate metrics
   const metrics = useMemo(() => {
     const now = new Date();
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
-
-    // Current month transactions
-    const currentMonthTxns = transactions.filter(t => {
-      const date = new Date(t.transaction_date);
-      return date >= currentMonthStart && date <= currentMonthEnd;
-    });
-
-    // Previous month for comparison
     const prevMonthStart = startOfMonth(subMonths(now, 1));
     const prevMonthEnd = endOfMonth(subMonths(now, 1));
+
+    // 1. Revenue Summary
+    const currentMonthTxns = transactions.filter(t => {
+      const d = new Date(t.transaction_date);
+      return d >= currentMonthStart && d <= currentMonthEnd;
+    });
     const prevMonthTxns = transactions.filter(t => {
-      const date = new Date(t.transaction_date);
-      return date >= prevMonthStart && date <= prevMonthEnd;
+      const d = new Date(t.transaction_date);
+      return d >= prevMonthStart && d <= prevMonthEnd;
     });
 
-    // Total MRR
-    const totalMRR = currentMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-    const _prevMRR = prevMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const totalRevenue = currentMonthTxns.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const prevRevenue = prevMonthTxns.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
-    // MRR change
-    let mrrTrend = "neutral";
-    let mrrChange = "0%";
-    if (_prevMRR > 0) {
-      const changePercent = ((totalMRR - _prevMRR) / _prevMRR) * 100;
-      mrrTrend = changePercent > 0 ? "up" : changePercent < 0 ? "down" : "neutral";
-      mrrChange = `${changePercent > 0 ? "+" : ""}${changePercent.toFixed(1)}%`;
-    }
+    // 2. Reconciliation Status
+    // Unreconciled = Transactions NOT in reconciliations table
+    const reconciledTxnIds = new Set(reconciliations.map(r => r.revenue_transaction_id));
+    const reconciledTxns = transactions.filter(t => reconciledTxnIds.has(t.id));
+    const unreconciledTxns = transactions.filter(t => !reconciledTxnIds.has(t.id));
 
-    // Platform breakdown
-    const platformMap = {};
-    currentMonthTxns.forEach(t => {
-      if (!platformMap[t.platform]) {
-        platformMap[t.platform] = 0;
+    const reconciledAmount = reconciledTxns.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const unreconciledAmount = unreconciledTxns.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const unreconciledCount = unreconciledTxns.length;
+
+    // 3. Concentration Risk (Based on Last 90 Days for better accuracy)
+    const l90dStart = subDays(now, 90);
+    const l90dTxns = transactions.filter(t => new Date(t.transaction_date) >= l90dStart);
+
+    const platformRevenueMap = {};
+    l90dTxns.forEach(t => {
+      const p = t.platform || 'Unknown';
+      platformRevenueMap[p] = (platformRevenueMap[p] || 0) + (Number(t.amount) || 0);
+    });
+
+    const totalL90dRevenue = Object.values(platformRevenueMap).reduce((a, b) => a + b, 0);
+    let concentrationRisk = { platform: null, percentage: 0 };
+
+    Object.entries(platformRevenueMap).forEach(([platform, amount]) => {
+      const pct = totalL90dRevenue > 0 ? (amount / totalL90dRevenue) * 100 : 0;
+      if (pct > concentrationRisk.percentage) {
+        concentrationRisk = { platform, percentage: pct };
       }
-      platformMap[t.platform] += t.amount || 0;
     });
 
-    const platformBreakdown = Object.entries(platformMap).map(([platform, amount]) => ({
-      platform,
-      amount
-    }));
+    // 4. Next Payout Estimation
+    // Simple heuristic for demo purposes if no real payout data
+    let nextPayout = null;
+    const today = startOfDay(now);
 
-    // Concentration risk
-    let concentrationRisk = null;
-    const totalPlatformRevenue = platformBreakdown.reduce((sum, p) => sum + p.amount, 0);
-    if (totalPlatformRevenue > 0) {
-      platformBreakdown.forEach(({ platform, amount }) => {
-        const percentage = (amount / totalPlatformRevenue) * 100;
-        if (percentage >= 70) {
-          concentrationRisk = { platform, percentage };
+    const payouts = connectedPlatforms.map(p => {
+      let date = null;
+      let amount = 0; // Estimate based on unreconciled balance?
+      let confidence = 0;
+
+      if (p.platform === 'stripe') {
+        // Stripe usually daily/weekly. Assume 2 days from now.
+        date = addDays(today, 2);
+        confidence = 95;
+      } else if (p.platform === 'youtube') {
+        // 21st of current month
+        const d = new Date(now.getFullYear(), now.getMonth(), 21);
+        date = isAfter(d, today) ? d : new Date(now.getFullYear(), now.getMonth() + 1, 21);
+        confidence = 90;
+      } else if (p.platform === 'patreon') {
+        // 5th of month
+        const d = new Date(now.getFullYear(), now.getMonth(), 5);
+        date = isAfter(d, today) ? d : new Date(now.getFullYear(), now.getMonth() + 1, 5);
+        confidence = 85;
+      }
+
+      // Estimate amount: Avg daily revenue * days since last payout?
+      // Simplified: Just take sum of unreconciled txns for this platform
+      const platformUnreconciled = unreconciledTxns
+        .filter(t => t.platform === p.platform)
+        .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+      amount = platformUnreconciled || 150; // Fallback to avoid $0 if no data
+
+      return { platform: p.platform, date, amount, confidence };
+    }).filter(x => x.date);
+
+    // Sort by soonest
+    payouts.sort((a, b) => a.date - b.date);
+    nextPayout = payouts[0] || null;
+
+    // 5. Chart Data (Daily Revenue)
+    const chartDataMap = {};
+    // Init last 90 days with 0
+    for (let i = 0; i < 90; i++) {
+      const d = subDays(today, i);
+      const key = format(d, 'yyyy-MM-dd');
+      chartDataMap[key] = 0;
+    }
+
+    l90dTxns.forEach(t => {
+      const key = format(new Date(t.transaction_date), 'yyyy-MM-dd');
+      if (chartDataMap[key] !== undefined) {
+        chartDataMap[key] += (Number(t.amount) || 0);
+      }
+    });
+
+    const chartData = Object.entries(chartDataMap)
+      .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+      .map(([date, revenue], index, array) => {
+        // Calculate 7-day moving average
+        let ma7 = 0;
+        if (index >= 6) {
+          const slice = array.slice(index - 6, index + 1);
+          const sum = slice.reduce((s, item) => s + item[1], 0);
+          ma7 = sum / 7;
         }
+        return { date, revenue, ma7: ma7 > 0 ? Number(ma7.toFixed(2)) : null };
+      });
+
+    // 6. Platform Breakdown Data
+    const platformBreakdownData = {}; // { platformId: { current, previous } }
+    // Using platform NAME as key since ID might not match txn platform string easily
+    // We'll map connectedPlatforms to this data
+
+    // Map platform names to IDs
+    const platformNameToId = {};
+    connectedPlatforms.forEach(p => platformNameToId[p.platform] = p.id);
+
+    currentMonthTxns.forEach(t => {
+      const pid = platformNameToId[t.platform];
+      if (pid) {
+        if (!platformBreakdownData[pid]) platformBreakdownData[pid] = { current: 0, previous: 0 };
+        platformBreakdownData[pid].current += (Number(t.amount) || 0);
+      }
+    });
+
+    prevMonthTxns.forEach(t => {
+      const pid = platformNameToId[t.platform];
+      if (pid) {
+        if (!platformBreakdownData[pid]) platformBreakdownData[pid] = { current: 0, previous: 0 };
+        platformBreakdownData[pid].previous += (Number(t.amount) || 0);
+      }
+    });
+
+    // 7. Action Items
+    const actionItems = [];
+    if (unreconciledCount > 0) {
+      actionItems.push({
+        id: 'unreconciled',
+        title: `${unreconciledCount} Transactions Pending`,
+        description: 'Review and reconcile your latest revenue.',
+        type: 'warning',
+        link: '/reconciliation'
       });
     }
 
-    // 3-month trend
-    const trendData = [];
-    for (let i = 2; i >= 0; i--) {
-      const monthStart = startOfMonth(subMonths(now, i));
-      const monthEnd = endOfMonth(subMonths(now, i));
-      const monthTxns = transactions.filter(t => {
-        const date = new Date(t.transaction_date);
-        return date >= monthStart && date <= monthEnd;
-      });
-      const monthTotal = monthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-      trendData.push({
-        month: format(monthStart, "MMM"),
-        revenue: monthTotal
-      });
-    }
+    connectedPlatforms.forEach(p => {
+      if (p.sync_status === 'error') {
+        actionItems.push({
+          id: `sync-${p.id}`,
+          title: `${p.platform} Connection Failed`,
+          description: 'Reconnect to resume data syncing.',
+          type: 'critical',
+          link: '/settings/connected-apps'
+        });
+      }
+    });
 
-    // Top transactions this month
-    const topTransactions = [...currentMonthTxns]
-      .sort((a, b) => (b.amount || 0) - (a.amount || 0))
-      .slice(0, 5);
+    if (actionItems.length === 0) {
+      // Add a positive empty state item if really empty?
+      // No, ActionItemsPanel handles empty state.
+    }
 
     return {
-      totalMRR,
-      mrrTrend,
-      mrrChange,
-      platformBreakdown,
+      totalRevenue,
+      prevRevenue,
+      platformCount: connectedPlatforms.length,
+      reconciledAmount,
+      unreconciledAmount,
+      unreconciledCount,
       concentrationRisk,
-      trendData,
-      topTransactions,
-      prevMRR: _prevMRR
+      nextPayout,
+      chartData,
+      platformBreakdownData,
+      actionItems,
+      lastSynced: connectedPlatforms.length > 0 ? formatDistanceToNow(new Date(connectedPlatforms[0].last_synced_at || new Date()), { addSuffix: true }) : null
     };
-  }, [transactions]);
+  }, [transactions, reconciliations, connectedPlatforms]);
+
+  const handleRefresh = () => {
+    refetchTxns();
+    // Refetch others
+  };
+
+  if (isLoadingTxns || isLoadingRecs || isLoadingPlatforms) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="space-y-6 p-8 pt-6 max-w-[1600px] mx-auto bg-background min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex items-center justify-between space-y-2">
         <div>
-          <h1 className="text-2xl font-semibold text-white tracking-tight">Dashboard</h1>
-          <p className="text-white/40 mt-1 text-sm">Your revenue at a glance</p>
+          <h2 className="text-3xl font-bold tracking-tight font-serif text-foreground">Dashboard</h2>
+          <p className="text-muted-foreground">
+            Financial overview and reconciliation status.
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={handleGenerateInsights}
-            disabled={generatingInsights}
-            className="rounded-lg bg-zteal-400 hover:bg-zteal-500 text-white border-0 transition-colors text-sm h-9"
-          >
-            {generatingInsights ? (
-              <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="w-3.5 h-3.5 mr-2" />
-            )}
-            Generate Insights
-          </Button>
-          <Button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm h-9"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Refresh
+        <div className="flex items-center space-x-2">
+          <Button onClick={handleRefresh} variant="outline" size="sm" className="h-8 gap-1 bg-background">
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+              Refresh Data
+            </span>
           </Button>
         </div>
       </div>
 
-      {/* Alert Banners */}
-      <AlertBanner
-        alerts={alerts}
-        onDismiss={(id) => setAlerts(alerts.filter(a => a.id !== id))}
-      />
+      {/* Top Cards Row */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <RevenueSummaryCard
+          totalRevenue={metrics.totalRevenue}
+          previousRevenue={metrics.prevRevenue}
+          platformCount={metrics.platformCount}
+          lastSynced={metrics.lastSynced}
+        />
+        <ReconciliationCard
+          reconciledAmount={metrics.reconciledAmount}
+          unreconciledAmount={metrics.unreconciledAmount}
+          unreconciledCount={metrics.unreconciledCount}
+        />
+        <ConcentrationRiskCard
+          platform={metrics.concentrationRisk.platform}
+          percentage={metrics.concentrationRisk.percentage}
+        />
+        <NextPayoutCard
+          platformName={metrics.nextPayout?.platform}
+          payoutDate={metrics.nextPayout?.date}
+          estimatedAmount={metrics.nextPayout?.amount || 0}
+          confidence={metrics.nextPayout?.confidence}
+        />
+      </div>
 
-      {/* Concentration Risk Alert */}
-      {showRiskAlert && metrics.concentrationRisk && (
-        <div className="mb-6">
-          <ConcentrationRiskAlert
-            platform={metrics.concentrationRisk.platform}
-            percentage={metrics.concentrationRisk.percentage}
-            onDismiss={() => setShowRiskAlert(false)}
-          />
+      {/* Chart & Actions Row */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <div className="col-span-4">
+           <InteractivePlatformChart
+             data={metrics.chartData}
+             isLoading={isLoadingTxns}
+           />
         </div>
-      )}
-
-      {/* Revenue Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="relative rounded-xl">
-          <GlowingEffect
-            spread={40}
-            glow={true}
-            disabled={false}
-            proximity={64}
-            inactiveZone={0.01}
-            borderWidth={2}
-          />
-          <div className="card-modern rounded-xl p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-zteal-400/10 border border-white/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-zteal-400" />
-              </div>
-            </div>
-            <p className="text-white/50 text-xs mb-1">This Month</p>
-            <p className="text-2xl font-semibold text-white">${metrics.totalMRR.toFixed(0)}</p>
-            <p className={`text-xs mt-2 flex items-center gap-1 ${metrics.mrrTrend === 'up' ? 'text-emerald-400' : metrics.mrrTrend === 'down' ? 'text-red-400' : 'text-white/40'}`}>
-              {metrics.mrrChange} vs last month
-            </p>
-          </div>
-        </div>
-
-        <div className="relative rounded-xl">
-          <GlowingEffect
-            spread={40}
-            glow={true}
-            disabled={false}
-            proximity={64}
-            inactiveZone={0.01}
-            borderWidth={2}
-          />
-          <div className="card-modern rounded-xl p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-white/10 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-emerald-400" />
-              </div>
-            </div>
-            <p className="text-white/50 text-xs mb-1">Transactions</p>
-            <p className="text-2xl font-semibold text-white">{transactions.length}</p>
-            <p className="text-xs text-white/40 mt-2">All-time</p>
-          </div>
-        </div>
-
-        <div className="relative rounded-xl">
-          <GlowingEffect
-            spread={40}
-            glow={true}
-            disabled={false}
-            proximity={64}
-            inactiveZone={0.01}
-            borderWidth={2}
-          />
-          <div className="card-modern rounded-xl p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-white/10 flex items-center justify-center">
-                <CircleDollarSign className="w-5 h-5 text-blue-400" />
-              </div>
-            </div>
-            <p className="text-white/50 text-xs mb-1">Avg Transaction</p>
-            <p className="text-2xl font-semibold text-white">
-              ${transactions.length > 0 ? (metrics.totalMRR / transactions.length).toFixed(0) : 0}
-            </p>
-            <p className="text-xs text-white/40 mt-2">Per transaction</p>
-          </div>
-        </div>
-
-        <div className="relative rounded-xl">
-          <GlowingEffect
-            spread={40}
-            glow={true}
-            disabled={false}
-            proximity={64}
-            inactiveZone={0.01}
-            borderWidth={2}
-          />
-          <div className="card-modern rounded-xl p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-white/10 flex items-center justify-center">
-                <Link2 className="w-5 h-5 text-amber-400" />
-              </div>
-            </div>
-            <p className="text-white/50 text-xs mb-1">Platforms</p>
-            <p className="text-2xl font-semibold text-white">{metrics.platformBreakdown.length}</p>
-            <p className="text-xs text-white/40 mt-2">Connected sources</p>
-          </div>
+        <div className="col-span-3">
+          <ActionItemsPanel actionItems={metrics.actionItems} />
         </div>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <React.Suspense fallback={
-          <div className="card-modern rounded-xl p-6 h-[400px] flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-white/30" />
-          </div>
-        }>
-          <InteractivePlatformChart transactions={transactions} />
-        </React.Suspense>
-        <React.Suspense fallback={
-          <div className="card-modern rounded-xl p-6 h-[400px] flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-white/30" />
-          </div>
-        }>
-          <RevenueForecasting transactions={transactions} />
-        </React.Suspense>
+      {/* Platform Breakdown Row */}
+      <div className="grid gap-4 md:grid-cols-1">
+        <PlatformBreakdownTable
+          platforms={connectedPlatforms}
+          revenueData={metrics.platformBreakdownData}
+        />
       </div>
-
-      {/* Insights & Lending Signals */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <InsightsPanel
-            insights={insights.filter(i => i.insight_type !== 'cashflow_forecast')}
-          />
-        </div>
-        <div>
-          <LendingSignalsCard
-            insight={insights.find(i => i.insight_type === 'cashflow_forecast')}
-          />
-        </div>
-      </div>
-
     </div>
   );
 }
