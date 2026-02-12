@@ -1,192 +1,337 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, X, AlertTriangle, ArrowRight, Shield, FileText, Database, Activity, FileCheck, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import MethodologyAnimations from '@/components/landing/methodology/MethodologyAnimations';
+import Footer from '@/components/landing/Footer';
 
 const Methodology = () => {
+    const [view, setView] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('zerithum_methodology_view') || 'simple';
+        }
+        return 'simple';
+    });
+
+    const handleViewChange = (newView) => {
+        setView(newView);
+        localStorage.setItem('zerithum_methodology_view', newView);
+    };
+
     return (
-        <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans selection:bg-emerald-100">
+        <div className="min-h-screen bg-zinc-950 text-white font-sans selection:bg-emerald-500/30">
             {/* Nav */}
-            <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-zinc-200 px-6 py-4">
-                <div className="max-w-4xl mx-auto flex justify-between items-center">
-                    <Link to="/" className="flex items-center gap-2 text-zinc-900 hover:text-emerald-700 transition-colors">
+            <nav className="sticky top-0 z-50 w-full bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-6 py-4">
+                <div className="max-w-6xl mx-auto flex justify-between items-center">
+                    <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm font-medium">
                         <ArrowLeft className="w-4 h-4" /> Back to Product
                     </Link>
-                    <div className="font-serif font-bold text-lg tracking-tight">Zerithum.</div>
+                    <div className="font-serif font-bold text-lg tracking-tight text-white">Zerithum.</div>
                     <div className="w-24"></div> {/* Spacer */}
                 </div>
             </nav>
 
-            <main className="max-w-4xl mx-auto px-6 py-16">
-                <header className="mb-16 border-b border-zinc-200 pb-16">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-xs font-mono text-zinc-500 uppercase tracking-wider mb-6">
+            <main className="max-w-5xl mx-auto px-6 py-24">
+                {/* Header */}
+                <div className="text-center mb-16">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-400 uppercase tracking-wider mb-6">
                         Technical Paper v1.2
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-zinc-900 mb-6 leading-tight">
-                        Reconciliation Methodology: <br/>
-                        Deterministic Matching & Audit Trails
-                    </h1>
-                    <p className="text-xl text-zinc-600 leading-relaxed font-serif">
-                        This document outlines the inputs, matching logic, confidence scoring, and immutable audit logging architecture used by the Zerithum engine to reconcile creator revenue.
+                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-6">How reconciliation works</h1>
+                    <p className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto mb-8 leading-relaxed font-serif">
+                        Zerithum matches what platforms say you earned to what your bank actually received. Mismatches are flagged with reason codes. Every decision is logged for tax defense.
                     </p>
-                </header>
-
-                <div className="grid gap-16">
-                    {/* Section A: Inputs */}
-                    <section>
-                        <h2 className="text-2xl font-bold text-zinc-900 mb-6 flex items-center gap-3">
-                            <span className="w-8 h-8 rounded bg-zinc-900 text-white flex items-center justify-center text-sm font-mono">A</span>
-                            Data Inputs
-                        </h2>
-                        <div className="grid md:grid-cols-2 gap-8">
-                            <div className="bg-white border border-zinc-200 p-6 rounded-lg shadow-sm">
-                                <h3 className="font-bold text-lg mb-3">1. Platform Transactions</h3>
-                                <p className="text-zinc-600 text-sm mb-4">Ingested via API (OAuth) or CSV.</p>
-                                <ul className="space-y-2 text-sm font-mono text-zinc-500">
-                                    <li className="flex justify-between border-b border-zinc-100 pb-1"><span>amount</span> <span>decimal(18,2)</span></li>
-                                    <li className="flex justify-between border-b border-zinc-100 pb-1"><span>date</span> <span>timestamp_utc</span></li>
-                                    <li className="flex justify-between border-b border-zinc-100 pb-1"><span>transaction_id</span> <span>string</span></li>
-                                    <li className="flex justify-between border-b border-zinc-100 pb-1"><span>category</span> <span>enum</span></li>
-                                </ul>
-                            </div>
-                            <div className="bg-white border border-zinc-200 p-6 rounded-lg shadow-sm">
-                                <h3 className="font-bold text-lg mb-3">2. Bank Transactions</h3>
-                                <p className="text-zinc-600 text-sm mb-4">Ingested via Plaid (Read-only) or Statement.</p>
-                                <ul className="space-y-2 text-sm font-mono text-zinc-500">
-                                    <li className="flex justify-between border-b border-zinc-100 pb-1"><span>amount</span> <span>decimal(18,2)</span></li>
-                                    <li className="flex justify-between border-b border-zinc-100 pb-1"><span>date</span> <span>timestamp_utc</span></li>
-                                    <li className="flex justify-between border-b border-zinc-100 pb-1"><span>description</span> <span>string</span></li>
-                                    <li className="flex justify-between border-b border-zinc-100 pb-1"><span>merchant_name</span> <span>string</span></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Section B: Matching Logic */}
-                    <section>
-                        <h2 className="text-2xl font-bold text-zinc-900 mb-6 flex items-center gap-3">
-                            <span className="w-8 h-8 rounded bg-zinc-900 text-white flex items-center justify-center text-sm font-mono">B</span>
-                            Matching Logic & Confidence
-                        </h2>
-                        <p className="text-zinc-600 mb-8 leading-relaxed">
-                            The matching engine operates on a waterfall logic. We prefer one-to-one matches with the highest confidence score. In the event of a conflict (multiple possible matches), the system defaults to "Unmatched" and flags for human review to prevent false positives.
-                        </p>
-
-                        {/* Visualization 1 */}
-                        <div className="bg-zinc-900 rounded-xl p-8 mb-8 text-white relative overflow-hidden">
-                             <div className="absolute top-4 right-4 text-xs font-mono text-zinc-500">LOGIC_FLOW_VISUALIZATION</div>
-                             <div className="flex flex-col gap-4 items-center max-w-lg mx-auto">
-                                 <LogicGate score="0.99" label="Exact Match" desc="Amount == Amount AND Date == Date" />
-                                 <div className="h-6 w-0.5 bg-zinc-700"></div>
-                                 <LogicGate score="0.85" label="Fee Window" desc="Amount within 2% AND Date within 24h" />
-                                 <div className="h-6 w-0.5 bg-zinc-700"></div>
-                                 <LogicGate score="0.60" label="Hold Window" desc="Amount within 5% AND Date within 72h" />
-                             </div>
-                        </div>
-
-                        <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-lg">
-                            <h4 className="font-bold text-emerald-900 mb-2">Auto-Reconciliation Threshold</h4>
-                            <p className="text-emerald-800 text-sm">
-                                Only matches with a confidence score ≥ 0.95 are automatically reconciled. All others are routed to the review queue.
-                            </p>
-                        </div>
-                    </section>
-
-                    {/* Section C: Reason Codes */}
-                    <section>
-                        <h2 className="text-2xl font-bold text-zinc-900 mb-6 flex items-center gap-3">
-                            <span className="w-8 h-8 rounded bg-zinc-900 text-white flex items-center justify-center text-sm font-mono">C</span>
-                            Reason Codes
-                        </h2>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <ReasonCode code="FEE_DEDUCTION" desc="Platform fees deducted from payout. Common in Stripe/PayPal." />
-                            <ReasonCode code="HOLD_PERIOD" desc="Payout delayed by platform hold policy (e.g. Gumroad 7-day)." />
-                            <ReasonCode code="REFUND" desc="Negative transaction representing a refund to a customer." />
-                            <ReasonCode code="DUPLICATE" desc="Transaction appears twice (e.g. double click ingest)." />
-                            <ReasonCode code="UNMATCHED" desc="No corresponding bank deposit found within window." />
-                        </div>
-                    </section>
-
-                    {/* Section D: Review Workflow */}
-                    <section>
-                        <h2 className="text-2xl font-bold text-zinc-900 mb-6 flex items-center gap-3">
-                            <span className="w-8 h-8 rounded bg-zinc-900 text-white flex items-center justify-center text-sm font-mono">D</span>
-                            Review Workflow & Audit Trail
-                        </h2>
-                        <p className="text-zinc-600 mb-6 leading-relaxed">
-                            When confidence is below 0.95, the transaction enters the review queue. The creator (user) must manually accept, reject, or edit the match. Every action is recorded.
-                        </p>
-
-                        {/* Visualization 2: Audit Log */}
-                        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-                            <div className="bg-zinc-50 border-b border-zinc-200 px-4 py-2 text-xs font-mono text-zinc-500 uppercase">
-                                Immutable_Audit_Log
-                            </div>
-                            <div className="divide-y divide-zinc-100">
-                                <AuditRow time="10:01:22" actor="System" action="MATCH_ATTEMPT" detail="Confidence 0.85 (Fee Window)" />
-                                <AuditRow time="10:01:23" actor="System" action="QUEUE_ADD" detail="Review Queue #8821" />
-                                <AuditRow time="14:20:05" actor="User_Admin" action="REVIEW_ACCEPT" detail="Manual Confirmation" />
-                                <AuditRow time="14:20:05" actor="System" action="RECONCILE_COMMIT" detail="Ledger ID #99281" />
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Section E: Limitations */}
-                    <section>
-                        <h2 className="text-2xl font-bold text-zinc-900 mb-6 flex items-center gap-3">
-                            <span className="w-8 h-8 rounded bg-zinc-900 text-white flex items-center justify-center text-sm font-mono">E</span>
-                            Known Limitations
-                        </h2>
-                        <ul className="list-disc pl-6 space-y-3 text-zinc-600">
-                            <li><strong>Partial Payouts:</strong> If a platform splits a single period's earnings into multiple bank transfers, manual grouping is required.</li>
-                            <li><strong>Multi-Currency:</strong> FX rates applied by banks may cause "Fee Window" mismatches if variance exceeds 5%.</li>
-                            <li><strong>Ambiguous Descriptors:</strong> Bank feeds with generic descriptors like "WIRE TRANSFER" cannot be auto-matched without amount correlation.</li>
-                        </ul>
-                    </section>
+                    <p className="text-[15px] leading-[1.6] text-zinc-500 max-w-3xl mx-auto font-light">
+                        Creators earn from multiple platforms with different payout schedules, fees, and delays. Platform dashboards report earnings, but the numbers rarely match bank deposits. Zerithum connects to your platforms and bank via read-only access, compares platform earnings to actual deposits, scores matches by confidence, flags gaps with reason codes like fee deduction or hold period, and logs every decision in an immutable audit trail. Bank deposits are treated as the source of truth. Platform numbers are treated as inputs that must reconcile. The result is a clean export pack for your accountant.
+                    </p>
                 </div>
 
-                <footer className="mt-24 pt-12 border-t border-zinc-200 text-center">
-                    <p className="text-zinc-500 text-sm mb-6">
-                        Start reconciling your revenue today.
-                    </p>
-                    <Link to="/Signup">
-                        <Button className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-8">
+                {/* Toggle */}
+                <div className="flex flex-col items-center mb-20">
+                    <div className="bg-zinc-900 p-1.5 rounded-lg inline-flex relative border border-zinc-800 shadow-inner">
+                        {['simple', 'full'].map((v) => (
+                            <button
+                                key={v}
+                                onClick={() => handleViewChange(v)}
+                                className={cn(
+                                    "relative px-8 py-2.5 text-sm font-medium transition-colors z-10 capitalize rounded-md",
+                                    view === v ? "text-zinc-950 shadow-sm" : "text-zinc-500 hover:text-zinc-300"
+                                )}
+                            >
+                                {v === 'simple' ? 'Simple explanation' : 'Full methodology'}
+                                {view === v && (
+                                    <motion.div
+                                        className="absolute inset-0 bg-white rounded-md shadow-sm -z-10 border border-zinc-200"
+                                        layoutId="toggleHighlight"
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    />
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                    <p className="text-xs text-zinc-500 mt-4 font-mono tracking-wide">Switch views. The system stays the same. Only the explanation changes.</p>
+                </div>
+
+                {/* Content Area */}
+                <div className="min-h-[600px] mb-32 relative">
+                    <AnimatePresence mode="wait">
+                        {view === 'simple' ? (
+                            <SimpleView key="simple" />
+                        ) : (
+                            <FullView key="full" />
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                {/* Disclaimer */}
+                <div className="pt-12 border-t border-zinc-900 mb-24">
+                    <h4 className="text-xs font-bold text-zinc-600 uppercase tracking-wider mb-6">What Zerithum does not do</h4>
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm text-zinc-500">
+                        <li className="flex items-start gap-3">
+                            <X className="w-4 h-4 mt-0.5 text-zinc-700 shrink-0" />
+                            Does not move, hold, or settle your funds.
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <X className="w-4 h-4 mt-0.5 text-zinc-700 shrink-0" />
+                            Does not initiate payouts, refunds, or transfers.
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <X className="w-4 h-4 mt-0.5 text-zinc-700 shrink-0" />
+                            Does not see or store your bank login credentials.
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <X className="w-4 h-4 mt-0.5 text-zinc-700 shrink-0" />
+                            Does not guarantee perfect matching for every platform in every country, because platform metadata quality varies.
+                        </li>
+                    </ul>
+                </div>
+
+                {/* CTA */}
+                <div className="bg-white rounded-2xl p-12 text-center text-zinc-900 shadow-2xl shadow-zinc-900/50">
+                     <h3 className="text-2xl font-serif font-bold mb-4">Start reconciling your revenue today.</h3>
+                     <p className="text-zinc-500 mb-8 max-w-md mx-auto">Join thousands of creators who trust Zerithum for financial clarity.</p>
+                     <Link to="/Signup">
+                        <Button className="bg-zinc-950 text-white hover:bg-zinc-800 rounded-full px-8 h-12 text-base font-medium">
                             Create Account
                         </Button>
                     </Link>
-                </footer>
+                </div>
             </main>
+
+            <Footer />
         </div>
     );
 };
 
-// Subcomponents for visuals
-const LogicGate = ({ score, label, desc }) => (
-    <div className="w-full bg-zinc-800 p-4 rounded border border-zinc-700 flex justify-between items-center group hover:border-emerald-500/50 transition-colors">
-        <div>
-            <div className="font-bold text-sm text-white">{label}</div>
-            <div className="text-xs text-zinc-400 font-mono">{desc}</div>
+const SimpleView = () => (
+    <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3 }}
+        className="grid md:grid-cols-2 gap-12 items-start"
+    >
+        <div className="space-y-12">
+            <div className="space-y-4 group">
+                <div className="w-8 h-8 rounded bg-zinc-900 flex items-center justify-center text-zinc-500 font-mono text-sm border border-zinc-800 group-hover:border-emerald-500/50 group-hover:text-emerald-400 transition-colors">1</div>
+                <h3 className="text-xl font-medium text-white">Connect your platforms and bank via read only access.</h3>
+                <p className="text-[15px] leading-[1.6] text-zinc-400">
+                    Zerithum pulls earnings from platforms and deposits from your bank.
+                </p>
+            </div>
+            <div className="space-y-4 group">
+                <div className="w-8 h-8 rounded bg-zinc-900 flex items-center justify-center text-zinc-500 font-mono text-sm border border-zinc-800 group-hover:border-emerald-500/50 group-hover:text-emerald-400 transition-colors">2</div>
+                <h3 className="text-xl font-medium text-white">Zerithum matches platform earnings to bank deposits using amount and date rules.</h3>
+                <p className="text-[15px] leading-[1.6] text-zinc-400">
+                    High confidence matches are auto reconciled. Uncertain matches go to review.
+                </p>
+            </div>
+            <div className="space-y-4 group">
+                <div className="w-8 h-8 rounded bg-zinc-900 flex items-center justify-center text-zinc-500 font-mono text-sm border border-zinc-800 group-hover:border-emerald-500/50 group-hover:text-emerald-400 transition-colors">3</div>
+                <h3 className="text-xl font-medium text-white">Every match decision is logged with a confidence score and reason code.</h3>
+                <p className="text-[15px] leading-[1.6] text-zinc-400">
+                    You export a reconciled report for your accountant.
+                </p>
+            </div>
         </div>
-        <div className="font-mono text-emerald-400 text-lg font-bold">{score}</div>
-    </div>
+
+        {/* Example Box */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 shadow-xl shadow-black/50 sticky top-24">
+            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-zinc-800">
+                <div className="p-2 bg-red-500/10 rounded text-red-400">
+                    <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                    <h4 className="font-medium text-white">What a mismatch looks like</h4>
+                    <p className="text-xs text-zinc-500">Real-world example</p>
+                </div>
+            </div>
+
+            <div className="space-y-6">
+                <div className="flex justify-between items-center group">
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span className="text-sm text-zinc-400">Platform (YouTube)</span>
+                    </div>
+                    <div className="font-mono text-white font-medium">$1,800.00</div>
+                </div>
+
+                <div className="flex justify-between items-center group">
+                     <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span className="text-sm text-zinc-400">Bank Deposit</span>
+                    </div>
+                    <div className="font-mono text-white font-medium">$1,650.00</div>
+                </div>
+
+                <div className="pt-4 border-t border-zinc-800 flex justify-between items-center">
+                    <span className="text-sm font-medium text-red-400">Difference</span>
+                    <span className="font-mono text-red-400 font-bold">-$150.00</span>
+                </div>
+
+                <div className="pt-2">
+                    <div className="text-xs text-zinc-500 uppercase tracking-wider mb-3">Reason Code</div>
+                    <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-xs text-zinc-300 font-medium">Fee deduction</span>
+                        <span className="px-2 py-1 bg-zinc-950 border border-zinc-800 rounded text-xs text-zinc-600 opacity-50">Hold period</span>
+                        <span className="px-2 py-1 bg-zinc-950 border border-zinc-800 rounded text-xs text-zinc-600 opacity-50">Refund</span>
+                    </div>
+                </div>
+
+                <div className="bg-zinc-950 p-4 rounded text-xs text-zinc-500 italic border border-zinc-900">
+                    "Zerithum flags this, logs the confidence score, and includes the note in your export."
+                </div>
+            </div>
+        </div>
+    </motion.div>
 );
 
-const ReasonCode = ({ code, desc }) => (
-    <div className="p-4 border border-zinc-200 rounded bg-white hover:shadow-md transition-shadow">
-        <div className="font-mono text-xs font-bold text-zinc-900 bg-zinc-100 inline-block px-2 py-1 rounded mb-2">
-            {code}
-        </div>
-        <div className="text-sm text-zinc-600">{desc}</div>
-    </div>
-);
+const FullView = () => (
+    <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-24"
+    >
+        {/* Section 1 & 2: Inputs & Matching */}
+        <div className="grid md:grid-cols-2 gap-16">
+            <div className="space-y-12">
+                <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-6 h-6 rounded bg-zinc-900 flex items-center justify-center text-xs text-zinc-500 font-mono border border-zinc-800">01</span>
+                        Inputs we use
+                    </h3>
+                    <p className="text-[15px] leading-[1.6] text-zinc-400">
+                        Zerithum pulls transaction or payout records from connected platforms via OAuth or API. These include amount, date, transaction ID, category, and fee fields when available. Bank records include deposit amount, date, description, and reference IDs when available. Some platforms provide rich transaction detail. Others provide only payout summaries. Zerithum uses what exists and marks gaps explicitly.
+                    </p>
+                </div>
 
-const AuditRow = ({ time, actor, action, detail }) => (
-    <div className="px-4 py-3 flex items-center gap-4 text-sm font-mono">
-        <div className="text-zinc-400 w-20 shrink-0">{time}</div>
-        <div className="text-zinc-900 w-24 shrink-0 font-medium">{actor}</div>
-        <div className="text-emerald-700 w-32 shrink-0">{action}</div>
-        <div className="text-zinc-500">{detail}</div>
-    </div>
+                <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-6 h-6 rounded bg-zinc-900 flex items-center justify-center text-xs text-zinc-500 font-mono border border-zinc-800">02</span>
+                        How matching works
+                    </h3>
+                    <p className="text-[15px] leading-[1.6] text-zinc-400">
+                        Zerithum compares platform earnings to bank deposits using fuzzy matching on amount and date. For each bank deposit, the system searches for plausible platform candidates. Candidates are scored by how closely amount and date align. The highest confidence match is selected if the score passes a strict threshold.
+                    </p>
+                </div>
+            </div>
+            {/* Animation 1 Placement */}
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden min-h-[300px] shadow-sm">
+                <MethodologyAnimations type="matching" />
+            </div>
+        </div>
+
+        {/* Section 3 & 4: Confidence & Reason Codes */}
+        <div className="grid md:grid-cols-2 gap-16">
+            {/* Animation 2 Placement - Left side for variety */}
+            <div className="order-2 md:order-1 bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden min-h-[300px] shadow-sm">
+                 <MethodologyAnimations type="scoring" />
+            </div>
+
+            <div className="order-1 md:order-2 space-y-12">
+                <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-6 h-6 rounded bg-zinc-900 flex items-center justify-center text-xs text-zinc-500 font-mono border border-zinc-800">03</span>
+                        Confidence scoring
+                    </h3>
+                    <div className="space-y-3">
+                         <p className="text-[15px] leading-[1.6] text-zinc-400">
+                            Every proposed match gets a confidence score between 0 and 1. Rules include:
+                        </p>
+                        <ul className="space-y-2 text-[15px] leading-[1.6] text-zinc-400 list-disc pl-4 marker:text-zinc-600">
+                            <li>Exact amount and exact date produces a confidence score near 0.99, eligible for auto reconcile.</li>
+                            <li>Amount within 2 percent and date within 1 day produces a confidence score around 0.85, sent for review.</li>
+                            <li>Amount within 5 percent and date within 3 days produces a confidence score around 0.60, flagged for review.</li>
+                        </ul>
+                         <p className="text-[15px] leading-[1.6] text-zinc-400">
+                            Auto reconcile happens only when confidence is 0.95 or higher. Below that threshold, the match is routed to your review queue.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-6 h-6 rounded bg-zinc-900 flex items-center justify-center text-xs text-zinc-500 font-mono border border-zinc-800">04</span>
+                        Reason codes
+                    </h3>
+                    <p className="text-[15px] leading-[1.6] text-zinc-400">
+                        When Zerithum flags a mismatch, it assigns a reason code to explain the likely cause:
+                    </p>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[14px] text-zinc-500">
+                         <li className="flex gap-2"><span className="text-zinc-300 font-medium">Fee deduction:</span> Platform fees reduced payout.</li>
+                         <li className="flex gap-2"><span className="text-zinc-300 font-medium">Hold period:</span> Payout delayed for settlement.</li>
+                         <li className="flex gap-2"><span className="text-zinc-300 font-medium">Refund:</span> Customer received money back.</li>
+                         <li className="flex gap-2"><span className="text-zinc-300 font-medium">Duplicate:</span> Transaction appears twice.</li>
+                         <li className="flex gap-2"><span className="text-zinc-300 font-medium">Unmatched:</span> No match found yet.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {/* Section 5, 6, 7: Review, Audit, Limitations */}
+        <div className="grid md:grid-cols-2 gap-16">
+            <div className="space-y-12">
+                 <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-6 h-6 rounded bg-zinc-900 flex items-center justify-center text-xs text-zinc-500 font-mono border border-zinc-800">05</span>
+                        Review workflow
+                    </h3>
+                    <p className="text-[15px] leading-[1.6] text-zinc-400">
+                        When a match is flagged for review, you see platform amount, bank amount, difference, and suggested reason code. You can accept the match, reject it, manually link to a different deposit, or add a note explaining the gap. All actions are logged in the audit trail.
+                    </p>
+                </div>
+
+                <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-6 h-6 rounded bg-zinc-900 flex items-center justify-center text-xs text-zinc-500 font-mono border border-zinc-800">06</span>
+                        Audit trail
+                    </h3>
+                    <p className="text-[15px] leading-[1.6] text-zinc-400">
+                        Every reconciliation decision is logged in an immutable append only audit trail. Each entry includes timestamp, platform, amounts, confidence score, reason code, and any notes you added. The trail cannot be edited or deleted. This provides defensible documentation for tax filing and audit defense.
+                    </p>
+                </div>
+
+                <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-6 h-6 rounded bg-zinc-900 flex items-center justify-center text-xs text-zinc-500 font-mono border border-zinc-800">07</span>
+                        Limitations
+                    </h3>
+                    <p className="text-[15px] leading-[1.6] text-zinc-400">
+                        Some scenarios require manual review because data is ambiguous. Examples include batched payouts where many transactions land as one deposit, platforms with delayed reporting, currency conversion where amounts differ materially, and generic bank descriptions that hide payer identity. Zerithum exposes these cases instead of hiding them.
+                    </p>
+                </div>
+            </div>
+
+            {/* Animation 3 Placement */}
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden min-h-[300px] shadow-sm">
+                <MethodologyAnimations type="audit" />
+            </div>
+        </div>
+    </motion.div>
 );
 
 export default Methodology;
