@@ -1,39 +1,52 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/supabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
-import { RefreshCw, Sparkles, Loader2, TrendingUp, FileText, CircleDollarSign, Link2 } from "lucide-react";
+import { format, subMonths, subDays, startOfMonth, endOfMonth } from "date-fns";
+import {
+  RefreshCw,
+  Loader2,
+  TrendingUp,
+  DollarSign,
+  ShieldAlert,
+  CalendarClock,
+  Link2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-import ConcentrationRiskAlert from "@/components/dashboard/ConcentrationRiskAlert";
-import LendingSignalsCard from "@/components/dashboard/LendingSignalsCard";
-import InsightsPanel from "@/components/dashboard/InsightsPanel";
+import SummaryCard from "@/components/dashboard/SummaryCard";
+import PlatformRevenueTable from "@/components/dashboard/PlatformRevenueTable";
+import RevenueTrendChart from "@/components/dashboard/RevenueTrendChart";
+import ActionItemsPanel from "@/components/dashboard/ActionItemsPanel";
 import AlertBanner from "@/components/dashboard/AlertBanner";
-import { GlowingEffect } from "@/components/ui/glowing-effect";
 
-// Lazy load chart components for better performance
-const RevenueForecasting = React.lazy(() => import("@/components/dashboard/RevenueForecasting"));
-const InteractivePlatformChart = React.lazy(() => import("@/components/dashboard/InteractivePlatformChart"));
+const PLATFORM_LABELS = {
+  youtube: "YouTube",
+  patreon: "Patreon",
+  stripe: "Stripe",
+  gumroad: "Gumroad",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  shopify: "Shopify",
+  substack: "Substack",
+};
 
 export default function Dashboard() {
-  const [showRiskAlert, setShowRiskAlert] = useState(true);
-  const [generatingInsights, setGeneratingInsights] = useState(false);
   const [alerts, setAlerts] = useState([]);
-
-  const { data: transactions = [], isLoading, refetch } = useQuery({
-    queryKey: ["revenueTransactions"],
-    queryFn: () => base44.entities.RevenueTransaction.fetchAll({
-      // Filters (empty for now, unless we want to filter by user implicitly handled by RLS)
-    }, "-transaction_date"),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: insights = [] } = useQuery({
-    queryKey: ["insights"],
-    queryFn: () => base44.entities.Insight.list("-created_date", 10),
-    staleTime: 1000 * 60 * 10, // 10 minutes
+  // ── Data queries ──────────────────────────────────────────────────────
+
+  const {
+    data: transactions = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["revenueTransactions"],
+    queryFn: () =>
+      base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: user } = useQuery({
@@ -45,7 +58,11 @@ export default function Dashboard() {
     queryKey: ["autopsyEvents"],
     queryFn: async () => {
       const user = await base44.auth.me();
-      return base44.entities.AutopsyEvent.filter({ user_id: user.id, status: 'pending_review' }, "-detected_at", 5);
+      return base44.entities.AutopsyEvent.filter(
+        { user_id: user.id, status: "pending_review" },
+        "-detected_at",
+        5
+      );
     },
   });
 
@@ -57,322 +74,363 @@ export default function Dashboard() {
     },
   });
 
+  const { data: reconciliations = [] } = useQuery({
+    queryKey: ["reconciliations"],
+    queryFn: async () => {
+      const user = await base44.auth.me();
+      return base44.entities.Reconciliation.filter({ user_id: user.id });
+    },
+  });
+
+  // ── Alert banners ─────────────────────────────────────────────────────
+
   useEffect(() => {
     const newAlerts = [];
 
-    // Autopsy alerts
     if (autopsyEvents.length > 0) {
       newAlerts.push({
-        id: 'autopsy',
-        type: 'error',
-        title: `⚠️ ${autopsyEvents.length} Revenue Anomal${autopsyEvents.length > 1 ? 'ies' : 'y'} Detected`,
-        description: 'Critical events require your decision. Review now to understand impact.',
-        dismissible: false
+        id: "autopsy",
+        type: "error",
+        title: `${autopsyEvents.length} Revenue ${autopsyEvents.length > 1 ? "Anomalies" : "Anomaly"} Detected`,
+        description:
+          "Critical events require your decision. Review now to understand impact.",
+        dismissible: false,
       });
     }
 
-    // Sync alerts
-    const failedSyncs = connectedPlatforms.filter(p => p.sync_status === 'error');
+    const failedSyncs = connectedPlatforms.filter(
+      (p) => p.sync_status === "error"
+    );
     if (failedSyncs.length > 0) {
       newAlerts.push({
-        id: 'sync',
-        type: 'sync',
-        title: `⏰ ${failedSyncs.length} Platform${failedSyncs.length > 1 ? 's' : ''} Failed to Sync`,
-        description: 'Go to Connected Platforms to reconnect.',
-        dismissible: true
-      });
-    }
-
-    // AI insights available
-    if (insights.length > 3) {
-      newAlerts.push({
-        id: 'insights',
-        type: 'info',
-        title: '✨ New AI Insights Available',
-        description: `${insights.length} insights ready for review.`,
-        dismissible: true
+        id: "sync",
+        type: "sync",
+        title: `${failedSyncs.length} Platform${failedSyncs.length > 1 ? "s" : ""} Failed to Sync`,
+        description: "Go to Connected Platforms to reconnect.",
+        dismissible: true,
       });
     }
 
     setAlerts(newAlerts);
-  }, [autopsyEvents, connectedPlatforms, insights]);
+  }, [autopsyEvents, connectedPlatforms]);
 
-  const handleGenerateInsights = async () => {
-    setGeneratingInsights(true);
-    try {
-      await base44.functions.invoke('generateInsights');
-      await queryClient.invalidateQueries({ queryKey: ['insights'] });
-    } catch (error) {
-      console.error('Failed to generate insights:', error);
-    } finally {
-      setGeneratingInsights(false);
-    }
-  };
+  // ── Computed metrics ──────────────────────────────────────────────────
 
-  // Calculate metrics
   const metrics = useMemo(() => {
     const now = new Date();
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
 
-    // Current month transactions
-    const currentMonthTxns = transactions.filter(t => {
+    // Current month
+    const currentMonthTxns = transactions.filter((t) => {
       const date = new Date(t.transaction_date);
       return date >= currentMonthStart && date <= currentMonthEnd;
     });
 
-    // Previous month for comparison
+    // Previous month
     const prevMonthStart = startOfMonth(subMonths(now, 1));
     const prevMonthEnd = endOfMonth(subMonths(now, 1));
-    const prevMonthTxns = transactions.filter(t => {
+    const prevMonthTxns = transactions.filter((t) => {
       const date = new Date(t.transaction_date);
       return date >= prevMonthStart && date <= prevMonthEnd;
     });
 
-    // Total MRR
-    const totalMRR = currentMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-    const _prevMRR = prevMonthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
+    // Total revenue
+    const totalRevenue = currentMonthTxns.reduce(
+      (sum, t) => sum + (t.amount || 0),
+      0
+    );
+    const prevRevenue = prevMonthTxns.reduce(
+      (sum, t) => sum + (t.amount || 0),
+      0
+    );
 
-    // MRR change
-    let mrrTrend = "neutral";
-    let mrrChange = "0%";
-    if (_prevMRR > 0) {
-      const changePercent = ((totalMRR - _prevMRR) / _prevMRR) * 100;
-      mrrTrend = changePercent > 0 ? "up" : changePercent < 0 ? "down" : "neutral";
-      mrrChange = `${changePercent > 0 ? "+" : ""}${changePercent.toFixed(1)}%`;
+    // Revenue change
+    let revenueTrend = "neutral";
+    let revenueChange = "No prior data";
+    if (prevRevenue > 0) {
+      const pct = ((totalRevenue - prevRevenue) / prevRevenue) * 100;
+      revenueTrend = pct > 0 ? "up" : pct < 0 ? "down" : "neutral";
+      revenueChange = `${pct > 0 ? "+" : ""}${pct.toFixed(1)}% vs last month`;
     }
 
-    // Platform breakdown
-    const platformMap = {};
-    currentMonthTxns.forEach(t => {
-      if (!platformMap[t.platform]) {
-        platformMap[t.platform] = 0;
-      }
-      platformMap[t.platform] += t.amount || 0;
+    // Platform breakdown (current + previous month)
+    const currentPlatformMap = {};
+    currentMonthTxns.forEach((t) => {
+      currentPlatformMap[t.platform] =
+        (currentPlatformMap[t.platform] || 0) + (t.amount || 0);
     });
 
-    const platformBreakdown = Object.entries(platformMap).map(([platform, amount]) => ({
+    const prevPlatformMap = {};
+    prevMonthTxns.forEach((t) => {
+      prevPlatformMap[t.platform] =
+        (prevPlatformMap[t.platform] || 0) + (t.amount || 0);
+    });
+
+    // Merge platforms
+    const allPlatforms = new Set([
+      ...Object.keys(currentPlatformMap),
+      ...Object.keys(prevPlatformMap),
+    ]);
+    const platformData = Array.from(allPlatforms).map((platform) => ({
       platform,
-      amount
+      currentMonth: currentPlatformMap[platform] || 0,
+      lastMonth: prevPlatformMap[platform] || 0,
     }));
 
-    // Concentration risk
+    // Concentration risk (last 90 days for more accuracy)
+    const ninetyDaysAgo = subDays(now, 90);
+    const recentTxns = transactions.filter(
+      (t) => new Date(t.transaction_date) >= ninetyDaysAgo
+    );
+    const recentPlatformMap = {};
+    recentTxns.forEach((t) => {
+      recentPlatformMap[t.platform] =
+        (recentPlatformMap[t.platform] || 0) + (t.amount || 0);
+    });
+    const recentTotal = Object.values(recentPlatformMap).reduce(
+      (sum, v) => sum + v,
+      0
+    );
+
     let concentrationRisk = null;
-    const totalPlatformRevenue = platformBreakdown.reduce((sum, p) => sum + p.amount, 0);
-    if (totalPlatformRevenue > 0) {
-      platformBreakdown.forEach(({ platform, amount }) => {
-        const percentage = (amount / totalPlatformRevenue) * 100;
-        if (percentage >= 70) {
-          concentrationRisk = { platform, percentage };
-        }
-      });
+    if (recentTotal > 0) {
+      const sorted = Object.entries(recentPlatformMap).sort(
+        (a, b) => b[1] - a[1]
+      );
+      if (sorted.length > 0) {
+        const topPlatform = sorted[0][0];
+        const topPct = (sorted[0][1] / recentTotal) * 100;
+        concentrationRisk = {
+          platform: topPlatform,
+          percentage: topPct,
+          level:
+            topPct >= 70 ? "high" : topPct >= 50 ? "moderate" : "diversified",
+        };
+      }
     }
 
-    // 3-month trend
-    const trendData = [];
-    for (let i = 2; i >= 0; i--) {
-      const monthStart = startOfMonth(subMonths(now, i));
-      const monthEnd = endOfMonth(subMonths(now, i));
-      const monthTxns = transactions.filter(t => {
-        const date = new Date(t.transaction_date);
-        return date >= monthStart && date <= monthEnd;
-      });
-      const monthTotal = monthTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
-      trendData.push({
-        month: format(monthStart, "MMM"),
-        revenue: monthTotal
-      });
-    }
+    // Reconciliation status
+    const reconciledAmount = reconciliations
+      .filter((r) => r.status === "matched" || r.status === "reconciled")
+      .reduce((sum, r) => sum + (r.amount || 0), 0);
+    const unreconciledCount = reconciliations.filter(
+      (r) => r.status === "pending" || r.status === "unmatched"
+    ).length;
+    const unreconciledAmount = reconciliations
+      .filter((r) => r.status === "pending" || r.status === "unmatched")
+      .reduce((sum, r) => sum + (r.amount || 0), 0);
 
-    // Top transactions this month
-    const topTransactions = [...currentMonthTxns]
-      .sort((a, b) => (b.amount || 0) - (a.amount || 0))
-      .slice(0, 5);
+    // Count unique platforms with data
+    const activePlatformCount = Object.keys(currentPlatformMap).length;
 
     return {
-      totalMRR,
-      mrrTrend,
-      mrrChange,
-      platformBreakdown,
+      totalRevenue,
+      prevRevenue,
+      revenueTrend,
+      revenueChange,
+      activePlatformCount,
+      platformData,
       concentrationRisk,
-      trendData,
-      topTransactions,
-      prevMRR: _prevMRR
+      reconciledAmount,
+      unreconciledAmount,
+      unreconciledCount,
     };
-  }, [transactions]);
+  }, [transactions, reconciliations]);
+
+  // ── Stale platforms for action items ──────────────────────────────────
+
+  const stalePlatforms = connectedPlatforms
+    .filter((p) => p.sync_status === "error")
+    .map(
+      (p) =>
+        PLATFORM_LABELS[(p.platform_name || p.platform || "").toLowerCase()] ||
+        p.platform_name ||
+        p.platform
+    );
+
+  // ── Concentration risk badge ──────────────────────────────────────────
+
+  const riskBadge = metrics.concentrationRisk
+    ? {
+      high: { text: "High risk", variant: "danger" },
+      moderate: { text: "Moderate", variant: "warning" },
+      diversified: { text: "Diversified", variant: "success" },
+    }[metrics.concentrationRisk.level]
+    : null;
+
+  // ── Greeting ──────────────────────────────────────────────────────────
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  }, []);
+
+  const firstName = user?.full_name?.split(" ")[0] || "there";
+
+  // ── Render ────────────────────────────────────────────────────────────
 
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-white tracking-tight">Dashboard</h1>
-          <p className="text-white/40 mt-1 text-sm">Your revenue at a glance</p>
+          <h1 className="text-[28px] font-semibold text-[var(--z-text-1)] tracking-tight leading-tight">
+            {greeting}, {firstName}
+          </h1>
+          <p className="text-[var(--z-text-3)] mt-1 text-sm">
+            Your earnings at a glance
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={handleGenerateInsights}
-            disabled={generatingInsights}
-            className="rounded-lg bg-zteal-400 hover:bg-zteal-500 text-white border-0 transition-colors text-sm h-9"
-          >
-            {generatingInsights ? (
-              <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="w-3.5 h-3.5 mr-2" />
-            )}
-            Generate Insights
-          </Button>
-          <Button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm h-9"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        </div>
+        <Button
+          onClick={() => refetch()}
+          disabled={isLoading}
+          className="rounded-lg bg-[var(--z-bg-3)] border border-[var(--z-border-1)] text-[var(--z-text-2)] hover:bg-[var(--z-bg-3)] hover:border-[var(--z-border-2)] hover:text-[var(--z-text-1)] transition-all text-sm h-9 px-4"
+        >
+          <RefreshCw
+            className={`w-3.5 h-3.5 mr-2 ${isLoading ? "animate-spin" : ""}`}
+          />
+          Refresh
+        </Button>
       </div>
 
       {/* Alert Banners */}
       <AlertBanner
         alerts={alerts}
-        onDismiss={(id) => setAlerts(alerts.filter(a => a.id !== id))}
+        onDismiss={(id) => setAlerts(alerts.filter((a) => a.id !== id))}
       />
 
-      {/* Concentration Risk Alert */}
-      {showRiskAlert && metrics.concentrationRisk && (
+      {/* No Platforms Connected CTA */}
+      {connectedPlatforms.length === 0 && (
         <div className="mb-6">
-          <ConcentrationRiskAlert
-            platform={metrics.concentrationRisk.platform}
-            percentage={metrics.concentrationRisk.percentage}
-            onDismiss={() => setShowRiskAlert(false)}
-          />
+          <div
+            onClick={() => navigate("/ConnectedPlatforms")}
+            className="group cursor-pointer rounded-xl p-4 border border-[var(--z-border-1)] bg-[var(--z-bg-2)] hover:border-[#32B8C6]/30 transition-all duration-200"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[#32B8C6]/10 border border-[#32B8C6]/20 flex items-center justify-center flex-shrink-0">
+                <Link2 className="w-4 h-4 text-[#32B8C6]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-[var(--z-text-2)] group-hover:text-[var(--z-text-1)] transition-colors">
+                  No platforms connected.{" "}
+                  <span className="text-[#32B8C6] font-medium">
+                    Connect now
+                  </span>{" "}
+                  to start tracking your revenue.
+                </p>
+              </div>
+              <div className="text-[var(--z-text-3)] group-hover:text-[#32B8C6] transition-colors">
+                →
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Revenue Overview Cards */}
+      {/* Summary Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="relative rounded-xl">
-          <GlowingEffect
-            spread={40}
-            glow={true}
-            disabled={false}
-            proximity={64}
-            inactiveZone={0.01}
-            borderWidth={2}
-          />
-          <div className="card-modern rounded-xl p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-zteal-400/10 border border-white/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-zteal-400" />
-              </div>
-            </div>
-            <p className="text-white/50 text-xs mb-1">This Month</p>
-            <p className="text-2xl font-semibold text-white">${metrics.totalMRR.toFixed(0)}</p>
-            <p className={`text-xs mt-2 flex items-center gap-1 ${metrics.mrrTrend === 'up' ? 'text-emerald-400' : metrics.mrrTrend === 'down' ? 'text-red-400' : 'text-white/40'}`}>
-              {metrics.mrrChange} vs last month
-            </p>
-          </div>
-        </div>
+        {/* Card 1: Total Revenue This Month */}
+        <SummaryCard
+          icon={DollarSign}
+          iconColor="text-[#32B8C6]"
+          label="Total Revenue This Month"
+          value={`$${metrics.totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+          trend={metrics.revenueTrend}
+          trendValue={metrics.revenueChange}
+          subtitle={
+            metrics.activePlatformCount > 0
+              ? `Across ${metrics.activePlatformCount} platform${metrics.activePlatformCount > 1 ? "s" : ""}`
+              : null
+          }
+          microcopy="Based on synced transactions"
+        />
 
-        <div className="relative rounded-xl">
-          <GlowingEffect
-            spread={40}
-            glow={true}
-            disabled={false}
-            proximity={64}
-            inactiveZone={0.01}
-            borderWidth={2}
-          />
-          <div className="card-modern rounded-xl p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-white/10 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-emerald-400" />
-              </div>
-            </div>
-            <p className="text-white/50 text-xs mb-1">Transactions</p>
-            <p className="text-2xl font-semibold text-white">{transactions.length}</p>
-            <p className="text-xs text-white/40 mt-2">All-time</p>
-          </div>
-        </div>
+        {/* Card 2: Reconciled vs Unreconciled */}
+        <SummaryCard
+          icon={DollarSign}
+          iconColor="text-emerald-400"
+          label="Reconciled Revenue"
+          value={`$${metrics.reconciledAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+          secondaryValue={
+            metrics.unreconciledAmount > 0
+              ? `$${metrics.unreconciledAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pending`
+              : null
+          }
+          subtitle={
+            metrics.unreconciledCount > 0
+              ? `${metrics.unreconciledCount} transaction${metrics.unreconciledCount > 1 ? "s" : ""} need review`
+              : "All transactions matched"
+          }
+          microcopy="Bank deposits matched"
+        />
 
-        <div className="relative rounded-xl">
-          <GlowingEffect
-            spread={40}
-            glow={true}
-            disabled={false}
-            proximity={64}
-            inactiveZone={0.01}
-            borderWidth={2}
-          />
-          <div className="card-modern rounded-xl p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-white/10 flex items-center justify-center">
-                <CircleDollarSign className="w-5 h-5 text-blue-400" />
-              </div>
-            </div>
-            <p className="text-white/50 text-xs mb-1">Avg Transaction</p>
-            <p className="text-2xl font-semibold text-white">
-              ${transactions.length > 0 ? (metrics.totalMRR / transactions.length).toFixed(0) : 0}
-            </p>
-            <p className="text-xs text-white/40 mt-2">Per transaction</p>
-          </div>
-        </div>
+        {/* Card 3: Revenue Concentration Risk */}
+        <SummaryCard
+          icon={ShieldAlert}
+          iconColor={
+            metrics.concentrationRisk?.level === "high"
+              ? "text-[#FF5459]"
+              : metrics.concentrationRisk?.level === "moderate"
+                ? "text-[#E68161]"
+                : "text-emerald-400"
+          }
+          label="Revenue Concentration"
+          value={
+            metrics.concentrationRisk
+              ? `${metrics.concentrationRisk.percentage.toFixed(0)}% from ${PLATFORM_LABELS[metrics.concentrationRisk.platform] || metrics.concentrationRisk.platform}`
+              : "—"
+          }
+          isMonospace={false}
+          badge={riskBadge}
+          subtitle={
+            metrics.concentrationRisk?.level === "diversified"
+              ? "Well diversified income"
+              : "Diversify to reduce platform dependency"
+          }
+          microcopy="Based on last 90 days"
+        />
 
-        <div className="relative rounded-xl">
-          <GlowingEffect
-            spread={40}
-            glow={true}
-            disabled={false}
-            proximity={64}
-            inactiveZone={0.01}
-            borderWidth={2}
-          />
-          <div className="card-modern rounded-xl p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-white/10 flex items-center justify-center">
-                <Link2 className="w-5 h-5 text-amber-400" />
-              </div>
-            </div>
-            <p className="text-white/50 text-xs mb-1">Platforms</p>
-            <p className="text-2xl font-semibold text-white">{metrics.platformBreakdown.length}</p>
-            <p className="text-xs text-white/40 mt-2">Connected sources</p>
-          </div>
-        </div>
+        {/* Card 4: Next Payout Date */}
+        <SummaryCard
+          icon={CalendarClock}
+          iconColor="text-[#32B8C6]"
+          label="Next Expected Payout"
+          value="—"
+          isMonospace={false}
+          subtitle={
+            connectedPlatforms.length > 0
+              ? "Payout prediction coming soon"
+              : "Connect platforms for payout estimates"
+          }
+          microcopy="Based on platform payout schedules"
+        />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <React.Suspense fallback={
-          <div className="card-modern rounded-xl p-6 h-[400px] flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-white/30" />
-          </div>
-        }>
-          <InteractivePlatformChart transactions={transactions} />
-        </React.Suspense>
-        <React.Suspense fallback={
-          <div className="card-modern rounded-xl p-6 h-[400px] flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-white/30" />
-          </div>
-        }>
-          <RevenueForecasting transactions={transactions} />
-        </React.Suspense>
+      {/* Platform Revenue Table */}
+      <div className="mb-8">
+        <PlatformRevenueTable
+          platformData={metrics.platformData}
+          connectedPlatforms={connectedPlatforms}
+        />
       </div>
 
-      {/* Insights & Lending Signals */}
+      {/* Revenue Trend + Action Items Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <InsightsPanel
-            insights={insights.filter(i => i.insight_type !== 'cashflow_forecast')}
-          />
+          <RevenueTrendChart transactions={transactions} />
         </div>
         <div>
-          <LendingSignalsCard
-            insight={insights.find(i => i.insight_type === 'cashflow_forecast')}
+          <ActionItemsPanel
+            unreconciledCount={metrics.unreconciledCount}
+            stalePlatforms={stalePlatforms}
+            autopsyEventCount={autopsyEvents.length}
+            hasTaxExport={false}
           />
         </div>
       </div>
-
     </div>
   );
 }
