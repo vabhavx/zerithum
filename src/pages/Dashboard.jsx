@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/supabaseClient";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, subMonths, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { subMonths, subDays, startOfMonth, endOfMonth } from "date-fns";
 import {
   RefreshCw,
-  Loader2,
-  TrendingUp,
   DollarSign,
   ShieldAlert,
   CalendarClock,
@@ -34,7 +32,6 @@ const PLATFORM_LABELS = {
 export default function Dashboard() {
   const [alerts, setAlerts] = useState([]);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   // ── Data queries ──────────────────────────────────────────────────────
 
