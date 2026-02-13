@@ -153,7 +153,8 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    outline-color: var(--ring);
   }
 
   html {
@@ -327,8 +328,15 @@
 
   /* Loading state - simple pulse instead of shimmer */
   @keyframes subtle-pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.6; }
+
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+
+    50% {
+      opacity: 0.6;
+    }
   }
 
   .shimmer {
