@@ -14,6 +14,8 @@ vi.mock('framer-motion', async () => {
         AnimatePresence: ({ children }: any) => <>{children}</>,
         motion: {
             div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+            h2: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
+            p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
         },
         useReducedMotion: () => false,
         useInView: () => true, // Mock visible
@@ -34,19 +36,40 @@ describe('HowItWorksSection', () => {
     it('renders the section headline', () => {
         render(<HowItWorksSection />);
         expect(screen.getByText('Revenue, reality checked.')).toBeInTheDocument();
-        expect(screen.getByText(/Platforms report what they owe you/)).toBeInTheDocument();
+        expect(screen.getByText(/Stop guessing. We verify every single payout/)).toBeInTheDocument();
     });
 
     it('renders the interactive widget controls', () => {
         render(<HowItWorksSection />);
-        expect(screen.getByText('View with bank layer')).toBeInTheDocument();
-        expect(screen.getByText('Replay')).toBeInTheDocument();
+        // "Reset" button
+        expect(screen.getByText('Reset')).toBeInTheDocument();
+        // "Auto-Cycle" indicator
+        expect(screen.getByText('Auto-Cycle')).toBeInTheDocument();
     });
 
-    it('toggles the bank layer', () => {
+    it('renders the data content', () => {
         render(<HowItWorksSection />);
-        const toggle = screen.getByText('View with bank layer');
-        fireEvent.click(toggle);
-        expect(toggle).toBeInTheDocument();
+        // Total balance
+        expect(screen.getByText('$17,043.34')).toBeInTheDocument();
+        // Platforms (only first 3 are rendered in the dashboard view)
+        expect(screen.getByText('YouTube')).toBeInTheDocument();
+        expect(screen.getByText('Patreon')).toBeInTheDocument();
+        expect(screen.getByText('Stripe')).toBeInTheDocument();
+    });
+
+    it('toggles manual control on hover', () => {
+        render(<HowItWorksSection />);
+        const widget = screen.getByRole('region', { name: /Revenue Unification Simulation/ });
+
+        // Initial state
+        expect(screen.getByText('Auto-Cycle')).toBeInTheDocument();
+
+        // Hover
+        fireEvent.mouseEnter(widget);
+        expect(screen.getByText('Manual Control')).toBeInTheDocument();
+
+        // Unhover
+        fireEvent.mouseLeave(widget);
+        expect(screen.getByText('Auto-Cycle')).toBeInTheDocument();
     });
 });
