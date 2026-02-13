@@ -1,431 +1,259 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useInView, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    RefreshCw,
-    TrendingUp,
-    CreditCard,
-    Youtube,
-    DollarSign,
     CheckCircle2,
-    Landmark,
-    Zap
+    Terminal,
+    Shield,
+    Zap,
+    Youtube,
+    CreditCard,
+    DollarSign,
+    Search,
+    RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-// --- Types & Data ---
-
-type Platform = {
-    id: string;
-    name: string;
-    color: string;
-    icon: React.ElementType;
-    orbit: { x: number; y: number; rotate: number; delay: number };
-    payout: string;
-    insight: string;
-};
-
-const PLATFORMS: Platform[] = [
-    {
-        id: 'yt',
-        name: 'YouTube',
-        color: 'bg-red-600',
-        icon: Youtube,
-        orbit: { x: -180, y: -60, rotate: -15, delay: 0 },
-        payout: '$8,432.10',
-        insight: 'Delayed 18 days'
-    },
-    {
-        id: 'pat',
-        name: 'Patreon',
-        color: 'bg-orange-500',
-        icon: DollarSign,
-        orbit: { x: 160, y: 80, rotate: 10, delay: 0.1 },
-        payout: '$3,890.55',
-        insight: '8% Platform Fee'
-    },
-    {
-        id: 'str',
-        name: 'Stripe',
-        color: 'bg-indigo-500',
-        icon: CreditCard,
-        orbit: { x: -80, y: 140, rotate: -5, delay: 0.2 },
-        payout: '$1,250.00',
-        insight: 'Net Match'
-    },
-    {
-        id: 'gum',
-        name: 'Gumroad',
-        color: 'bg-pink-500',
-        icon: DollarSign,
-        orbit: { x: 120, y: -100, rotate: 12, delay: 0.15 },
-        payout: '$420.69',
-        insight: 'Instant Settle'
-    },
-    {
-        id: 'twt',
-        name: 'Twitch',
-        color: 'bg-purple-600',
-        icon: Youtube,
-        orbit: { x: -140, y: 50, rotate: -20, delay: 0.05 },
-        payout: '$950.00',
-        insight: 'Pending'
-    },
-    {
-        id: 'sub',
-        name: 'Substack',
-        color: 'bg-orange-600',
-        icon: FileTextIcon,
-        orbit: { x: 60, y: 160, rotate: 8, delay: 0.25 },
-        payout: '$2,100.00',
-        insight: 'Cleared'
-    }
+// --- Data ---
+const INCOMING_STREAM = [
+    { id: 'tx_881', source: 'YouTube', amount: '$8,432.10', icon: Youtube, color: 'text-red-500' },
+    { id: 'tx_882', source: 'Stripe', amount: '$1,250.00', icon: CreditCard, color: 'text-indigo-500' },
+    { id: 'tx_883', source: 'Patreon', amount: '$3,890.55', icon: DollarSign, color: 'text-orange-500' },
+    { id: 'tx_884', source: 'Gumroad', amount: '$420.69', icon: DollarSign, color: 'text-pink-500' },
 ];
-
-function FileTextIcon(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" x2="8" y1="13" y2="13" />
-            <line x1="16" x2="8" y1="17" y2="17" />
-            <line x1="10" x2="8" y1="9" y2="9" />
-        </svg>
-    )
-}
 
 const HowItWorksSection = () => {
     return (
         <section id="how-it-works" className="py-24 bg-zinc-950 relative overflow-hidden" aria-label="How Zerithum Works">
             <div className="max-w-7xl mx-auto px-6 relative z-10">
 
-                {/* Centered Header for Impact */}
+                {/* Header */}
                 <div className="text-center max-w-3xl mx-auto mb-16">
-                    <motion.h2
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                        className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 tracking-tight"
-                    >
+                    <h2 className="text-4xl md:text-5xl font-serif font-bold text-white mb-6 tracking-tight">
                         Revenue, reality checked.
-                    </motion.h2>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="text-xl text-zinc-400 font-light"
-                    >
-                        Stop guessing. We verify every single payout against your actual bank wire.
-                    </motion.p>
+                    </h2>
+                    <p className="text-xl text-zinc-400 font-light">
+                        High-frequency reconciliation. We match platform signals to bank truths in milliseconds.
+                    </p>
                 </div>
 
-                {/* Interactive Widget - Centered & Focused */}
-                <div className="max-w-4xl mx-auto">
-                    <FlowTimelineWidget />
-                </div>
-
-                {/* Supporting Points - Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-16 max-w-4xl mx-auto">
-                     <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="flex gap-4 items-start p-6 rounded-2xl bg-zinc-900/20 border border-zinc-800 hover:border-emerald-500/30 transition-colors"
-                     >
-                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                            <TrendingUp className="w-5 h-5 text-emerald-500" />
-                        </div>
-                        <div>
-                            <h3 className="text-white font-medium mb-1 text-lg">True Cash Position</h3>
-                            <p className="text-zinc-500 leading-relaxed">Know exactly what hit the bank, ignoring platform "estimated" earnings that haven't settled.</p>
-                        </div>
-                     </motion.div>
-
-                     <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
-                        className="flex gap-4 items-start p-6 rounded-2xl bg-zinc-900/20 border border-zinc-800 hover:border-emerald-500/30 transition-colors"
-                     >
-                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                        </div>
-                        <div>
-                            <h3 className="text-white font-medium mb-1 text-lg">Audit-Grade Trace</h3>
-                            <p className="text-zinc-500 leading-relaxed">Every dollar is traced from click to deposit. If the IRS asks, you have the receipts.</p>
-                        </div>
-                     </motion.div>
-                </div>
+                {/* Pipeline Widget */}
+                <PipelineWidget />
 
             </div>
         </section>
     );
 };
 
-const FlowTimelineWidget = () => {
-    // States: 'orbit' -> 'snap' -> 'unified' -> 'bank' -> 'reset'
-    const [phase, setPhase] = useState<'orbit' | 'snap' | 'unified' | 'bank' | 'reset'>('orbit');
-    const [isHovered, setIsHovered] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const isInView = useInView(containerRef, { amount: 0.5, once: true });
-    const shouldReduceMotion = useReducedMotion();
+const PipelineWidget = () => {
+    const [processedItems, setProcessedItems] = useState<typeof INCOMING_STREAM>([]);
+    const [isReplaying, setIsReplaying] = useState(false);
+    const [scanIndex, setScanIndex] = useState(-1);
 
-    // Auto-Loop Logic
+    // Animation Loop
     useEffect(() => {
-        if (!isInView || isHovered) return;
+        if (isReplaying) return;
 
-        let timeout: NodeJS.Timeout;
-
-        const runLoop = () => {
-            if (phase === 'orbit') {
-                timeout = setTimeout(() => setPhase('snap'), 2000);
-            } else if (phase === 'snap') {
-                timeout = setTimeout(() => setPhase('unified'), 400); // Fast snap
-            } else if (phase === 'unified') {
-                timeout = setTimeout(() => setPhase('bank'), 2000); // Hold unified
-            } else if (phase === 'bank') {
-                timeout = setTimeout(() => setPhase('reset'), 2500); // Show bank layer
-            } else if (phase === 'reset') {
-                timeout = setTimeout(() => setPhase('orbit'), 100); // Quick reset
+        let currentIndex = 0;
+        const interval = setInterval(() => {
+            if (currentIndex >= INCOMING_STREAM.length) {
+                clearInterval(interval);
+                return;
             }
-        };
 
-        runLoop();
-        return () => clearTimeout(timeout);
-    }, [phase, isInView, isHovered]);
+            const index = currentIndex;
+            setScanIndex(index);
 
-    // Reduced Motion Override
-    useEffect(() => {
-        if (shouldReduceMotion && isInView) {
-            setPhase('bank');
-        }
-    }, [shouldReduceMotion, isInView]);
+            // Add to processed list after a brief "scan" delay
+            setTimeout(() => {
+                setProcessedItems(prev => [...prev, INCOMING_STREAM[index]]);
+            }, 400); // 400ms scan time
 
-    const handleInteraction = () => {
-        setIsHovered(true);
-        if (phase === 'orbit' || phase === 'reset') {
-            setPhase('snap');
-            setTimeout(() => setPhase('unified'), 400);
-        }
+            currentIndex++;
+        }, 800); // New item every 800ms
+
+        return () => clearInterval(interval);
+    }, [isReplaying]);
+
+    const handleReplay = () => {
+        setIsReplaying(true);
+        setProcessedItems([]);
+        setScanIndex(-1);
+        setTimeout(() => setIsReplaying(false), 500);
     };
 
     return (
-        <div className="relative w-full group" ref={containerRef} onMouseEnter={handleInteraction} onTouchStart={handleInteraction} onMouseLeave={() => setIsHovered(false)}>
-
-            {/* Status Indicator */}
-            <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
-                 <div className={cn("text-[10px] font-mono uppercase tracking-widest transition-colors", isHovered ? "text-emerald-400" : "text-zinc-600")}>
-                    {isHovered ? "Manual Control" : "Auto-Cycle"}
-                 </div>
-                 <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", isHovered ? "bg-emerald-500 animate-pulse" : "bg-zinc-700")} />
+        <div className="max-w-5xl mx-auto bg-[#09090b] border border-zinc-800 rounded-xl overflow-hidden shadow-2xl relative">
+            {/* Window Header */}
+            <div className="h-10 bg-[#0c0c0e] border-b border-zinc-800 flex items-center px-4 justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-zinc-700" />
+                    <div className="w-3 h-3 rounded-full bg-zinc-700" />
+                    <div className="w-3 h-3 rounded-full bg-zinc-700" />
+                </div>
+                <div className="text-zinc-500 tracking-widest text-[10px] font-medium flex items-center gap-2">
+                    <Terminal className="w-3 h-3" />
+                    ZERITHUM_PIPELINE_V4
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-zinc-400">
+                    <span className={cn("w-2 h-2 rounded-full", processedItems.length === 4 ? "bg-emerald-500" : "bg-amber-500 animate-pulse")} />
+                    {processedItems.length === 4 ? "SYNC COMPLETE" : "PROCESSING..."}
+                </div>
             </div>
 
-            {/* Stage */}
-            <div
-                className="relative h-[400px] w-full bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl"
-                role="region"
-                aria-label="Revenue Unification Simulation"
-            >
-                {/* Background Grid - Radial */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/50 via-zinc-950 to-zinc-950 opacity-50" />
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808005_1px,transparent_1px),linear-gradient(to_bottom,#80808005_1px,transparent_1px)] bg-[size:24px_24px]" />
+            <div className="grid grid-cols-1 md:grid-cols-2 h-[400px] divide-y md:divide-y-0 md:divide-x divide-zinc-800 bg-[#0a0a0b] relative">
 
-                <div className="absolute inset-0 flex items-center justify-center">
+                {/* --- LEFT: RAW SIGNALS --- */}
+                <div className="p-6 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-                    {/* --- CENTRAL DASHBOARD (Always there, but ghosted initially) --- */}
-                    <motion.div
-                        initial={{ opacity: 0.2, scale: 0.9, filter: "grayscale(100%)" }}
-                        animate={{
-                            opacity: (phase === 'unified' || phase === 'bank') ? 1 : 0.2,
-                            scale: (phase === 'unified' || phase === 'bank') ? 1 : 0.9,
-                            filter: (phase === 'unified' || phase === 'bank') ? "grayscale(0%)" : "grayscale(100%)"
-                        }}
-                        transition={{ duration: 0.4, ease: "circOut" }}
-                        className="relative w-[340px] bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-10"
-                    >
-                        {/* Header */}
-                        <div className="p-3 border-b border-zinc-800 bg-zinc-900 flex justify-between items-center">
-                             <div className="flex gap-1.5">
-                                <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-                                <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-                             </div>
-                             <div className="h-2 w-16 bg-zinc-800 rounded-full" />
+                    <div className="flex justify-between items-center mb-6 relative z-10">
+                        <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                            <Zap className="w-3 h-3 text-amber-500" />
+                            Incoming Signals
                         </div>
-                        {/* Content */}
-                        <div className="p-4 space-y-4">
-                             <div className="flex justify-between items-end">
-                                <div className="space-y-1">
-                                    <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium">Total Balance</div>
-                                    <div className="text-2xl font-bold text-white tracking-tight">$17,043.34</div>
-                                </div>
-                                <div className="flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded text-emerald-500 text-xs font-medium border border-emerald-500/20">
-                                    <TrendingUp className="w-3 h-3" />
-                                    <span>+12%</span>
-                                </div>
-                             </div>
+                        <div className="font-mono text-[10px] text-zinc-600">BUFFER: {4 - processedItems.length}</div>
+                    </div>
 
-                             {/* Rows */}
-                             <div className="space-y-2 pt-2">
-                                {PLATFORMS.slice(0, 3).map((p, i) => (
-                                    <motion.div
-                                        key={p.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.1 + (i * 0.1) }} // Stagger internal items
-                                        className="h-10 w-full bg-zinc-800/50 rounded border border-zinc-700/50 flex items-center px-3 justify-between group/row relative overflow-hidden"
-                                    >
-                                        <div className="flex items-center gap-2 relative z-10">
-                                            <div className={cn("w-4 h-4 rounded-sm flex items-center justify-center text-[8px] text-white", p.color)}>
-                                                <p.icon className="w-2.5 h-2.5" />
-                                            </div>
-                                            <span className="text-xs text-zinc-300 font-medium">{p.name}</span>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 relative z-10">
-                                            {/* Insight Badge (Visible on Unified) */}
-                                            <div className="hidden sm:flex items-center px-1.5 py-0.5 rounded-sm bg-zinc-700/50 text-[9px] text-zinc-400 border border-zinc-700">
-                                                {p.insight}
-                                            </div>
-                                            <span className="text-xs font-mono text-white">{p.payout}</span>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                             </div>
-                        </div>
-
-                        {/* --- BANK OVERLAY --- */}
+                    <div className="space-y-4 relative z-10">
                         <AnimatePresence>
-                            {phase === 'bank' && (
-                                <motion.div
-                                    initial={{ y: "100%" }}
-                                    animate={{ y: 0 }}
-                                    exit={{ y: "100%" }}
-                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                    className="absolute inset-0 bg-emerald-950/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-emerald-400"
-                                >
-                                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mb-3 ring-1 ring-emerald-500/50">
-                                        <CheckCircle2 className="w-6 h-6" />
-                                    </div>
-                                    <div className="font-bold text-lg tracking-tight">VERIFIED</div>
-                                    <div className="text-xs font-mono opacity-70 mt-1">Match: 100%</div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
+                            {INCOMING_STREAM.map((item, i) => {
+                                const isProcessed = processedItems.find(p => p.id === item.id);
+                                const isScanning = scanIndex === i;
 
-                    {/* --- ORBITING PLATFORMS --- */}
-                    <AnimatePresence>
-                        {(phase === 'orbit' || phase === 'reset') && (
-                            <div className="absolute inset-0 pointer-events-none">
-                                {PLATFORMS.map((platform, i) => (
+                                if (isProcessed) return null; // Remove from left once processed
+
+                                return (
                                     <motion.div
-                                        key={platform.id}
-                                        initial={{
-                                            x: platform.orbit.x * 1.5, // Start further out
-                                            y: platform.orbit.y * 1.5,
-                                            opacity: 0,
-                                            scale: 0.5
-                                        }}
+                                        key={item.id}
+                                        initial={{ opacity: 0, x: -20 }}
                                         animate={{
-                                            x: platform.orbit.x,
-                                            y: platform.orbit.y,
                                             opacity: 1,
-                                            scale: 1,
-                                            rotate: platform.orbit.rotate
-                                        }}
-                                        exit={{
                                             x: 0,
-                                            y: 0,
-                                            scale: 0.2,
-                                            opacity: 0,
-                                            transition: { duration: 0.3, ease: "backIn" } // Snap in effect
+                                            scale: isScanning ? 1.05 : 1,
+                                            borderColor: isScanning ? 'rgba(16, 185, 129, 0.5)' : 'rgba(39, 39, 42, 1)'
                                         }}
-                                        transition={{
-                                            type: "spring",
-                                            stiffness: 100,
-                                            damping: 10,
-                                            delay: i * 0.05
-                                        }}
-                                        className="absolute top-1/2 left-1/2"
-                                        style={{ marginLeft: -32, marginTop: -20 }} // Center anchor
+                                        exit={{ x: 100, opacity: 0, scale: 0.8 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="bg-zinc-900/50 border border-zinc-800 p-3 rounded-lg flex items-center justify-between"
                                     >
-                                        <div className={cn(
-                                            "w-16 h-10 rounded-lg shadow-lg flex items-center justify-center border border-white/10 backdrop-blur-md",
-                                            "bg-zinc-900/80"
-                                        )}>
-                                            <div className={cn("w-6 h-6 rounded flex items-center justify-center text-white", platform.color)}>
-                                                <platform.icon className="w-3 h-3" />
+                                        <div className="flex items-center gap-3">
+                                            <div className={cn("w-8 h-8 rounded flex items-center justify-center bg-zinc-900 border border-zinc-800", item.color)}>
+                                                <item.icon className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <div className="text-xs font-bold text-zinc-300">{item.source} Payload</div>
+                                                <div className="text-[10px] font-mono text-zinc-600">{item.id}</div>
+                                            </div>
+                                        </div>
+                                        <div className="font-mono text-zinc-400 text-xs">{item.amount}</div>
+
+                                        {isScanning && (
+                                            <motion.div
+                                                layoutId="scanner"
+                                                className="absolute inset-0 border-2 border-emerald-500/30 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                                                transition={{ duration: 0.2 }}
+                                            />
+                                        )}
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
+                        {processedItems.length === 4 && (
+                            <div className="text-center py-12 text-zinc-600 text-xs font-mono animate-pulse">
+                                // STREAM IDLE
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* --- CENTER: SCANNER BEAM (Desktop Only) --- */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-zinc-800 hidden md:block z-20 overflow-visible">
+                     <div className="absolute top-0 bottom-0 -left-[1px] w-[3px] bg-gradient-to-b from-transparent via-emerald-500/50 to-transparent opacity-50" />
+                </div>
+
+
+                {/* --- RIGHT: VERIFIED LEDGER --- */}
+                <div className="p-6 bg-zinc-900/10 relative">
+                     <div className="flex justify-between items-center mb-6">
+                        <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                            <Shield className="w-3 h-3 text-emerald-500" />
+                            Verified Ledger
+                        </div>
+                        <div className="font-mono text-[10px] text-zinc-600">HASH: SHA-256</div>
+                    </div>
+
+                    <div className="w-full border border-zinc-800 rounded-lg overflow-hidden bg-zinc-950">
+                        {/* Table Header */}
+                        <div className="grid grid-cols-4 gap-2 p-2 bg-zinc-900/50 border-b border-zinc-800 text-[9px] text-zinc-500 font-mono uppercase tracking-wider">
+                            <div className="col-span-2">Origin</div>
+                            <div className="text-right">Amount</div>
+                            <div className="text-center">Status</div>
+                        </div>
+
+                        {/* Table Body */}
+                        <div className="divide-y divide-zinc-800/50 min-h-[200px]">
+                            <AnimatePresence mode="popLayout">
+                                {processedItems.map((item) => (
+                                    <motion.div
+                                        key={item.id}
+                                        initial={{ opacity: 0, y: -10, backgroundColor: "rgba(16, 185, 129, 0.1)" }}
+                                        animate={{ opacity: 1, y: 0, backgroundColor: "rgba(9, 9, 11, 0)" }}
+                                        transition={{ duration: 0.5 }}
+                                        className="grid grid-cols-4 gap-2 p-3 items-center group hover:bg-zinc-900/30 transition-colors"
+                                    >
+                                        <div className="col-span-2 flex items-center gap-2">
+                                            <item.icon className={cn("w-3 h-3", item.color)} />
+                                            <span className="text-xs text-zinc-300 font-medium">{item.source}</span>
+                                        </div>
+                                        <div className="text-right font-mono text-xs text-zinc-400">{item.amount}</div>
+                                        <div className="flex justify-center">
+                                            <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[9px] text-emerald-500 font-bold tracking-wider">
+                                                <CheckCircle2 className="w-2.5 h-2.5" />
+                                                MATCH
                                             </div>
                                         </div>
                                     </motion.div>
                                 ))}
-                                {/* Central Gravity Pull Effect */}
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-dashed border-zinc-800 animate-[spin_10s_linear_infinite] opacity-20" />
-                            </div>
-                        )}
-                    </AnimatePresence>
+                            </AnimatePresence>
+                            {processedItems.length === 0 && (
+                                <div className="p-8 text-center text-[10px] text-zinc-600 font-mono">
+                                    WAITING_FOR_DATA...
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
-                    {/* --- SNAP LINES EFFECT --- */}
-                    <AnimatePresence>
-                        {phase === 'snap' && (
-                            <div className="absolute inset-0 pointer-events-none">
-                                {PLATFORMS.map((platform, i) => (
-                                    <motion.div
-                                        key={`line-${platform.id}`}
-                                        initial={{ opacity: 0, pathLength: 0 }}
-                                        animate={{ opacity: 1, pathLength: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2"
-                                    >
-                                       {/* Simulated Line via CSS/Div for simplicity and performance */}
-                                       <motion.div
-                                           initial={{
-                                               width: 0,
-                                               height: 2,
-                                               x: platform.orbit.x,
-                                               y: platform.orbit.y,
-                                               rotate: Math.atan2(-platform.orbit.y, -platform.orbit.x) * (180 / Math.PI)
-                                           }}
-                                           animate={{ width: 100, opacity: 0 }} // Flash line
-                                           transition={{ duration: 0.2 }}
-                                           className="absolute bg-emerald-500 shadow-[0_0_10px_#10b981] origin-left"
-                                       />
-                                    </motion.div>
-                                ))}
-                            </div>
-                        )}
-                    </AnimatePresence>
+                    {/* Bank Context Note */}
+                    <div className="mt-4 flex items-start gap-2 p-3 bg-zinc-900/30 border border-zinc-800/50 rounded text-[10px] text-zinc-500">
+                        <Search className="w-3 h-3 mt-0.5 shrink-0" />
+                        <p className="font-mono leading-relaxed">
+                            <span className="text-zinc-400">Context:</span> Each matched row is cryptographically linked to a confirmed bank deposit trace ID.
+                            <span className="text-emerald-500/80 ml-1">No anomalies detected.</span>
+                        </p>
+                    </div>
 
                 </div>
             </div>
 
-            {/* Control Bar */}
-            <div className="flex justify-center mt-6 gap-4">
-                 <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => { setPhase('reset'); setTimeout(() => setPhase('orbit'), 50); }}
-                    className="border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:text-white hover:bg-zinc-900"
-                 >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Reset
-                 </Button>
-            </div>
+            {/* Replay Control */}
+            {processedItems.length === 4 && (
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-30">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center"
+                    >
+                        <Button
+                            onClick={handleReplay}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs tracking-wider"
+                        >
+                            <RefreshCw className="w-3 h-3 mr-2" />
+                            RUN_SEQUENCE_AGAIN
+                        </Button>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 };
