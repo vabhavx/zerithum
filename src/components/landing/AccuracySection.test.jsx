@@ -1,8 +1,7 @@
-
 import React from 'react';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
-import { expect, vi, describe, test, afterEach } from 'vitest';
+import { expect, vi, describe, test, afterEach, beforeEach } from 'vitest';
 import AccuracySection from './AccuracySection';
 
 // Extend vitest's expect with jest-dom matchers
@@ -11,6 +10,11 @@ expect.extend(matchers);
 // Cleanup after each test
 afterEach(() => {
     cleanup();
+    vi.useRealTimers();
+});
+
+beforeEach(() => {
+    vi.useFakeTimers();
 });
 
 // Mock Lucide icons
@@ -27,12 +31,15 @@ vi.mock('lucide-react', () => ({
   Clock: () => <div data-testid="icon-clock" />,
   User: () => <div data-testid="icon-user" />,
   Eye: () => <div data-testid="icon-eye" />,
+  Play: () => <div data-testid="icon-play" />,
+  Pause: () => <div data-testid="icon-pause" />,
+  RefreshCw: () => <div data-testid="icon-refresh" />,
 }));
 
 // Mock Framer Motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, className, ...props }) => <div className={className}>{children}</div>,
+    div: ({ children, className, layoutId, ...props }) => <div className={className} data-layoutid={layoutId} {...props}>{children}</div>,
     button: ({ children, className, ...props }) => <button className={className}>{children}</button>,
   },
   AnimatePresence: ({ children }) => <>{children}</>,
@@ -45,41 +52,27 @@ describe('AccuracySection', () => {
     expect(screen.getByText(/Verification logic you can see/i)).toBeInTheDocument();
   });
 
-  test('renders Proof Widget text', () => {
+  test('renders Live Simulation indicator', () => {
     render(<AccuracySection />);
-    // Use queryAll to debug if multiple exist, but with cleanup it should be one
-    expect(screen.getByText(/Live Proof Mode/i)).toBeInTheDocument();
+    expect(screen.getByText(/Live Simulation/i)).toBeInTheDocument();
   });
 
-  test('renders sample events', () => {
+  test('hover pauses autoplay', async () => {
     render(<AccuracySection />);
-    expect(screen.getByText(/YouTube AdSense/i)).toBeInTheDocument();
+    const widget = screen.getByText(/Live Simulation/i).closest('div').parentElement;
+    fireEvent.mouseEnter(widget);
+    expect(screen.getByText(/Manual Inspection/i)).toBeInTheDocument();
   });
 
-  test('interactive widget expansion', async () => {
+  test('manual interaction works', async () => {
     render(<AccuracySection />);
-
-    // Find a "See proof" button
-    const expandButtons = screen.getAllByLabelText('See proof');
-    expect(expandButtons.length).toBeGreaterThan(0);
-
-    // Click the first one
-    fireEvent.click(expandButtons[0]);
-
-    // Check if tabs appear
-    await waitFor(() => {
-        expect(screen.getByText('Trace')).toBeInTheDocument();
-        expect(screen.getByText('Explain')).toBeInTheDocument();
-        expect(screen.getByText('Resolve')).toBeInTheDocument();
-    });
-  });
-
-  test('filtering mismatches', async () => {
-    render(<AccuracySection />);
-
-    const toggle = screen.getByRole('switch');
-    fireEvent.click(toggle);
-    expect(toggle).toBeInTheDocument();
+    const row = screen.getByText(/YouTube AdSense/i);
+    fireEvent.click(row);
+    expect(screen.getByText(/Manual Inspection/i)).toBeInTheDocument();
+    expect(screen.getByText(/API Ingest/i)).toBeInTheDocument(); // YouTube trace
+    const explainTab = screen.getByText(/Explain/i);
+    fireEvent.click(explainTab);
+    expect(screen.getByText(/Exact match/i)).toBeInTheDocument(); // YouTube explain
   });
 
   test('check for forbidden characters (em-dash)', () => {
