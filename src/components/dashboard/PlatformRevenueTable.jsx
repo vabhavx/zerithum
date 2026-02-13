@@ -147,7 +147,7 @@ export default function PlatformRevenueTable({
                                         new Date(syncInfo.lastSync),
                                         { addSuffix: false }
                                     )} ago`;
-                                } catch (e) {
+                                } catch (_e) {
                                     statusText = "Synced";
                                 }
                             }
