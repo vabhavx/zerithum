@@ -1,21 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     CheckCircle2,
     Terminal,
-    Shield,
     Zap,
-    Youtube,
     CreditCard,
     DollarSign,
-    Search,
-    RefreshCw
+    Youtube,
+    Server,
+    Database
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 // --- Data ---
-const INCOMING_STREAM = [
+const STREAM_ITEMS = [
     { id: 'tx_881', source: 'YouTube', amount: '$8,432.10', icon: Youtube, color: 'text-red-500' },
     { id: 'tx_882', source: 'Stripe', amount: '$1,250.00', icon: CreditCard, color: 'text-indigo-500' },
     { id: 'tx_883', source: 'Patreon', amount: '$3,890.55', icon: DollarSign, color: 'text-orange-500' },
@@ -46,47 +44,71 @@ const HowItWorksSection = () => {
 };
 
 const PipelineWidget = () => {
-    const [processedItems, setProcessedItems] = useState<typeof INCOMING_STREAM>([]);
-    const [isReplaying, setIsReplaying] = useState(false);
-    const [scanIndex, setScanIndex] = useState(-1);
+    const [activeItem, setActiveItem] = useState<typeof STREAM_ITEMS[0] | null>(null);
+    const [processedList, setProcessedList] = useState<typeof STREAM_ITEMS>([]);
+    const [phase, setPhase] = useState<'idle' | 'ingest' | 'scan' | 'match' | 'verify'>('idle');
 
-    // Animation Loop
+    // Continuous Animation Loop
     useEffect(() => {
-        if (isReplaying) return;
-
         let currentIndex = 0;
-        const interval = setInterval(() => {
-            if (currentIndex >= INCOMING_STREAM.length) {
-                clearInterval(interval);
-                return;
+        let mounted = true;
+
+        const runSequence = async () => {
+            if (!mounted) return;
+
+            // Reset if we've done all items
+            if (currentIndex >= STREAM_ITEMS.length) {
+                // Wait a bit, then clear list and restart
+                await new Promise(r => setTimeout(r, 2000));
+                if (!mounted) return;
+                setProcessedList([]);
+                currentIndex = 0;
             }
 
-            const index = currentIndex;
-            setScanIndex(index);
+            const item = STREAM_ITEMS[currentIndex];
+            setActiveItem(item);
 
-            // Add to processed list after a brief "scan" delay
-            setTimeout(() => {
-                setProcessedItems(prev => [...prev, INCOMING_STREAM[index]]);
-            }, 400); // 400ms scan time
+            // Phase 1: Ingest (Appear on left/top)
+            setPhase('ingest');
+            await new Promise(r => setTimeout(r, 500));
+            if (!mounted) return;
 
+            // Phase 2: Scan (Move to center)
+            setPhase('scan');
+            await new Promise(r => setTimeout(r, 600));
+            if (!mounted) return;
+
+            // Phase 3: Match (Flash Green)
+            setPhase('match');
+            await new Promise(r => setTimeout(r, 400));
+            if (!mounted) return;
+
+            // Phase 4: Verify (Move to right/bottom list)
+            setPhase('verify');
+            setProcessedList(prev => [...prev, item]);
+            await new Promise(r => setTimeout(r, 400)); // Time for exit animation
+            if (!mounted) return;
+
+            setActiveItem(null);
             currentIndex++;
-        }, 800); // New item every 800ms
 
-        return () => clearInterval(interval);
-    }, [isReplaying]);
+            // Short pause between items
+            await new Promise(r => setTimeout(r, 200));
 
-    const handleReplay = () => {
-        setIsReplaying(true);
-        setProcessedItems([]);
-        setScanIndex(-1);
-        setTimeout(() => setIsReplaying(false), 500);
-    };
+            // Recursive call for next item
+            runSequence();
+        };
+
+        runSequence();
+
+        return () => { mounted = false; };
+    }, []);
 
     return (
         <div className="max-w-5xl mx-auto bg-[#09090b] border border-zinc-800 rounded-xl overflow-hidden shadow-2xl relative">
-            {/* Window Header */}
+            {/* Header */}
             <div className="h-10 bg-[#0c0c0e] border-b border-zinc-800 flex items-center px-4 justify-between shrink-0">
-                <div className="flex items-center gap-2">
+                 <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-zinc-700" />
                     <div className="w-3 h-3 rounded-full bg-zinc-700" />
                     <div className="w-3 h-3 rounded-full bg-zinc-700" />
@@ -95,165 +117,155 @@ const PipelineWidget = () => {
                     <Terminal className="w-3 h-3" />
                     ZERITHUM_PIPELINE_V4
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-zinc-400">
-                    <span className={cn("w-2 h-2 rounded-full", processedItems.length === 4 ? "bg-emerald-500" : "bg-amber-500 animate-pulse")} />
-                    {processedItems.length === 4 ? "SYNC COMPLETE" : "PROCESSING..."}
+                <div className="text-[10px] text-zinc-500 font-mono">
+                    STATUS: <span className="text-emerald-500">ACTIVE_LOOP</span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 h-[400px] divide-y md:divide-y-0 md:divide-x divide-zinc-800 bg-[#0a0a0b] relative">
+            {/* Main Stage */}
+            <div className="relative h-auto md:h-[320px] bg-[#0a0a0b] flex flex-col md:flex-row items-center justify-between p-8 md:p-8 overflow-hidden gap-12 md:gap-0">
+                {/* Background Grid */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
 
-                {/* --- LEFT: RAW SIGNALS --- */}
-                <div className="p-6 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:24px_24px]" />
-
-                    <div className="flex justify-between items-center mb-6 relative z-10">
-                        <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                            <Zap className="w-3 h-3 text-amber-500" />
-                            Incoming Signals
-                        </div>
-                        <div className="font-mono text-[10px] text-zinc-600">BUFFER: {4 - processedItems.length}</div>
-                    </div>
-
-                    <div className="space-y-4 relative z-10">
-                        <AnimatePresence>
-                            {INCOMING_STREAM.map((item, i) => {
-                                const isProcessed = processedItems.find(p => p.id === item.id);
-                                const isScanning = scanIndex === i;
-
-                                if (isProcessed) return null; // Remove from left once processed
-
-                                return (
-                                    <motion.div
-                                        key={item.id}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{
-                                            opacity: 1,
-                                            x: 0,
-                                            scale: isScanning ? 1.05 : 1,
-                                            borderColor: isScanning ? 'rgba(16, 185, 129, 0.5)' : 'rgba(39, 39, 42, 1)'
-                                        }}
-                                        exit={{ x: 100, opacity: 0, scale: 0.8 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="bg-zinc-900/50 border border-zinc-800 p-3 rounded-lg flex items-center justify-between"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={cn("w-8 h-8 rounded flex items-center justify-center bg-zinc-900 border border-zinc-800", item.color)}>
-                                                <item.icon className="w-4 h-4" />
-                                            </div>
-                                            <div>
-                                                <div className="text-xs font-bold text-zinc-300">{item.source} Payload</div>
-                                                <div className="text-[10px] font-mono text-zinc-600">{item.id}</div>
-                                            </div>
-                                        </div>
-                                        <div className="font-mono text-zinc-400 text-xs">{item.amount}</div>
-
-                                        {isScanning && (
-                                            <motion.div
-                                                layoutId="scanner"
-                                                className="absolute inset-0 border-2 border-emerald-500/30 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.1)]"
-                                                transition={{ duration: 0.2 }}
-                                            />
-                                        )}
-                                    </motion.div>
-                                );
-                            })}
-                        </AnimatePresence>
-                        {processedItems.length === 4 && (
-                            <div className="text-center py-12 text-zinc-600 text-xs font-mono animate-pulse">
-                                // STREAM IDLE
+                {/* ZONE 1: INGESTION */}
+                <div className="w-full md:w-1/3 h-auto md:h-full flex flex-col items-center relative z-10 border-b md:border-b-0 md:border-r border-dashed border-zinc-800/50 pb-8 md:pb-0">
+                    <div className="mb-8 text-center">
+                        <div className="flex justify-center mb-2">
+                            <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                                <Zap className="w-5 h-5 text-amber-500" />
                             </div>
+                        </div>
+                        <h3 className="text-zinc-300 text-xs font-bold uppercase tracking-wider">1. Platform Signal</h3>
+                    </div>
+
+                    {/* Active Item - Ingest State */}
+                    <AnimatePresence>
+                        {phase === 'ingest' && activeItem && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="bg-zinc-900 border border-zinc-700 p-3 rounded-lg flex items-center gap-3 w-48 shadow-lg"
+                            >
+                                <activeItem.icon className={cn("w-5 h-5", activeItem.color)} />
+                                <div>
+                                    <div className="text-xs font-bold text-white">{activeItem.source}</div>
+                                    <div className="text-[10px] font-mono text-zinc-500">Payload Rx</div>
+                                </div>
+                            </motion.div>
                         )}
+                    </AnimatePresence>
+                </div>
+
+                {/* ZONE 2: PROCESSING ENGINE */}
+                <div className="w-full md:w-1/3 h-auto md:h-full flex flex-col items-center relative z-10">
+                     <div className="mb-8 text-center">
+                        <div className="flex justify-center mb-2">
+                             <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                                <Server className="w-5 h-5 text-blue-500" />
+                            </div>
+                        </div>
+                        <h3 className="text-zinc-300 text-xs font-bold uppercase tracking-wider">2. Reconciliation</h3>
+                    </div>
+
+                    {/* Scanner Visuals */}
+                    <div className="relative w-64 h-24 flex items-center justify-center">
+                         {/* Connection Lines (Desktop Horizontal, Mobile Vertical handled by stacking/spacing but nice to have visual) */}
+                         <div className="absolute top-1/2 left-0 w-full h-[1px] bg-zinc-800 -z-10 hidden md:block" />
+                         {/* Vertical line for mobile */}
+                         <div className="absolute -top-12 left-1/2 w-[1px] h-[calc(100%+6rem)] bg-zinc-800 -z-10 md:hidden" />
+
+                         <AnimatePresence>
+                            {(phase === 'scan' || phase === 'match') && activeItem && (
+                                <motion.div
+                                    layoutId="active-card"
+                                    initial={{ x: -50, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    exit={{ x: 50, opacity: 0 }}
+                                    className={cn(
+                                        "bg-zinc-900 border p-4 rounded-xl flex items-center gap-4 w-56 shadow-2xl relative overflow-hidden transition-colors duration-300",
+                                        phase === 'match' ? "border-emerald-500 bg-emerald-950/20" : "border-zinc-700"
+                                    )}
+                                >
+                                    {/* Scan Beam */}
+                                    {phase === 'scan' && (
+                                        <motion.div
+                                            initial={{ left: "-100%" }}
+                                            animate={{ left: "200%" }}
+                                            transition={{ duration: 1, ease: "linear" }}
+                                            className="absolute top-0 bottom-0 w-12 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent skew-x-12"
+                                        />
+                                    )}
+
+                                    <div className={cn("w-8 h-8 rounded flex items-center justify-center bg-black/40", activeItem.color)}>
+                                        <activeItem.icon className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-mono text-zinc-400">AMOUNT</div>
+                                        <div className="text-sm font-bold text-white">{activeItem.amount}</div>
+                                    </div>
+
+                                    {phase === 'match' && (
+                                        <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            className="absolute top-1 right-1"
+                                        >
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                        </motion.div>
+                                    )}
+                                </motion.div>
+                            )}
+                         </AnimatePresence>
+                    </div>
+
+                    {/* Status Text */}
+                    <div className="h-6 mt-4 flex items-center justify-center">
+                         {phase === 'scan' && <span className="text-[10px] font-mono text-blue-400 animate-pulse">SCANNING_BANK_FEED...</span>}
+                         {phase === 'match' && <span className="text-[10px] font-mono text-emerald-400 font-bold">MATCH CONFIRMED</span>}
                     </div>
                 </div>
 
-                {/* --- CENTER: SCANNER BEAM (Desktop Only) --- */}
-                <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-zinc-800 hidden md:block z-20 overflow-visible">
-                     <div className="absolute top-0 bottom-0 -left-[1px] w-[3px] bg-gradient-to-b from-transparent via-emerald-500/50 to-transparent opacity-50" />
-                </div>
-
-
-                {/* --- RIGHT: VERIFIED LEDGER --- */}
-                <div className="p-6 bg-zinc-900/10 relative">
-                     <div className="flex justify-between items-center mb-6">
-                        <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                            <Shield className="w-3 h-3 text-emerald-500" />
-                            Verified Ledger
+                {/* ZONE 3: VERIFIED LEDGER */}
+                <div className="w-full md:w-1/3 h-auto md:h-full flex flex-col items-center relative z-10 border-t md:border-t-0 md:border-l border-dashed border-zinc-800/50 pt-8 md:pt-0">
+                    <div className="mb-8 text-center">
+                        <div className="flex justify-center mb-2">
+                             <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                                <Database className="w-5 h-5 text-emerald-500" />
+                            </div>
                         </div>
-                        <div className="font-mono text-[10px] text-zinc-600">HASH: SHA-256</div>
+                        <h3 className="text-zinc-300 text-xs font-bold uppercase tracking-wider">3. Verified Ledger</h3>
                     </div>
 
-                    <div className="w-full border border-zinc-800 rounded-lg overflow-hidden bg-zinc-950">
-                        {/* Table Header */}
-                        <div className="grid grid-cols-4 gap-2 p-2 bg-zinc-900/50 border-b border-zinc-800 text-[9px] text-zinc-500 font-mono uppercase tracking-wider">
-                            <div className="col-span-2">Origin</div>
-                            <div className="text-right">Amount</div>
-                            <div className="text-center">Status</div>
-                        </div>
-
-                        {/* Table Body */}
-                        <div className="divide-y divide-zinc-800/50 min-h-[200px]">
-                            <AnimatePresence mode="popLayout">
-                                {processedItems.map((item) => (
+                    <div className="w-full max-w-[240px] bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden flex-1 min-h-[140px] md:min-h-0 md:max-h-[180px]">
+                         <div className="p-2 bg-zinc-900/50 border-b border-zinc-800 text-[9px] text-zinc-500 font-mono uppercase">Recent Transactions</div>
+                         <div className="p-2 space-y-2 overflow-hidden">
+                            <AnimatePresence initial={false} mode="popLayout">
+                                {processedList.slice(-3).map((item) => (
                                     <motion.div
                                         key={item.id}
-                                        initial={{ opacity: 0, y: -10, backgroundColor: "rgba(16, 185, 129, 0.1)" }}
-                                        animate={{ opacity: 1, y: 0, backgroundColor: "rgba(9, 9, 11, 0)" }}
+                                        layout
+                                        initial={{ opacity: 0, x: -20, backgroundColor: "rgba(16, 185, 129, 0.2)" }}
+                                        animate={{ opacity: 1, x: 0, backgroundColor: "rgba(0,0,0,0)" }}
                                         transition={{ duration: 0.5 }}
-                                        className="grid grid-cols-4 gap-2 p-3 items-center group hover:bg-zinc-900/30 transition-colors"
+                                        className="flex items-center justify-between p-2 rounded border border-zinc-800/50 bg-zinc-900/20"
                                     >
-                                        <div className="col-span-2 flex items-center gap-2">
-                                            <item.icon className={cn("w-3 h-3", item.color)} />
-                                            <span className="text-xs text-zinc-300 font-medium">{item.source}</span>
+                                        <div className="flex items-center gap-2">
+                                            <item.icon className="w-3 h-3 text-zinc-500" />
+                                            <span className="text-[10px] text-zinc-300 font-mono">{item.amount}</span>
                                         </div>
-                                        <div className="text-right font-mono text-xs text-zinc-400">{item.amount}</div>
-                                        <div className="flex justify-center">
-                                            <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[9px] text-emerald-500 font-bold tracking-wider">
-                                                <CheckCircle2 className="w-2.5 h-2.5" />
-                                                MATCH
-                                            </div>
-                                        </div>
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
-                            {processedItems.length === 0 && (
-                                <div className="p-8 text-center text-[10px] text-zinc-600 font-mono">
-                                    WAITING_FOR_DATA...
-                                </div>
+                            {processedList.length === 0 && (
+                                <div className="text-[10px] text-zinc-600 text-center py-4 italic">Waiting for verify...</div>
                             )}
-                        </div>
+                         </div>
                     </div>
-
-                    {/* Bank Context Note */}
-                    <div className="mt-4 flex items-start gap-2 p-3 bg-zinc-900/30 border border-zinc-800/50 rounded text-[10px] text-zinc-500">
-                        <Search className="w-3 h-3 mt-0.5 shrink-0" />
-                        <p className="font-mono leading-relaxed">
-                            <span className="text-zinc-400">Context:</span> Each matched row is cryptographically linked to a confirmed bank deposit trace ID.
-                            <span className="text-emerald-500/80 ml-1">No anomalies detected.</span>
-                        </p>
-                    </div>
-
                 </div>
+
             </div>
-
-            {/* Replay Control */}
-            {processedItems.length === 4 && (
-                <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-30">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="text-center"
-                    >
-                        <Button
-                            onClick={handleReplay}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs tracking-wider"
-                        >
-                            <RefreshCw className="w-3 h-3 mr-2" />
-                            RUN_SEQUENCE_AGAIN
-                        </Button>
-                    </motion.div>
-                </div>
-            )}
         </div>
     );
 };

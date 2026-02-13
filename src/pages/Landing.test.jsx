@@ -25,8 +25,9 @@ vi.mock('@paper-design/shaders-react', () => ({
 // Mock the components that use canvas or complex animations to avoid JSDOM issues
 vi.mock('@/components/landing/HeroSection', () => ({ default: () => <div data-testid="hero-section">Hero Section</div> }));
 vi.mock('@/components/landing/ProductShowcase', () => ({ default: () => <div data-testid="product-showcase">Product Showcase</div> }));
-vi.mock('@/components/landing/HowItWorks', () => ({ default: () => <div data-testid="how-it-works">How It Works</div> }));
-vi.mock('@/components/landing/AccuracySpecs', () => ({ default: () => <div data-testid="accuracy-specs">Accuracy Specs</div> }));
+// Updated mocks to match current Landing.jsx
+vi.mock('@/components/landing/HowItWorksSection', () => ({ default: () => <div data-testid="how-it-works-section">How It Works Section</div> }));
+vi.mock('@/components/landing/AccuracySection', () => ({ default: () => <div data-testid="accuracy-section">Accuracy Section</div> }));
 vi.mock('@/components/landing/SecuritySection', () => ({ default: () => <div data-testid="security-section">Security Section</div> }));
 vi.mock('@/components/landing/Footer', () => ({ default: () => <div data-testid="footer">Footer</div> }));
 
@@ -40,8 +41,8 @@ describe('Landing Page', () => {
 
     expect(screen.getByTestId('hero-section')).toBeInTheDocument();
     expect(screen.getByTestId('product-showcase')).toBeInTheDocument();
-    expect(screen.getByTestId('how-it-works')).toBeInTheDocument();
-    expect(screen.getByTestId('accuracy-specs')).toBeInTheDocument();
+    expect(screen.getByTestId('how-it-works-section')).toBeInTheDocument();
+    expect(screen.getByTestId('accuracy-section')).toBeInTheDocument();
     expect(screen.getByTestId('security-section')).toBeInTheDocument();
     expect(screen.getByTestId('footer')).toBeInTheDocument();
   });
