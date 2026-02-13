@@ -8,19 +8,19 @@
        ZERITHUM DARK INDUSTRIAL DESIGN SYSTEM
        ═══════════════════════════════════════════════════════════════════════════ */
 
-    /* Grayscale surfaces (charcoal dark) */
-    --z-bg-0: #1F2121;
+    /* Grayscale surfaces (true black) */
+    --z-bg-0: #09090B;
     /* page background */
-    --z-bg-1: #232525;
+    --z-bg-1: #0C0C0E;
     /* raised surfaces */
-    --z-bg-2: #262828;
+    --z-bg-2: #111113;
     /* cards */
-    --z-bg-3: #2C2E2E;
+    --z-bg-3: #18181B;
     /* elevated panels */
 
     /* Borders */
-    --z-border-1: rgba(119, 124, 124, 0.2);
-    --z-border-2: rgba(119, 124, 124, 0.35);
+    --z-border-1: rgba(255, 255, 255, 0.08);
+    --z-border-2: rgba(255, 255, 255, 0.15);
 
     /* Text hierarchy */
     --z-text-1: #F5F5F5;
@@ -58,34 +58,34 @@
        Maps Zerithum tokens to standard shadcn variables
        ═══════════════════════════════════════════════════════════════════════════ */
 
-    --background: 180 2% 13%;
-    /* #1F2121 */
+    --background: 240 6% 4%;
+    /* #09090B */
     --foreground: 0 0% 96%;
     /* #F5F5F5 */
-    --card: 180 2% 15%;
-    /* #262828 */
+    --card: 240 5% 7%;
+    /* #111113 */
     --card-foreground: 0 0% 96%;
-    --popover: 180 2% 14%;
-    /* #232525 */
+    --popover: 240 6% 5%;
+    /* #0C0C0E */
     --popover-foreground: 0 0% 96%;
     --primary: 186 60% 49%;
     /* #32B8C6 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 180 2% 17%;
-    /* #2C2E2E */
+    --secondary: 240 5% 10%;
+    /* #18181B */
     --secondary-foreground: 0 0% 96%;
-    --muted: 180 2% 17%;
-    --muted-foreground: 180 1% 66%;
-    /* --z-text-3 equiv */
+    --muted: 240 5% 10%;
+    --muted-foreground: 240 4% 46%;
+    /* muted text */
     --accent: 186 60% 49%;
     /* #32B8C6 */
     --accent-foreground: 0 0% 100%;
     --destructive: 358 100% 67%;
     /* #FF5459 */
     --destructive-foreground: 0 0% 100%;
-    --border: 180 2% 48% / 0.2;
-    /* --z-border-1 */
-    --input: 180 2% 48% / 0.2;
+    --border: 0 0% 100% / 0.08;
+    /* subtle white border */
+    --input: 0 0% 100% / 0.08;
     --ring: 186 60% 49%;
     /* #32B8C6 */
 
@@ -104,49 +104,49 @@
     --radius: 0.625rem;
 
     /* Sidebar - mapped to Zerithum palette */
-    --sidebar-background: 180 2% 13%;
+    --sidebar-background: 240 6% 4%;
     --sidebar-foreground: 0 0% 96%;
     --sidebar-primary: 186 60% 49%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 180 2% 17%;
+    --sidebar-accent: 240 5% 10%;
     --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 180 2% 48% / 0.2;
+    --sidebar-border: 0 0% 100% / 0.08;
     --sidebar-ring: 186 60% 49%;
   }
 
   /* Dark class - same as root for always-dark theme */
   .dark {
-    --background: 180 2% 13%;
+    --background: 240 6% 4%;
     --foreground: 0 0% 96%;
-    --card: 180 2% 15%;
+    --card: 240 5% 7%;
     --card-foreground: 0 0% 96%;
-    --popover: 180 2% 14%;
+    --popover: 240 6% 5%;
     --popover-foreground: 0 0% 96%;
     --primary: 186 60% 49%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 180 2% 17%;
+    --secondary: 240 5% 10%;
     --secondary-foreground: 0 0% 96%;
-    --muted: 180 2% 17%;
-    --muted-foreground: 180 1% 66%;
+    --muted: 240 5% 10%;
+    --muted-foreground: 240 4% 46%;
     --accent: 186 60% 49%;
     --accent-foreground: 0 0% 100%;
     --destructive: 358 100% 67%;
     --destructive-foreground: 0 0% 100%;
-    --border: 180 2% 48% / 0.2;
-    --input: 180 2% 48% / 0.2;
+    --border: 0 0% 100% / 0.08;
+    --input: 0 0% 100% / 0.08;
     --ring: 186 60% 49%;
     --chart-1: 186 60% 49%;
     --chart-2: 18 75% 64%;
     --chart-3: 358 100% 67%;
     --chart-4: 262 52% 60%;
     --chart-5: 160 60% 50%;
-    --sidebar-background: 180 2% 13%;
+    --sidebar-background: 240 6% 4%;
     --sidebar-foreground: 0 0% 96%;
     --sidebar-primary: 186 60% 49%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 180 2% 17%;
+    --sidebar-accent: 240 5% 10%;
     --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 180 2% 48% / 0.2;
+    --sidebar-border: 0 0% 100% / 0.08;
     --sidebar-ring: 186 60% 49%;
   }
 }

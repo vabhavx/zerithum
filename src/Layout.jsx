@@ -46,10 +46,10 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#1F2121]">
+    <div className="min-h-screen bg-[#09090B]">
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#1F2121] px-4 py-3 flex items-center justify-between border-b border-white/5">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#09090B] px-4 py-3 flex items-center justify-between border-b border-white/5">
         <div className="relative">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png"
@@ -77,7 +77,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 bg-[#1F2121] border-r border-white/5 z-50 transition-transform duration-150 ease-out",
+        "fixed left-0 top-0 h-full w-64 bg-[#09090B] border-r border-white/5 z-50 transition-transform duration-150 ease-out",
         "lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
@@ -150,7 +150,7 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 bg-[#1F2121]">
+      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 bg-[#09090B]">
         <div className="p-6 lg:p-10 max-w-[1600px] mx-auto">
           {children}
         </div>
