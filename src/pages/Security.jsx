@@ -38,8 +38,8 @@ const Security = () => {
                 </div>
 
                 {/* Data Boundaries Block */}
-                <div className="grid md:grid-cols-2 gap-12 mb-24">
-                    <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-24">
+                    <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6 md:p-8">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
                                 <Check className="w-4 h-4" />
@@ -66,7 +66,7 @@ const Security = () => {
                         </ul>
                     </div>
 
-                    <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-8">
+                    <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6 md:p-8">
                          <div className="flex items-center gap-3 mb-6">
                             <div className="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
                                 <X className="w-4 h-4" />
@@ -98,7 +98,7 @@ const Security = () => {
                 {/* Trust Controls Grid */}
                 <div className="mb-24">
                      <h2 className="text-2xl font-serif font-bold text-white mb-12 text-center">Trust Controls</h2>
-                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <ControlCard
                             title="No custody of funds"
                             desc="Money flows directly from platforms to your bank. Zerithum never touches funds and never initiates transactions. This avoids Money Transmitter License requirements."

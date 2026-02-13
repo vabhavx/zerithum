@@ -48,7 +48,7 @@ const DataBoundaryMap = () => {
                     <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50" />
                     <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
                     <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50" />
-                    <span className="text-xs font-mono text-zinc-500 ml-2 uppercase tracking-wider">Data Boundary Map</span>
+                    <span className="text-xs font-mono text-zinc-500 ml-2 uppercase tracking-wider hidden sm:inline">Data Boundary Map</span>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="flex gap-1">
@@ -67,27 +67,28 @@ const DataBoundaryMap = () => {
             </div>
 
             {/* Visualization Area */}
-            <div className="flex-1 relative bg-zinc-950 p-8 flex items-center justify-center overflow-hidden rounded-b-xl">
+            <div className="flex-1 relative bg-zinc-950 p-4 md:p-8 flex items-center justify-center overflow-hidden rounded-b-xl">
                 {/* Background Grid */}
                 <div className="absolute inset-0 z-0 opacity-10"
                      style={{ backgroundImage: 'radial-gradient(#333 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
                 </div>
 
-                <div className="relative z-10 w-full h-full flex items-center justify-between gap-8 max-w-4xl py-12">
+                <div className="relative z-10 w-full h-full flex flex-col md:flex-row items-center justify-between gap-8 md:gap-8 max-w-4xl py-6 md:py-12">
 
-                    {/* Left Side: Sources */}
-                    <div className="flex flex-col gap-6 items-center w-24 shrink-0 z-20">
-                        <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-2 text-center">Sources</div>
+                    {/* Left Side: Sources (Horizontal on mobile, Vertical on Desktop) */}
+                    <div className="flex md:flex-col gap-6 items-center w-full md:w-24 shrink-0 z-20 justify-center">
+                        <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-2 text-center md:hidden w-full absolute -top-8 left-0">Sources</div>
+                        <div className="hidden md:block text-xs font-mono text-zinc-500 uppercase tracking-widest mb-2 text-center">Sources</div>
                         <PlatformIcon icon={Youtube} label="YouTube" active={activeFrame <= 1} />
                         <PlatformIcon icon={DollarSign} label="Patreon" active={activeFrame <= 1} />
                         <PlatformIcon icon={CreditCard} label="Stripe" active={activeFrame <= 1} />
                     </div>
 
                     {/* Middle: The Flow & The Box */}
-                    <div className="flex-1 relative h-80 flex items-center justify-center">
+                    <div className="flex-1 relative w-full h-[400px] md:h-80 flex flex-col md:flex-row items-center justify-center">
 
                         {/* ZERITHUM BOX */}
-                        <div className="relative z-20 w-56 h-56 bg-zinc-900 border border-zinc-700 rounded-lg flex flex-col items-center justify-center shadow-2xl group transition-all duration-500">
+                        <div className="relative z-20 w-48 h-48 md:w-56 md:h-56 bg-zinc-900 border border-zinc-700 rounded-lg flex flex-col items-center justify-center shadow-2xl group transition-all duration-500">
                             <div className="absolute -top-3 bg-zinc-950 px-3 py-1 text-xs font-mono text-zinc-400 border border-zinc-800 rounded shadow-sm z-30">ZERITHUM</div>
 
                             {/* Internal Components Animation */}
@@ -128,84 +129,127 @@ const DataBoundaryMap = () => {
                             </AnimatePresence>
                         </div>
 
-                        {/* FLOW 1: MONEY BYPASS (Dashed Line) - Upper Arch */}
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-                            <AnimatePresence>
-                                {activeFrame === 0 && (
-                                    <motion.path
-                                        d="M 0,20 Q 50,-40 100,20"
-                                        fill="none"
-                                        stroke="#52525b"
-                                        strokeWidth="0.8"
-                                        strokeDasharray="3 3"
-                                        initial={{ pathLength: 0, opacity: 0 }}
-                                        animate={{ pathLength: 1, opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 1.2, ease: "easeInOut" }}
-                                    />
-                                )}
-                            </AnimatePresence>
-                        </svg>
-                         {activeFrame === 0 && (
+                        {/* DESKTOP SVG FLOWS */}
+                        <div className="hidden md:block absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
+                            <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                {/* Desktop Flow 1: Money Bypass */}
+                                <AnimatePresence>
+                                    {activeFrame === 0 && (
+                                        <motion.path
+                                            d="M 0,20 Q 50,-40 100,20"
+                                            fill="none"
+                                            stroke="#52525b"
+                                            strokeWidth="0.8"
+                                            strokeDasharray="3 3"
+                                            initial={{ pathLength: 0, opacity: 0 }}
+                                            animate={{ pathLength: 1, opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 1.2, ease: "easeInOut" }}
+                                        />
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Desktop Flow 2: Data Ingest */}
+                                <AnimatePresence>
+                                    {activeFrame === 1 && (
+                                        <>
+                                            <motion.path d="M 0,30 L 35,50" fill="none" stroke="#10b981" strokeWidth="0.8" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }} />
+                                            <motion.path d="M 0,70 L 35,50" fill="none" stroke="#10b981" strokeWidth="0.8" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5, delay: 0.1 }} />
+                                        </>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Desktop Flow 4: Exports */}
+                                <AnimatePresence>
+                                    {activeFrame === 4 && (
+                                        <motion.path d="M 65,50 L 100,50" fill="none" stroke="#3b82f6" strokeWidth="0.8" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }} />
+                                    )}
+                                </AnimatePresence>
+                            </svg>
+                        </div>
+
+                         {/* MOBILE SVG FLOWS (VERTICAL) */}
+                        <div className="md:hidden absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
+                             <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                {/* Mobile Flow 1: Money Bypass (Curved Right Side) */}
+                                <AnimatePresence>
+                                    {activeFrame === 0 && (
+                                        <motion.path
+                                            d="M 20,0 Q 100,50 20,100"
+                                            fill="none"
+                                            stroke="#52525b"
+                                            strokeWidth="1"
+                                            strokeDasharray="3 3"
+                                            initial={{ pathLength: 0, opacity: 0 }}
+                                            animate={{ pathLength: 1, opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 1.2, ease: "easeInOut" }}
+                                        />
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Mobile Flow 2: Data Ingest (Top Down) */}
+                                <AnimatePresence>
+                                    {activeFrame === 1 && (
+                                        <>
+                                            <motion.path d="M 20,0 L 50,35" fill="none" stroke="#10b981" strokeWidth="1" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }} />
+                                            <motion.path d="M 80,0 L 50,35" fill="none" stroke="#10b981" strokeWidth="1" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5, delay: 0.1 }} />
+                                        </>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Mobile Flow 4: Exports (Bottom Down) */}
+                                <AnimatePresence>
+                                    {activeFrame === 4 && (
+                                        <motion.path d="M 50,65 L 50,100" fill="none" stroke="#3b82f6" strokeWidth="1" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }} />
+                                    )}
+                                </AnimatePresence>
+                            </svg>
+                        </div>
+
+                         {/* LABELS (Responsive Positioning) */}
+                        {activeFrame === 0 && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute -top-16 left-1/2 -translate-x-1/2 bg-zinc-800 text-zinc-300 text-xs px-3 py-1.5 rounded border border-zinc-700 whitespace-nowrap z-30 shadow-lg flex items-center gap-2"
+                                className="absolute -top-12 md:-top-16 left-1/2 -translate-x-1/2 bg-zinc-800 text-zinc-300 text-xs px-3 py-1.5 rounded border border-zinc-700 whitespace-nowrap z-30 shadow-lg flex items-center gap-2"
                             >
                                 <span className="w-2 h-2 bg-zinc-500 rounded-full"></span>
-                                Money Flow (Bypasses Zerithum)
+                                Money Flow (Bypasses)
                             </motion.div>
                         )}
 
-                        {/* FLOW 2: DATA INGEST (Solid Line) - Lower Ingest */}
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-                            <AnimatePresence>
-                                {activeFrame === 1 && (
-                                    <>
-                                        <motion.path
-                                            d="M 0,30 L 35,50"
-                                            fill="none"
-                                            stroke="#10b981"
-                                            strokeWidth="0.8"
-                                            initial={{ pathLength: 0, opacity: 0 }}
-                                            animate={{ pathLength: 1, opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.5 }}
-                                        />
-                                         <motion.path
-                                            d="M 0,70 L 35,50"
-                                            fill="none"
-                                            stroke="#10b981"
-                                            strokeWidth="0.8"
-                                            initial={{ pathLength: 0, opacity: 0 }}
-                                            animate={{ pathLength: 1, opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.5, delay: 0.1 }}
-                                        />
-                                    </>
-                                )}
-                            </AnimatePresence>
-                        </svg>
-                         {activeFrame === 1 && (
+                        {activeFrame === 1 && (
                             <motion.div
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute top-1/2 left-0 -translate-y-1/2 -ml-4 bg-zinc-900/90 text-emerald-400 text-xs px-2 py-1 rounded border border-emerald-900/30 whitespace-nowrap z-30 shadow-lg backdrop-blur-sm"
+                                className="absolute top-1/3 md:top-1/2 left-0 -translate-y-1/2 md:-ml-4 bg-zinc-900/90 text-emerald-400 text-xs px-2 py-1 rounded border border-emerald-900/30 whitespace-nowrap z-30 shadow-lg backdrop-blur-sm"
                             >
                                 Read-Only Metadata
                             </motion.div>
                         )}
 
-                        {/* FLOW 3: AUDIT LOGS (Drawer) - Bottom Slide Up */}
+                        {activeFrame === 4 && (
+                            <motion.div
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute bottom-1/3 md:top-1/2 right-0 md:-translate-y-1/2 md:-mr-4 bg-zinc-900/90 text-blue-400 text-xs px-2 py-1 rounded border border-blue-900/30 whitespace-nowrap z-30 shadow-lg backdrop-blur-sm"
+                            >
+                                Tax Ready Exports
+                            </motion.div>
+                        )}
+
+                        {/* FLOW 3: AUDIT LOGS (Drawer) */}
                          <AnimatePresence>
                             {activeFrame === 3 && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 40 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 40 }}
-                                    className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-64 bg-zinc-900 border border-zinc-700 rounded-lg p-3 shadow-2xl z-40 overflow-hidden"
+                                    className="absolute -bottom-16 md:-bottom-24 left-1/2 -translate-x-1/2 w-64 bg-zinc-900 border border-zinc-700 rounded-lg p-3 shadow-2xl z-40 overflow-hidden"
                                 >
                                     <div className="text-[10px] text-zinc-500 mb-2 font-mono uppercase border-b border-zinc-800 pb-1 flex justify-between items-center">
                                         <span>Immutable Audit Trail</span>
@@ -226,39 +270,12 @@ const DataBoundaryMap = () => {
                             )}
                         </AnimatePresence>
 
-                        {/* FLOW 4: EXPORTS (Right Arrow) */}
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-                            <AnimatePresence>
-                                {activeFrame === 4 && (
-                                    <motion.path
-                                        d="M 65,50 L 100,50"
-                                        fill="none"
-                                        stroke="#3b82f6"
-                                        strokeWidth="0.8"
-                                        initial={{ pathLength: 0, opacity: 0 }}
-                                        animate={{ pathLength: 1, opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.5 }}
-                                    />
-                                )}
-                            </AnimatePresence>
-                        </svg>
-                        {activeFrame === 4 && (
-                            <motion.div
-                                initial={{ opacity: 0, x: 10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute top-1/2 right-0 -translate-y-1/2 -mr-4 bg-zinc-900/90 text-blue-400 text-xs px-2 py-1 rounded border border-blue-900/30 whitespace-nowrap z-30 shadow-lg backdrop-blur-sm"
-                            >
-                                Tax Ready Exports
-                            </motion.div>
-                        )}
-
                     </div>
 
-                    {/* Right Side: Destinations */}
-                    <div className="flex flex-col gap-6 items-center w-24 shrink-0 z-20">
-                        <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-2 text-center">Destinations</div>
+                    {/* Right Side: Destinations (Horizontal on mobile, Vertical on Desktop) */}
+                    <div className="flex md:flex-col gap-6 items-center w-full md:w-24 shrink-0 z-20 justify-center">
+                        <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-2 text-center md:hidden w-full absolute -bottom-8 left-0">Destinations</div>
+                        <div className="hidden md:block text-xs font-mono text-zinc-500 uppercase tracking-widest mb-2 text-center">Destinations</div>
                         <div className="w-14 h-14 bg-zinc-900 border border-zinc-700 rounded flex flex-col items-center justify-center relative transition-all duration-300 hover:border-zinc-500">
                             <span className="text-[10px] font-bold text-zinc-300">BANK</span>
                             <AnimatePresence>
@@ -272,7 +289,7 @@ const DataBoundaryMap = () => {
                                 )}
                             </AnimatePresence>
                         </div>
-                        <div className="h-12 border-l border-zinc-800 border-dashed"></div>
+                        <div className="w-8 border-t md:border-t-0 md:h-12 md:border-l border-zinc-800 border-dashed"></div>
                         <div className="w-14 h-14 bg-zinc-900 border border-zinc-700 rounded flex flex-col items-center justify-center relative transition-all duration-300 hover:border-zinc-500">
                             <span className="text-[10px] font-bold text-zinc-300">CPA</span>
                              <AnimatePresence>
@@ -292,7 +309,7 @@ const DataBoundaryMap = () => {
             </div>
 
             {/* Footer / Status */}
-            <div className="bg-zinc-950 border-t border-zinc-800 px-6 py-3 flex justify-between items-center text-[10px] text-zinc-600 font-mono rounded-b-xl">
+            <div className="bg-zinc-950 border-t border-zinc-800 px-6 py-3 flex flex-col md:flex-row justify-between items-center text-[10px] text-zinc-600 font-mono rounded-b-xl gap-2 md:gap-0">
                 <div className="flex items-center gap-2">
                     STATUS: <span className="text-emerald-500 flex items-center gap-1"><div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></div> OPERATIONAL</span>
                 </div>
