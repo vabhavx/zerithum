@@ -1,189 +1,214 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, useMotionValue, useAnimationFrame } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    CheckCircle2,
-    Terminal,
-    Code2,
+    Activity,
     ShieldCheck,
+    Youtube,
     CreditCard,
     DollarSign,
     Zap,
-    Info
+    ArrowRightLeft,
+    CheckCircle2,
+    Building2,
+    Wifi
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// --- Helper Hook ---
-function useInView(options: IntersectionObserverInit) {
-    const [inView, setInView] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(([entry]) => {
-            setInView(entry.isIntersecting);
-        }, options);
-
-        if (ref.current) {
-            observer.observe(ref.current);
-        }
-
-        return () => {
-            if (ref.current) observer.unobserve(ref.current);
-        };
-    }, [options.root, options.rootMargin, options.threshold]);
-
-    return { ref, inView };
-}
-
-// --- Real Data Simulation ---
-const RAW_PAYLOADS = [
-    { id: 'evt_1', type: 'stripe.charge', raw: '{"id":"ch_1Nx","amt":12500,"cur":"usd","st":"succeeded"}', clean: { source: 'Stripe', amount: '$125.00', status: 'Verified', fee: '2.9% + 30¢' }, color: 'text-indigo-400', icon: CreditCard },
-    { id: 'evt_2', type: 'yt.payout', raw: '{"uid":"U_88x","val":8432.1,"curr":"USD","src":"ads"}', clean: { source: 'YouTube', amount: '$8,432.10', status: 'Verified', fee: '0%' }, color: 'text-red-400', icon: Zap },
-    { id: 'evt_3', type: 'patreon.pledge', raw: '{"m_id":"p_99z","pledge":389055,"iso":"USD"}', clean: { source: 'Patreon', amount: '$3,890.55', status: 'Verified', fee: '5.0%' }, color: 'text-orange-400', icon: DollarSign },
-    { id: 'evt_4', type: 'gumroad.sale', raw: '{"sale_id":"g_77q","price":42069,"currency":"usd"}', clean: { source: 'Gumroad', amount: '$420.69', status: 'Verified', fee: '9.0%' }, color: 'text-pink-400', icon: Code2 },
-    { id: 'evt_5', type: 'bank.deposit', raw: '{"desc":"STRIPE TRANSFER","val":125.00,"d_dt":"2024-03-01"}', clean: { source: 'Chase Bank', amount: '$125.00', status: 'Matched', fee: '0%' }, color: 'text-emerald-400', icon: ShieldCheck },
+// --- Simulation Data ---
+// We need pairs that match, and some noise that doesn't immediately.
+const TX_PAIRS = [
+    {
+        id: 'tx_1',
+        platform: { name: 'YouTube', amount: 8432.10, icon: Youtube, color: 'text-red-500' },
+        bank: { name: 'Chase Deposit', amount: 8432.10, date: 'Mar 12' }
+    },
+    {
+        id: 'tx_2',
+        platform: { name: 'Stripe', amount: 1250.00, icon: CreditCard, color: 'text-indigo-500' },
+        bank: { name: 'Stripe Payout', amount: 1220.50, date: 'Mar 13' } // Fee deduction scenario
+    },
+    {
+        id: 'tx_3',
+        platform: { name: 'Patreon', amount: 3890.55, icon: DollarSign, color: 'text-orange-500' },
+        bank: { name: 'Patreon Irel...', amount: 3890.55, date: 'Mar 14' }
+    },
+    {
+        id: 'tx_4',
+        platform: { name: 'Gumroad', amount: 420.69, icon: Zap, color: 'text-pink-500' },
+        bank: { name: 'Gumroad Inc', amount: 420.69, date: 'Mar 15' }
+    },
 ];
-
-// Duplicate for infinite scroll
-const ITEMS = [...RAW_PAYLOADS, ...RAW_PAYLOADS, ...RAW_PAYLOADS, ...RAW_PAYLOADS];
 
 const HowItWorksSection = () => {
     return (
-        <section id="how-it-works" className="py-24 bg-black relative overflow-hidden" aria-label="How Zerithum Works">
+        <section id="how-it-works" className="py-32 bg-black relative overflow-hidden" aria-label="How Zerithum Works">
+            {/* Ambient Background */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.05)_0%,transparent_70%)] pointer-events-none" />
+
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-20">
+                <div className="text-center max-w-3xl mx-auto mb-24">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-400 uppercase tracking-wider mb-6">
-                        <Terminal className="w-3 h-3 text-emerald-500" />
-                        The Reality Scanner
+                        <ArrowRightLeft className="w-3 h-3 text-emerald-500" />
+                        Neural Reconciliation
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-serif font-bold text-white mb-6 tracking-tight">
-                        We decode the noise.
+                    <h2 className="text-4xl md:text-6xl font-serif font-bold text-white mb-8 tracking-tight">
+                        We connect the disconnect.
                     </h2>
-                    <p className="text-xl text-zinc-400 font-light">
-                        Raw platform data enters. Verified, tax-ready revenue exits. See the transformation live.
+                    <p className="text-xl text-zinc-400 font-light max-w-2xl mx-auto">
+                        Your platforms say one thing. Your bank says another. <br className="hidden md:block" />
+                        We identify the truth in between.
                     </p>
                 </div>
 
-                {/* The Scanner Widget */}
-                <ScannerWidget />
+                {/* The Neural Matcher Widget */}
+                <NeuralMatcherWidget />
             </div>
         </section>
     );
 };
 
-const ScannerWidget = () => {
-    const [hovered, setHovered] = useState(false);
+const NeuralMatcherWidget = () => {
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [isHovering, setIsHovering] = useState(false);
 
-    // Vertical scroll animation
-    const y = useMotionValue(0);
+    // Auto-cycle logic
+    useEffect(() => {
+        if (isHovering) return;
 
-    useAnimationFrame((t) => {
-        if (!hovered) {
-            const speed = 0.8; // Pixels per frame
-            const currentY = y.get();
-            const resetY = -1200; // Reset point based on content height
+        const interval = setInterval(() => {
+            setActiveIndex((prev) => (prev + 1) % TX_PAIRS.length);
+        }, 3000); // 3 seconds per "Story"
 
-            if (currentY <= resetY) {
-                y.set(0);
-            } else {
-                y.set(currentY - speed);
-            }
-        }
-    });
+        return () => clearInterval(interval);
+    }, [isHovering]);
+
+    const activePair = TX_PAIRS[activeIndex];
 
     return (
         <div
-            className="max-w-2xl mx-auto h-[600px] bg-[#050505] border border-zinc-800 rounded-3xl overflow-hidden relative shadow-2xl group"
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
+            className="max-w-5xl mx-auto min-h-[500px] relative flex flex-col md:flex-row items-center justify-center gap-8 md:gap-24 select-none"
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
         >
-            {/* Background Grid */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+            {/* --- LEFT: PLATFORM SIGNAL --- */}
+            <div className="relative w-full md:w-80 h-40 md:h-auto flex flex-col items-center md:items-end justify-center">
+                <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest mb-4 md:mb-8 text-right w-full">Platform Signal</div>
 
-            {/* The Scanner Beam (Fixed Center) */}
-            <div className="absolute top-1/2 left-0 right-0 h-32 -translate-y-1/2 z-20 pointer-events-none">
-                {/* Glass Effect */}
-                <div className="absolute inset-0 bg-emerald-500/5 backdrop-blur-[2px] border-y border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]" />
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={`plat-${activePair.id}`}
+                        initial={{ opacity: 0, x: -50, scale: 0.9 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 50, scale: 0.9, filter: "blur(4px)" }}
+                        transition={{ duration: 0.5, ease: "circOut" }}
+                        className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl w-full shadow-2xl relative group"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className={cn("p-2 rounded-lg bg-zinc-950 border border-zinc-800", activePair.platform.color)}>
+                                    <activePair.platform.icon className="w-5 h-5" />
+                                </div>
+                                <span className="text-zinc-200 font-medium">{activePair.platform.name}</span>
+                            </div>
+                            <Wifi className="w-4 h-4 text-zinc-600 animate-pulse" />
+                        </div>
+                        <div className="space-y-1">
+                            <div className="text-xs text-zinc-500 font-mono">REPORTED EARNINGS</div>
+                            <div className="text-2xl text-white font-bold tracking-tight">
+                                ${activePair.platform.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </div>
+                        </div>
 
-                {/* Laser Lines */}
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
-                <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
-
-                {/* Label */}
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#050505] px-3 py-0.5 text-[9px] font-mono text-emerald-500 border border-emerald-900/50 rounded-full flex items-center gap-1 uppercase tracking-widest shadow-xl">
-                    <ShieldCheck className="w-3 h-3" /> Verification Zone
-                </div>
+                        {/* Connector Node */}
+                        <div className="absolute top-1/2 -right-1.5 w-3 h-3 bg-zinc-700 rounded-full border-2 border-black hidden md:block" />
+                    </motion.div>
+                </AnimatePresence>
             </div>
 
-            {/* Scrolling Content */}
-            <motion.div
-                className="relative z-10 w-full px-8 py-32 flex flex-col items-center gap-4"
-                style={{ y }}
-            >
-                {ITEMS.map((item, index) => (
-                    <ScannerItem key={`${item.id}-${index}`} item={item} />
-                ))}
-            </motion.div>
+            {/* --- CENTER: THE NEURAL CORE (Matching Logic) --- */}
+            <div className="relative z-10 flex flex-col items-center justify-center w-full md:w-auto h-32 md:h-64">
+                {/* Visual Connector Line */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[2px] bg-gradient-to-r from-zinc-800 via-emerald-500/50 to-zinc-800 md:w-64 md:h-[2px] hidden md:block" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[120%] w-[2px] bg-gradient-to-b from-zinc-800 via-emerald-500/50 to-zinc-800 md:hidden" />
 
-            {/* Overlay Gradients to hide start/end */}
-            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#050505] to-transparent z-20 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#050505] to-transparent z-20 pointer-events-none" />
-        </div>
-    );
-};
-
-const ScannerItem = ({ item }: { item: typeof RAW_PAYLOADS[0] }) => {
-    // Custom useInView hook using native IntersectionObserver
-    const { ref, inView } = useInView({
-        threshold: 0.5,
-        rootMargin: '-40% 0px -40% 0px',
-    });
-
-    return (
-        <div
-            ref={ref}
-            className={cn(
-                "w-full transition-all duration-500 ease-out flex items-center justify-center min-h-[64px]",
-                inView ? "scale-100 opacity-100" : "scale-95 opacity-40 grayscale blur-[1px]"
-            )}
-        >
-            {!inView ? (
-                <div className="font-mono text-xs text-zinc-500 break-all w-full max-w-md bg-zinc-900/50 p-3 rounded border border-zinc-800 border-dashed relative overflow-hidden">
-                    <div className="absolute top-1 right-2 text-[9px] text-zinc-600 uppercase">Raw Payload</div>
-                    {item.raw}
-                </div>
-            ) : (
-                <div className="w-full max-w-md bg-zinc-900 border border-emerald-500/30 p-3 rounded-lg shadow-[0_0_20px_rgba(16,185,129,0.1)] flex items-center justify-between group relative overflow-hidden cursor-default">
-                    <div className="absolute inset-0 bg-emerald-500/5 animate-pulse" />
-
-                    {/* Tooltip Overlay on Hover */}
-                    <div className="absolute inset-0 bg-zinc-900/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 z-20">
-                        <div className="text-center">
-                            <div className="text-[10px] text-zinc-500 uppercase">Platform Fee</div>
-                            <div className="font-mono text-white text-xs">{item.clean.fee}</div>
-                        </div>
-                        <div className="h-6 w-[1px] bg-zinc-800" />
-                        <div className="text-center">
-                            <div className="text-[10px] text-zinc-500 uppercase">Tax Category</div>
-                            <div className="font-mono text-white text-xs">Income_1099K</div>
-                        </div>
+                <motion.div
+                    key={`core-${activePair.id}`}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-black border border-emerald-500/30 p-1 rounded-full relative shadow-[0_0_40px_rgba(16,185,129,0.2)]"
+                >
+                    <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-emerald-500/10 animate-pulse" />
+                        <Activity className="w-6 h-6 text-emerald-500" />
                     </div>
 
-                    <div className="flex items-center gap-4 relative z-10">
-                        <div className={cn("w-10 h-10 rounded-full bg-zinc-950 flex items-center justify-center border border-zinc-800", item.color)}>
-                            <item.icon className="w-5 h-5" />
+                    {/* Floating Status Badge */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 24 }}
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 whitespace-nowrap bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono px-3 py-1 rounded-full backdrop-blur-md"
+                    >
+                        MATCH CONFIRMED
+                    </motion.div>
+                </motion.div>
+            </div>
+
+            {/* --- RIGHT: BANK TRUTH --- */}
+            <div className="relative w-full md:w-80 h-40 md:h-auto flex flex-col items-center md:items-start justify-center">
+                <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest mb-4 md:mb-8 text-left w-full">Bank Feed</div>
+
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={`bank-${activePair.id}`}
+                        initial={{ opacity: 0, x: 50, scale: 0.9 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -50, scale: 0.9, filter: "blur(4px)" }}
+                        transition={{ duration: 0.5, ease: "circOut" }}
+                        className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl w-full shadow-2xl relative"
+                    >
+                         {/* Connector Node */}
+                         <div className="absolute top-1/2 -left-1.5 w-3 h-3 bg-zinc-700 rounded-full border-2 border-black hidden md:block" />
+
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-400">
+                                    <Building2 className="w-5 h-5" />
+                                </div>
+                                <span className="text-zinc-200 font-medium">{activePair.bank.name}</span>
+                            </div>
+                            <span className="text-xs font-mono text-zinc-500">{activePair.bank.date}</span>
                         </div>
-                        <div>
-                            <div className="text-xs text-zinc-400 font-medium">{item.clean.source}</div>
-                            <div className="text-sm text-white font-bold font-mono">{item.clean.amount}</div>
+                        <div className="space-y-1">
+                            <div className="text-xs text-zinc-500 font-mono">ACTUAL DEPOSIT</div>
+                            <div className="text-2xl text-emerald-400 font-bold tracking-tight">
+                                ${activePair.bank.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-2 relative z-10">
-                        <span className="text-[10px] font-mono text-emerald-500 uppercase tracking-wider">{item.clean.status}</span>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    </div>
-                </div>
-            )}
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+
+            {/* --- BOTTOM: RESULT LOG (Appears after match) --- */}
+            <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 md:bottom-auto md:top-[calc(100%+2rem)] w-full max-w-lg">
+                 <AnimatePresence mode="wait">
+                    <motion.div
+                        key={`log-${activePair.id}`}
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ delay: 0.4 }}
+                        className="flex items-center gap-3 p-3 bg-zinc-900/50 border border-zinc-800/50 rounded-lg backdrop-blur-sm mx-auto w-fit"
+                    >
+                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                        <span className="text-xs text-zinc-400 font-mono">
+                            Reconciled <span className="text-white">{activePair.platform.name}</span> to <span className="text-white">Bank</span> • Confidence <span className="text-emerald-400">99.9%</span>
+                        </span>
+                    </motion.div>
+                 </AnimatePresence>
+            </div>
+
         </div>
     );
 };
