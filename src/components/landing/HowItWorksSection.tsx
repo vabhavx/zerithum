@@ -1,24 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
-    CheckCircle2,
-    Terminal,
     Zap,
+    Activity,
+    Search,
+    Database,
+    Layers,
+    ArrowUpRight,
+    AlertCircle,
+    CheckCircle2,
+    Youtube,
     CreditCard,
     DollarSign,
-    Youtube,
-    Server,
-    Database
+    ShoppingCart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // --- Data ---
-const STREAM_ITEMS = [
-    { id: 'tx_881', source: 'YouTube', amount: '$8,432.10', icon: Youtube, color: 'text-red-500' },
-    { id: 'tx_882', source: 'Stripe', amount: '$1,250.00', icon: CreditCard, color: 'text-indigo-500' },
-    { id: 'tx_883', source: 'Patreon', amount: '$3,890.55', icon: DollarSign, color: 'text-orange-500' },
-    { id: 'tx_884', source: 'Gumroad', amount: '$420.69', icon: DollarSign, color: 'text-pink-500' },
+const SAMPLE_TXS = [
+    { source: 'YouTube', amount: 8432.10, icon: Youtube, color: 'text-red-500' },
+    { source: 'Stripe', amount: 1250.00, icon: CreditCard, color: 'text-indigo-500' },
+    { source: 'Patreon', amount: 3890.55, icon: DollarSign, color: 'text-orange-500' },
+    { source: 'Gumroad', amount: 420.69, icon: ShoppingCart, color: 'text-pink-500' },
+    { source: 'Twitch', amount: 2100.00, icon: Zap, color: 'text-purple-500' },
 ];
+
+type ParticleType = {
+    id: string;
+    source: string;
+    icon: any;
+    color: string;
+    amount: number;
+    status: 'match' | 'mismatch';
+};
 
 const HowItWorksSection = () => {
     return (
@@ -26,246 +40,247 @@ const HowItWorksSection = () => {
             <div className="max-w-7xl mx-auto px-6 relative z-10">
 
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-16">
+                <div className="text-center max-w-3xl mx-auto mb-20">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-400 uppercase tracking-wider mb-6">
+                        <Activity className="w-3 h-3 text-emerald-500" />
+                        Live Fusion Engine
+                    </div>
                     <h2 className="text-4xl md:text-5xl font-serif font-bold text-white mb-6 tracking-tight">
-                        Revenue, reality checked.
+                        Revenue fusion.
                     </h2>
                     <p className="text-xl text-zinc-400 font-light">
-                        High-frequency reconciliation. We match platform signals to bank truths in milliseconds.
+                        We collide platform data with bank truths. The result is pure, verified revenue.
                     </p>
                 </div>
 
-                {/* Pipeline Widget */}
-                <PipelineWidget />
+                {/* The Reactor Widget */}
+                <FusionReactorWidget />
 
             </div>
         </section>
     );
 };
 
-const PipelineWidget = () => {
-    const [activeItem, setActiveItem] = useState<typeof STREAM_ITEMS[0] | null>(null);
-    const [processedList, setProcessedList] = useState<typeof STREAM_ITEMS>([]);
-    const [phase, setPhase] = useState<'idle' | 'ingest' | 'scan' | 'match' | 'verify'>('idle');
+const FusionReactorWidget = () => {
+    const [revenue, setRevenue] = useState(142050.00);
+    const [particles, setParticles] = useState<ParticleType[]>([]);
+    const [isHovering, setIsHovering] = useState(false);
+    const shouldReduceMotion = useReducedMotion();
 
-    // Continuous Animation Loop
+    // Particle Spawner Loop
     useEffect(() => {
-        let currentIndex = 0;
-        let mounted = true;
+        if (isHovering || shouldReduceMotion) return; // Pause on hover or reduced motion
 
-        const runSequence = async () => {
-            if (!mounted) return;
+        let txIndex = 0;
+        const interval = setInterval(() => {
+            const id = Math.random().toString(36).substr(2, 9);
+            const isMatch = Math.random() > 0.2; // 80% matches
 
-            // Reset if we've done all items
-            if (currentIndex >= STREAM_ITEMS.length) {
-                // Wait a bit, then clear list and restart
-                await new Promise(r => setTimeout(r, 2000));
-                if (!mounted) return;
-                setProcessedList([]);
-                currentIndex = 0;
+            const tx = SAMPLE_TXS[txIndex % SAMPLE_TXS.length];
+            txIndex++;
+
+            const newParticle: ParticleType = {
+                id,
+                source: tx.source,
+                icon: tx.icon,
+                color: tx.color,
+                amount: tx.amount, // Use consistent amount for demo
+                status: isMatch ? 'match' : 'mismatch',
+            };
+
+            setParticles(prev => [...prev.slice(-8), newParticle]); // Keep last 8 to avoid clutter
+
+            // Update revenue if match
+            if (isMatch) {
+                setTimeout(() => {
+                    setRevenue(prev => prev + newParticle.amount);
+                }, 1000); // Wait for "collision"
             }
 
-            const item = STREAM_ITEMS[currentIndex];
-            setActiveItem(item);
+        }, 1200); // Spawn every 1.2s for clarity
 
-            // Phase 1: Ingest (Appear on left/top)
-            setPhase('ingest');
-            await new Promise(r => setTimeout(r, 500));
-            if (!mounted) return;
+        return () => clearInterval(interval);
+    }, [isHovering, shouldReduceMotion]);
 
-            // Phase 2: Scan (Move to center)
-            setPhase('scan');
-            await new Promise(r => setTimeout(r, 600));
-            if (!mounted) return;
-
-            // Phase 3: Match (Flash Green)
-            setPhase('match');
-            await new Promise(r => setTimeout(r, 400));
-            if (!mounted) return;
-
-            // Phase 4: Verify (Move to right/bottom list)
-            setPhase('verify');
-            setProcessedList(prev => [...prev, item]);
-            await new Promise(r => setTimeout(r, 400)); // Time for exit animation
-            if (!mounted) return;
-
-            setActiveItem(null);
-            currentIndex++;
-
-            // Short pause between items
-            await new Promise(r => setTimeout(r, 200));
-
-            // Recursive call for next item
-            runSequence();
-        };
-
-        runSequence();
-
-        return () => { mounted = false; };
-    }, []);
+    // Static View for Reduced Motion
+    if (shouldReduceMotion) {
+        return (
+             <div className="max-w-5xl mx-auto bg-[#050505] border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative min-h-[400px] flex items-center justify-center p-8">
+                <div className="text-center space-y-4">
+                    <div className="w-24 h-24 rounded-full bg-zinc-900 border border-zinc-600 flex items-center justify-center mx-auto shadow-2xl">
+                         <div className="text-center">
+                            <div className="text-[9px] font-mono text-zinc-500 uppercase mb-1">Total Revenue</div>
+                            <div className="text-lg font-bold text-white tabular-nums tracking-tight">
+                                ${revenue.toLocaleString()}
+                            </div>
+                         </div>
+                    </div>
+                    <p className="text-zinc-500 text-sm">Live reconciliation active.</p>
+                </div>
+             </div>
+        );
+    }
 
     return (
-        <div className="max-w-5xl mx-auto bg-[#09090b] border border-zinc-800 rounded-xl overflow-hidden shadow-2xl relative">
-            {/* Header */}
-            <div className="h-10 bg-[#0c0c0e] border-b border-zinc-800 flex items-center px-4 justify-between shrink-0">
-                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-zinc-700" />
-                    <div className="w-3 h-3 rounded-full bg-zinc-700" />
-                    <div className="w-3 h-3 rounded-full bg-zinc-700" />
+        <div
+            className="max-w-5xl mx-auto bg-[#050505] border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative min-h-[500px] flex flex-col md:flex-row"
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+        >
+            {/* Background Grid */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+
+            {/* --- LEFT / TOP: PLATFORM INPUT --- */}
+            <div className="flex-1 p-8 flex flex-col items-center justify-center relative border-b md:border-b-0 md:border-r border-zinc-800/50 z-10">
+                <div className="absolute top-4 left-4 text-xs font-mono text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <Layers className="w-3 h-3" /> Input: Platforms
                 </div>
-                <div className="text-zinc-500 tracking-widest text-[10px] font-medium flex items-center gap-2">
-                    <Terminal className="w-3 h-3" />
-                    ZERITHUM_PIPELINE_V4
+
+                {/* Emitter Visual */}
+                <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center mb-8 relative">
+                    <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping opacity-20" />
+                    <Zap className="w-6 h-6 text-blue-400" />
                 </div>
-                <div className="text-[10px] text-zinc-500 font-mono">
-                    STATUS: <span className="text-emerald-500">ACTIVE_LOOP</span>
+
+                {/* Particles moving towards center */}
+                <div className="w-full h-20 relative flex items-center justify-center">
+                    <AnimatePresence>
+                        {particles.map((p) => (
+                            <motion.div
+                                key={`p-${p.id}`}
+                                initial={{ x: -100, opacity: 0, scale: 0.5 }}
+                                animate={{ x: "100%", opacity: [0, 1, 1, 0], scale: 1 }}
+                                transition={{ duration: 1.5, ease: "easeIn" }}
+                                className="absolute left-0 flex items-center gap-2"
+                            >
+                                <div className={cn("w-3 h-3 rounded-full shadow-lg", p.color.replace('text-', 'bg-'))} />
+                                <div className={cn("text-[10px] font-mono opacity-50 hidden md:block", p.color)}>{p.source}</div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
                 </div>
             </div>
 
-            {/* Main Stage */}
-            <div className="relative h-auto md:h-[320px] bg-[#0a0a0b] flex flex-col md:flex-row items-center justify-between p-8 md:p-8 overflow-hidden gap-12 md:gap-0">
-                {/* Background Grid */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
+            {/* --- CENTER: FUSION CORE --- */}
+            <div className="w-full md:w-[400px] bg-zinc-900/30 flex flex-col items-center justify-center relative z-20 py-12 md:py-0 overflow-hidden">
+                {/* Core Ring */}
+                <div className="relative w-48 h-48 flex items-center justify-center">
+                    {/* Rotating Rings */}
+                    <div className="absolute inset-0 border border-zinc-700 rounded-full animate-[spin_10s_linear_infinite]" />
+                    <div className="absolute inset-4 border border-zinc-600 rounded-full animate-[spin_7s_linear_infinite_reverse] border-dashed" />
+                    <div className="absolute inset-0 rounded-full bg-emerald-500/5 blur-3xl animate-pulse" />
 
-                {/* ZONE 1: INGESTION */}
-                <div className="w-full md:w-1/3 h-auto md:h-full flex flex-col items-center relative z-10 border-b md:border-b-0 md:border-r border-dashed border-zinc-800/50 pb-8 md:pb-0">
-                    <div className="mb-8 text-center">
-                        <div className="flex justify-center mb-2">
-                            <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                                <Zap className="w-5 h-5 text-amber-500" />
+                    {/* The Core Orb */}
+                    <div className="w-24 h-24 rounded-full bg-zinc-950 border border-zinc-600 flex items-center justify-center relative z-10 shadow-2xl">
+                         <div className="text-center">
+                            <div className="text-[9px] font-mono text-zinc-500 uppercase mb-1">Total Revenue</div>
+                            <div className="text-lg font-bold text-white tabular-nums tracking-tight">
+                                ${revenue.toLocaleString()}
                             </div>
-                        </div>
-                        <h3 className="text-zinc-300 text-xs font-bold uppercase tracking-wider">1. Platform Signal</h3>
+                         </div>
                     </div>
 
-                    {/* Active Item - Ingest State */}
+                    {/* Collision Flash Effects */}
                     <AnimatePresence>
-                        {phase === 'ingest' && activeItem && (
+                        {particles.map((p) => (
                             <motion.div
-                                initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                className="bg-zinc-900 border border-zinc-700 p-3 rounded-lg flex items-center gap-3 w-48 shadow-lg"
-                            >
-                                <activeItem.icon className={cn("w-5 h-5", activeItem.color)} />
-                                <div>
-                                    <div className="text-xs font-bold text-white">{activeItem.source}</div>
-                                    <div className="text-[10px] font-mono text-zinc-500">Payload Rx</div>
-                                </div>
-                            </motion.div>
-                        )}
+                                key={`flash-${p.id}`}
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{
+                                    opacity: [0, 1, 0],
+                                    scale: [0.5, 1.5, 2],
+                                    borderColor: p.status === 'match' ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)'
+                                }}
+                                transition={{ duration: 0.6, delay: 1.4 }} // Sync with particle arrival
+                                className={cn(
+                                    "absolute inset-0 rounded-full border-2",
+                                    p.status === 'match' ? "border-emerald-500" : "border-red-500"
+                                )}
+                            />
+                        ))}
                     </AnimatePresence>
                 </div>
 
-                {/* ZONE 2: PROCESSING ENGINE */}
-                <div className="w-full md:w-1/3 h-auto md:h-full flex flex-col items-center relative z-10">
-                     <div className="mb-8 text-center">
-                        <div className="flex justify-center mb-2">
-                             <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                                <Server className="w-5 h-5 text-blue-500" />
-                            </div>
-                        </div>
-                        <h3 className="text-zinc-300 text-xs font-bold uppercase tracking-wider">2. Reconciliation</h3>
-                    </div>
-
-                    {/* Scanner Visuals */}
-                    <div className="relative w-64 h-24 flex items-center justify-center">
-                         {/* Connection Lines (Desktop Horizontal, Mobile Vertical handled by stacking/spacing but nice to have visual) */}
-                         <div className="absolute top-1/2 left-0 w-full h-[1px] bg-zinc-800 -z-10 hidden md:block" />
-                         {/* Vertical line for mobile */}
-                         <div className="absolute -top-12 left-1/2 w-[1px] h-[calc(100%+6rem)] bg-zinc-800 -z-10 md:hidden" />
-
-                         <AnimatePresence>
-                            {(phase === 'scan' || phase === 'match') && activeItem && (
-                                <motion.div
-                                    layoutId="active-card"
-                                    initial={{ x: -50, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    exit={{ x: 50, opacity: 0 }}
-                                    className={cn(
-                                        "bg-zinc-900 border p-4 rounded-xl flex items-center gap-4 w-56 shadow-2xl relative overflow-hidden transition-colors duration-300",
-                                        phase === 'match' ? "border-emerald-500 bg-emerald-950/20" : "border-zinc-700"
-                                    )}
-                                >
-                                    {/* Scan Beam */}
-                                    {phase === 'scan' && (
-                                        <motion.div
-                                            initial={{ left: "-100%" }}
-                                            animate={{ left: "200%" }}
-                                            transition={{ duration: 1, ease: "linear" }}
-                                            className="absolute top-0 bottom-0 w-12 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent skew-x-12"
-                                        />
-                                    )}
-
-                                    <div className={cn("w-8 h-8 rounded flex items-center justify-center bg-black/40", activeItem.color)}>
-                                        <activeItem.icon className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <div className="text-xs font-mono text-zinc-400">AMOUNT</div>
-                                        <div className="text-sm font-bold text-white">{activeItem.amount}</div>
-                                    </div>
-
-                                    {phase === 'match' && (
-                                        <motion.div
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            className="absolute top-1 right-1"
-                                        >
-                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                        </motion.div>
-                                    )}
-                                </motion.div>
-                            )}
-                         </AnimatePresence>
-                    </div>
-
-                    {/* Status Text */}
-                    <div className="h-6 mt-4 flex items-center justify-center">
-                         {phase === 'scan' && <span className="text-[10px] font-mono text-blue-400 animate-pulse">SCANNING_BANK_FEED...</span>}
-                         {phase === 'match' && <span className="text-[10px] font-mono text-emerald-400 font-bold">MATCH CONFIRMED</span>}
-                    </div>
+                {/* Output Streams */}
+                <div className="absolute top-8 right-8 md:top-auto md:bottom-12 md:right-auto flex flex-col items-center gap-2">
+                     <AnimatePresence>
+                        {particles.filter(p => p.status === 'match').map((p) => (
+                            <motion.div
+                                key={`out-${p.id}`}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: -40 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 1, delay: 1.5 }}
+                                className="absolute text-xs font-bold text-emerald-400 flex items-center gap-1"
+                            >
+                                +${p.amount.toLocaleString()} <ArrowUpRight className="w-3 h-3" />
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
                 </div>
-
-                {/* ZONE 3: VERIFIED LEDGER */}
-                <div className="w-full md:w-1/3 h-auto md:h-full flex flex-col items-center relative z-10 border-t md:border-t-0 md:border-l border-dashed border-zinc-800/50 pt-8 md:pt-0">
-                    <div className="mb-8 text-center">
-                        <div className="flex justify-center mb-2">
-                             <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                                <Database className="w-5 h-5 text-emerald-500" />
-                            </div>
-                        </div>
-                        <h3 className="text-zinc-300 text-xs font-bold uppercase tracking-wider">3. Verified Ledger</h3>
-                    </div>
-
-                    <div className="w-full max-w-[240px] bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden flex-1 min-h-[140px] md:min-h-0 md:max-h-[180px]">
-                         <div className="p-2 bg-zinc-900/50 border-b border-zinc-800 text-[9px] text-zinc-500 font-mono uppercase">Recent Transactions</div>
-                         <div className="p-2 space-y-2 overflow-hidden">
-                            <AnimatePresence initial={false} mode="popLayout">
-                                {processedList.slice(-3).map((item) => (
-                                    <motion.div
-                                        key={item.id}
-                                        layout
-                                        initial={{ opacity: 0, x: -20, backgroundColor: "rgba(16, 185, 129, 0.2)" }}
-                                        animate={{ opacity: 1, x: 0, backgroundColor: "rgba(0,0,0,0)" }}
-                                        transition={{ duration: 0.5 }}
-                                        className="flex items-center justify-between p-2 rounded border border-zinc-800/50 bg-zinc-900/20"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <item.icon className="w-3 h-3 text-zinc-500" />
-                                            <span className="text-[10px] text-zinc-300 font-mono">{item.amount}</span>
-                                        </div>
-                                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                            {processedList.length === 0 && (
-                                <div className="text-[10px] text-zinc-600 text-center py-4 italic">Waiting for verify...</div>
-                            )}
-                         </div>
-                    </div>
-                </div>
-
             </div>
+
+            {/* --- RIGHT / BOTTOM: BANK INPUT --- */}
+            <div className="flex-1 p-8 flex flex-col items-center justify-center relative border-t md:border-t-0 md:border-l border-zinc-800/50 z-10">
+                <div className="absolute top-4 right-4 text-xs font-mono text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    Input: Bank <Database className="w-3 h-3" />
+                </div>
+
+                 {/* Emitter Visual */}
+                 <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center mb-8 relative">
+                    <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping opacity-20" />
+                    <Database className="w-6 h-6 text-emerald-400" />
+                </div>
+
+                {/* Particles moving towards center (Reversed direction visually) */}
+                <div className="w-full h-20 relative flex items-center justify-center">
+                    <AnimatePresence>
+                        {particles.map((p) => (
+                            <motion.div
+                                key={`b-${p.id}`}
+                                initial={{ x: 100, opacity: 0, scale: 0.5 }}
+                                animate={{ x: "-100%", opacity: [0, 1, 1, 0], scale: 1 }}
+                                transition={{ duration: 1.5, ease: "easeIn" }}
+                                className="absolute right-0 flex items-center gap-2 flex-row-reverse"
+                            >
+                                <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                <div className="text-[10px] font-mono text-emerald-300 opacity-50 hidden md:block">DEPOSIT</div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            </div>
+
+            {/* Manual Control Overlay (Visible on Hover) */}
+            <AnimatePresence>
+                {isHovering && !shouldReduceMotion && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-50 flex items-center justify-center"
+                    >
+                        <div className="text-center p-6 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl max-w-sm mx-4">
+                            <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Search className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2">Deep Inspection Mode</h3>
+                            <p className="text-sm text-zinc-400 mb-4">
+                                In the app, you can pause any transaction to see the exact lineage from platform API to bank settlement.
+                            </p>
+                            <div className="flex gap-2 justify-center">
+                                <div className="px-3 py-1 bg-zinc-950 rounded border border-zinc-800 text-xs text-zinc-500 font-mono">
+                                    ID: {particles[particles.length-1]?.id || 'tx_init'}
+                                </div>
+                                <div className="px-3 py-1 bg-emerald-950/30 rounded border border-emerald-900/50 text-xs text-emerald-400 font-mono flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3" /> Verified
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
         </div>
     );
 };

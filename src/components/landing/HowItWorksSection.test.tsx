@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, act, cleanup } from '@testing-library/react';
+import { render, screen, act, cleanup, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import HowItWorksSection from './HowItWorksSection';
@@ -11,9 +11,10 @@ vi.mock('framer-motion', async () => {
     return {
         AnimatePresence: ({ children }: any) => <>{children}</>,
         motion: {
-            div: ({ children, layout, layoutId, ...props }: any) => <div {...props}>{children}</div>,
-            span: ({ children, layout, layoutId, ...props }: any) => <span {...props}>{children}</span>,
+            div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+            span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
         },
+        useReducedMotion: () => false,
     };
 });
 
@@ -39,25 +40,51 @@ describe('HowItWorksSection', () => {
 
     it('renders the section header', () => {
         render(<HowItWorksSection />);
-        expect(screen.getByText(/Revenue, reality checked./i)).toBeInTheDocument();
-        expect(screen.getByText(/High-frequency reconciliation/i)).toBeInTheDocument();
+        expect(screen.getByText(/Revenue fusion/i)).toBeInTheDocument();
+        expect(screen.getByText(/We collide platform data with bank truths/i)).toBeInTheDocument();
     });
 
-    it('renders the pipeline stages', () => {
+    it('renders the fusion reactor inputs', () => {
         render(<HowItWorksSection />);
-        expect(screen.getAllByText(/1. Platform Signal/i)[0]).toBeInTheDocument();
-        expect(screen.getAllByText(/2. Reconciliation/i)[0]).toBeInTheDocument();
-        expect(screen.getAllByText(/3. Verified Ledger/i)[0]).toBeInTheDocument();
+        expect(screen.getByText(/Input: Platforms/i)).toBeInTheDocument();
+        expect(screen.getByText(/Input: Bank/i)).toBeInTheDocument();
     });
 
-    it('starts the animation sequence (Phase 1)', async () => {
+    it('starts with initial revenue total', () => {
+        render(<HowItWorksSection />);
+        expect(screen.getByText(/Total Revenue/i)).toBeInTheDocument();
+        // Assuming default value $142,050.00
+        expect(screen.getByText(/\$142,050/)).toBeInTheDocument();
+    });
+
+    it('spawns particles over time', async () => {
         render(<HowItWorksSection />);
 
-        // Initial state: Phase 1 (Ingest) starts immediately
-        // This confirms useEffect -> runSequence -> setActiveItem executed.
-        expect(screen.getByText('YouTube')).toBeInTheDocument();
+        // Initial state: No DEPOSIT text (particles array empty)
+        expect(screen.queryByText(/DEPOSIT/i)).not.toBeInTheDocument();
 
-        // We do not test the full async loop here as JSDOM timers + Promises
-        // can be flaky with recursive timeouts. We rely on visual verification for the full loop.
+        // Advance timers to trigger interval (1200ms)
+        await act(async () => {
+            vi.advanceTimersByTime(1500);
+        });
+
+        // Now particles should exist
+        // We check for "DEPOSIT" which is rendered for every bank particle
+        const deposits = screen.getAllByText(/DEPOSIT/i);
+        expect(deposits.length).toBeGreaterThan(0);
+    });
+
+    it('shows inspection overlay on hover', async () => {
+        render(<HowItWorksSection />);
+
+        const coreText = screen.getByText(/Total Revenue/i);
+
+        await act(async () => {
+            fireEvent.mouseEnter(coreText);
+        });
+
+        // Expect overlay text
+        expect(screen.getByText(/Deep Inspection Mode/i)).toBeInTheDocument();
+        expect(screen.getByText(/ID:/i)).toBeInTheDocument();
     });
 });
