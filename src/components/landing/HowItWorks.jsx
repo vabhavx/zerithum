@@ -4,17 +4,17 @@ import { Database, ArrowRight, Server, FileCheck, Shield, Download, Cloud } from
 
 const HowItWorks = () => {
     return (
-        <section id="how-it-works" className="py-24 relative z-10">
+        <section id="how-it-works" className="py-24 relative z-10 bg-zinc-50">
             <div className="max-w-6xl mx-auto px-4">
                 <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-5xl font-serif font-bold text-white mb-6">How it works</h2>
-                    <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
+                    <h2 className="text-3xl md:text-5xl font-serif font-bold text-zinc-900 mb-6">How it works</h2>
+                    <p className="text-zinc-600 max-w-2xl mx-auto text-lg">
                         Automated financial operations for the modern creator economy.
                     </p>
                 </div>
 
                 {/* Pipeline Animation */}
-                <div className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-8 mb-16 overflow-hidden relative">
+                <div className="w-full bg-white border border-zinc-200 rounded-xl p-8 mb-16 overflow-hidden relative shadow-sm">
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px] opacity-20"></div>
 
                     <div className="flex justify-between items-center relative z-10 min-w-[800px] overflow-x-auto pb-4">
@@ -50,23 +50,23 @@ const HowItWorks = () => {
                 {/* 3 Steps */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                     <div className="space-y-4">
-                        <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 font-mono text-sm">01</div>
-                        <h3 className="text-xl font-medium text-white">Connect platforms</h3>
-                        <p className="text-zinc-400 leading-relaxed text-sm">
+                        <div className="w-10 h-10 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-500 font-mono text-sm shadow-sm">01</div>
+                        <h3 className="text-xl font-medium text-zinc-900">Connect platforms</h3>
+                        <p className="text-zinc-600 leading-relaxed text-sm">
                             Zerithum ingests transaction metadata from platform APIs. We support 20+ integrations including YouTube, Stripe, and Patreon.
                         </p>
                     </div>
                     <div className="space-y-4">
-                        <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 font-mono text-sm">02</div>
-                        <h3 className="text-xl font-medium text-white">Connect bank feed</h3>
-                        <p className="text-zinc-400 leading-relaxed text-sm">
+                        <div className="w-10 h-10 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-500 font-mono text-sm shadow-sm">02</div>
+                        <h3 className="text-xl font-medium text-zinc-900">Connect bank feed</h3>
+                        <p className="text-zinc-600 leading-relaxed text-sm">
                             Read-only access via Plaid. We never store bank credentials and cannot initiate transactions. Manual statement upload is also supported.
                         </p>
                     </div>
                     <div className="space-y-4">
-                        <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 font-mono text-sm">03</div>
-                        <h3 className="text-xl font-medium text-white">Reconcile & Export</h3>
-                        <p className="text-zinc-400 leading-relaxed text-sm">
+                        <div className="w-10 h-10 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-500 font-mono text-sm shadow-sm">03</div>
+                        <h3 className="text-xl font-medium text-zinc-900">Reconcile & Export</h3>
+                        <p className="text-zinc-600 leading-relaxed text-sm">
                             Zerithum reconciles payouts, flags anomalies for review, and writes an immutable audit trail. Generate tax-ready reports in one click.
                         </p>
                     </div>
@@ -78,16 +78,16 @@ const HowItWorks = () => {
 
 const PipelineNode = ({ icon: Icon, label, active = false }) => (
     <div className="flex flex-col items-center gap-3 relative group">
-        <div className={`w-16 h-16 rounded-xl border flex items-center justify-center transition-all duration-500 ${active ? 'bg-zinc-900 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : 'bg-zinc-950 border-zinc-800 group-hover:border-zinc-700'}`}>
-            <Icon className={`w-6 h-6 ${active ? 'text-emerald-500' : 'text-zinc-500'}`} />
+        <div className={`w-16 h-16 rounded-xl border flex items-center justify-center transition-all duration-500 ${active ? 'bg-white border-emerald-600 shadow-md shadow-emerald-500/10' : 'bg-zinc-50 border-zinc-200 group-hover:border-zinc-300'}`}>
+            <Icon className={`w-6 h-6 ${active ? 'text-emerald-600' : 'text-zinc-400'}`} />
         </div>
-        <span className="text-xs font-mono uppercase tracking-wider text-zinc-500 group-hover:text-zinc-300 transition-colors">{label}</span>
+        <span className="text-xs font-mono uppercase tracking-wider text-zinc-500 group-hover:text-zinc-700 transition-colors">{label}</span>
     </div>
 );
 
 const PipelineArrow = () => (
     <div className="flex-1 px-2 flex justify-center opacity-30">
-        <ArrowRight className="w-4 h-4 text-zinc-600" />
+        <ArrowRight className="w-4 h-4 text-zinc-400" />
     </div>
 );
 

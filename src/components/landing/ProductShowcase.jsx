@@ -31,17 +31,17 @@ const ProductShowcase = () => {
     const [activeIndex, setActiveIndex] = useState(0);
 
     return (
-        <section id="product" className="py-24 bg-zinc-950 relative overflow-hidden">
+        <section id="product" className="py-24 bg-white relative overflow-hidden">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
                     {/* Left Column: Navigation / Toggles */}
                     <div className="col-span-1 lg:col-span-4 space-y-8">
                         <div className="space-y-4">
-                            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-white">
+                            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-zinc-900">
                                 The Source of Truth.
                             </h2>
-                            <p className="text-zinc-400">
+                            <p className="text-zinc-600">
                                 Zerithum connects the dots between platform activity and bank reality.
                             </p>
                         </div>
@@ -57,8 +57,8 @@ const ProductShowcase = () => {
                                         className={cn(
                                             "group rounded-xl border transition-all duration-300 cursor-pointer overflow-hidden",
                                             isActive
-                                                ? "bg-zinc-900 border-emerald-500/50 shadow-[0_0_30px_-10px_rgba(16,185,129,0.3)]"
-                                                : "bg-zinc-900/20 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/40"
+                                                ? "bg-white border-emerald-600 shadow-lg shadow-emerald-500/10"
+                                                : "bg-zinc-50 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-100"
                                         )}
                                         onClick={() => setActiveIndex(index)}
                                     >
@@ -67,7 +67,7 @@ const ProductShowcase = () => {
                                             <div className="space-y-2 flex-1">
                                                 <h3 className={cn(
                                                     "font-medium text-lg transition-colors",
-                                                    isActive ? "text-white" : "text-zinc-400 group-hover:text-zinc-200"
+                                                    isActive ? "text-zinc-900" : "text-zinc-600 group-hover:text-zinc-900"
                                                 )}>
                                                     {feature.title}
                                                 </h3>
@@ -78,7 +78,7 @@ const ProductShowcase = () => {
                                                             initial={{ height: 0, opacity: 0 }}
                                                             animate={{ height: "auto", opacity: 1 }}
                                                             exit={{ height: 0, opacity: 0 }}
-                                                            className="text-sm text-zinc-400 leading-relaxed block"
+                                                            className="text-sm text-zinc-600 leading-relaxed block"
                                                         >
                                                             {feature.description}
                                                         </motion.p>
@@ -90,8 +90,8 @@ const ProductShowcase = () => {
                                             <div className={cn(
                                                 "mt-1 w-6 h-6 flex items-center justify-center rounded-full border transition-all shrink-0",
                                                 isActive
-                                                    ? "bg-emerald-500 border-emerald-500 text-black"
-                                                    : "border-zinc-700 text-zinc-600"
+                                                    ? "bg-emerald-600 border-emerald-600 text-white"
+                                                    : "border-zinc-300 text-zinc-400"
                                             )}>
                                                {isActive ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                                             </div>
@@ -105,7 +105,7 @@ const ProductShowcase = () => {
                                                         initial={{ height: 0, opacity: 0 }}
                                                         animate={{ height: "auto", opacity: 1 }}
                                                         exit={{ height: 0, opacity: 0 }}
-                                                        className="overflow-hidden border-t border-zinc-800 bg-zinc-950/50"
+                                                        className="overflow-hidden border-t border-zinc-200 bg-zinc-50"
                                                     >
                                                         <div className="p-4">
                                                             <VisualComponent />
@@ -122,7 +122,7 @@ const ProductShowcase = () => {
 
                     {/* Right Column: Desktop Visual */}
                     <div className="hidden lg:block lg:col-span-8 sticky top-24">
-                        <div className="relative min-h-[600px] w-full bg-zinc-900/20 rounded-2xl border border-zinc-800 p-2 backdrop-blur-sm">
+                        <div className="relative min-h-[600px] w-full bg-zinc-50 rounded-2xl border border-zinc-200 p-2 shadow-sm">
                              {/* Decoration */}
                              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 to-blue-500/5 rounded-2xl pointer-events-none"></div>
 

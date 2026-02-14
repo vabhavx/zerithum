@@ -88,8 +88,7 @@ const EVENTS: RevenueEvent[] = [
         changelog: [
             { action: 'CSV Parsed', time: '9:00:01 AM' },
             { action: 'Mismatch Flag', time: '9:00:05 AM' }
-        ],
-        raw_data: '{"payout_id": "pt_998877", "currency": "USD", "status": "processed"}'
+        ]
     },
     {
         id: 'evt-004',
@@ -130,21 +129,21 @@ const EVENTS: RevenueEvent[] = [
 ];
 
 // --- Animation Config ---
-const AUTO_PLAY_INTERVAL = 4000; // Total cycle time per step if we were just looping linearly, but we have a custom sequence
+const AUTO_PLAY_INTERVAL = 4000;
 const SEQUENCE_STEPS = [
     { action: 'expand', target: 'evt-003', delay: 1000 },
     { action: 'tab', target: 'trace', delay: 800 },
     { action: 'tab', target: 'explain', delay: 1500 },
     { action: 'tab', target: 'resolve', delay: 1500 },
     { action: 'resolve_simulate', target: 'confirmed', delay: 1200 },
-    { action: 'reset', delay: 1000 } // Collapse and restart
+    { action: 'reset', delay: 1000 }
 ];
 
 // --- Components ---
 
 const AccuracySection = () => {
     return (
-        <section id="accuracy" className="py-24 relative bg-zinc-950 overflow-hidden">
+        <section id="accuracy" className="py-24 relative bg-white overflow-hidden">
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
                     {/* Copy Side */}
@@ -157,13 +156,13 @@ const AccuracySection = () => {
                     >
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 mb-4">
-                                <div className="h-[1px] w-8 bg-emerald-500"></div>
-                                <span className="text-emerald-500 font-mono text-xs uppercase tracking-widest">System Integrity</span>
+                                <div className="h-[1px] w-8 bg-emerald-600"></div>
+                                <span className="text-emerald-600 font-mono text-xs uppercase tracking-widest">System Integrity</span>
                             </div>
-                            <h2 className="text-3xl md:text-5xl font-serif font-bold text-white tracking-tight leading-tight">
+                            <h2 className="text-3xl md:text-5xl font-serif font-bold text-zinc-900 tracking-tight leading-tight">
                                 Verification logic you can see.
                             </h2>
-                            <p className="text-lg text-zinc-400 leading-relaxed font-light">
+                            <p className="text-lg text-zinc-600 leading-relaxed font-light">
                                 Revenue data is too important for black boxes. Inspect the lineage of every cent, from API response to bank settlement, with military-grade audit trails.
                             </p>
                         </div>
@@ -186,12 +185,12 @@ const AccuracySection = () => {
                             />
                         </div>
 
-                        <div className="pt-8 border-t border-zinc-900">
+                        <div className="pt-8 border-t border-zinc-200">
                              <div className="flex items-center gap-3 text-sm text-zinc-500 font-mono">
                                 <div className="flex -space-x-2">
-                                     <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-950 flex items-center justify-center text-[10px] text-zinc-300">YT</div>
-                                     <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-950 flex items-center justify-center text-[10px] text-zinc-300">S</div>
-                                     <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-950 flex items-center justify-center text-[10px] text-zinc-300">+20</div>
+                                     <div className="w-6 h-6 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-[10px] text-zinc-500">YT</div>
+                                     <div className="w-6 h-6 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-[10px] text-zinc-500">S</div>
+                                     <div className="w-6 h-6 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-[10px] text-zinc-500">+20</div>
                                 </div>
                                 <span>Ingesting from 20+ platforms & custom APIs</span>
                              </div>
@@ -207,7 +206,7 @@ const AccuracySection = () => {
                         className="w-full relative group"
                     >
                         {/* Decorative glow behind widget */}
-                        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
+                        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/5 to-blue-500/5 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
                         <ProofWidget />
                     </motion.div>
                 </div>
@@ -218,12 +217,12 @@ const AccuracySection = () => {
 
 const FeaturePoint = ({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) => (
     <div className="flex gap-4 group">
-        <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 transition-all duration-300">
-            <Icon className="w-5 h-5 text-emerald-500" />
+        <div className="w-10 h-10 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 transition-all duration-300">
+            <Icon className="w-5 h-5 text-emerald-600" />
         </div>
         <div>
-            <h3 className="text-white font-medium mb-1 text-base group-hover:text-emerald-400 transition-colors">{title}</h3>
-            <p className="text-zinc-500 text-sm leading-relaxed">{desc}</p>
+            <h3 className="text-zinc-900 font-medium mb-1 text-base group-hover:text-emerald-700 transition-colors">{title}</h3>
+            <p className="text-zinc-600 text-sm leading-relaxed">{desc}</p>
         </div>
     </div>
 );
@@ -295,17 +294,16 @@ const ProofWidget = () => {
 
     const handleInteractionEnd = () => {
         // Optional: Resume after delay? For now, sticky stop is better UX for "taking control"
-        // Or strictly pause while hovering
     };
 
     return (
         <div
-            className="bg-zinc-900/80 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md ring-1 ring-white/5"
+            className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xl ring-1 ring-black/5"
             onMouseEnter={handleInteractionStart}
             onTouchStart={handleInteractionStart}
         >
             {/* Widget Header */}
-            <div className="p-3 border-b border-zinc-800 bg-zinc-950/50 flex items-center justify-between">
+            <div className="p-3 border-b border-zinc-200 bg-zinc-50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="relative flex items-center justify-center w-4 h-4">
                         {isAutoplaying ? (
@@ -314,21 +312,21 @@ const ProofWidget = () => {
                                 <div className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></div>
                             </>
                         ) : (
-                            <div className="w-2 h-2 rounded-full bg-zinc-600"></div>
+                            <div className="w-2 h-2 rounded-full bg-zinc-400"></div>
                         )}
                     </div>
-                    <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">
+                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">
                         {isAutoplaying ? 'Live Simulation' : 'Manual Inspection'}
                     </span>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="hidden md:flex items-center gap-2 px-2 py-1 rounded bg-zinc-900 border border-zinc-800/50">
-                        <Clock className="w-3 h-3 text-zinc-500" />
-                        <span className="text-[10px] font-mono text-zinc-400">T-00:00:00.042</span>
+                    <div className="hidden md:flex items-center gap-2 px-2 py-1 rounded bg-white border border-zinc-200 shadow-sm">
+                        <Clock className="w-3 h-3 text-zinc-400" />
+                        <span className="text-[10px] font-mono text-zinc-500">T-00:00:00.042</span>
                     </div>
 
-                    <label className="text-[10px] font-medium text-zinc-400 cursor-pointer select-none flex items-center gap-2 hover:text-white transition-colors">
+                    <label className="text-[10px] font-medium text-zinc-500 cursor-pointer select-none flex items-center gap-2 hover:text-zinc-900 transition-colors">
                         Show mismatches
                         <button
                             role="switch"
@@ -338,11 +336,11 @@ const ProofWidget = () => {
                                 setFilterMismatches(!filterMismatches);
                                 handleInteractionStart();
                             }}
-                            className={`w-7 h-4 rounded-full relative transition-colors ${filterMismatches ? 'bg-emerald-600' : 'bg-zinc-800 border border-zinc-700'}`}
+                            className={`w-7 h-4 rounded-full relative transition-colors ${filterMismatches ? 'bg-emerald-600' : 'bg-zinc-200 border border-zinc-300'}`}
                         >
                             <motion.div
                                 layout
-                                className="w-2.5 h-2.5 bg-white rounded-full absolute top-[2px] left-[3px]"
+                                className="w-2.5 h-2.5 bg-white rounded-full absolute top-[2px] left-[3px] shadow-sm"
                                 animate={{ x: filterMismatches ? 14 : 0 }}
                                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
                             />
@@ -352,9 +350,9 @@ const ProofWidget = () => {
             </div>
 
             {/* Event List */}
-            <div className="bg-zinc-950/30 min-h-[420px] max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+            <div className="bg-white min-h-[420px] max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-transparent">
                 <LayoutGroup>
-                    <motion.div layout className="divide-y divide-zinc-800/50">
+                    <motion.div layout className="divide-y divide-zinc-100">
                         <AnimatePresence mode="popLayout" initial={false}>
                             {filteredEvents.map((event) => (
                                 <EventRow
@@ -386,18 +384,18 @@ const ProofWidget = () => {
                         animate={{ opacity: 1 }}
                         className="p-12 text-center"
                     >
-                        <ShieldCheck className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
-                        <p className="text-zinc-500 text-xs font-mono">System reconciled. No anomalies found.</p>
+                        <ShieldCheck className="w-8 h-8 text-zinc-300 mx-auto mb-3" />
+                        <p className="text-zinc-400 text-xs font-mono">System reconciled. No anomalies found.</p>
                     </motion.div>
                 )}
             </div>
 
             {/* Footer Status Bar */}
-            <div className="bg-zinc-950 border-t border-zinc-900 p-2 flex justify-between items-center text-[10px] text-zinc-600 font-mono">
+            <div className="bg-zinc-50 border-t border-zinc-200 p-2 flex justify-between items-center text-[10px] text-zinc-500 font-mono">
                  <div>Connected: 3 Nodes</div>
                  <div>Latency: 42ms</div>
                  <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 bg-emerald-900 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full"></div>
                     Encrypted (AES-256)
                  </div>
             </div>
@@ -428,7 +426,7 @@ const EventRow = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={`group transition-all duration-300 border-l-2 ${isExpanded ? 'bg-zinc-900/80 border-l-emerald-500' : 'hover:bg-zinc-900/40 border-l-transparent'}`}
+            className={`group transition-all duration-300 border-l-2 ${isExpanded ? 'bg-zinc-50 border-l-emerald-600' : 'hover:bg-zinc-50 border-l-transparent'}`}
         >
             {/* Row Content */}
             <div
@@ -437,16 +435,16 @@ const EventRow = ({
             >
                  {/* Mobile/Desktop Source & Amount */}
                 <div className="min-w-0">
-                    <div className="font-medium text-white text-sm truncate flex items-center gap-2">
+                    <div className="font-medium text-zinc-900 text-sm truncate flex items-center gap-2">
                         {event.source}
                         {event.status === 'review' && <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
                     </div>
                     <div className="text-[10px] text-zinc-500 font-mono mt-0.5 md:hidden">{event.amount}</div>
-                    <div className="text-[10px] text-zinc-500 mt-0.5 hidden md:block font-mono opacity-60">{event.date} • ID: {event.id.split('-')[1]}</div>
+                    <div className="text-[10px] text-zinc-500 mt-0.5 hidden md:block font-mono opacity-80">{event.date} • ID: {event.id.split('-')[1]}</div>
                 </div>
 
                 {/* Amount (Desktop) */}
-                <div className="hidden md:block font-mono text-zinc-300 text-sm text-right md:text-left tracking-tight">
+                <div className="hidden md:block font-mono text-zinc-700 text-sm text-right md:text-left tracking-tight">
                     {event.amount}
                 </div>
 
@@ -458,7 +456,7 @@ const EventRow = ({
 
                 {/* Expand Button */}
                 <button
-                    className={`p-1.5 rounded-md hover:bg-zinc-800 text-zinc-500 transition-all duration-300 ${isExpanded ? 'rotate-90 text-white bg-zinc-800' : ''}`}
+                    className={`p-1.5 rounded-md hover:bg-zinc-200 text-zinc-400 transition-all duration-300 ${isExpanded ? 'rotate-90 text-zinc-900 bg-zinc-200' : ''}`}
                     aria-label={isExpanded ? "Collapse proof" : "See proof"}
                 >
                     <ChevronRight className="w-4 h-4" />
@@ -473,7 +471,7 @@ const EventRow = ({
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="overflow-hidden border-t border-zinc-800/50 bg-zinc-950/30"
+                        className="overflow-hidden border-t border-zinc-200 bg-zinc-50"
                     >
                         <div className="p-4">
                             <ProofDrawer
@@ -493,9 +491,9 @@ const EventRow = ({
 
 const StatusChip = ({ status }: { status: EventStatus }) => {
     const config = {
-        matched: { color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', label: 'Match' },
-        review: { color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', label: 'Review' },
-        flagged: { color: 'text-rose-400 bg-rose-500/10 border-rose-500/20', label: 'Flagged' },
+        matched: { color: 'text-emerald-700 bg-emerald-50 border-emerald-200', label: 'Match' },
+        review: { color: 'text-amber-700 bg-amber-50 border-amber-200', label: 'Review' },
+        flagged: { color: 'text-rose-700 bg-rose-50 border-rose-200', label: 'Flagged' },
     };
     const c = config[status];
     return (
@@ -511,7 +509,7 @@ const ConfidenceMeter = ({ value }: { value: number }) => {
 
     return (
         <div className="flex items-center gap-2 w-24 group/meter cursor-help" title={`Confidence Score: ${value}%`}>
-            <div className="flex-1 h-1 bg-zinc-800 rounded-sm overflow-hidden">
+            <div className="flex-1 h-1 bg-zinc-200 rounded-sm overflow-hidden">
                 <motion.div
                     initial={{ width: 0 }}
                     whileInView={{ width: `${value}%` }}
@@ -547,21 +545,21 @@ const ProofDrawer = ({
     return (
         <div className="space-y-4">
             {/* Tabs */}
-            <div className="flex border-b border-zinc-800">
+            <div className="flex border-b border-zinc-200">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
                         onClick={(e) => { e.stopPropagation(); setActiveTab(tab.id); }}
-                        className={`relative flex items-center gap-2 px-4 py-2 text-xs font-medium transition-all duration-300 outline-none focus:bg-zinc-900 ${
+                        className={`relative flex items-center gap-2 px-4 py-2 text-xs font-medium transition-all duration-300 outline-none focus:bg-zinc-100 ${
                             activeTab === tab.id
-                                ? 'text-white'
-                                : 'text-zinc-500 hover:text-zinc-300'
+                                ? 'text-zinc-900'
+                                : 'text-zinc-500 hover:text-zinc-700'
                         }`}
                     >
                         {activeTab === tab.id && (
                             <motion.div
                                 layoutId="activeTabIndicator"
-                                className="absolute bottom-0 left-0 right-0 h-[1px] bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                                className="absolute bottom-0 left-0 right-0 h-[1px] bg-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
                             />
                         )}
                         <tab.icon className="w-3.5 h-3.5" />
@@ -584,7 +582,7 @@ const ProofDrawer = ({
                         >
                             <div className="relative pl-2">
                                 {/* Vertical Line */}
-                                <div className="absolute left-[5.5px] top-2 bottom-2 w-[1px] bg-zinc-800"></div>
+                                <div className="absolute left-[5.5px] top-2 bottom-2 w-[1px] bg-zinc-200"></div>
 
                                 {event.trace.map((node, i) => (
                                     <motion.div
@@ -594,12 +592,12 @@ const ProofDrawer = ({
                                         transition={{ delay: i * 0.05 }}
                                         className="flex items-center gap-4 relative py-2 group/node"
                                     >
-                                        <div className={`z-10 w-2 h-2 rounded-full border border-zinc-950 transition-all duration-300 ${i === event.trace.length - 1 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] scale-110' : 'bg-zinc-700'}`}></div>
-                                        <div className="flex-1 flex justify-between items-center p-2 rounded border border-transparent hover:border-zinc-800 hover:bg-zinc-900/30 transition-all cursor-crosshair">
-                                            <span className="text-xs text-zinc-300 font-medium">{node.step}</span>
+                                        <div className={`z-10 w-2 h-2 rounded-full border border-white transition-all duration-300 ${i === event.trace.length - 1 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] scale-110' : 'bg-zinc-300'}`}></div>
+                                        <div className="flex-1 flex justify-between items-center p-2 rounded border border-transparent hover:border-zinc-200 hover:bg-zinc-50 transition-all cursor-crosshair">
+                                            <span className="text-xs text-zinc-700 font-medium">{node.step}</span>
                                             <div className="flex items-center gap-3">
-                                                <span className="text-[10px] font-mono text-zinc-600 group-hover/node:text-emerald-500/70 transition-colors">#{node.hash}</span>
-                                                <span className="text-[10px] font-mono text-zinc-500">{node.time}</span>
+                                                <span className="text-[10px] font-mono text-zinc-500 group-hover/node:text-emerald-600/70 transition-colors">#{node.hash}</span>
+                                                <span className="text-[10px] font-mono text-zinc-400">{node.time}</span>
                                             </div>
                                         </div>
                                     </motion.div>
@@ -617,15 +615,15 @@ const ProofDrawer = ({
                             transition={{ duration: 0.2 }}
                             className="space-y-4"
                         >
-                            <div className="p-3 rounded bg-zinc-900/50 border border-zinc-800/60">
-                                <h4 className="text-[10px] font-mono text-emerald-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <div className="p-3 rounded bg-zinc-50 border border-zinc-200">
+                                <h4 className="text-[10px] font-mono text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-2">
                                     <FileText className="w-3 h-3" /> System Reasoning
                                 </h4>
-                                <p className="text-xs text-zinc-300 leading-relaxed font-mono opacity-90">{event.explanation}</p>
+                                <p className="text-xs text-zinc-700 leading-relaxed font-mono opacity-90">{event.explanation}</p>
                             </div>
                             {event.raw_data && (
-                                <div className="p-3 rounded bg-black/40 border border-zinc-800/60">
-                                    <h4 className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider mb-1">Raw Payload</h4>
+                                <div className="p-3 rounded bg-zinc-50 border border-zinc-200">
+                                    <h4 className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-1">Raw Payload</h4>
                                     <pre className="text-[10px] text-zinc-500 font-mono overflow-x-auto">{event.raw_data}</pre>
                                 </div>
                             )}
@@ -643,16 +641,16 @@ const ProofDrawer = ({
                         >
                             {resolvedState === 'none' ? (
                                 <div className="space-y-4">
-                                    <div className="flex items-start gap-3 p-3 bg-amber-500/5 border border-amber-500/10 rounded">
+                                    <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-100 rounded">
                                         <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                                        <p className="text-xs text-amber-200/70 leading-relaxed">
+                                        <p className="text-xs text-amber-700/80 leading-relaxed">
                                             This transaction is outside the 2% tolerance window. Manual reconciliation required to update the ledger.
                                         </p>
                                     </div>
                                     <div className="flex gap-3">
                                         <Button
                                             onClick={(e) => { e.stopPropagation(); setResolvedState('confirmed'); }}
-                                            className="bg-emerald-600 hover:bg-emerald-500 text-white flex-1 h-9 text-xs font-semibold tracking-wide"
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white flex-1 h-9 text-xs font-semibold tracking-wide shadow-sm"
                                         >
                                             <Check className="w-3.5 h-3.5 mr-2" />
                                             CONFIRM MATCH
@@ -660,7 +658,7 @@ const ProofDrawer = ({
                                         <Button
                                             onClick={(e) => { e.stopPropagation(); setResolvedState('flagged'); }}
                                             variant="outline"
-                                            className="border-rose-900/30 text-rose-400 bg-rose-950/10 hover:bg-rose-950/20 hover:text-rose-300 flex-1 h-9 text-xs"
+                                            className="border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 hover:text-rose-700 flex-1 h-9 text-xs"
                                         >
                                             <AlertCircle className="w-3.5 h-3.5 mr-2" />
                                             FLAG ISSUE
@@ -671,16 +669,16 @@ const ProofDrawer = ({
                                 <motion.div
                                     initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    className="flex flex-col items-center justify-center py-8 text-emerald-500 bg-emerald-500/5 rounded border border-emerald-500/10"
+                                    className="flex flex-col items-center justify-center py-8 text-emerald-600 bg-emerald-50 rounded border border-emerald-100"
                                 >
-                                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mb-3 ring-1 ring-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                                    <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mb-3 ring-1 ring-emerald-200 shadow-sm">
                                         <Check className="w-6 h-6" />
                                     </div>
                                     <p className="font-mono text-sm font-bold tracking-tight">TRANSACTION LOCKED</p>
-                                    <p className="text-[10px] text-emerald-500/60 font-mono mt-1">Hash: 0x99a...f7b2 • Timestamp: {new Date().toLocaleTimeString()}</p>
+                                    <p className="text-[10px] text-emerald-600/60 font-mono mt-1">Hash: 0x99a...f7b2 • Timestamp: {new Date().toLocaleTimeString()}</p>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setResolvedState('none'); }}
-                                        className="text-[10px] text-zinc-500 mt-4 hover:text-white underline decoration-zinc-700 underline-offset-4"
+                                        className="text-[10px] text-zinc-500 mt-4 hover:text-zinc-900 underline decoration-zinc-300 underline-offset-4"
                                     >
                                         Undo Action
                                     </button>
@@ -693,7 +691,7 @@ const ProofDrawer = ({
                                 >
                                     <div className="space-y-1">
                                         <label className="text-[10px] font-mono text-zinc-500 uppercase">Reason Code</label>
-                                        <select className="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-xs text-white focus:ring-1 focus:ring-rose-500/50 outline-none">
+                                        <select className="w-full bg-white border border-zinc-200 rounded p-2 text-xs text-zinc-900 focus:ring-1 focus:ring-rose-500/50 outline-none">
                                             <option>ERR_DUPLICATE_TX</option>
                                             <option>ERR_INVALID_AMOUNT</option>
                                             <option>ERR_FRAUD_SUSPICION</option>
@@ -703,13 +701,13 @@ const ProofDrawer = ({
                                     <div className="space-y-1">
                                         <label className="text-[10px] font-mono text-zinc-500 uppercase">Analyst Notes</label>
                                         <textarea
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-xs text-white h-16 focus:ring-1 focus:ring-rose-500/50 outline-none resize-none placeholder:text-zinc-700"
+                                            className="w-full bg-white border border-zinc-200 rounded p-2 text-xs text-zinc-900 h-16 focus:ring-1 focus:ring-rose-500/50 outline-none resize-none placeholder:text-zinc-400"
                                             placeholder="Add context for audit trail..."
                                         ></textarea>
                                     </div>
                                     <div className="flex justify-end gap-2">
-                                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setResolvedState('none'); }} className="text-zinc-400 h-8 text-xs hover:text-white hover:bg-zinc-900">Cancel</Button>
-                                        <Button size="sm" className="bg-rose-600 hover:bg-rose-700 h-8 text-xs">Submit Flag</Button>
+                                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setResolvedState('none'); }} className="text-zinc-500 h-8 text-xs hover:text-zinc-900 hover:bg-zinc-100">Cancel</Button>
+                                        <Button size="sm" className="bg-rose-600 hover:bg-rose-700 h-8 text-xs shadow-sm">Submit Flag</Button>
                                     </div>
                                 </motion.div>
                             )}
