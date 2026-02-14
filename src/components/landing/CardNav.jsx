@@ -84,7 +84,7 @@ const CardNav = ({
       tl?.kill();
       tlRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [ease, items]);
 
   useLayoutEffect(() => {
@@ -112,7 +112,7 @@ const CardNav = ({
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [isExpanded]);
 
   const toggleMenu = () => {

@@ -1,5 +1,6 @@
+/** @vitest-environment jsdom */
 import React from 'react';
-import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { expect, vi, describe, test, afterEach, beforeEach } from 'vitest';
 import AccuracySection from './AccuracySection';
@@ -34,6 +35,7 @@ vi.mock('lucide-react', () => ({
   Play: () => <div data-testid="icon-play" />,
   Pause: () => <div data-testid="icon-pause" />,
   RefreshCw: () => <div data-testid="icon-refresh" />,
+  Activity: () => <div data-testid="icon-activity" />,
 }));
 
 // Mock Framer Motion
@@ -54,23 +56,23 @@ describe('AccuracySection', () => {
 
   test('renders Live Simulation indicator', () => {
     render(<AccuracySection />);
-    expect(screen.getByText(/Live Simulation/i)).toBeInTheDocument();
+    expect(screen.getByText(/AUTOPLAY::ACTIVE/i)).toBeInTheDocument();
   });
 
   test('hover pauses autoplay', async () => {
     render(<AccuracySection />);
-    const widget = screen.getByText(/Live Simulation/i).closest('div').parentElement;
+    const widget = screen.getByText(/AUTOPLAY::ACTIVE/i).closest('div').parentElement.parentElement; // Widget header -> Widget container
     fireEvent.mouseEnter(widget);
-    expect(screen.getByText(/Manual Inspection/i)).toBeInTheDocument();
+    expect(screen.getByText(/MANUAL_OVERRIDE/i)).toBeInTheDocument();
   });
 
   test('manual interaction works', async () => {
     render(<AccuracySection />);
     const row = screen.getByText(/YouTube AdSense/i);
     fireEvent.click(row);
-    expect(screen.getByText(/Manual Inspection/i)).toBeInTheDocument();
+    expect(screen.getByText(/MANUAL_OVERRIDE/i)).toBeInTheDocument();
     expect(screen.getByText(/API Ingest/i)).toBeInTheDocument(); // YouTube trace
-    const explainTab = screen.getByText(/Explain/i);
+    const explainTab = screen.getByText(/EXPLAIN/i);
     fireEvent.click(explainTab);
     expect(screen.getByText(/Exact match/i)).toBeInTheDocument(); // YouTube explain
   });

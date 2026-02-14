@@ -1,6 +1,7 @@
-/* eslint-disable react/no-unknown-property */
+
 import React from 'react';
 import CardNav from '@/components/landing/CardNav';
+// @ts-ignore
 import logoSvg from '@/components/landing/logo.svg';
 
 // Sections
@@ -12,54 +13,56 @@ import SecuritySection from '@/components/landing/SecuritySection';
 import Footer from '@/components/landing/Footer';
 
 const Landing = () => {
-    // Nav items
+    // Nav items - Enterprise Structure
     const navItems = [
       {
         label: "Platform",
-        bgColor: "#18181b",
+        bgColor: "#09090b", // zinc-950
         textColor: "#fff",
         links: [
-          { label: "Product", href: "#product", ariaLabel: "Product Features" },
-          { label: "How it Works", href: "#how-it-works", ariaLabel: "How it Works" },
-          { label: "Accuracy", href: "#accuracy", ariaLabel: "Accuracy" }
+          { label: "Product Features", href: "#product", ariaLabel: "Product Features" },
+          { label: "Execution Logic", href: "#how-it-works", ariaLabel: "How it Works" },
+          { label: "Audit & Verification", href: "#accuracy", ariaLabel: "Accuracy" }
         ]
       },
       {
         label: "Resources",
-        bgColor: "#27272a",
+        bgColor: "#18181b", // zinc-900
         textColor: "#fff",
         links: [
-          { label: "Security", href: "/Security", ariaLabel: "Security" },
-          { label: "Methodology", href: "/methodology", ariaLabel: "Methodology" }
+          { label: "Security Specs", href: "/Security", ariaLabel: "Security" },
+          { label: "Reconciliation Methodology", href: "/methodology", ariaLabel: "Methodology" }
         ]
       },
       {
-        label: "Access",
-        bgColor: "#3f3f46",
+        label: "System",
+        bgColor: "#27272a", // zinc-800
         textColor: "#fff",
         links: [
-          { label: "Sign In", href: "/SignIn", ariaLabel: "Sign In" },
-          { label: "Sign Up", href: "/Signup", ariaLabel: "Sign Up" }
+          { label: "Console Login", href: "/SignIn", ariaLabel: "Sign In" },
+          { label: "Create Instance", href: "/Signup", ariaLabel: "Sign Up" }
         ]
       }
     ];
 
     return (
-        <div className="relative min-h-screen bg-white text-zinc-900 overflow-hidden font-sans selection:bg-emerald-500/30"
-             style={{ backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
+        <div className="relative min-h-screen bg-white text-zinc-900 overflow-hidden font-sans selection:bg-emerald-500/30">
+
+            {/* Global Technical Grid Overlay */}
+            <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px] z-0"></div>
 
             <CardNav
                 logo={logoSvg}
                 logoAlt="Zerithum"
                 items={navItems}
-                baseColor="#fff"
-                menuColor="#000"
-                buttonBgColor="#18181b"
+                baseColor="#ffffff"
+                menuColor="#09090b"
+                buttonBgColor="#09090b"
                 buttonTextColor="#fff"
             />
 
             {/* Main Content */}
-            <main className="relative z-10 pt-32 md:pt-48">
+            <main className="relative z-10 pt-32">
                 <HeroSection />
                 <ProductShowcase />
                 <HowItWorks />
