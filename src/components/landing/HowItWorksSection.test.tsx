@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, act, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, act, cleanup, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import HowItWorksSection from './HowItWorksSection';
@@ -13,13 +13,13 @@ vi.mock('framer-motion', async () => {
         ...actual,
         AnimatePresence: ({ children }) => <>{children}</>,
         motion: {
-            div: ({ children, style, ...props }) => <div {...props}>{children}</div>,
+            div: ({ children, layout, ...props }) => <div {...props}>{children}</div>,
             span: ({ children, ...props }) => <span {...props}>{children}</span>,
         },
     };
 });
 
-describe('HowItWorksSection', () => {
+describe('HowItWorksSection (Living Ledger)', () => {
     beforeEach(() => {
         vi.useFakeTimers();
     });
@@ -32,44 +32,58 @@ describe('HowItWorksSection', () => {
 
     it('renders the section header', () => {
         render(<HowItWorksSection />);
-        expect(screen.getByText(/We connect the disconnect/i)).toBeInTheDocument();
-        expect(screen.getByText(/Neural Reconciliation/i)).toBeInTheDocument();
+        expect(screen.getByText(/The source of truth/i)).toBeInTheDocument();
+        expect(screen.getByText(/Live Ledger Construction/i)).toBeInTheDocument();
     });
 
-    it('renders platform and bank streams', () => {
+    it('renders the ledger widget structure', () => {
         render(<HowItWorksSection />);
-        expect(screen.getByText(/Platform Signal/i)).toBeInTheDocument();
-        expect(screen.getByText(/Bank Feed/i)).toBeInTheDocument();
+        expect(screen.getByText(/Zerithum Ledger v2.1/i)).toBeInTheDocument();
+        expect(screen.getByText(/Platform Source/i)).toBeInTheDocument();
+        expect(screen.getByText(/Bank Verification/i)).toBeInTheDocument();
     });
 
-    it('renders initial pair data', () => {
-        render(<HowItWorksSection />);
-        // Use getAllByText because text like "YouTube" might appear in alt tags or duplicates
-        const youtube = screen.getAllByText('YouTube');
-        expect(youtube[0]).toBeInTheDocument();
-
-        expect(screen.getByText('Chase Deposit')).toBeInTheDocument();
-    });
-
-    it('cycles through pairs over time', async () => {
+    it('populates rows over time', async () => {
         render(<HowItWorksSection />);
 
-        // Initial: YouTube
-        const youtube = screen.getAllByText('YouTube');
-        expect(youtube[0]).toBeInTheDocument();
+        // Initial state: Empty
+        expect(screen.getByText(/Waiting for transaction stream/i)).toBeInTheDocument();
 
-        // Advance 3 seconds (interval is 3000ms)
+        // Advance 2s (Row 1 appears)
         await act(async () => {
-            vi.advanceTimersByTime(3500);
+            vi.advanceTimersByTime(2100);
         });
 
-        // Next: Stripe
-        // YouTube should be gone (or at least Stripe should be present)
-        // With AnimatePresence, exit animations might keep it in DOM momentarily in real app,
-        // but with our mock, it should be instant.
-        expect(screen.queryByText('YouTube')).not.toBeInTheDocument();
+        expect(screen.getByText('YouTube')).toBeInTheDocument();
+        // At 2.1s, it's in 'ingest' or 'match' phase.
+        // Ingest = only platform. Match (800ms after ingest) = Bank appears.
+        // 2100ms > 2000ms (Ingest) + 100ms. So bank might not be there yet?
+        // Wait, loop runs at 2000ms.
+        // T=2000ms: Row 1 added (Stage: Ingest).
+        // T=2800ms: Row 1 -> Match (Bank appears).
+        // T=3600ms: Row 1 -> Verified.
 
-        const stripe = screen.getAllByText('Stripe');
-        expect(stripe[0]).toBeInTheDocument();
+        // So at 2100ms, only YouTube should be visible. Bank "Chase" might be hidden or skeleton.
+        // The skeleton is rendered if !isMatched.
+
+        // Let's advance to T=3000ms to see Bank
+        await act(async () => {
+            vi.advanceTimersByTime(1000);
+        });
+
+        // Now at 3100ms total. Row 1 is matched.
+        // We look for "CH" circle or text.
+        expect(screen.getByText('Chase')).toBeInTheDocument();
+    });
+
+    it('verifies rows eventually', async () => {
+        render(<HowItWorksSection />);
+
+        // Advance enough for first row to be verified (3600ms+)
+        await act(async () => {
+            vi.advanceTimersByTime(4000);
+        });
+
+        expect(screen.getByText(/Reconciled/i)).toBeInTheDocument();
     });
 });
