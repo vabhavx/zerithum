@@ -36,6 +36,13 @@ describe('HowItWorksSection (Quantum Ledger)', () => {
         expect(screen.getByText(/System Architecture/i)).toBeInTheDocument();
     });
 
+    it('renders the explanatory steps', () => {
+        render(<HowItWorksSection />);
+        expect(screen.getByText(/01 Connect platforms/i)).toBeInTheDocument();
+        expect(screen.getByText(/02 Connect bank feed/i)).toBeInTheDocument();
+        expect(screen.getByText(/03 Reconcile & Export/i)).toBeInTheDocument();
+    });
+
     it('renders the terminal structure', () => {
         render(<HowItWorksSection />);
         expect(screen.getByText(/LIVE_FEED/i)).toBeInTheDocument();
@@ -58,15 +65,6 @@ describe('HowItWorksSection (Quantum Ledger)', () => {
         expect(screen.getAllByText(/STRIPE/i).length).toBeGreaterThan(0);
 
         // Initially they are pending
-        expect(screen.getAllByText(/PENDING_MATCH/i).length).toBeGreaterThan(0);
-    });
-
-    // We skip the full scan verification test here because simulated async loops with setTimeouts
-    // are notoriously flaky in JSDOM/Vitest environment with fake timers, leading to timeouts.
-    // The "ingests rows rapidly" test confirms the loop starts and renders data.
-    // We will verify the full animation logic via Playwright/Visual inspection.
-    it.skip('scans and verifies rows', async () => {
-        render(<HowItWorksSection />);
-        // ... (complex timer logic omitted)
+        expect(screen.getAllByText(/PENDING/i).length).toBeGreaterThan(0);
     });
 });
