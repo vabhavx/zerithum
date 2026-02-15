@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { encrypt, decrypt } from './utils/encryption.ts';
 
 const REFRESH_CONFIG = {
   youtube: {
@@ -49,6 +50,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No refresh token available' }, { status: 400 });
     }
 
+    const refreshToken = await decrypt(connection.refresh_token);
+
     const config = REFRESH_CONFIG[connection.platform];
     if (!config) {
       return Response.json({ error: 'Token refresh not supported for this platform' }, { status: 400 });
@@ -70,7 +73,7 @@ Deno.serve(async (req) => {
       body: new URLSearchParams({
         client_id: config.clientId,
         client_secret: clientSecret,
-        refresh_token: connection.refresh_token,
+        refresh_token: refreshToken,
         grant_type: 'refresh_token'
       }),
     });
@@ -90,11 +93,19 @@ Deno.serve(async (req) => {
     expiresAt.setSeconds(expiresAt.getSeconds() + (tokens.expires_in || 3600));
 
     // Update connection with new token
-    await base44.asServiceRole.entities.ConnectedPlatform.update(connectionId, {
-      oauth_token: tokens.access_token,
-      refresh_token: tokens.refresh_token || connection.refresh_token, // Keep old if new not provided
+    const updateData: any = {
+      oauth_token: await encrypt(tokens.access_token),
       expires_at: expiresAt.toISOString()
-    });
+    };
+
+    if (tokens.refresh_token) {
+      updateData.refresh_token = await encrypt(tokens.refresh_token);
+    } else {
+      // Re-encrypt the old token to ensure it's stored securely (migration)
+      updateData.refresh_token = await encrypt(refreshToken);
+    }
+
+    await base44.asServiceRole.entities.ConnectedPlatform.update(connectionId, updateData);
 
     return Response.json({ 
       success: true,
