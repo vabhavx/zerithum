@@ -24,6 +24,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
     const [confirmationText, setConfirmationText] = useState("");
     const [currentPassword, setCurrentPassword] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
+    const [progressMessage, setProgressMessage] = useState("");
 
     // Check if user has password auth
     const hasPasswordAuth = user?.app_metadata?.provider === 'email' ||
@@ -49,7 +50,16 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
 
     // Delete account mutation
     const deleteAccountMutation = useMutation({
-        mutationFn: (data) => base44.functions.invoke('deleteAccount', data),
+        mutationFn: async (data) => {
+            setProgressMessage("Initializing deletion...");
+            return await base44.functions.invokeStream('deleteAccount', data, (type, eventData) => {
+                if (type === 'progress') {
+                    setProgressMessage(eventData.message);
+                } else if (type === 'error') {
+                    throw new Error(eventData.error);
+                }
+            });
+        },
         onSuccess: () => {
             setStep("success");
         },
@@ -274,7 +284,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
                             <div className="absolute inset-0 border-4 border-red-500 rounded-full border-t-transparent animate-spin"></div>
                         </div>
                         <p className="text-white/60 text-sm">
-                            Anonymizing data and deleting account...
+                            {progressMessage || "Anonymizing data and deleting account..."}
                         </p>
                         <p className="text-white/40 text-xs mt-2">
                             Please do not close this window.

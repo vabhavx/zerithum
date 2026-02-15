@@ -8,11 +8,12 @@ import {
     extractClientInfo,
     sanitizeErrorMessage
 } from './logic/security.ts';
+import { revokeToken, RevokeContext } from './logic/revokeToken.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-// Tables to delete user data from (in order)
+// Tables to delete user data from (in order of dependency)
 const USER_DATA_TABLES = [
     'sync_history',
     'reconciliations',
@@ -26,25 +27,32 @@ const USER_DATA_TABLES = [
     'connected_platforms',
     'platform_connections',
     'verification_codes',
-    'audit_log', // Keep some audit trail - we'll anonymize instead of delete
+    'audit_log',
 ];
 
 Deno.serve(async (req) => {
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
     };
 
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders });
     }
 
+    // Helper for SSE encoding
+    const encoder = new TextEncoder();
+    const formatEvent = (type: string, data: any) => {
+        return encoder.encode(`event: ${type}\ndata: ${JSON.stringify(data)}\n\n`);
+    };
+
     let user: any = null;
     const clientInfo = extractClientInfo(req);
     let deletionRequestId: string | null = null;
 
+    // 1. Initial Verification Phase (Pre-Stream)
     try {
-        // Create client with user's token for auth
         const authHeader = req.headers.get('Authorization');
         if (!authHeader) {
             return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
@@ -54,14 +62,12 @@ Deno.serve(async (req) => {
             global: { headers: { Authorization: authHeader } }
         });
 
-        // Get authenticated user
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
         if (authError || !authUser) {
             return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
         }
         user = authUser;
 
-        // Parse request body
         let body: {
             confirmationText: string;
             currentPassword?: string;
@@ -75,7 +81,6 @@ Deno.serve(async (req) => {
 
         const { confirmationText, currentPassword, verificationCode } = body;
 
-        // Validate confirmation text
         if (confirmationText !== 'DELETE') {
             return Response.json({
                 error: 'Please type DELETE to confirm account deletion'
@@ -84,7 +89,7 @@ Deno.serve(async (req) => {
 
         const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
-        // Check for existing deletion request (idempotency)
+        // Check existing request
         const { data: existingRequest } = await adminClient
             .from('deletion_requests')
             .select('*')
@@ -99,11 +104,15 @@ Deno.serve(async (req) => {
                 }, { headers: corsHeaders });
             }
             if (existingRequest.status === 'processing') {
-                return Response.json({
-                    error: 'Account deletion is already in progress'
-                }, { status: 409, headers: corsHeaders });
+                // If it's stuck in processing for too long (e.g. > 1 hour), we might allow retry
+                // But generally blocking duplicate processing is safer
+                const requestedAt = new Date(existingRequest.requested_at).getTime();
+                if (Date.now() - requestedAt < 3600000) { // 1 hour
+                     return Response.json({
+                        error: 'Account deletion is already in progress'
+                    }, { status: 409, headers: corsHeaders });
+                }
             }
-            // If failed, allow retry
             deletionRequestId = existingRequest.id;
         }
 
@@ -118,19 +127,17 @@ Deno.serve(async (req) => {
                 status: 'warning',
                 details: { action_type: 'delete_account', ...clientInfo }
             });
-
             return Response.json({
                 error: 'Too many deletion attempts. Please wait before trying again.',
                 retryAfter: Math.ceil((rateLimitResult.resetAt.getTime() - Date.now()) / 1000)
             }, { status: 429, headers: corsHeaders });
         }
 
-        // Determine auth method and verify re-authentication
+        // Re-authentication
         const hasPassword = user.app_metadata?.provider === 'email' ||
             user.app_metadata?.providers?.includes('email');
 
         if (hasPassword && currentPassword) {
-            // Verify via password
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email: user.email!,
                 password: currentPassword
@@ -143,20 +150,12 @@ Deno.serve(async (req) => {
                     status: 'failure',
                     details: { reason: 'invalid_password', ...clientInfo }
                 });
-
-                return Response.json({
-                    error: 'Current password is incorrect'
-                }, { status: 401, headers: corsHeaders });
+                return Response.json({ error: 'Current password is incorrect' }, { status: 401, headers: corsHeaders });
             }
         } else if (verificationCode) {
-            // Verify via OTP
             if (!isValidOTPFormat(verificationCode)) {
-                return Response.json({
-                    error: 'Invalid verification code format'
-                }, { status: 400, headers: corsHeaders });
+                return Response.json({ error: 'Invalid verification code format' }, { status: 400, headers: corsHeaders });
             }
-
-            // Check verification code
             const { data: codeData, error: codeError } = await adminClient
                 .from('verification_codes')
                 .select('*')
@@ -176,185 +175,194 @@ Deno.serve(async (req) => {
                     status: 'failure',
                     details: { reason: 'invalid_verification_code', ...clientInfo }
                 });
-
-                return Response.json({
-                    error: 'Invalid or expired verification code'
-                }, { status: 401, headers: corsHeaders });
+                return Response.json({ error: 'Invalid or expired verification code' }, { status: 401, headers: corsHeaders });
             }
-
-            // Mark code as used
-            await adminClient
-                .from('verification_codes')
-                .update({ used_at: new Date().toISOString() })
-                .eq('id', codeData.id);
+            await adminClient.from('verification_codes').update({ used_at: new Date().toISOString() }).eq('id', codeData.id);
         } else {
-            // No re-authentication provided
-            return Response.json({
-                error: 'Re-authentication required. Please provide current password or verification code.',
+             return Response.json({
+                error: 'Re-authentication required.',
                 requiresReauth: true,
                 authMethod: hasPassword ? 'password' : 'otp'
             }, { status: 401, headers: corsHeaders });
         }
 
-        // Audit: deletion requested
-        await logAudit(null, {
-            action: SECURITY_ACTIONS.ACCOUNT_DELETE_REQUESTED,
-            actor_id: user.id,
-            status: 'success',
-            details: clientInfo
-        });
+        // 2. Start Streaming Response
+        const bodyStream = new ReadableStream({
+            async start(controller) {
+                const stepsCompleted: string[] = [];
 
-        // Create or update deletion request
-        const stepsCompleted: string[] = [];
+                const emit = (type: string, data: any) => {
+                    try {
+                        controller.enqueue(formatEvent(type, data));
+                    } catch (e) {
+                        console.error('Stream enqueue failed:', e);
+                    }
+                };
 
-        if (!deletionRequestId) {
-            const { data: newRequest, error: createError } = await adminClient
-                .from('deletion_requests')
-                .insert({
-                    user_id: user.id,
-                    status: 'processing'
-                })
-                .select()
-                .single();
-
-            if (createError) {
-                throw new Error('Failed to create deletion request');
-            }
-            deletionRequestId = newRequest.id;
-        } else {
-            await adminClient
-                .from('deletion_requests')
-                .update({ status: 'processing', last_error: null })
-                .eq('id', deletionRequestId);
-        }
-
-        try {
-            // Step 1: Revoke all sessions
-            try {
-                await adminClient.auth.admin.signOut(user.id, 'global');
-                stepsCompleted.push('sessions_revoked');
-            } catch (e) {
-                console.error('Failed to revoke sessions:', e);
-                // Continue anyway
-            }
-
-            // Step 2: Delete OAuth tokens from connected_platforms
-            // (tokens are stored in oauth_token column)
-            const { data: platforms } = await adminClient
-                .from('connected_platforms')
-                .select('platform, oauth_token')
-                .eq('user_id', user.id);
-
-            if (platforms && platforms.length > 0) {
-                // TODO: Revoke OAuth tokens at provider level if API available
-                // For now, we just delete the records (tokens become orphaned)
-                stepsCompleted.push('oauth_tokens_noted');
-            }
-
-            // Step 3: Delete user data from all tables
-            for (const table of USER_DATA_TABLES) {
                 try {
-                    if (table === 'audit_log') {
-                        // Anonymize audit logs instead of deleting
-                        await adminClient
-                            .from(table)
-                            .update({
-                                user_id: null,
-                                details_json: { anonymized: true, original_user_deleted: true }
-                            })
-                            .eq('user_id', user.id);
-                        stepsCompleted.push(`${table}_anonymized`);
-                    } else {
-                        const { error } = await adminClient
-                            .from(table)
-                            .delete()
-                            .eq('user_id', user.id);
+                    // Audit: deletion requested
+                    await logAudit(null, {
+                        action: SECURITY_ACTIONS.ACCOUNT_DELETE_REQUESTED,
+                        actor_id: user.id,
+                        status: 'success',
+                        details: clientInfo
+                    });
 
-                        if (error) {
-                            console.error(`Failed to delete from ${table}:`, error);
+                    emit('progress', { step: 'init', message: 'Initializing deletion process...' });
+
+                    // Create/Update deletion request
+                    if (!deletionRequestId) {
+                        const { data: newRequest, error: createError } = await adminClient
+                            .from('deletion_requests')
+                            .insert({ user_id: user.id, status: 'processing' })
+                            .select()
+                            .single();
+
+                        if (createError) throw new Error('Failed to create deletion request record');
+                        deletionRequestId = newRequest.id;
+                    } else {
+                        await adminClient
+                            .from('deletion_requests')
+                            .update({ status: 'processing', last_error: null })
+                            .eq('id', deletionRequestId);
+                    }
+
+                    // Step 1: Revoke Sessions
+                    emit('progress', { step: 'revoke_sessions', message: 'Revoking active sessions...' });
+                    try {
+                        await adminClient.auth.admin.signOut(user.id, 'global');
+                        stepsCompleted.push('sessions_revoked');
+                    } catch (e) {
+                        console.error('Session revocation error:', e);
+                        // Non-critical
+                    }
+
+                    // Step 2: Revoke OAuth Tokens
+                    emit('progress', { step: 'revoke_tokens', message: 'Revoking connected platform tokens...' });
+                    const { data: platforms } = await adminClient
+                        .from('connected_platforms')
+                        .select('platform, oauth_token, refresh_token')
+                        .eq('user_id', user.id);
+
+                    if (platforms && platforms.length > 0) {
+                        const revokeCtx: RevokeContext = {
+                            envGet: (key) => Deno.env.get(key),
+                            fetch: fetch,
+                            logger: console
+                        };
+
+                        // We stream individual revocations to show progress
+                        for (const p of platforms) {
+                            emit('progress', {
+                                step: 'revoke_tokens',
+                                message: `Revoking ${p.platform}...`,
+                                platform: p.platform
+                            });
+                            await revokeToken(revokeCtx, p.platform, p.oauth_token, p.refresh_token);
+                        }
+                        stepsCompleted.push('oauth_tokens_revoked');
+                    }
+
+                    // Step 3: Delete Data Tables
+                    emit('progress', { step: 'delete_data', message: 'Removing user data...' });
+                    for (const table of USER_DATA_TABLES) {
+                        emit('progress', { step: 'delete_data', message: `Cleaning up ${table.replace('_', ' ')}...`, table });
+
+                        if (table === 'audit_log') {
+                            await adminClient
+                                .from(table)
+                                .update({
+                                    user_id: null,
+                                    details_json: { anonymized: true, original_user_deleted: true }
+                                })
+                                .eq('user_id', user.id);
+                             stepsCompleted.push(`${table}_anonymized`);
                         } else {
-                            stepsCompleted.push(`${table}_deleted`);
+                            const { error } = await adminClient
+                                .from(table)
+                                .delete()
+                                .eq('user_id', user.id);
+
+                            if (error) {
+                                console.error(`Error deleting ${table}:`, error);
+                                // We continue despite errors to best-effort clean up,
+                                // but we might want to flag this.
+                                // For now, proceeding.
+                            } else {
+                                stepsCompleted.push(`${table}_deleted`);
+                            }
                         }
                     }
-                } catch (e) {
-                    console.error(`Error deleting from ${table}:`, e);
+
+                    // Step 4: Delete Profile
+                    emit('progress', { step: 'delete_profile', message: 'Deleting user profile...' });
+                    await adminClient.from('profiles').delete().eq('id', user.id);
+                    stepsCompleted.push('profile_deleted');
+
+                    // Step 5: Delete Auth User
+                    emit('progress', { step: 'delete_auth', message: 'Finalizing account deletion...' });
+                    const { error: deleteUserError } = await adminClient.auth.admin.deleteUser(user.id);
+                    if (deleteUserError) throw new Error('Failed to delete auth user');
+                    stepsCompleted.push('auth_user_deleted');
+
+                    // Mark complete
+                    await adminClient
+                        .from('deletion_requests')
+                        .update({
+                            status: 'deleted',
+                            completed_at: new Date().toISOString(),
+                            steps_completed: stepsCompleted
+                        })
+                        .eq('id', deletionRequestId);
+
+                    await logAudit(null, {
+                        action: SECURITY_ACTIONS.ACCOUNT_DELETED,
+                        actor_id: null,
+                        status: 'success',
+                        details: { deletion_request_id: deletionRequestId, steps_completed: stepsCompleted, ...clientInfo }
+                    });
+
+                    emit('complete', { message: 'Your account has been permanently deleted' });
+
+                } catch (deletionError: any) {
+                    console.error('Deletion error:', deletionError);
+
+                    if (deletionRequestId) {
+                        await adminClient
+                            .from('deletion_requests')
+                            .update({
+                                status: 'failed',
+                                last_error: sanitizeErrorMessage(deletionError),
+                                steps_completed: stepsCompleted
+                            })
+                            .eq('id', deletionRequestId);
+                    }
+
+                    emit('error', { error: sanitizeErrorMessage(deletionError) });
+
+                    await logAudit(null, {
+                        action: SECURITY_ACTIONS.ACCOUNT_DELETE_FAILED,
+                        actor_id: user?.id,
+                        status: 'failure',
+                        details: { error: sanitizeErrorMessage(deletionError), deletion_request_id: deletionRequestId, ...clientInfo }
+                    });
+                } finally {
+                    controller.close();
                 }
-            }
-
-            // Step 4: Delete profile
-            try {
-                await adminClient
-                    .from('profiles')
-                    .delete()
-                    .eq('id', user.id);
-                stepsCompleted.push('profile_deleted');
-            } catch (e) {
-                console.error('Failed to delete profile:', e);
-            }
-
-            // Step 5: Delete user from auth.users
-            const { error: deleteUserError } = await adminClient.auth.admin.deleteUser(user.id);
-
-            if (deleteUserError) {
-                throw new Error('Failed to delete user account');
-            }
-            stepsCompleted.push('auth_user_deleted');
-
-            // Mark deletion as complete
-            await adminClient
-                .from('deletion_requests')
-                .update({
-                    status: 'deleted',
-                    completed_at: new Date().toISOString(),
-                    steps_completed: stepsCompleted
-                })
-                .eq('id', deletionRequestId);
-
-            // Final audit log (anonymized)
-            await logAudit(null, {
-                action: SECURITY_ACTIONS.ACCOUNT_DELETED,
-                actor_id: null, // Anonymized
-                status: 'success',
-                details: {
-                    deletion_request_id: deletionRequestId,
-                    steps_completed: stepsCompleted,
-                    ...clientInfo
-                }
-            });
-
-            return Response.json({
-                ok: true,
-                message: 'Your account has been permanently deleted'
-            }, { headers: corsHeaders });
-
-        } catch (deletionError: any) {
-            // Mark deletion as failed
-            await adminClient
-                .from('deletion_requests')
-                .update({
-                    status: 'failed',
-                    last_error: sanitizeErrorMessage(deletionError),
-                    steps_completed: stepsCompleted
-                })
-                .eq('id', deletionRequestId);
-
-            throw deletionError;
-        }
-
-    } catch (error: any) {
-        console.error('deleteAccount error:', error);
-
-        await logAudit(null, {
-            action: SECURITY_ACTIONS.ACCOUNT_DELETE_FAILED,
-            actor_id: user?.id,
-            status: 'failure',
-            details: {
-                error: sanitizeErrorMessage(error),
-                deletion_request_id: deletionRequestId,
-                ...clientInfo
             }
         });
 
+        return new Response(bodyStream, {
+            headers: {
+                ...corsHeaders,
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            }
+        });
+
+    } catch (error: any) {
+        console.error('deleteAccount top-level error:', error);
         return Response.json({
             error: sanitizeErrorMessage(error)
         }, { status: 500, headers: corsHeaders });
