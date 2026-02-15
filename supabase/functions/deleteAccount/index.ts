@@ -13,8 +13,10 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 // Tables to delete user data from (in order)
+// CRITICAL: sync_history.platform_id REFERENCES connected_platforms(id) ON DELETE CASCADE
+// Therefore sync_history MUST be deleted BEFORE connected_platforms
 const USER_DATA_TABLES = [
-    'sync_history',
+    'sync_history',           // MUST be first - has FK to connected_platforms
     'reconciliations',
     'autopsy_events',
     'insights',
@@ -23,10 +25,10 @@ const USER_DATA_TABLES = [
     'transactions',
     'revenue_transactions',
     'tax_profiles',
-    'platform_connections', // Delete dependent table first
-    'connected_platforms',
+    'platform_connections',   // Legacy table
+    'connected_platforms',    // MUST be after sync_history
     'verification_codes',
-    'audit_log', // Keep some audit trail - we'll anonymize instead of delete
+    'audit_log',              // Anonymize instead of delete
 ];
 
 Deno.serve(async (req) => {
