@@ -5,6 +5,7 @@ import IngestionVisual from './visuals/IngestionVisual';
 import AutopsyVisual from './visuals/AutopsyVisual';
 import ExportVisual from './visuals/ExportVisual';
 import { cn } from '@/lib/utils';
+import ScrollReveal from '@/components/ui/ScrollReveal';
 
 const features = [
     {
@@ -38,9 +39,16 @@ const ProductShowcase = () => {
                     {/* Left Column: Navigation / Toggles */}
                     <div className="col-span-1 lg:col-span-4 space-y-8">
                         <div className="space-y-4">
-                            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-white">
+                            <ScrollReveal
+                                baseOpacity={0}
+                                enableBlur={true}
+                                baseRotation={5}
+                                blurStrength={10}
+                                textClassName="text-3xl md:text-4xl font-serif font-semibold text-white leading-tight"
+                                containerClassName="mb-4"
+                            >
                                 The Source of Truth.
-                            </h2>
+                            </ScrollReveal>
                             <p className="text-zinc-400">
                                 Zerithum connects the dots between platform activity and bank reality.
                             </p>

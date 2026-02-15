@@ -13,7 +13,6 @@ import HowItWorksSection from '@/components/landing/HowItWorksSection';
 import AccuracySection from '@/components/landing/AccuracySection';
 import SecuritySection from '@/components/landing/SecuritySection';
 import Footer from '@/components/landing/Footer';
-import ScrollReveal from '@/components/ui/ScrollReveal';
 
 const Landing = () => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -103,19 +102,6 @@ const Landing = () => {
             {/* Main Content */}
             <main className="relative z-10">
                 <HeroSection />
-
-                <div className="py-24 max-w-4xl mx-auto px-6 text-zinc-200">
-                    <ScrollReveal
-                        baseOpacity={0.1}
-                        enableBlur
-                        baseRotation={4}
-                        blurStrength={4}
-                    >
-                        When does a man die? When he is hit by a bullet? No! When he suffers a disease?
-                        No! When he ate a soup made out of a poisonous mushroom?
-                        No! A man dies when he is forgotten!
-                    </ScrollReveal>
-                </div>
 
                 <ProductShowcase />
 
