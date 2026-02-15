@@ -53,22 +53,17 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
         }
     });
 
-    // Delete account mutation
+    // Delete account mutation - uses regular invoke (not stream) for reliability
     const deleteAccountMutation = useMutation({
         mutationFn: async (data) => {
-            setProgressMessage("Initializing deletion...");
-            return await base44.functions.invokeStream('deleteAccount', data, (type, eventData) => {
-                if (type === 'progress') {
-                    setProgressMessage(eventData.message);
-                } else if (type === 'error') {
-                    throw new Error(eventData.error);
-                }
-            });
+            setProgressMessage("Deleting your account...");
+            return await base44.functions.invoke('deleteAccount', data);
         },
         onSuccess: () => {
             setStep("success");
         },
         onError: (error) => {
+            console.error('deleteAccount error:', error, 'requiresReauth:', error.requiresReauth, 'authMethod:', error.authMethod);
             if (error.requiresReauth && error.authMethod === 'otp') {
                 sendOTPMutation.mutate();
             } else {

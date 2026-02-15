@@ -101,11 +101,22 @@ Deno.serve(async (req) => {
                 }, { headers: corsHeaders });
             }
             if (existingRequest.status === 'processing') {
-                return Response.json({
-                    error: 'Account deletion is already in progress'
-                }, { status: 409, headers: corsHeaders });
+                // Check if it's been processing for more than 5 minutes (stale)
+                const updatedAt = new Date(existingRequest.updated_at || existingRequest.created_at);
+                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+                if (updatedAt > fiveMinutesAgo) {
+                    return Response.json({
+                        error: 'Account deletion is already in progress'
+                    }, { status: 409, headers: corsHeaders });
+                }
+                // Stale processing request - treat as failed and allow retry
+                console.log('Found stale processing request, allowing retry:', existingRequest.id);
+                await adminClient
+                    .from('deletion_requests')
+                    .update({ status: 'failed', last_error: 'Stale processing request - auto-recovered' })
+                    .eq('id', existingRequest.id);
             }
-            // If failed, allow retry
+            // If failed (or was stale), allow retry
             deletionRequestId = existingRequest.id;
         }
 

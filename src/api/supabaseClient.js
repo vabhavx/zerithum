@@ -339,22 +339,23 @@ export const functions = {
         });
 
         if (!response.ok) {
-            let errorMsg = `Function returned ${response.status}`;
+            // Try to parse the error response as JSON
             try {
                 const data = await response.json();
-                if (data.error) errorMsg = data.error;
-                // Propagate special fields
+                const errorMsg = data.error || `Function returned ${response.status}`;
                 const err = new Error(errorMsg);
+                // Propagate special fields from the Edge Function response
                 if (data.requiresReauth) err.requiresReauth = data.requiresReauth;
                 if (data.authMethod) err.authMethod = data.authMethod;
                 if (data.retryAfter) err.retryAfter = data.retryAfter;
                 throw err;
             } catch (e) {
-                 if (e.message !== errorMsg && !e.message.includes('JSON')) throw e; // throw constructed error
-                 // Fallback to text
-                 const text = await response.text();
-                 if (text) errorMsg = text;
-                 throw new Error(errorMsg);
+                // If JSON parsing failed, create a generic error
+                if (e instanceof SyntaxError) {
+                    throw new Error(`Edge Function returned a non-2xx status code (${response.status})`);
+                }
+                // Otherwise re-throw the structured error we created above
+                throw e;
             }
         }
 
