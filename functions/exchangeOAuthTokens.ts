@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { encrypt } from './utils/encryption.ts';
 
 const PLATFORM_CONFIG: Record<string, {
   tokenUrl: string;
@@ -140,8 +141,8 @@ Deno.serve(async (req) => {
     const connectionData = {
       user_id: user.id,
       platform: platform,
-      oauth_token: tokens.access_token,
-      refresh_token: tokens.refresh_token || null,
+      oauth_token: await encrypt(tokens.access_token),
+      refresh_token: tokens.refresh_token ? await encrypt(tokens.refresh_token) : null,
       expires_at: expiresAt.toISOString(),
       sync_status: 'active',
       connected_at: existingConnections.length > 0 ? existingConnections[0].connected_at : new Date().toISOString(),
