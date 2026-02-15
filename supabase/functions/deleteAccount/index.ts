@@ -128,8 +128,23 @@ Deno.serve(async (req) => {
         }
 
         // Determine auth method and verify re-authentication
-        const hasPassword = user.app_metadata?.provider === 'email' ||
-            user.app_metadata?.providers?.includes('email');
+        // Check if user has password-based auth (email) vs OAuth (google, github, etc.)
+        const oauthProviders = ['google', 'github', 'gitlab', 'bitbucket', 'azure', 'facebook', 'twitter'];
+        const userProvider = user.app_metadata?.provider || '';
+        const userProviders = user.app_metadata?.providers || [];
+
+        // User has password ONLY if they signed up with email AND are not using OAuth
+        const hasPassword = (userProvider === 'email' || userProviders.includes('email')) &&
+            !oauthProviders.includes(userProvider);
+
+        console.log('deleteAccount: User auth method:', {
+            userId: user.id,
+            provider: userProvider,
+            providers: userProviders,
+            hasPassword,
+            hasCurrentPassword: !!currentPassword,
+            hasVerificationCode: !!verificationCode
+        });
 
         if (hasPassword && currentPassword) {
             // Verify via password
@@ -139,6 +154,7 @@ Deno.serve(async (req) => {
             });
 
             if (signInError) {
+                console.error('Password verification failed:', signInError);
                 await logAudit(null, {
                     action: SECURITY_ACTIONS.ACCOUNT_DELETE_FAILED,
                     actor_id: user.id,
@@ -153,6 +169,7 @@ Deno.serve(async (req) => {
         } else if (verificationCode) {
             // Verify via OTP
             if (!isValidOTPFormat(verificationCode)) {
+                console.error('Invalid OTP format:', verificationCode);
                 return Response.json({
                     error: 'Invalid verification code format'
                 }, { status: 400, headers: corsHeaders });
@@ -172,6 +189,7 @@ Deno.serve(async (req) => {
                 .single();
 
             if (codeError || !codeData) {
+                console.error('OTP verification failed:', { codeError, hasCode: !!codeData });
                 await logAudit(null, {
                     action: SECURITY_ACTIONS.ACCOUNT_DELETE_FAILED,
                     actor_id: user.id,
@@ -191,6 +209,7 @@ Deno.serve(async (req) => {
                 .eq('id', codeData.id);
         } else {
             // No re-authentication provided
+            console.log('No auth provided, requesting reauth. hasPassword:', hasPassword);
             return Response.json({
                 error: 'Re-authentication required. Please provide current password or verification code.',
                 requiresReauth: true,

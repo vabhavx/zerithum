@@ -26,9 +26,14 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
     const [errorMsg, setErrorMsg] = useState("");
     const [progressMessage, setProgressMessage] = useState("");
 
-    // Check if user has password auth
-    const hasPasswordAuth = user?.app_metadata?.provider === 'email' ||
-        user?.app_metadata?.providers?.includes('email');
+    // Check if user has password auth - must match backend logic
+    const oauthProviders = ['google', 'github', 'gitlab', 'bitbucket', 'azure', 'facebook', 'twitter'];
+    const userProvider = user?.app_metadata?.provider || '';
+    const userProviders = user?.app_metadata?.providers || [];
+
+    // User has password ONLY if they signed up with email AND are not using OAuth
+    const hasPasswordAuth = (userProvider === 'email' || userProviders.includes('email')) &&
+        !oauthProviders.includes(userProvider);
 
     // Send OTP mutation
     const sendOTPMutation = useMutation({
