@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -321,6 +321,75 @@ export const functions = {
         }
 
         return data;
+    },
+
+    async invokeStream(functionName, params = {}, onEvent) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+
+        if (!token) throw new Error('Not authenticated');
+
+        const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(params)
+        });
+
+        if (!response.ok) {
+            let errorMsg = `Function returned ${response.status}`;
+            try {
+                const data = await response.json();
+                if (data.error) errorMsg = data.error;
+                // Propagate special fields
+                const err = new Error(errorMsg);
+                if (data.requiresReauth) err.requiresReauth = data.requiresReauth;
+                if (data.authMethod) err.authMethod = data.authMethod;
+                if (data.retryAfter) err.retryAfter = data.retryAfter;
+                throw err;
+            } catch (e) {
+                 if (e.message !== errorMsg && !e.message.includes('JSON')) throw e; // throw constructed error
+                 // Fallback to text
+                 const text = await response.text();
+                 if (text) errorMsg = text;
+                 throw new Error(errorMsg);
+            }
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    const eventMatch = line.match(/^event: (.*)$/m);
+                    const dataMatch = line.match(/^data: (.*)$/m);
+
+                    if (eventMatch && dataMatch) {
+                        const type = eventMatch[1].trim();
+                        try {
+                            const data = JSON.parse(dataMatch[1].trim());
+                            await onEvent(type, data);
+                        } catch (e) {
+                            // If the event handler throws, we should propagate it to abort the stream
+                            throw e;
+                        }
+                    }
+                }
+            }
+        } finally {
+            reader.cancel();
+        }
     }
 };
 
