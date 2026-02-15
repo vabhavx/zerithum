@@ -29,6 +29,7 @@ import TransactionAnalysis from './pages/TransactionAnalysis';
 import Transactions from './pages/Transactions';
 import Methodology from './pages/Methodology';
 import Security from './pages/Security';
+import TermsOfService from './pages/TermsOfService';
 import __Layout from './Layout.jsx';
 
 
@@ -65,6 +66,7 @@ export const PAGES = {
     "TaxReports": TaxReports,
     "TransactionAnalysis": TransactionAnalysis,
     "Transactions": Transactions,
+    "TermsOfService": TermsOfService,
 }
 
 export const pagesConfig = {
