@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { logAudit } from './utils/audit.ts';
 import { processReceipt } from './logic/processReceiptLogic.ts';
+import { validateReceiptUrl } from './utils/security.ts';
 
 Deno.serve(async (req) => {
   let user = null;
@@ -22,6 +23,14 @@ Deno.serve(async (req) => {
     }
 
     const { receiptUrl } = body;
+
+    if (!receiptUrl) {
+      return Response.json({ error: 'Receipt URL required' }, { status: 400 });
+    }
+
+    if (!validateReceiptUrl(receiptUrl)) {
+      return Response.json({ error: 'Invalid Receipt URL' }, { status: 400 });
+    }
 
     const result = await processReceipt(
       {
