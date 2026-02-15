@@ -13,7 +13,7 @@ const Footer = () => {
                             San Francisco, CA.
                         </p>
                         <div className="flex gap-4 text-sm font-medium">
-                            <Link to="/methodology" className="hover:text-emerald-600 transition-colors">Methodology</Link>
+                            <Link to="/Methodology" className="hover:text-emerald-600 transition-colors">Methodology</Link>
                             <Link to="/SignIn" className="hover:text-emerald-600 transition-colors">Sign In</Link>
                         </div>
                     </div>
@@ -31,8 +31,8 @@ const Footer = () => {
                         <div className="space-y-3">
                             <div className="font-bold text-zinc-900">Legal</div>
                             <ul className="space-y-2 text-zinc-500">
-                                <li><Link to="/privacy" className="hover:text-zinc-900 transition-colors">Privacy Policy</Link></li>
-                                <li><Link to="/terms" className="hover:text-zinc-900 transition-colors">Terms of Service</Link></li>
+                                <li><Link to="/Privacy" className="hover:text-zinc-900 transition-colors">Privacy Policy</Link></li>
+                                <li><Link to="/TermsOfService" className="hover:text-zinc-900 transition-colors">Terms of Service</Link></li>
                                 <li><Link to="/contact" className="hover:text-zinc-900 transition-colors">Contact</Link></li>
                             </ul>
                         </div>
