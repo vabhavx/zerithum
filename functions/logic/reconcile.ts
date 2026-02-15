@@ -24,24 +24,56 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
         return { success: true, matchedCount: 0, message: 'No unreconciled revenue found' };
     }
 
+    // Pre-process revenue transactions: parse date and sort
+    // Using a map to include timestamp for faster access and sorting
+    const sortedRevenue = revenueTxns.map(r => ({
+        ...r,
+        timestamp: new Date(r.transaction_date).getTime()
+    })).sort((a, b) => a.timestamp - b.timestamp);
+
     // Find earliest revenue date to limit bank query
-    const minDate = revenueTxns.reduce((min, t) => t.transaction_date < min ? t.transaction_date : min, revenueTxns[0].transaction_date);
+    // Use the timestamp of the first (earliest) sorted revenue txn
+    const minDate = new Date(sortedRevenue[0].timestamp).toISOString();
     const bankTxns = await ctx.fetchUnreconciledBankTransactions(user.id, minDate);
+
+    // Pre-process bank transactions: parse date and sort
+    const sortedBanks = bankTxns.map(b => ({
+        ...b,
+        timestamp: new Date(b.transaction_date).getTime()
+    })).sort((a, b) => a.timestamp - b.timestamp);
 
     // 2. Identify Potential Matches
     const candidates: MatchCandidate[] = [];
 
-    for (const rev of revenueTxns) {
-      const revDate = new Date(rev.transaction_date);
+    // Constants for date calculations
+    const DAY_MS = 1000 * 3600 * 24;
+    const MAX_DIFF_MS = 14 * DAY_MS;
+
+    let bankStartIndex = 0;
+
+    for (const rev of sortedRevenue) {
+      const revTime = rev.timestamp;
       const revAmount = rev.amount;
 
-      for (const bank of bankTxns) {
-        const bankDate = new Date(bank.transaction_date);
-        const diffTime = bankDate.getTime() - revDate.getTime();
-        const diffDays = diffTime / (1000 * 3600 * 24);
+      // Sliding Window: Advance bankStartIndex to the first bank txn >= revTime
+      // Since sortedBanks is sorted, we don't need to reset bankStartIndex for the next revenue txn
+      while (bankStartIndex < sortedBanks.length && sortedBanks[bankStartIndex].timestamp < revTime) {
+        bankStartIndex++;
+      }
 
-        // Date constraint: Bank txn must be after revenue (or same day) and within 14 days
-        if (diffDays < 0 || diffDays > 14) continue;
+      // Iterate from bankStartIndex
+      for (let i = bankStartIndex; i < sortedBanks.length; i++) {
+        const bank = sortedBanks[i];
+        const diffTime = bank.timestamp - revTime;
+
+        // Optimization: Since banks are sorted, if diffTime > 14 days, all subsequent banks are also too late.
+        if (diffTime > MAX_DIFF_MS) {
+            break;
+        }
+
+        const diffDays = diffTime / DAY_MS;
+        // diffDays < 0 is handled by bankStartIndex (bank.timestamp >= revTime)
+        // diffDays > 14 is handled by the break above
 
         const bankAmount = bank.amount;
         let matchType: MatchCandidate['matchType'] | null = null;
