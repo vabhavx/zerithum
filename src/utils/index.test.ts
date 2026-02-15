@@ -14,7 +14,7 @@ describe('createPageUrl', () => {
     expect(createPageUrl(pageName)).toBe(expectedUrl);
   });
 
-  it('should handle multiple spaces correctly', () => {
+  it('should handle multiple spaces correctly by replacing each with a hyphen', () => {
     const pageName = 'Hello World Test';
     const expectedUrl = '/Hello-World-Test';
     expect(createPageUrl(pageName)).toBe(expectedUrl);
@@ -29,6 +29,36 @@ describe('createPageUrl', () => {
   it('should handle leading and trailing spaces by replacing them with hyphens', () => {
     const pageName = '  test  ';
     const expectedUrl = '/--test--';
+    expect(createPageUrl(pageName)).toBe(expectedUrl);
+  });
+
+  it('should preserve case', () => {
+    const pageName = 'MixedCasePage';
+    const expectedUrl = '/MixedCasePage';
+    expect(createPageUrl(pageName)).toBe(expectedUrl);
+  });
+
+  it('should handle numbers', () => {
+    const pageName = 'Page123';
+    const expectedUrl = '/Page123';
+    expect(createPageUrl(pageName)).toBe(expectedUrl);
+  });
+
+  it('should preserve special characters', () => {
+    const pageName = 'Page?Query=1';
+    const expectedUrl = '/Page?Query=1';
+    expect(createPageUrl(pageName)).toBe(expectedUrl);
+  });
+
+  it('should handle consecutive spaces as multiple hyphens', () => {
+    const pageName = 'Hello  World';
+    const expectedUrl = '/Hello--World';
+    expect(createPageUrl(pageName)).toBe(expectedUrl);
+  });
+
+  it('should handle strings with no spaces correctly', () => {
+    const pageName = 'NoSpaces';
+    const expectedUrl = '/NoSpaces';
     expect(createPageUrl(pageName)).toBe(expectedUrl);
   });
 });
