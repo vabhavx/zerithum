@@ -66,7 +66,7 @@ export const PAGES = {
     "TaxReports": TaxReports,
     "TransactionAnalysis": TransactionAnalysis,
     "Transactions": Transactions,
-    "TermsOfService": TermsOfService,
+    "terms": TermsOfService,
 }
 
 export const pagesConfig = {

@@ -33,7 +33,7 @@ const Footer = () => {
                             <ul className="space-y-2 text-zinc-500">
                                 <li><Link to="/privacy" className="hover:text-zinc-900 transition-colors">Privacy Policy</Link></li>
                                 <li><Link to="/terms" className="hover:text-zinc-900 transition-colors">Terms of Service</Link></li>
-                                <li><Link to="/contact" className="hover:text-zinc-900 transition-colors">Contact</Link></li>
+                                <li><a href="mailto:support@zerithum.com" className="hover:text-zinc-900 transition-colors">Contact</a></li>
                             </ul>
                         </div>
                     </div>
