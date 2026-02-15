@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { logAudit } from './utils/audit.ts';
+import { logAudit } from '../_shared/utils/audit.ts';
 import {
     checkRateLimit,
     isValidOTPFormat,
@@ -7,7 +7,7 @@ import {
     SECURITY_ACTIONS,
     extractClientInfo,
     sanitizeErrorMessage
-} from './logic/security.ts';
+} from '../_shared/logic/security.ts';
 import { revokeToken, RevokeContext } from './logic/revokeToken.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -24,8 +24,8 @@ const USER_DATA_TABLES = [
     'transactions',
     'revenue_transactions',
     'tax_profiles',
+    'platform_connections', // Delete dependent table first
     'connected_platforms',
-    'platform_connections',
     'verification_codes',
     'audit_log',
 ];
@@ -104,11 +104,9 @@ Deno.serve(async (req) => {
                 }, { headers: corsHeaders });
             }
             if (existingRequest.status === 'processing') {
-                // If it's stuck in processing for too long (e.g. > 1 hour), we might allow retry
-                // But generally blocking duplicate processing is safer
                 const requestedAt = new Date(existingRequest.requested_at).getTime();
                 if (Date.now() - requestedAt < 3600000) { // 1 hour
-                     return Response.json({
+                    return Response.json({
                         error: 'Account deletion is already in progress'
                     }, { status: 409, headers: corsHeaders });
                 }
@@ -179,7 +177,7 @@ Deno.serve(async (req) => {
             }
             await adminClient.from('verification_codes').update({ used_at: new Date().toISOString() }).eq('id', codeData.id);
         } else {
-             return Response.json({
+            return Response.json({
                 error: 'Re-authentication required.',
                 requiresReauth: true,
                 authMethod: hasPassword ? 'password' : 'otp'
@@ -234,7 +232,6 @@ Deno.serve(async (req) => {
                         stepsCompleted.push('sessions_revoked');
                     } catch (e) {
                         console.error('Session revocation error:', e);
-                        // Non-critical
                     }
 
                     // Step 2: Revoke OAuth Tokens
@@ -251,7 +248,6 @@ Deno.serve(async (req) => {
                             logger: console
                         };
 
-                        // We stream individual revocations to show progress
                         for (const p of platforms) {
                             emit('progress', {
                                 step: 'revoke_tokens',
@@ -268,28 +264,36 @@ Deno.serve(async (req) => {
                     for (const table of USER_DATA_TABLES) {
                         emit('progress', { step: 'delete_data', message: `Cleaning up ${table.replace('_', ' ')}...`, table });
 
-                        if (table === 'audit_log') {
-                            await adminClient
-                                .from(table)
-                                .update({
-                                    user_id: null,
-                                    details_json: { anonymized: true, original_user_deleted: true }
-                                })
-                                .eq('user_id', user.id);
-                             stepsCompleted.push(`${table}_anonymized`);
-                        } else {
-                            const { error } = await adminClient
-                                .from(table)
-                                .delete()
-                                .eq('user_id', user.id);
-
-                            if (error) {
-                                console.error(`Error deleting ${table}:`, error);
-                                // We continue despite errors to best-effort clean up,
-                                // but we might want to flag this.
-                                // For now, proceeding.
+                        try {
+                            if (table === 'audit_log') {
+                                await adminClient
+                                    .from(table)
+                                    .update({
+                                        user_id: null,
+                                        details_json: { anonymized: true, original_user_deleted: true }
+                                    })
+                                    .eq('user_id', user.id);
+                                stepsCompleted.push(`${table}_anonymized`);
                             } else {
-                                stepsCompleted.push(`${table}_deleted`);
+                                const { error } = await adminClient
+                                    .from(table)
+                                    .delete()
+                                    .eq('user_id', user.id);
+
+                                if (error) {
+                                    console.error(`Error deleting ${table}:`, error);
+                                    if (table === 'platform_connections' || table === 'connected_platforms') {
+                                        throw new Error(`Critical failure: Could not delete from ${table}: ${error.message}`);
+                                    }
+                                    stepsCompleted.push(`${table}_failed`);
+                                } else {
+                                    stepsCompleted.push(`${table}_deleted`);
+                                }
+                            }
+                        } catch (tableError: any) {
+                            console.error(`Error processing table ${table}:`, tableError);
+                            if (table === 'platform_connections' || table === 'connected_platforms') {
+                                throw tableError;
                             }
                         }
                     }

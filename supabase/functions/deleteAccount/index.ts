@@ -23,8 +23,8 @@ const USER_DATA_TABLES = [
     'transactions',
     'revenue_transactions',
     'tax_profiles',
+    'platform_connections', // Delete dependent table first
     'connected_platforms',
-    'platform_connections',
     'verification_codes',
     'audit_log', // Keep some audit trail - we'll anonymize instead of delete
 ];
@@ -274,12 +274,20 @@ Deno.serve(async (req) => {
 
                         if (error) {
                             console.error(`Failed to delete from ${table}:`, error);
+                            // Critical tables failure should potentially stop the process
+                            if (table === 'platform_connections' || table === 'connected_platforms') {
+                                throw new Error(`Critical failure: Could not delete from ${table}: ${error.message}`);
+                            }
+                            stepsCompleted.push(`${table}_failed`);
                         } else {
                             stepsCompleted.push(`${table}_deleted`);
                         }
                     }
-                } catch (e) {
-                    console.error(`Error deleting from ${table}:`, e);
+                } catch (e: any) {
+                    console.error(`Error processing table ${table}:`, e);
+                    if (table === 'platform_connections' || table === 'connected_platforms') {
+                        throw e;
+                    }
                 }
             }
 
