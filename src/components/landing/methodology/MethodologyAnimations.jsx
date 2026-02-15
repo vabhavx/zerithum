@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Check, AlertCircle, ArrowRight, Video, CreditCard, Globe, ShoppingBag, Database, Shield } from 'lucide-react';
+import { Check, AlertCircle, Video, CreditCard, Globe, ShoppingBag, Database, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const MethodologyAnimations = ({ type }) => {
