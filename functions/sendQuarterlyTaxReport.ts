@@ -24,9 +24,23 @@ Deno.serve(async (req) => {
           transaction_date: { $gte: start, $lte: end }
         });
       },
+      getTransactionsForUsers: async (userIds, start, end) => {
+        // @ts-ignore: SDK supports $in operator
+        return await base44.asServiceRole.entities.RevenueTransaction.filter({
+          user_id: { $in: userIds },
+          transaction_date: { $gte: start, $lte: end }
+        });
+      },
       getExpenses: async (userId, start, end) => {
         return await base44.asServiceRole.entities.Expense.filter({
           user_id: userId,
+          expense_date: { $gte: start, $lte: end }
+        });
+      },
+      getExpensesForUsers: async (userIds, start, end) => {
+        // @ts-ignore: SDK supports $in operator
+        return await base44.asServiceRole.entities.Expense.filter({
+          user_id: { $in: userIds },
           expense_date: { $gte: start, $lte: end }
         });
       },
