@@ -166,8 +166,8 @@ Deno.serve(async (req) => {
     }
 
     // Save insights to database
-    for (const insight of insights) {
-      await base44.asServiceRole.entities.Insight.create(insight);
+    if (insights.length > 0) {
+      await base44.asServiceRole.entities.Insight.bulkCreate(insights);
     }
 
     return Response.json({
