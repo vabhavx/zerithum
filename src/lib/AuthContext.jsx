@@ -16,15 +16,12 @@ export const AuthProvider = ({ children }) => {
 
     // Immediately check for session on mount
     const initializeAuth = async () => {
-      console.log('[Auth] Initializing...');
-
       try {
         // Check for OAuth callback hash first
         const hash = window.location.hash;
         const isOAuthCallback = hash && hash.includes('access_token');
 
         if (isOAuthCallback) {
-          console.log('[Auth] OAuth callback detected, waiting for Supabase to process...');
           // For OAuth callbacks, wait for Supabase to process the hash
           await new Promise(resolve => setTimeout(resolve, 100));
         }
@@ -34,7 +31,6 @@ export const AuthProvider = ({ children }) => {
         try {
           const result = await supabase.auth.getSession();
           session = result.data?.session;
-          console.log('[Auth] getSession succeeded');
         } catch (err) {
           console.warn('[Auth] getSession failed:', err.name, '- recovering from localStorage');
 
@@ -50,7 +46,6 @@ export const AuthProvider = ({ children }) => {
               const parsed = JSON.parse(storedData);
               if (parsed.access_token && parsed.user) {
                 session = parsed;
-                console.log('[Auth] Recovered session from localStorage');
               }
             } catch (parseError) {
               console.warn('[Auth] Failed to parse stored session');
@@ -59,7 +54,6 @@ export const AuthProvider = ({ children }) => {
 
           // If still no session and this is an OAuth callback, parse tokens from hash
           if (!session && isOAuthCallback) {
-            console.log('[Auth] Parsing OAuth tokens from URL hash...');
             try {
               const hashParams = new URLSearchParams(hash.substring(1));
               const accessToken = hashParams.get('access_token');
@@ -71,7 +65,6 @@ export const AuthProvider = ({ children }) => {
                 const parts = accessToken.split('.');
                 if (parts.length === 3) {
                   const payload = JSON.parse(atob(parts[1]));
-                  console.log('[Auth] Decoded JWT payload');
 
                   // Create user object from JWT claims
                   const user = {
@@ -101,8 +94,6 @@ export const AuthProvider = ({ children }) => {
                   const projectId = new URL(supabaseUrl).hostname.split('.')[0];
                   const storageKey = `sb-${projectId}-auth-token`;
                   localStorage.setItem(storageKey, JSON.stringify(session));
-
-                  console.log('[Auth] Session created from JWT:', user.email);
                 }
               }
             } catch (parseError) {
@@ -114,12 +105,10 @@ export const AuthProvider = ({ children }) => {
         if (!isMounted) return;
 
         if (session?.user) {
-          console.log('[Auth] Session found:', session.user.email);
           setUser(session.user);
           setIsAuthenticated(true);
           fetchUserProfile(session.user).catch(console.error);
         } else {
-          console.log('[Auth] No session found');
           setIsAuthenticated(false);
           setUser(null);
         }
@@ -146,7 +135,6 @@ export const AuthProvider = ({ children }) => {
     // Listen for subsequent auth state changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
-      console.log('[Auth] State change:', event, session?.user?.email);
 
       if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user);
@@ -205,8 +193,6 @@ export const AuthProvider = ({ children }) => {
         // This is an OAuth callback - Supabase needs to process the hash
         // CRITICAL: Do NOT clear the hash BEFORE getSession() - Supabase reads tokens from it!
 
-        console.log('[Auth] OAuth callback detected, processing tokens...');
-
         // First call to getSession - Supabase will detect and process the hash tokens
         const { data: { session }, error } = await supabase.auth.getSession();
 
@@ -222,7 +208,6 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(false);
           setUser(null);
         } else if (session?.user) {
-          console.log('[Auth] OAuth successful, user:', session.user.email);
           setIsAuthenticated(true);
           setUser(session.user);
           fetchUserProfile(session.user).catch(console.error);
