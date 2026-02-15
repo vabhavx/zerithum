@@ -330,11 +330,15 @@ export const functions = {
                 if (errorData.authMethod) err.authMethod = errorData.authMethod;
                 if (errorData.retryAfter) err.retryAfter = errorData.retryAfter;
 
+                // Mark as a structured function error so we know to rethrow it
+                err.isFunctionError = true;
+
                 console.error(`Edge Function ${functionName} returned error:`, errorMsg, errorData);
                 throw err;
             } catch (e) {
-                // If the error we just threw is valid, rethrow it
-                if (e.message && (e.requiresReauth || e.authMethod)) throw e;
+                // If the error we just threw is valid (it came from our try block), rethrow it.
+                // We identify it because we just created it and flagged it.
+                if (e && (e.isFunctionError || (e.message && (e.requiresReauth || e.authMethod)))) throw e;
 
                 // Fallback for non-JSON errors
                 const text = await response.text().catch(() => '');
