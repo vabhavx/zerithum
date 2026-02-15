@@ -88,11 +88,11 @@ const Privacy = () => {
                     <p className="text-zinc-500 text-sm mb-4">
                         If you have any questions about this policy, please contact us.
                     </p>
-                    <Link to="/contact">
+                    <a href="mailto:support@zerithum.com">
                         <Button variant="outline" className="border-zinc-300 text-zinc-700 hover:bg-zinc-100">
                             Contact Support
                         </Button>
-                    </Link>
+                    </a>
                 </footer>
             </main>
         </div>
