@@ -1,8 +1,11 @@
+// @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import '@testing-library/jest-dom';
+import * as matchers from '@testing-library/jest-dom/matchers';
 import { BrowserRouter } from 'react-router-dom';
 import Privacy from './Privacy';
+
+expect.extend(matchers);
 
 describe('Privacy Page', () => {
   it('renders privacy policy heading', () => {
@@ -20,7 +23,10 @@ describe('Privacy Page', () => {
         <Privacy />
       </BrowserRouter>
     );
-    expect(screen.getByText(/back to home/i)).toBeInTheDocument();
+    // Use getAllByText as it might appear multiple times (desktop/mobile)
+    const links = screen.getAllByText(/back to home/i);
+    expect(links.length).toBeGreaterThan(0);
+    expect(links[0]).toBeInTheDocument();
   });
 
   it('does not contain delete account button', () => {
