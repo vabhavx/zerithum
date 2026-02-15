@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import { getPlanDetails } from './logic/paymentLogic.ts';
+import { createSkydoPayment } from './logic/createSkydoPaymentLogic.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -12,82 +12,19 @@ Deno.serve(async (req) => {
 
     const { planName, billingPeriod } = await req.json();
 
-    if (!planName || !billingPeriod) {
-      return Response.json({ error: 'Missing required fields: planName, billingPeriod' }, { status: 400 });
-    }
-
-    // 🛡️ Sentinel: Server-side pricing validation
-    // Prevent price manipulation by ignoring client-provided amount
-    let priceDetails;
-    try {
-      priceDetails = getPlanDetails(planName, billingPeriod);
-    } catch (e) {
-      return Response.json({ error: e.message }, { status: 400 });
-    }
-
-    const { price: amount, currency } = priceDetails;
-
-    // Create Skydo payment link
-    const skydoApiKey = Deno.env.get('SKYDO_API_KEY');
-    if (!skydoApiKey) {
-      return Response.json({ error: 'Skydo API key not configured' }, { status: 500 });
-    }
-
-    // Skydo payment link creation
-    const skydoResponse = await fetch('https://api.skydo.com/v1/payment-links', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${skydoApiKey}`,
-        'Content-Type': 'application/json'
+    const result = await createSkydoPayment(
+      {
+        envGet: (key) => Deno.env.get(key),
+        fetch: fetch,
+        logError: console.error,
+        auditLogCreate: (data) => base44.asServiceRole.entities.AuditLog.create(data)
       },
-      body: JSON.stringify({
-        amount: amount,
-        currency: currency,
-        description: `${planName} - ${billingPeriod} subscription`,
-        customer: {
-          email: user.email,
-          name: user.full_name || user.email
-        },
-        metadata: {
-          user_id: user.id,
-          plan: planName,
-          billing_period: billingPeriod
-        },
-        success_url: `${Deno.env.get('APP_URL') || 'https://zerithum-copy-36d43903.base44.app'}/pricing?payment=success`,
-        cancel_url: `${Deno.env.get('APP_URL') || 'https://zerithum-copy-36d43903.base44.app'}/pricing?payment=cancelled`
-      })
-    });
+      user,
+      planName,
+      billingPeriod
+    );
 
-    if (!skydoResponse.ok) {
-      const errorData = await skydoResponse.json();
-      console.error('Skydo API error:', errorData);
-      return Response.json({ 
-        error: 'Failed to create payment link',
-        details: errorData 
-      }, { status: skydoResponse.status });
-    }
-
-    const paymentData = await skydoResponse.json();
-
-    // Log the payment attempt
-    await base44.asServiceRole.entities.AuditLog.create({
-      user_id: user.id,
-      action: 'payment_initiated',
-      resource_type: 'subscription',
-      data: {
-        plan: planName,
-        amount,
-        currency,
-        billing_period: billingPeriod,
-        payment_id: paymentData.id
-      }
-    });
-
-    return Response.json({
-      success: true,
-      payment_url: paymentData.payment_url || paymentData.url,
-      payment_id: paymentData.id
-    });
+    return Response.json(result.body, { status: result.status });
 
   } catch (error) {
     console.error('Payment creation error:', error);
