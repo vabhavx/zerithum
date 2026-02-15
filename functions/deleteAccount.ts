@@ -8,6 +8,7 @@ import {
     extractClientInfo,
     sanitizeErrorMessage
 } from './logic/security.ts';
+import { revokeToken, RevokeContext } from './logic/revokeToken.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -242,13 +243,22 @@ Deno.serve(async (req) => {
             // (tokens are stored in oauth_token column)
             const { data: platforms } = await adminClient
                 .from('connected_platforms')
-                .select('platform, oauth_token')
+                .select('platform, oauth_token, refresh_token')
                 .eq('user_id', user.id);
 
             if (platforms && platforms.length > 0) {
-                // TODO: Revoke OAuth tokens at provider level if API available
-                // For now, we just delete the records (tokens become orphaned)
-                stepsCompleted.push('oauth_tokens_noted');
+                // Revoke OAuth tokens at provider level if API available
+                const revokeCtx: RevokeContext = {
+                    envGet: (key) => Deno.env.get(key),
+                    fetch: fetch,
+                    logger: console
+                };
+
+                await Promise.allSettled(
+                    platforms.map(p => revokeToken(revokeCtx, p.platform, p.oauth_token, p.refresh_token))
+                );
+
+                stepsCompleted.push('oauth_tokens_revoked');
             }
 
             // Step 3: Delete user data from all tables
