@@ -61,4 +61,22 @@ describe('createPageUrl', () => {
     const expectedUrl = '/NoSpaces';
     expect(createPageUrl(pageName)).toBe(expectedUrl);
   });
+
+  it('should preserve forward slashes', () => {
+    const pageName = 'Settings/Profile';
+    const expectedUrl = '/Settings/Profile';
+    expect(createPageUrl(pageName)).toBe(expectedUrl);
+  });
+
+  it('should preserve URL unsafe characters', () => {
+    const pageName = 'You&Me';
+    const expectedUrl = '/You&Me';
+    expect(createPageUrl(pageName)).toBe(expectedUrl);
+  });
+
+  it('should preserve tabs and newlines (only replaces spaces)', () => {
+    const pageName = 'Tab\tNewline\n';
+    const expectedUrl = '/Tab\tNewline\n';
+    expect(createPageUrl(pageName)).toBe(expectedUrl);
+  });
 });
