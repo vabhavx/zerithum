@@ -23,7 +23,7 @@ vi.mock('@supabase/supabase-js', () => ({
 }));
 
 // Import the module under test
-import { functions } from './supabaseClient';
+import { functions, appLogs } from './supabaseClient';
 
 describe('functions.invoke error handling', () => {
     beforeEach(() => {
@@ -82,5 +82,24 @@ describe('functions.invoke error handling', () => {
         // Since json() failed and consumed body (in real fetch), text() also fails.
         // So it returns status code message.
         await expect(functions.invoke('test-function')).rejects.toThrow(/Edge Function returned a non-2xx status code/);
+    });
+});
+
+describe('appLogs', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.spyOn(console, 'log').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('should log generic events', async () => {
+        await expect(appLogs.logEvent('test_event', { foo: 'bar' })).resolves.toBeUndefined();
+    });
+
+    it('should log user in app', async () => {
+        await expect(appLogs.logUserInApp('dashboard')).resolves.toBeUndefined();
     });
 });

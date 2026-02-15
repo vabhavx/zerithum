@@ -196,17 +196,12 @@ export default function Pricing() {
     }
   }, []);
 
-  const trackEvent = (eventName, data = {}) => {
-    // Track events using Base44 analytics
-    console.log(`Event: ${eventName}`, data);
-  };
-
   React.useEffect(() => {
-    trackEvent("pricing_viewed");
+    base44.appLogs.logEvent("pricing_viewed");
   }, []);
 
   const handlePlanSelect = async (plan) => {
-    trackEvent(`plan_selected_${plan.name.toLowerCase().replace(" ", "_")}`);
+    base44.appLogs.logEvent(`plan_selected_${plan.name.toLowerCase().replace(" ", "_")}`);
     
     if (plan.price === 0) {
       // Free plan - redirect to dashboard
@@ -244,7 +239,7 @@ export default function Pricing() {
   };
 
   const handleCTA = (ctaType) => {
-    trackEvent(`cta_${ctaType}_clicked`);
+    base44.appLogs.logEvent(`cta_${ctaType}_clicked`);
   };
 
   const plans = PLANS[billingPeriod];
