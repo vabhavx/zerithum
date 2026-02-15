@@ -28,19 +28,55 @@ const Privacy = () => {
 
             <div className="max-w-7xl mx-auto px-6 py-16 flex flex-col lg:flex-row gap-12 relative">
                 {/* TOC Sidebar - Sticky on Desktop, Static on Mobile */}
-                <aside className="w-full lg:w-1/4 h-fit lg:sticky lg:top-32 mb-8 lg:mb-0">
+                <aside className="w-full lg:w-1/4 h-fit lg:sticky lg:top-32 mb-8 lg:mb-0 max-h-[calc(100vh-10rem)] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-zinc-200">
                     <h2 className="lg:hidden font-bold text-lg mb-4 text-zinc-900">Table of Contents</h2>
                     <nav className="space-y-1 text-sm border-l border-zinc-200 pl-4">
                         <button onClick={() => scrollToSection('scope')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">1. Scope</button>
+
                         <button onClick={() => scrollToSection('summary')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full font-medium">2. Quick Summary</button>
+
                         <button onClick={() => scrollToSection('collection')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">3. Information Collection</button>
+                        <div className="pl-3 border-l border-zinc-100 ml-1 space-y-1">
+                            <button onClick={() => scrollToSection('collection-account')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">3.1 Account & Profile</button>
+                            <button onClick={() => scrollToSection('collection-platform')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">3.2 Platform Revenue</button>
+                            <button onClick={() => scrollToSection('collection-bank')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">3.3 Bank Data</button>
+                            <button onClick={() => scrollToSection('collection-usage')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">3.4 Usage & Device</button>
+                            <button onClick={() => scrollToSection('collection-cookies')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">3.5 Cookies</button>
+                            <button onClick={() => scrollToSection('collection-communications')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">3.6 Communications</button>
+                        </div>
+
                         <button onClick={() => scrollToSection('usage')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">4. Usage & Legal Bases</button>
+                        <div className="pl-3 border-l border-zinc-100 ml-1 space-y-1">
+                            <button onClick={() => scrollToSection('usage-providing')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">4.1 Providing Services</button>
+                            <button onClick={() => scrollToSection('usage-security')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">4.2 Security</button>
+                            <button onClick={() => scrollToSection('usage-improvement')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">4.3 Improvements</button>
+                            <button onClick={() => scrollToSection('usage-ai')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">4.4 AI Insights</button>
+                            <button onClick={() => scrollToSection('usage-communications')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">4.5 Communications</button>
+                            <button onClick={() => scrollToSection('usage-compliance')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">4.6 Compliance</button>
+                        </div>
+
                         <button onClick={() => scrollToSection('connections')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">5. Bank & Platform Connections</button>
+
                         <button onClick={() => scrollToSection('sharing')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">6. Sharing Information</button>
+                        <div className="pl-3 border-l border-zinc-100 ml-1 space-y-1">
+                            <button onClick={() => scrollToSection('sharing-providers')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">6.1 Service Providers</button>
+                            <button onClick={() => scrollToSection('sharing-accountants')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">6.2 Accountants</button>
+                            <button onClick={() => scrollToSection('sharing-corporate')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">6.3 Transactions</button>
+                            <button onClick={() => scrollToSection('sharing-legal')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">6.4 Legal Obligations</button>
+                        </div>
+
                         <button onClick={() => scrollToSection('international')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">7. International Transfers</button>
                         <button onClick={() => scrollToSection('retention')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">8. Data Retention</button>
                         <button onClick={() => scrollToSection('security')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">9. Security</button>
+
                         <button onClick={() => scrollToSection('rights')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">10. Your Rights</button>
+                        <div className="pl-3 border-l border-zinc-100 ml-1 space-y-1">
+                            <button onClick={() => scrollToSection('rights-global')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">10.1 Global Rights</button>
+                            <button onClick={() => scrollToSection('rights-eea')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">10.2 EEA & UK (GDPR)</button>
+                            <button onClick={() => scrollToSection('rights-california')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">10.3 California</button>
+                            <button onClick={() => scrollToSection('rights-india')} className="block text-zinc-500 hover:text-emerald-700 py-0.5 text-left w-full text-xs">10.4 India</button>
+                        </div>
+
                         <button onClick={() => scrollToSection('children')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">11. Children's Privacy</button>
                         <button onClick={() => scrollToSection('links')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">12. Third Party Links</button>
                         <button onClick={() => scrollToSection('changes')} className="block text-zinc-600 hover:text-emerald-700 py-1 text-left w-full">13. Changes</button>
@@ -137,7 +173,7 @@ const Privacy = () => {
                             <h2>3. What information Zerithum collects</h2>
                             <p>Zerithum collects different types of information depending on how you interact with the Services.</p>
 
-                            <h3>3.1 Account and profile information</h3>
+                            <h3 id="collection-account" className="scroll-mt-32">3.1 Account and profile information</h3>
                             <p>When you create a Zerithum account or communicate with us, we collect:</p>
                             <ul>
                                 <li>Name, display name, and contact details such as email address and phone number</li>
@@ -154,7 +190,7 @@ const Privacy = () => {
                                 <li>Metadata about the communication, such as date, time, and channel</li>
                             </ul>
 
-                            <h3>3.2 Connected platform revenue data</h3>
+                            <h3 id="collection-platform" className="scroll-mt-32">3.2 Connected platform revenue data</h3>
                             <p>When you connect third party platforms to Zerithum, Zerithum collects revenue related data through those platforms’ APIs, based on the permissions you grant. This may include:</p>
                             <ul>
                                 <li>Platform identifiers, for example your YouTube channel ID, Patreon creator ID, Stripe account ID, or Gumroad account ID</li>
@@ -171,7 +207,7 @@ const Privacy = () => {
                             </ul>
                             <p>Zerithum does not request or store your passwords for these third party platforms. Zerithum uses OAuth or equivalent delegated access that those platforms provide.</p>
 
-                            <h3>3.3 Bank and financial data</h3>
+                            <h3 id="collection-bank" className="scroll-mt-32">3.3 Bank and financial data</h3>
                             <p>When you connect a bank or financial institution to Zerithum through a third party aggregation service (for example a provider such as Plaid or similar), or when you upload statements manually, Zerithum may collect:</p>
                             <ul>
                                 <li>Bank or institution name</li>
@@ -188,7 +224,7 @@ const Privacy = () => {
                             </ul>
                             <p>Zerithum does not store your online banking passwords. Zerithum does not have permission to initiate payments or transfer funds from your accounts.</p>
 
-                            <h3>3.4 Usage and device information</h3>
+                            <h3 id="collection-usage" className="scroll-mt-32">3.4 Usage and device information</h3>
                             <p>When you visit Zerithum websites or use the web application, Zerithum automatically collects certain technical information, such as:</p>
                             <ul>
                                 <li>Device identifiers, such as IP address, browser type and version, and operating system</li>
@@ -198,7 +234,7 @@ const Privacy = () => {
                             </ul>
                             <p>This information is used for security, analytics, and product improvement.</p>
 
-                            <h3>3.5 Cookies and similar technologies</h3>
+                            <h3 id="collection-cookies" className="scroll-mt-32">3.5 Cookies and similar technologies</h3>
                             <p>Zerithum uses cookies and similar technologies in its websites and application. These can include:</p>
                             <ul>
                                 <li>Essential cookies, required for login sessions, security, and core functionality</li>
@@ -208,7 +244,7 @@ const Privacy = () => {
                             </ul>
                             <p>Where required by law, Zerithum will request your consent for non essential cookies. You can control cookies through your browser settings and, where available, through the in product cookie settings.</p>
 
-                            <h3>3.6 Communications, feedback, and support data</h3>
+                            <h3 id="collection-communications" className="scroll-mt-32">3.6 Communications, feedback, and support data</h3>
                             <p>If you:</p>
                             <ul>
                                 <li>Fill out a waitlist or feedback form</li>
@@ -229,7 +265,7 @@ const Privacy = () => {
                             <h2>4. How Zerithum uses your information and legal bases</h2>
                             <p>Zerithum uses personal and business information for clearly defined purposes, under specific legal bases where data protection laws apply.</p>
 
-                            <h3>4.1 Providing and operating the Services</h3>
+                            <h3 id="usage-providing" className="scroll-mt-32">4.1 Providing and operating the Services</h3>
                             <p>Zerithum uses your information to:</p>
                             <ul>
                                 <li>Create and maintain your account</li>
@@ -246,7 +282,7 @@ const Privacy = () => {
                                 <li>Legitimate interests in operating a functional SaaS platform for creators</li>
                             </ul>
 
-                            <h3>4.2 Security, fraud prevention, and abuse detection</h3>
+                            <h3 id="usage-security" className="scroll-mt-32">4.2 Security, fraud prevention, and abuse detection</h3>
                             <p>Zerithum uses your information to:</p>
                             <ul>
                                 <li>Authenticate your identity and manage sessions</li>
@@ -260,7 +296,7 @@ const Privacy = () => {
                                 <li>Compliance with legal obligations in some regions</li>
                             </ul>
 
-                            <h3>4.3 Product improvement and analytics</h3>
+                            <h3 id="usage-improvement" className="scroll-mt-32">4.3 Product improvement and analytics</h3>
                             <p>Zerithum uses aggregated and pseudonymized data to:</p>
                             <ul>
                                 <li>Understand which features are most used and which are ignored</li>
@@ -275,7 +311,7 @@ const Privacy = () => {
                                 <li>Consent for certain analytics cookies or tracking technologies, where required</li>
                             </ul>
 
-                            <h3>4.4 AI driven insights and recommendations</h3>
+                            <h3 id="usage-ai" className="scroll-mt-32">4.4 AI driven insights and recommendations</h3>
                             <p>Zerithum uses your historical revenue and transaction data to power AI and machine learning features, including:</p>
                             <ul>
                                 <li>Forecasting cash inflows based on past payouts</li>
@@ -292,7 +328,7 @@ const Privacy = () => {
                                 <li>Legitimate interests in providing analytics and insights that help creators run their businesses</li>
                             </ul>
 
-                            <h3>4.5 Communications, support, and marketing</h3>
+                            <h3 id="usage-communications" className="scroll-mt-32">4.5 Communications, support, and marketing</h3>
                             <p>Zerithum uses your information to:</p>
                             <ul>
                                 <li>Respond to your questions and support tickets</li>
@@ -307,7 +343,7 @@ const Privacy = () => {
                                 <li>Consent or legitimate interests for marketing, depending on your region</li>
                             </ul>
 
-                            <h3>4.6 Compliance, legal obligations, and protection of rights</h3>
+                            <h3 id="usage-compliance" className="scroll-mt-32">4.6 Compliance, legal obligations, and protection of rights</h3>
                             <p>Zerithum may use your information to:</p>
                             <ul>
                                 <li>Comply with applicable laws and regulations, including tax and accounting requirements</li>
@@ -345,7 +381,7 @@ const Privacy = () => {
                             <p>Zerithum does not sell your personal data to third party data brokers or advertisers.</p>
                             <p>Zerithum shares information in the following situations:</p>
 
-                            <h3>6.1 Service providers and subprocessors</h3>
+                            <h3 id="sharing-providers" className="scroll-mt-32">6.1 Service providers and subprocessors</h3>
                             <p>Zerithum uses service providers to help operate and improve the Services. These include:</p>
                             <ul>
                                 <li>Cloud hosting providers and data centers</li>
@@ -359,7 +395,7 @@ const Privacy = () => {
                             <p>These service providers only access your information to perform tasks on Zerithum’s behalf and are bound by contractual obligations to protect your data and to process it only as instructed by Zerithum.</p>
                             <p>Zerithum maintains a list of key subprocessors and will provide it upon request where legally required.</p>
 
-                            <h3>6.2 Accountants, advisors, and collaborators you authorize</h3>
+                            <h3 id="sharing-accountants" className="scroll-mt-32">6.2 Accountants, advisors, and collaborators you authorize</h3>
                             <p>One of Zerithum’s core purposes is to make it easier for you to work with your accountant or advisor. When you:</p>
                             <ul>
                                 <li>Invite an accountant to your workspace</li>
@@ -369,10 +405,10 @@ const Privacy = () => {
                             <p>Zerithum will share the data you choose with that third party, under your direction. Their use of your data is governed by their own terms and privacy policies.</p>
                             <p>You are responsible for the trust relationships you create by granting such access.</p>
 
-                            <h3>6.3 Corporate transactions</h3>
+                            <h3 id="sharing-corporate" className="scroll-mt-32">6.3 Corporate transactions</h3>
                             <p>If Zerithum is involved in a merger, acquisition, financing, sale of assets, reorganization, or similar transaction, your information may be transferred as part of that transaction. Zerithum will require any acquiring entity to honor this Policy or to notify you of material changes and choices you may have.</p>
 
-                            <h3>6.4 Legal obligations and protection of rights</h3>
+                            <h3 id="sharing-legal" className="scroll-mt-32">6.4 Legal obligations and protection of rights</h3>
                             <p>Zerithum may disclose information to third parties when Zerithum believes in good faith that disclosure is reasonably necessary to:</p>
                             <ul>
                                 <li>Comply with a law, regulation, legal process, or governmental request</li>
@@ -426,7 +462,7 @@ const Privacy = () => {
                             <h2>10. Your privacy rights</h2>
                             <p>Your rights over your personal data depend on where you live and which laws apply to you. Zerithum aims to honor reasonable requests from all users, within technical and legal limits.</p>
 
-                            <h3>10.1 Global rights</h3>
+                            <h3 id="rights-global" className="scroll-mt-32">10.1 Global rights</h3>
                             <p>In general, you can:</p>
                             <ul>
                                 <li>Access your account and view most of your data directly through the app</li>
@@ -437,7 +473,7 @@ const Privacy = () => {
                             </ul>
                             <p>You can send additional requests by contacting Zerithum at the email address in the "Contact" section.</p>
 
-                            <h3>10.2 EEA and UK residents (GDPR)</h3>
+                            <h3 id="rights-eea" className="scroll-mt-32">10.2 EEA and UK residents (GDPR)</h3>
                             <p>If you are located in the European Economic Area or the United Kingdom, you may have the following rights, subject to conditions and exceptions in law:</p>
                             <ul>
                                 <li><strong>Right of access:</strong> to know whether Zerithum processes your personal data and to receive a copy</li>
@@ -451,7 +487,7 @@ const Privacy = () => {
                             </ul>
                             <p>To exercise these rights, contact Zerithum using the details in the "Contact" section. Zerithum may need to verify your identity before responding.</p>
 
-                            <h3>10.3 California residents (CCPA / CPRA)</h3>
+                            <h3 id="rights-california" className="scroll-mt-32">10.3 California residents (CCPA / CPRA)</h3>
                             <p>If you are a resident of California, you may have additional rights under the California Consumer Privacy Act and the California Privacy Rights Act, including:</p>
                             <ul>
                                 <li><strong>Right to know:</strong> to request disclosure of the categories and specific pieces of personal information collected, sources, purposes, and categories of third parties with whom information is shared</li>
@@ -463,7 +499,7 @@ const Privacy = () => {
                             <p>Zerithum will not discriminate against you for exercising your privacy rights, for example by denying services or charging different prices solely because you made a privacy request, except where a difference in service is reasonably related to the value provided by your data.</p>
                             <p>You may exercise your California rights by contacting Zerithum using the details in the "Contact" section. Zerithum may request information to verify your identity and may allow authorized agents to submit requests on your behalf where permitted.</p>
 
-                            <h3>10.4 India residents (Digital Personal Data Protection law)</h3>
+                            <h3 id="rights-india" className="scroll-mt-32">10.4 India residents (Digital Personal Data Protection law)</h3>
                             <p>If you are located in India, you may have rights under India’s data protection framework, including:</p>
                             <ul>
                                 <li>Right to access information about the personal data Zerithum processes about you</li>
