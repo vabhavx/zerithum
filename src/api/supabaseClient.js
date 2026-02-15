@@ -300,27 +300,50 @@ export const entities = Object.fromEntries(
 
 export const functions = {
     async invoke(functionName, params = {}) {
-        const { data, error } = await supabase.functions.invoke(functionName, {
-            body: params
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+        if (!token) throw new Error('Not authenticated');
+
+        // Use raw fetch to bypass Supabase SDK error handling opacity
+        // This ensures we get the exact error body (requiresReauth, match, etc)
+        const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'apikey': anonKey, // Critical for Supabase Edge Functions
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(params)
         });
 
-        // Handle Supabase function invocation errors
-        if (error) {
-            console.error(`Function ${functionName} error:`, error);
-            throw error;
+        if (!response.ok) {
+            // Manual error parsing to preserve custom properties
+            try {
+                const errorData = await response.json();
+                const errorMsg = errorData.error || `Function returned ${response.status}`;
+                const err = new Error(errorMsg);
+
+                // Propagate special fields exactly as Edge Function sends them
+                if (errorData.requiresReauth) err.requiresReauth = errorData.requiresReauth;
+                if (errorData.authMethod) err.authMethod = errorData.authMethod;
+                if (errorData.retryAfter) err.retryAfter = errorData.retryAfter;
+
+                console.error(`Edge Function ${functionName} returned error:`, errorMsg, errorData);
+                throw err;
+            } catch (e) {
+                // If the error we just threw is valid, rethrow it
+                if (e.message && (e.requiresReauth || e.authMethod)) throw e;
+
+                // Fallback for non-JSON errors
+                const text = await response.text().catch(() => '');
+                throw new Error(text || `Edge Function returned a non-2xx status code (${response.status})`);
+            }
         }
 
-        // Check if the response indicates an error from the edge function
-        if (data && data.error) {
-            const err = new Error(data.error);
-            // Copy over any additional properties from the response
-            if (data.requiresReauth) err.requiresReauth = data.requiresReauth;
-            if (data.authMethod) err.authMethod = data.authMethod;
-            if (data.retryAfter) err.retryAfter = data.retryAfter;
-            throw err;
-        }
-
-        return data;
+        // Success response
+        return await response.json();
     },
 
     async invokeStream(functionName, params = {}, onEvent) {
