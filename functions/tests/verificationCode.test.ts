@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getVerificationEmailHtml, VerificationPurpose } from './verificationCode.ts';
+import { getVerificationEmailHtml, VerificationPurpose } from '../templates/verificationCode.ts';
 
 describe('getVerificationEmailHtml', () => {
     it('should generate email for password_change', () => {
