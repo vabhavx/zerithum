@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'New password is required' }, { status: 400, headers: corsHeaders });
         }
 
-        const passwordValidation = validatePassword(newPassword);
+        const passwordValidation = await validatePassword(newPassword);
         if (!passwordValidation.valid) {
             return Response.json({
                 error: passwordValidation.errors[0],

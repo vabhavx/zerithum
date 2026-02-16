@@ -3,15 +3,6 @@
  * and rate limiting. Testable without edge function runtime.
  */
 
-// Common weak passwords to block
-const COMMON_PASSWORDS = new Set([
-    'password123', 'password1234', 'password12345',
-    '123456789012', 'qwertyuiop12', 'abcdefghij12',
-    'letmein12345', 'welcome12345', 'admin1234567',
-    'iloveyou1234', 'monkey123456', 'dragon123456',
-    'master123456', 'sunshine1234', 'princess1234',
-]);
-
 export interface PasswordValidationResult {
     valid: boolean;
     errors: string[];
@@ -19,12 +10,42 @@ export interface PasswordValidationResult {
 }
 
 /**
+ * Checks if a password has been compromised using the Have I Been Pwned API.
+ * Uses k-anonymity to protect the password by only sending the first 5 chars of its SHA-1 hash.
+ */
+async function isPasswordPwned(password: string): Promise<boolean> {
+    try {
+        const msgUint8 = new TextEncoder().encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+
+        const prefix = hashHex.substring(0, 5);
+        const suffix = hashHex.substring(5);
+
+        const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+        if (!response.ok) {
+            // Fail open if HIBP is down to avoid blocking users
+            return false;
+        }
+
+        const text = await response.text();
+        const lines = text.split('\n');
+
+        return lines.some(line => line.split(':')[0].trim() === suffix);
+    } catch (error) {
+        console.error('Error checking pwned password:', error);
+        return false;
+    }
+}
+
+/**
  * Validates a new password against security requirements.
  * - Minimum 12 characters
- * - Not a common password
+ * - Not a compromised password (via HIBP)
  * - Returns strength assessment
  */
-export function validatePassword(password: string): PasswordValidationResult {
+export async function validatePassword(password: string): Promise<PasswordValidationResult> {
     const errors: string[] = [];
 
     // Minimum length check
@@ -32,9 +53,9 @@ export function validatePassword(password: string): PasswordValidationResult {
         errors.push('Password must be at least 12 characters');
     }
 
-    // Common password check
-    if (COMMON_PASSWORDS.has(password.toLowerCase())) {
-        errors.push('This password is too common. Please choose a stronger password');
+    // Compromised password check
+    if (password.length >= 12 && await isPasswordPwned(password)) {
+        errors.push('This password has appeared in a data breach. Please choose a different, more unique password');
     }
 
     // Calculate strength
