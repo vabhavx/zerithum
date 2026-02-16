@@ -68,9 +68,9 @@ export async function sendQuarterlyTaxReportLogic(ctx: TaxReportContext) {
       return acc;
     }, {} as Record<string, Expense[]>);
 
-    // Process each user in batch
-    for (const user of batchUsers) {
-      if (!user.email) continue;
+    // Process each user in batch in parallel
+    await Promise.all(batchUsers.map(async (user) => {
+      if (!user.email) return;
 
       const transactions = transactionsByUser[user.id] || [];
       const expenses = expensesByUser[user.id] || [];
@@ -163,7 +163,7 @@ export async function sendQuarterlyTaxReportLogic(ctx: TaxReportContext) {
 
       await ctx.sendEmail(user.email, `Your Q${quarter} ${year} tax report is ready`, emailBody);
       notifiedUsers.push(user.id);
-    }
+    }));
   }
 
   return { success: true, users_notified: notifiedUsers.length };
