@@ -143,15 +143,6 @@ Deno.serve(async (req) => {
         const hasPassword = (userProvider === 'email' || userProviders.includes('email')) &&
             !oauthProviders.includes(userProvider);
 
-        console.log('deleteAccount (streaming): User auth method:', {
-            userId: user.id,
-            provider: userProvider,
-            providers: userProviders,
-            hasPassword,
-            hasCurrentPassword: !!currentPassword,
-            hasVerificationCode: !!verificationCode
-        });
-
         if (hasPassword && currentPassword) {
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email: user.email!,
