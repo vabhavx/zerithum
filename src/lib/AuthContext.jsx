@@ -58,42 +58,18 @@ export const AuthProvider = ({ children }) => {
               const hashParams = new URLSearchParams(hash.substring(1));
               const accessToken = hashParams.get('access_token');
               const refreshToken = hashParams.get('refresh_token');
-              const expiresAt = hashParams.get('expires_at');
 
               if (accessToken) {
-                // Decode JWT payload (middle part of token)
-                const parts = accessToken.split('.');
-                if (parts.length === 3) {
-                  const payload = JSON.parse(atob(parts[1]));
+                // Use Supabase SDK to set session, avoiding insecure manual localStorage manipulation
+                const { data, error } = await supabase.auth.setSession({
+                  access_token: accessToken,
+                  refresh_token: refreshToken || '',
+                });
 
-                  // Create user object from JWT claims
-                  const user = {
-                    id: payload.sub,
-                    email: payload.email,
-                    phone: payload.phone || '',
-                    role: payload.role,
-                    user_metadata: payload.user_metadata || {},
-                    app_metadata: payload.app_metadata || {},
-                    aud: payload.aud,
-                    created_at: null,
-                    updated_at: null,
-                  };
-
-                  // Create session object
-                  session = {
-                    access_token: accessToken,
-                    refresh_token: refreshToken || '',
-                    expires_at: parseInt(expiresAt) || (Date.now() / 1000 + 3600),
-                    expires_in: 3600,
-                    token_type: 'bearer',
-                    user: user,
-                  };
-
-                  // Save to localStorage so Supabase can use it later
-                  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-                  const projectId = new URL(supabaseUrl).hostname.split('.')[0];
-                  const storageKey = `sb-${projectId}-auth-token`;
-                  localStorage.setItem(storageKey, JSON.stringify(session));
+                if (error) {
+                  console.error('[Auth] Failed to set session from hash:', error);
+                } else if (data?.session) {
+                  session = data.session;
                 }
               }
             } catch (parseError) {
