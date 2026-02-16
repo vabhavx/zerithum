@@ -269,14 +269,15 @@ Deno.serve(async (req) => {
                             logger: console
                         };
 
-                        for (const p of platforms) {
+                        const revokePromises = platforms.map(async (p) => {
                             emit('progress', {
                                 step: 'revoke_tokens',
                                 message: `Revoking ${p.platform}...`,
                                 platform: p.platform
                             });
-                            await revokeToken(revokeCtx, p.platform, p.oauth_token, p.refresh_token);
-                        }
+                            return revokeToken(revokeCtx, p.platform, p.oauth_token, p.refresh_token);
+                        });
+                        await Promise.all(revokePromises);
                         stepsCompleted.push('oauth_tokens_revoked');
                     }
 
