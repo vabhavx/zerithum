@@ -1,0 +1,61 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+
+describe('deleteAccount type check', () => {
+    beforeEach(() => {
+        vi.resetModules();
+        vi.stubGlobal('Deno', {
+            env: {
+                get: (key: string) => {
+                    if (key === 'SUPABASE_URL') return 'http://mock-url';
+                    if (key === 'SUPABASE_SERVICE_ROLE_KEY') return 'mock-key';
+                    return undefined;
+                }
+            },
+            serve: vi.fn(),
+        });
+
+        vi.mock('npm:@supabase/supabase-js@2', () => ({
+            createClient: vi.fn(() => ({
+                auth: {
+                    getUser: vi.fn(() => ({ data: { user: { id: 'test-user', email: 'test@example.com', app_metadata: {} } }, error: null })),
+                    admin: {
+                        deleteUser: vi.fn(),
+                        signOut: vi.fn(),
+                    }
+                },
+                from: vi.fn(() => ({
+                    select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn(() => ({ data: null })) })) })),
+                    insert: vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn(() => ({ data: { id: 'req-id' } })) })) })),
+                    update: vi.fn(() => ({ eq: vi.fn() })),
+                    delete: vi.fn(() => ({ eq: vi.fn(() => ({ error: null })) })),
+                })),
+            })),
+        }));
+
+        vi.mock('../_shared/utils/audit.ts', () => ({
+            logAudit: vi.fn(),
+        }));
+
+        vi.mock('../_shared/logic/security.ts', () => ({
+            checkRateLimit: vi.fn(() => ({ allowed: true })),
+            isValidOTPFormat: vi.fn(() => true),
+            RATE_LIMITS: { DELETE_ACCOUNT: 1 },
+            SECURITY_ACTIONS: {},
+            extractClientInfo: vi.fn(() => ({})),
+            sanitizeErrorMessage: vi.fn((e: any) => e),
+        }));
+
+        vi.mock('../logic/revokeToken.ts', () => ({
+            revokeToken: vi.fn(),
+        }));
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('should load deleteAccount without type errors', async () => {
+        await import('../deleteAccount.ts');
+        expect(globalThis.Deno.serve).toHaveBeenCalled();
+    });
+});

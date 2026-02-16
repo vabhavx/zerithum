@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient, User } from 'npm:@supabase/supabase-js@2';
 import { logAudit } from '../_shared/utils/audit.ts';
 import {
     checkRateLimit,
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
         return encoder.encode(`event: ${type}\ndata: ${JSON.stringify(data)}\n\n`);
     };
 
-    let user: any = null;
+    let user: User | null = null;
     const clientInfo = extractClientInfo(req);
     let deletionRequestId: string | null = null;
 
