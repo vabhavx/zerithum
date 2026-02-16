@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
         const hasPassword = user.app_metadata?.provider === 'email' ||
             user.app_metadata?.providers?.includes('email');
 
+        // Create admin client for rate limiting and updates
         const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
         if (hasPassword && currentPassword) {
@@ -88,7 +89,7 @@ Deno.serve(async (req) => {
 
             // Rate limit OTP verification attempts
             const rateLimitKey = `otp_verify:${user.id}`;
-            const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.VERIFY_OTP);
+            const rateLimitResult = await checkRateLimit(adminClient, rateLimitKey, RATE_LIMITS.VERIFY_OTP);
 
             if (!rateLimitResult.allowed) {
                 return Response.json({

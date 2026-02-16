@@ -2,6 +2,7 @@
  * Security logic module - pure functions for password validation, OTP handling,
  * and rate limiting. Testable without edge function runtime.
  */
+import { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
 export interface PasswordValidationResult {
     valid: boolean;
@@ -107,55 +108,46 @@ export interface RateLimitResult {
     resetAt: Date;
 }
 
-// In-memory rate limit store (per instance, for edge functions)
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
-
 /**
- * Checks rate limit for a given key (userId + action).
- * Simple in-memory implementation suitable for edge functions.
+ * Checks rate limit for a given key (userId + action) using the database.
+ * This ensures persistence across edge function invocations.
  */
-export function checkRateLimit(
+export async function checkRateLimit(
+    client: SupabaseClient,
     key: string,
     config: RateLimitConfig
-): RateLimitResult {
-    const now = Date.now();
-    const entry = rateLimitStore.get(key);
-
-    // Clean up expired entries
-    if (entry && entry.resetAt <= now) {
-        rateLimitStore.delete(key);
-    }
-
-    const current = rateLimitStore.get(key);
-
-    if (!current) {
-        // First request in window
-        rateLimitStore.set(key, {
-            count: 1,
-            resetAt: now + config.windowMs
+): Promise<RateLimitResult> {
+    try {
+        const { data, error } = await client.rpc('increment_rate_limit', {
+            key_param: key,
+            window_ms: config.windowMs,
+            max_attempts: config.maxAttempts
         });
+
+        if (error) {
+            console.error('Rate limit RPC error:', error);
+            // Fail open to avoid blocking legitimate users during DB outages
+            return {
+                allowed: true,
+                remaining: 1,
+                resetAt: new Date(Date.now() + config.windowMs)
+            };
+        }
+
+        return {
+            allowed: data.allowed,
+            remaining: data.remaining,
+            resetAt: new Date(data.reset_at)
+        };
+    } catch (e) {
+        console.error('Rate limit exception:', e);
+        // Fail open
         return {
             allowed: true,
-            remaining: config.maxAttempts - 1,
-            resetAt: new Date(now + config.windowMs)
+            remaining: 1,
+            resetAt: new Date(Date.now() + config.windowMs)
         };
     }
-
-    if (current.count >= config.maxAttempts) {
-        return {
-            allowed: false,
-            remaining: 0,
-            resetAt: new Date(current.resetAt)
-        };
-    }
-
-    // Increment count
-    current.count++;
-    return {
-        allowed: true,
-        remaining: config.maxAttempts - current.count,
-        resetAt: new Date(current.resetAt)
-    };
 }
 
 /**
@@ -204,7 +196,12 @@ export const SECURITY_ACTIONS = {
  * Sanitizes error messages to prevent leaking sensitive information.
  */
 export function sanitizeErrorMessage(error: any): string {
-    const message = error?.message || 'An unexpected error occurred';
+    let message = error?.message || 'An unexpected error occurred';
+
+    // Don't expose internal error details
+    if (message.includes('stack') || message.includes('at ')) {
+        return 'An unexpected error occurred. Please try again.';
+    }
 
     // List of patterns to redact
     const sensitivePatterns = [
@@ -216,9 +213,9 @@ export function sanitizeErrorMessage(error: any): string {
         /auth/gi
     ];
 
-    // Don't expose internal error details
-    if (message.includes('stack') || message.includes('at ')) {
-        return 'An unexpected error occurred. Please try again.';
+    // Redact sensitive information
+    for (const pattern of sensitivePatterns) {
+        message = message.replace(pattern, '********');
     }
 
     return message;

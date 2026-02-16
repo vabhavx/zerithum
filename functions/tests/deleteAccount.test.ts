@@ -37,7 +37,7 @@ describe('deleteAccount type check', () => {
         }));
 
         vi.mock('../_shared/logic/security.ts', () => ({
-            checkRateLimit: vi.fn(() => ({ allowed: true })),
+            checkRateLimit: vi.fn(() => Promise.resolve({ allowed: true, remaining: 5, resetAt: new Date() })),
             isValidOTPFormat: vi.fn(() => true),
             RATE_LIMITS: { DELETE_ACCOUNT: 1 },
             SECURITY_ACTIONS: {},

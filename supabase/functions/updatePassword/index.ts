@@ -72,9 +72,12 @@ Deno.serve(async (req) => {
             }, { status: 400, headers: corsHeaders });
         }
 
+        // Create admin client for rate limiting and updates
+        const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
         // Rate limiting
         const rateLimitKey = `password_change:${user.id}`;
-        const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.PASSWORD_CHANGE);
+        const rateLimitResult = await checkRateLimit(adminClient, rateLimitKey, RATE_LIMITS.PASSWORD_CHANGE);
 
         if (!rateLimitResult.allowed) {
             await logAudit(null, {
@@ -101,8 +104,6 @@ Deno.serve(async (req) => {
         // Determine auth method and verify re-authentication
         const hasPassword = user.app_metadata?.provider === 'email' ||
             user.app_metadata?.providers?.includes('email');
-
-        const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
         if (hasPassword && currentPassword) {
             // Verify via password
