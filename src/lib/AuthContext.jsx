@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
 
-    // Immediately check for session on mount
+    // Immediately check for session on mount (and handle OAuth callback)
     const initializeAuth = async () => {
       try {
         // Check for OAuth callback hash first
