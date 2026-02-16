@@ -143,15 +143,6 @@ Deno.serve(async (req) => {
         const hasPassword = (userProvider === 'email' || userProviders.includes('email')) &&
             !oauthProviders.includes(userProvider);
 
-        console.log('deleteAccount (streaming): User auth method:', {
-            userId: user.id,
-            provider: userProvider,
-            providers: userProviders,
-            hasPassword,
-            hasCurrentPassword: !!currentPassword,
-            hasVerificationCode: !!verificationCode
-        });
-
         if (hasPassword && currentPassword) {
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email: user.email!,
@@ -197,7 +188,6 @@ Deno.serve(async (req) => {
             }
             await adminClient.from('verification_codes').update({ used_at: new Date().toISOString() }).eq('id', codeData.id);
         } else {
-            console.log('No auth provided, requesting reauth. hasPassword:', hasPassword);
             return Response.json({
                 error: 'Re-authentication required.',
                 requiresReauth: true,
