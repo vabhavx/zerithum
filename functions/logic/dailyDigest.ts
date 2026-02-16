@@ -65,10 +65,10 @@ export async function sendDailyDigestLogic(ctx: DailyDigestContext) {
     }, {} as Record<string, AutopsyEvent[]>);
 
     // Process each user in the batch
-    for (const user of batchUsers) {
+    await Promise.all(batchUsers.map(async (user) => {
       const transactions = transactionsByUser[user.id] || [];
 
-      if (transactions.length === 0) continue;
+      if (transactions.length === 0) return;
 
       const total = transactions.reduce((sum, t) => sum + t.amount, 0);
 
@@ -144,7 +144,7 @@ export async function sendDailyDigestLogic(ctx: DailyDigestContext) {
 
       await ctx.sendEmail(user.email, `Your earnings digest: $${total.toFixed(2)}`, emailBody);
       notifiedUsers.push(user.id);
-    }
+    }));
   }
 
   return { success: true, users_notified: notifiedUsers.length };
