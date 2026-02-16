@@ -8,6 +8,10 @@ describe('processReceiptLogic', () => {
   let user: any;
 
   beforeEach(() => {
+    vi.stubGlobal('Deno', {
+      resolveDns: vi.fn().mockResolvedValue([])
+    });
+
     mockBase44 = {
       auth: {
         me: vi.fn().mockResolvedValue({ id: 'user_123' })
