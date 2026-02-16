@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, ChevronDown, ChevronUp, Shield, Clock, TrendingUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -196,7 +196,7 @@ export default function Pricing() {
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     base44.appLogs.logEvent("pricing_viewed");
   }, []);
 

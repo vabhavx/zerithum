@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useScroll, useTransform, motion, MotionValue } from "framer-motion";
 
 export const ContainerScroll = ({
@@ -14,9 +14,9 @@ export const ContainerScroll = ({
     target: containerRef,
     offset: ["start end", "end end"]
   });
-  const [isMobile, setIsMobile] = React.useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
