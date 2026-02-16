@@ -183,7 +183,12 @@ export const SECURITY_ACTIONS = {
  * Sanitizes error messages to prevent leaking sensitive information.
  */
 export function sanitizeErrorMessage(error: any): string {
-    const message = error?.message || 'An unexpected error occurred';
+    let message = error?.message || 'An unexpected error occurred';
+
+    // Don't expose internal error details
+    if (message.includes('stack') || message.includes('at ')) {
+        return 'An unexpected error occurred. Please try again.';
+    }
 
     // List of patterns to redact
     const sensitivePatterns = [
@@ -195,9 +200,9 @@ export function sanitizeErrorMessage(error: any): string {
         /auth/gi
     ];
 
-    // Don't expose internal error details
-    if (message.includes('stack') || message.includes('at ')) {
-        return 'An unexpected error occurred. Please try again.';
+    // Redact sensitive information
+    for (const pattern of sensitivePatterns) {
+        message = message.replace(pattern, '********');
     }
 
     return message;
