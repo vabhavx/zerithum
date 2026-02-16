@@ -80,132 +80,16 @@ const TermsOfService = () => {
         { id: 'section-19', title: '19. Acknowledgment' },
     ];
 
+    const legalWarningClass = "text-sm md:text-[15px] font-semibold text-[#d32f2f] leading-relaxed bg-[#fef5f5] p-5 border-l-4 border-[#d32f2f] my-6 uppercase print:border print:border-black print:text-black print:bg-transparent not-prose";
+    const contactSectionClass = "contact-section bg-[#f8f9fa] p-8 rounded-lg mt-12 print:bg-transparent print:border print:border-black not-prose";
+    const acknowledgmentSectionClass = "acknowledgment-section bg-[#f0f7f8] p-8 rounded-lg border-2 border-[#208D9E] my-12 print:bg-transparent print:border print:border-black not-prose";
+    const contactLinkClass = "contact-link text-[#208D9E] no-underline border-b border-transparent hover:border-[#208D9E] transition-colors print:text-black print:no-underline";
+
     return (
-        <div className="min-h-screen bg-white text-[#3a3a3a] font-sans selection:bg-[#e5f9fb]">
-            <style>{`
-                /* Typography overrides based on specs */
-                :root {
-                    --z-bg-0: #ffffff; /* Override dark theme bg */
-                    --z-text-1: #1a1a1a;
-                }
-                body {
-                    background-color: #ffffff !important;
-                    color: #3a3a3a !important;
-                }
-                h1 {
-                    font-size: 28px;
-                    font-weight: 700;
-                    color: #1a1a1a;
-                    line-height: 1.2;
-                    margin-bottom: 16px;
-                }
-                @media (min-width: 768px) {
-                    h1 { font-size: 36px; }
-                }
-                h2 {
-                    font-size: 20px;
-                    font-weight: 600;
-                    color: #1a1a1a;
-                    line-height: 1.3;
-                    margin-top: 48px;
-                    margin-bottom: 20px;
-                    border-bottom: 2px solid #e5e5e5;
-                    padding-bottom: 12px;
-                }
-                @media (min-width: 768px) {
-                    h2 { font-size: 24px; }
-                }
-                h3 {
-                    font-size: 16px;
-                    font-weight: 600;
-                    color: #2a2a2a;
-                    line-height: 1.4;
-                    margin-top: 32px;
-                    margin-bottom: 16px;
-                }
-                @media (min-width: 768px) {
-                    h3 { font-size: 18px; }
-                }
-                p, li {
-                    font-size: 15px;
-                    font-weight: 400;
-                    color: #3a3a3a;
-                    line-height: 1.7;
-                    margin-bottom: 16px;
-                }
-                @media (min-width: 768px) {
-                    p, li { font-size: 16px; }
-                }
-                strong {
-                    font-weight: 600;
-                    color: #1a1a1a;
-                }
-                dfn {
-                    font-weight: 600;
-                    color: #1a1a1a;
-                    font-style: normal;
-                }
-                /* All Caps / Warning Sections */
-                .legal-warning {
-                    font-size: 14px;
-                    font-weight: 600;
-                    color: #d32f2f;
-                    line-height: 1.6;
-                    background: #fef5f5;
-                    padding: 20px;
-                    border-left: 4px solid #d32f2f;
-                    margin: 24px 0;
-                    text-transform: uppercase;
-                }
-                @media (min-width: 768px) {
-                    .legal-warning { font-size: 15px; }
-                }
-                /* Lists */
-                ul, ol {
-                    margin-left: 24px;
-                    margin-bottom: 16px;
-                }
-                li {
-                    margin-bottom: 8px;
-                }
-                /* Contact Section */
-                .contact-section {
-                    background: #f8f9fa;
-                    padding: 32px;
-                    border-radius: 8px;
-                    margin-top: 48px;
-                }
-                .contact-link {
-                    color: #208D9E;
-                    text-decoration: none;
-                    border-bottom: 1px solid transparent;
-                    transition: border-color 0.2s;
-                }
-                .contact-link:hover {
-                    border-bottom: 1px solid #208D9E;
-                }
-                /* Acknowledgment Section */
-                .acknowledgment-section {
-                    background: #f0f7f8;
-                    padding: 32px;
-                    border-radius: 8px;
-                    border: 2px solid #208D9E;
-                    margin-top: 48px;
-                    margin-bottom: 48px;
-                }
-                /* Print Styles */
-                @media print {
-                    nav, aside, button { display: none !important; }
-                    main { width: 100% !important; margin: 0 !important; padding: 0 !important; }
-                    body { background: white !important; color: black !important; }
-                    a { text-decoration: none !important; color: black !important; }
-                    .legal-warning { border-left-color: black !important; color: black !important; background: none !important; border: 1px solid #ccc !important; }
-                    .contact-section, .acknowledgment-section { background: none !important; border: 1px solid #ccc !important; }
-                }
-            `}</style>
+        <div className="min-h-screen bg-white text-[#3a3a3a] font-sans selection:bg-[#e5f9fb] print:bg-white print:text-black">
 
             {/* Navigation */}
-            <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 md:px-8 py-4">
+            <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 md:px-8 py-4 print:hidden">
                 <div className="max-w-[1200px] mx-auto flex justify-between items-center">
                     <Link to="/" className="flex items-center gap-2 text-gray-800 hover:text-[#208D9E] transition-colors group font-medium text-sm md:text-base">
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -219,7 +103,7 @@ const TermsOfService = () => {
 
             <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row gap-8 lg:gap-16 px-4 md:px-8 py-8 md:py-12 relative">
                 {/* Table of Contents Sidebar */}
-                <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 relative">
+                <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 relative print:hidden">
                     <div className="sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto pr-4 custom-scrollbar">
                         <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 pl-3">Contents</h4>
                         <nav className="flex flex-col space-y-1">
@@ -241,11 +125,11 @@ const TermsOfService = () => {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 max-w-[800px] mx-auto w-full pb-16">
-                    <article>
+                <main className="flex-1 max-w-[800px] mx-auto w-full pb-16 print:w-full print:m-0 print:p-0">
+                    <article className="prose prose-zinc max-w-none prose-headings:font-sans [&_h1]:text-[28px] md:[&_h1]:text-4xl [&_h1]:font-bold [&_h1]:text-[#1a1a1a] [&_h1]:mb-4 [&_h2]:text-xl md:[&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-[#1a1a1a] [&_h2]:mt-12 [&_h2]:mb-5 [&_h2]:border-b-2 [&_h2]:border-[#e5e5e5] [&_h2]:pb-3 [&_h3]:text-base md:[&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[#2a2a2a] [&_h3]:mt-8 [&_h3]:mb-4 [&_p]:text-[15px] md:[&_p]:text-base [&_p]:text-[#3a3a3a] [&_p]:leading-relaxed [&_li]:text-[15px] md:[&_li]:text-base [&_li]:text-[#3a3a3a] [&_strong]:font-semibold [&_strong]:text-[#1a1a1a] print:[&_h1]:text-black print:[&_h2]:text-black print:[&_h3]:text-black print:[&_p]:text-black print:[&_li]:text-black">
                         <header className="mb-8 md:mb-12">
                             <h1>Terms of Service</h1>
-                            <div className="flex flex-col sm:flex-row sm:gap-8 text-sm text-gray-500 border-b border-gray-200 pb-4 mb-8">
+                            <div className="flex flex-col sm:flex-row sm:gap-8 text-sm text-gray-500 border-b border-gray-200 pb-4 mb-8 not-prose">
                                 <p className="mb-1 sm:mb-0"><strong>Last Updated:</strong> February 15, 2026</p>
                                 <p className="mb-0"><strong>Effective Date:</strong> February 15, 2026</p>
                             </div>
@@ -426,7 +310,7 @@ const TermsOfService = () => {
                                 <li>Within the first 14 days of your initial paid subscription if you are unsatisfied</li>
                             </ul>
                             <p>
-                                To request a refund, contact us at <a href="mailto:support@zerithum.com" className="contact-link">support@zerithum.com</a> with your account details and reason for the request.
+                                To request a refund, contact us at <a href="mailto:support@zerithum.com" className={contactLinkClass}>support@zerithum.com</a> with your account details and reason for the request.
                             </p>
                         </section>
 
@@ -453,7 +337,7 @@ const TermsOfService = () => {
                             <p>You may cancel your subscription at any time through:</p>
                             <ul className="list-disc">
                                 <li>Your account settings on the Platform</li>
-                                <li>Contacting our support team at <a href="mailto:support@zerithum.com" className="contact-link">support@zerithum.com</a></li>
+                                <li>Contacting our support team at <a href="mailto:support@zerithum.com" className={contactLinkClass}>support@zerithum.com</a></li>
                             </ul>
                             <p>When you cancel:</p>
                             <ul className="list-disc">
@@ -545,7 +429,7 @@ const TermsOfService = () => {
 
                             <h3>9.1 Our Commitment to Privacy</h3>
                             <p>
-                                We take data privacy seriously. Our collection, use, and protection of your information is governed by our Privacy Policy, available at <a href="/privacy" className="contact-link">zerithum.com/privacy</a>.
+                                We take data privacy seriously. Our collection, use, and protection of your information is governed by our Privacy Policy, available at <a href="/privacy" className={contactLinkClass}>zerithum.com/privacy</a>.
                             </p>
 
                             <h3>9.2 Data Security Measures</h3>
@@ -584,7 +468,7 @@ const TermsOfService = () => {
                                 <li>Opt out of certain data processing activities</li>
                             </ul>
                             <p>
-                                To exercise these rights, contact us at <a href="mailto:privacy@zerithum.com" className="contact-link">privacy@zerithum.com</a>.
+                                To exercise these rights, contact us at <a href="mailto:privacy@zerithum.com" className={contactLinkClass}>privacy@zerithum.com</a>.
                             </p>
 
                             <h3>9.5 Data Retention</h3>
@@ -687,7 +571,7 @@ const TermsOfService = () => {
                             <h2>12. Disclaimers and Warranties</h2>
 
                             <h3>12.1 Service Provided "AS IS"</h3>
-                            <div className="legal-warning">
+                            <div className={legalWarningClass}>
                                 <p>THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED.</p>
                                 <p>TO THE FULLEST EXTENT PERMITTED BY LAW, WE DISCLAIM ALL WARRANTIES, INCLUDING:</p>
                                 <ul className="list-disc">
@@ -757,7 +641,7 @@ const TermsOfService = () => {
                             <h2>13. Limitation of Liability</h2>
 
                             <h3>13.1 General Limitation</h3>
-                            <div className="legal-warning">
+                            <div className={legalWarningClass}>
                                 <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, ZERITHUM AND ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AND LICENSORS SHALL NOT BE LIABLE FOR:</p>
                                 <ul className="list-disc">
                                     <li>INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES</li>
@@ -772,7 +656,7 @@ const TermsOfService = () => {
                             </div>
 
                             <h3>13.2 Maximum Liability Cap</h3>
-                            <div className="legal-warning">
+                            <div className={legalWarningClass}>
                                 <p>TO THE EXTENT PERMITTED BY LAW, OUR TOTAL LIABILITY TO YOU FOR ANY CLAIMS ARISING FROM OR RELATED TO THESE TERMS OR THE SERVICE SHALL NOT EXCEED THE GREATER OF:</p>
                                 <ul className="list-disc">
                                     <li>THE AMOUNT YOU PAID TO US IN THE 12 MONTHS PRECEDING THE CLAIM, OR</li>
@@ -830,7 +714,7 @@ const TermsOfService = () => {
 
                             <h3>15.2 Informal Resolution</h3>
                             <p>
-                                Before initiating formal legal proceedings, you agree to first contact us at <a href="mailto:legal@zerithum.com" className="contact-link">legal@zerithum.com</a> to seek informal resolution. We will attempt to resolve disputes amicably within 30 days of receiving notice.
+                                Before initiating formal legal proceedings, you agree to first contact us at <a href="mailto:legal@zerithum.com" className={contactLinkClass}>legal@zerithum.com</a> to seek informal resolution. We will attempt to resolve disputes amicably within 30 days of receiving notice.
                             </p>
 
                             <h3>15.3 Arbitration Agreement</h3>
@@ -847,7 +731,7 @@ const TermsOfService = () => {
                             </ul>
 
                             <h3>15.4 Class Action Waiver</h3>
-                            <div className="legal-warning">
+                            <div className={legalWarningClass}>
                                 <p>YOU AND ZERITHUM AGREE THAT DISPUTES WILL BE RESOLVED ON AN INDIVIDUAL BASIS ONLY. YOU WAIVE ANY RIGHT TO PARTICIPATE IN A CLASS ACTION, CLASS ARBITRATION, OR REPRESENTATIVE ACTION.</p>
                             </div>
                             <p>
@@ -958,20 +842,20 @@ const TermsOfService = () => {
                             </p>
                         </section>
 
-                        <section id="section-18" className="contact-section">
+                        <section id="section-18" className={contactSectionClass}>
                             <h2>18. Contact Information</h2>
                             <p>If you have questions, concerns, or requests regarding these Terms of Service, please contact us:</p>
                             <p>
                                 <strong>Zerithum Support</strong><br />
-                                Email: <a href="mailto:support@zerithum.com" className="contact-link">support@zerithum.com</a><br />
-                                Legal Inquiries: <a href="mailto:legal@zerithum.com" className="contact-link">legal@zerithum.com</a><br />
-                                Privacy Inquiries: <a href="mailto:privacy@zerithum.com" className="contact-link">privacy@zerithum.com</a><br />
-                                Website: <a href="https://zerithum.com" target="_blank" rel="noopener noreferrer" className="contact-link">https://zerithum.com</a>
+                                Email: <a href="mailto:support@zerithum.com" className={contactLinkClass}>support@zerithum.com</a><br />
+                                Legal Inquiries: <a href="mailto:legal@zerithum.com" className={contactLinkClass}>legal@zerithum.com</a><br />
+                                Privacy Inquiries: <a href="mailto:privacy@zerithum.com" className={contactLinkClass}>privacy@zerithum.com</a><br />
+                                Website: <a href="https://zerithum.com" target="_blank" rel="noopener noreferrer" className={contactLinkClass}>https://zerithum.com</a>
                             </p>
                             <p>Mailing Address: (To be specified based on registered business address)</p>
                         </section>
 
-                        <section id="section-19" className="acknowledgment-section">
+                        <section id="section-19" className={acknowledgmentSectionClass}>
                             <h2>19. Acknowledgment</h2>
                             <p className="font-bold">BY USING ZERITHUM, YOU ACKNOWLEDGE THAT:</p>
                             <ul className="list-disc">
@@ -993,7 +877,7 @@ const TermsOfService = () => {
             {/* Back to Top Button */}
             <button
                 onClick={scrollToTop}
-                className={`fixed bottom-8 right-8 z-50 p-3 rounded-full bg-[#208D9E] text-white shadow-lg transition-all duration-300 hover:bg-[#1a7a8a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#208D9E] ${
+                className={`fixed bottom-8 right-8 z-50 p-3 rounded-full bg-[#208D9E] text-white shadow-lg transition-all duration-300 hover:bg-[#1a7a8a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#208D9E] print:hidden ${
                     showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
                 }`}
                 aria-label="Back to top"
