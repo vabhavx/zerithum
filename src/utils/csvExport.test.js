@@ -85,8 +85,8 @@ describe('csvExport utility', () => {
             appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
             removeChildSpy = vi.spyOn(document.body, 'removeChild').mockImplementation(() => {});
 
-            // Mock Blob
-            global.Blob = vi.fn().mockImplementation((content, options) => ({ content, options }));
+            // Mock Blob (must be a function, not arrow function, to support 'new')
+            global.Blob = vi.fn().mockImplementation(function(content, options) { return { content, options }; });
         });
 
         afterEach(() => {
