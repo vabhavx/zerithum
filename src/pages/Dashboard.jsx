@@ -41,8 +41,15 @@ export default function Dashboard() {
     refetch,
   } = useQuery({
     queryKey: ["revenueTransactions"],
-    queryFn: () =>
-      base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
+    queryFn: () => {
+      // Optimization: Fetch only last 4 months of data
+      // This covers: current month, previous month, and 90-day trend chart/risk analysis
+      const fourMonthsAgo = startOfMonth(subMonths(new Date(), 4));
+      return base44.entities.RevenueTransaction.fetchAll(
+        { transaction_date: { $gte: fourMonthsAgo.toISOString() } },
+        "-transaction_date"
+      );
+    },
     staleTime: 1000 * 60 * 5,
   });
 
