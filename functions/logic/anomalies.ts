@@ -42,22 +42,32 @@ export async function detectAnomalies(
     const weeks = Object.entries(weeklyRevenue).sort();
 
     // Detect revenue drops/spikes
-    for (let i = 1; i < weeks.length; i++) {
-      const [prevWeek, prevAmount] = weeks[i - 1];
-      const [currWeek, currAmount] = weeks[i];
+    const recentAutopsies = await ctx.fetchRecentAutopsies(user.id, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
 
-      // Avoid division by zero
-      if (prevAmount === 0) continue;
+    // Only proceed with expensive analysis if no recent autopsy exists
+    if (recentAutopsies.length === 0) {
+      const llmPrompts: Promise<any>[] = [];
+      const pendingAnomaliesContext: any[] = [];
 
-      const change = ((currAmount - prevAmount) / prevAmount) * 100;
+      for (let i = 1; i < weeks.length; i++) {
+        const [prevWeek, prevAmount] = weeks[i - 1];
+        const [currWeek, currAmount] = weeks[i];
 
-      if (Math.abs(change) > 15) {
-        // Check if autopsy already exists recently
-        const recentAutopsies = await ctx.fetchRecentAutopsies(user.id, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+        // Avoid division by zero
+        if (prevAmount === 0) continue;
 
-        if (recentAutopsies.length === 0) {
+        const change = ((currAmount - prevAmount) / prevAmount) * 100;
+
+        if (Math.abs(change) > 15) {
+          pendingAnomaliesContext.push({
+            prevAmount,
+            currAmount,
+            change,
+            platformsAtRisk: Object.keys(platformRevenue)
+          });
+
           // Perform causal reconstruction using LLM
-          const causalAnalysis = await ctx.invokeLLM(
+          llmPrompts.push(ctx.invokeLLM(
             `Analyze this revenue anomaly for a creator:
 
 Previous week revenue: $${prevAmount.toFixed(2)}
@@ -85,7 +95,15 @@ Be specific and data-driven. No speculation.`,
                 expected_damage: { type: "number" }
               }
             }
-          );
+          ));
+        }
+      }
+
+      if (llmPrompts.length > 0) {
+        const results = await Promise.all(llmPrompts);
+
+        results.forEach((causalAnalysis, index) => {
+          const { prevAmount, currAmount, change, platformsAtRisk } = pendingAnomaliesContext[index];
 
           anomalies.push({
             user_id: user.id,
@@ -94,7 +112,7 @@ Be specific and data-driven. No speculation.`,
             detected_at: new Date().toISOString(),
             impact_percentage: change,
             impact_amount: currAmount - prevAmount,
-            affected_platforms: Object.keys(platformRevenue),
+            affected_platforms: platformsAtRisk,
             causal_reconstruction: {
               platform_behaviour: causalAnalysis.platform_behaviour,
               creator_behaviour: causalAnalysis.creator_behaviour,
@@ -105,11 +123,11 @@ Be specific and data-driven. No speculation.`,
               recurrence_probability: causalAnalysis.recurrence_probability || 0.5,
               expected_damage: causalAnalysis.expected_damage || Math.abs(currAmount - prevAmount),
               time_to_impact: Math.abs(change) > 25 ? 'immediate' : 'within_30_days',
-              platforms_at_risk: Object.keys(platformRevenue)
+              platforms_at_risk: platformsAtRisk
             },
             status: 'pending_review'
           });
-        }
+        });
       }
     }
 
