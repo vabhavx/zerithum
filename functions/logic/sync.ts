@@ -165,7 +165,7 @@ export async function syncPlatform(
 
         const campaigns = campaignsData.data || [];
 
-        for (const campaign of campaigns) {
+        const campaignsTransactions = await Promise.all(campaigns.map(async (campaign: any) => {
           const membersUrl = `https://www.patreon.com/api/oauth2/v2/campaigns/${campaign.id}/members?include=currently_entitled_tiers,user&fields[member]=full_name,patron_status,currently_entitled_amount_cents,pledge_relationship_start,last_charge_date,last_charge_status&fields[tier]=title,amount_cents`;
           
           const membersData = await retryWithBackoff(async () => {
@@ -178,7 +178,7 @@ export async function syncPlatform(
 
           const members = membersData.data || [];
 
-          const memberTransactions = members
+          return members
             .filter((member: any) => member.attributes.patron_status === 'active_patron')
             .map((member: any) => {
               const amount = (member.attributes.currently_entitled_amount_cents || 0) / 100;
@@ -196,9 +196,9 @@ export async function syncPlatform(
                 synced_at: new Date().toISOString()
               };
             });
+        }));
 
-          transactions.push(...memberTransactions);
-        }
+        transactions.push(...campaignsTransactions.flat());
         break;
       }
 
