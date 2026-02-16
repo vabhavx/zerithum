@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -36,9 +36,9 @@ const AuthenticatedApp = () => {
   const isPublicRoute = publicRoutes.some(route => route.toLowerCase() === currentPath.toLowerCase());
   const isRoot = currentPath === '';
 
-  const [showSlowLoadingMessage, setShowSlowLoadingMessage] = React.useState(false);
+  const [showSlowLoadingMessage, setShowSlowLoadingMessage] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => setShowSlowLoadingMessage(true), 3000);
     return () => clearTimeout(timer);
   }, []);

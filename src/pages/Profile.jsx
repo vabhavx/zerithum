@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -51,7 +51,7 @@ export default function Profile() {
 
 
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       setFormData({
         full_name: user.full_name || "",

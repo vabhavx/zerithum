@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import {
@@ -141,7 +141,7 @@ export default function LandingReconciliation({ isActive = true }) {
 
     // We'll show a subset of "recent" transactions in the dashboard view
     // The active source's transactions will be highlighted and brought to the top
-    const dashboardView = React.useMemo(() => {
+    const dashboardView = useMemo(() => {
         const activeTx = allTransactions.filter(tx => tx.sourceId === activeSource.id);
         const otherTx = allTransactions.filter(tx => tx.sourceId !== activeSource.id).slice(0, 3); // Show 3 others for context
         return [...activeTx, ...otherTx];
