@@ -56,7 +56,7 @@ export const PLATFORMS = [
     scope: "read_write",
     redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
-    clientId: "YOUR_STRIPE_CLIENT_ID"
+    clientId: import.meta.env.VITE_STRIPE_CLIENT_ID || "YOUR_STRIPE_CLIENT_ID"
   },
 
   {
@@ -69,7 +69,7 @@ export const PLATFORMS = [
     scope: "video.list,user.info.basic,video.insights",
     redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
-    clientKey: "YOUR_TIKTOK_CLIENT_KEY"
+    clientKey: import.meta.env.VITE_TIKTOK_CLIENT_KEY || "YOUR_TIKTOK_CLIENT_KEY"
   },
   {
     id: "shopify",
@@ -81,7 +81,7 @@ export const PLATFORMS = [
     scope: "read_orders,read_products,read_customers",
     redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
-    clientId: "YOUR_SHOPIFY_API_KEY",
+    clientId: import.meta.env.VITE_SHOPIFY_CLIENT_ID || "YOUR_SHOPIFY_API_KEY",
     requiresShopName: true
   },
   {
@@ -94,7 +94,7 @@ export const PLATFORMS = [
     scope: "channel:read:subscriptions bits:read analytics:read:extensions",
     redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
-    clientId: "YOUR_TWITCH_CLIENT_ID"
+    clientId: import.meta.env.VITE_TWITCH_CLIENT_ID || "YOUR_TWITCH_CLIENT_ID"
   },
   {
     id: "substack",
