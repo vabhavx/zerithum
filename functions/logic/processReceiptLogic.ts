@@ -22,7 +22,7 @@ export async function processReceiptLogic(
     return { status: 400, body: { error: 'Receipt URL required' } };
   }
 
-  if (!validateReceiptUrl(receiptUrl)) {
+  if (!(await validateReceiptUrl(receiptUrl))) {
     return { status: 400, body: { error: 'Invalid Receipt URL' } };
   }
 
