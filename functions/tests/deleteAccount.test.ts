@@ -48,6 +48,16 @@ describe('deleteAccount type check', () => {
         vi.mock('../logic/revokeToken.ts', () => ({
             revokeToken: vi.fn(),
         }));
+
+        vi.mock('../_shared/utils/cors.ts', () => ({
+            getCorsHeaders: vi.fn(() => ({
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'mock-headers',
+                'Access-Control-Allow-Methods': 'mock-methods',
+            })),
+            CORS_HEADERS: 'mock-headers',
+            CORS_METHODS: 'mock-methods',
+        }));
     });
 
     afterEach(() => {
