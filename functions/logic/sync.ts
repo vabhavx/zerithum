@@ -30,7 +30,7 @@ function isTemporaryError(error: any): boolean {
   const errorCode = error.code?.toLowerCase() || '';
   
   return RETRY_CONFIG.temporaryErrors.some(pattern => 
-    errorMessage.includes(pattern) || errorCode.includes(pattern)
+    errorMessage.includes(pattern.toLowerCase()) || errorCode.includes(pattern.toLowerCase())
   );
 }
 
