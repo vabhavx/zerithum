@@ -185,7 +185,6 @@ Deno.serve(async (req) => {
             }
             await adminClient.from('verification_codes').update({ used_at: new Date().toISOString() }).eq('id', codeData.id);
         } else {
-            console.log('No auth provided, requesting reauth. hasPassword:', hasPassword);
             return Response.json({
                 error: 'Re-authentication required.',
                 requiresReauth: true,
