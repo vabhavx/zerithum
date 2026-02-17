@@ -33,7 +33,8 @@ export async function detectAnomalies(
 
     transactions.forEach((tx: any) => {
       const date = new Date(tx.transaction_date);
-      const weekKey = `${date.getFullYear()}-W${Math.ceil(date.getDate() / 7)}`;
+      // Use monotonic week index to ensure correct sorting across months/years
+      const weekKey = Math.floor(date.getTime() / (7 * 24 * 60 * 60 * 1000)).toString();
 
       weeklyRevenue[weekKey] = (weeklyRevenue[weekKey] || 0) + tx.amount;
       platformRevenue[tx.platform] = (platformRevenue[tx.platform] || 0) + tx.amount;
@@ -48,6 +49,7 @@ export async function detectAnomalies(
     if (recentAutopsies.length === 0) {
       const llmPrompts: Promise<any>[] = [];
       const pendingAnomaliesContext: any[] = [];
+      const recentTransactionsStr = JSON.stringify(transactions.slice(0, 20), null, 2);
 
       for (let i = 1; i < weeks.length; i++) {
         const [prevWeek, prevAmount] = weeks[i - 1];
@@ -74,7 +76,7 @@ Previous week revenue: $${prevAmount.toFixed(2)}
 Current week revenue: $${currAmount.toFixed(2)}
 Change: ${change.toFixed(1)}%
 
-Recent transactions: ${JSON.stringify(transactions.slice(0, 20), null, 2)}
+Recent transactions: ${recentTransactionsStr}
 
 Provide a forensic analysis across these four layers:
 1. Platform behaviour (fees, payout timing, policy changes)
@@ -100,9 +102,12 @@ Be specific and data-driven. No speculation.`,
       }
 
       if (llmPrompts.length > 0) {
-        const results = await Promise.all(llmPrompts);
+        const results = await Promise.allSettled(llmPrompts);
 
-        results.forEach((causalAnalysis, index) => {
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') return;
+          const causalAnalysis = result.value;
+
           const { prevAmount, currAmount, change, platformsAtRisk } = pendingAnomaliesContext[index];
 
           anomalies.push({
