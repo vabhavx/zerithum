@@ -204,6 +204,7 @@ export default function TransactionsTable({
     onRowClick,
     focusedIndex,
     onFocusRow,
+    emptyState,
 }) {
     const rowRefs = useRef([]);
 
@@ -265,7 +266,15 @@ export default function TransactionsTable({
                     <tbody role="rowgroup">
                         {isLoading ? (
                             Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} cols={COLS} />)
-                        ) : transactions.length === 0 ? null : (
+                        ) : transactions.length === 0 ? (
+                            emptyState ? (
+                                <tr>
+                                    <td colSpan={COLS} className="py-0">
+                                        {emptyState}
+                                    </td>
+                                </tr>
+                            ) : null
+                        ) : (
                             transactions.map((txn, idx) => (
                                 <TransactionRowItem
                                     key={txn.id}
