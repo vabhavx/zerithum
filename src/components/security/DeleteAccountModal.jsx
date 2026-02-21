@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { base44 } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
+import { OAUTH_PROVIDERS } from "@/lib/auth";
 import OTPVerification from "./OTPVerification";
 import DopamineSuccess from "@/components/ui/DopamineSuccess";
 
@@ -27,13 +28,12 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
     const [progressMessage, setProgressMessage] = useState("");
 
     // Check if user has password auth - must match backend logic
-    const oauthProviders = ['google', 'github', 'gitlab', 'bitbucket', 'azure', 'facebook', 'twitter'];
     const userProvider = user?.app_metadata?.provider || '';
     const userProviders = user?.app_metadata?.providers || [];
 
     // User has password ONLY if they signed up with email AND are not using OAuth
     const hasPasswordAuth = (userProvider === 'email' || userProviders.includes('email')) &&
-        !oauthProviders.includes(userProvider);
+        !OAUTH_PROVIDERS.includes(userProvider);
 
     // Send OTP mutation
     const sendOTPMutation = useMutation({

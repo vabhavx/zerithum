@@ -6,7 +6,8 @@ import {
     RATE_LIMITS,
     SECURITY_ACTIONS,
     extractClientInfo,
-    sanitizeErrorMessage
+    sanitizeErrorMessage,
+    OAUTH_PROVIDERS
 } from '../_shared/logic/security.ts';
 import { revokeToken, RevokeContext } from './logic/revokeToken.ts';
 import { getCorsHeaders } from '../_shared/utils/cors.ts';
@@ -132,13 +133,12 @@ Deno.serve(async (req) => {
 
         // Re-authentication
         // Check if user has password-based auth (email) vs OAuth (google, github, etc.)
-        const oauthProviders = ['google', 'github', 'gitlab', 'bitbucket', 'azure', 'facebook', 'twitter'];
         const userProvider = user.app_metadata?.provider || '';
         const userProviders = user.app_metadata?.providers || [];
 
         // User has password ONLY if they signed up with email AND are not using OAuth
         const hasPassword = (userProvider === 'email' || userProviders.includes('email')) &&
-            !oauthProviders.includes(userProvider);
+            !OAUTH_PROVIDERS.includes(userProvider);
 
         if (hasPassword && currentPassword) {
             const { error: signInError } = await supabase.auth.signInWithPassword({
