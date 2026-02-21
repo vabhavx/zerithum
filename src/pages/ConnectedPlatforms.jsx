@@ -10,6 +10,8 @@ import {
   Search,
   ShieldCheck,
   Unplug,
+  Activity,
+  Server
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/supabaseClient";
@@ -49,7 +51,7 @@ const STATUS_FILTERS = [
 
 function statusTone(status) {
   if (status === "active") return "border-[#56C5D0]/40 bg-[#56C5D0]/10 text-[#56C5D0]";
-  if (status === "syncing") return "border-white/30 bg-white/10 text-white";
+  if (status === "syncing") return "border-white/30 bg-white/10 text-white animate-pulse";
   if (status === "error") return "border-[#F06C6C]/40 bg-[#F06C6C]/10 text-[#F06C6C]";
   return "border-[#F0A562]/40 bg-[#F0A562]/10 text-[#F0A562]";
 }
@@ -62,7 +64,7 @@ function statusLabel(status) {
   return status || "Unknown";
 }
 
-function MetricCard({ label, value, helper, tone = "neutral" }) {
+function MetricCard({ label, value, helper, tone = "neutral", icon: Icon }) {
   const toneClass =
     tone === "teal"
       ? "text-[#56C5D0]"
@@ -73,10 +75,19 @@ function MetricCard({ label, value, helper, tone = "neutral" }) {
           : "text-[#F5F5F5]";
 
   return (
-    <GlassCard hoverEffect className="p-4">
-      <p className="text-xs uppercase tracking-wide text-white/60">{label}</p>
-      <p className={`mt-2 font-mono-financial text-2xl font-semibold ${toneClass}`}>{value}</p>
-      <p className="mt-1 text-xs text-white/60">{helper}</p>
+    <GlassCard hoverEffect glowEffect={tone === 'teal'} className="group p-5">
+      <div className="flex items-start justify-between">
+        <div>
+           <p className="text-xs uppercase tracking-wide text-white/50 group-hover:text-white/70 transition-colors">{label}</p>
+           <p className={`mt-2 font-mono-financial text-3xl font-bold tracking-tight ${toneClass}`}>{value}</p>
+        </div>
+        {Icon && (
+          <div className={`rounded-lg p-2 transition-colors ${tone === 'teal' ? 'bg-[#56C5D0]/10 text-[#56C5D0]' : 'bg-white/5 text-white/40 group-hover:bg-white/10'}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+        )}
+      </div>
+      <p className="mt-2 text-xs text-white/50">{helper}</p>
     </GlassCard>
   );
 }
@@ -325,438 +336,440 @@ export default function ConnectedPlatforms() {
   };
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      className="mx-auto w-full max-w-[1400px] p-6 lg:p-8"
-    >
-      <motion.header
-        variants={itemVariants}
-        className="mb-6 flex flex-col gap-4 border-b border-white/5 pb-6 xl:flex-row xl:items-start xl:justify-between"
-      >
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#F5F5F5] sm:text-4xl">Connected platforms</h1>
-          <p className="mt-2 text-base text-white/60">
-            Interactive connection control center with live status filtering and sync evidence.
-          </p>
-          <p className="mt-2 text-xs text-white/60">
-            Last sync: {stats.lastSyncDate ? format(stats.lastSyncDate, "MMM d, yyyy h:mm a") : "No sync history"}
-          </p>
-        </div>
+    <div className="relative min-h-screen">
+      {/* Background Gradient */}
+      <div className="fixed inset-x-0 top-0 h-[400px] bg-gradient-to-b from-[#56C5D0]/5 via-transparent to-transparent blur-[120px] pointer-events-none" />
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            refetchPlatforms();
-            refetchHistory();
-          }}
-          disabled={isFetching}
-          className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </motion.header>
-
-      <motion.section
-        variants={itemVariants}
-        className="mb-6 rounded-lg border border-[#56C5D0]/30 bg-[#56C5D0]/10 p-4"
-      >
-        <div className="flex items-start gap-2">
-          <ShieldCheck className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
-          <p className="text-sm text-white/85">
-            Filter by status or search platform names to troubleshoot quickly before exports.
-          </p>
-        </div>
-      </motion.section>
-
-      <motion.section
+      <motion.div
+        initial="hidden"
+        animate="visible"
         variants={containerVariants}
-        className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
+        className="relative mx-auto w-full max-w-[1400px] p-6 lg:p-8"
       >
-        <MetricCard label="Connected" value={String(stats.total)} helper="Active data sources" />
-        <MetricCard label="Healthy" value={String(stats.active)} helper="Currently synced" tone="teal" />
-        <MetricCard label="Syncing" value={String(stats.syncing)} helper="In progress" tone="orange" />
-        <MetricCard label="Errors" value={String(stats.errors)} helper="Needs review" tone={stats.errors > 0 ? "red" : "teal"} />
-      </motion.section>
-
-      <GlassCard className="mb-6 p-4">
-        <div className="mb-3 flex flex-wrap gap-2">
-          {STATUS_FILTERS.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              onClick={() => setStatusFilter(item.value)}
-              className={`h-8 rounded-md border px-3 text-sm transition ${
-                statusFilter === item.value
-                  ? "border-[#56C5D0]/45 bg-[#56C5D0]/10 text-[#56C5D0]"
-                  : "border-white/20 bg-transparent text-white/70 hover:bg-white/10"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search connected platforms"
-              className="h-9 border-white/15 bg-[#15151A] pl-9 text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-            />
+        <motion.header
+          variants={itemVariants}
+          className="mb-6 flex flex-col gap-4 border-b border-white/5 pb-6 xl:flex-row xl:items-start xl:justify-between"
+        >
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-[#F5F5F5] sm:text-4xl">Connected platforms</h1>
+            <p className="mt-2 text-base text-white/60">
+              Interactive connection control center with live status filtering and sync evidence.
+            </p>
+            <p className="mt-2 text-xs text-white/60">
+              Last sync: {stats.lastSyncDate ? format(stats.lastSyncDate, "MMM d, yyyy h:mm a") : "No sync history"}
+            </p>
           </div>
 
-          <div>
-            <p className="mb-1 text-xs text-white/60">Connection health</p>
-            <div className="h-2 rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-[#56C5D0] transition-all"
-                style={{ width: `${Math.min(100, Math.max(0, stats.healthScore))}%` }}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              refetchPlatforms();
+              refetchHistory();
+            }}
+            disabled={isFetching}
+            className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </motion.header>
+
+        <motion.section
+          variants={itemVariants}
+          className="mb-6 rounded-lg border border-[#56C5D0]/30 bg-[#56C5D0]/10 p-4"
+        >
+          <div className="flex items-start gap-2">
+            <ShieldCheck className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
+            <p className="text-sm text-white/85">
+              Filter by status or search platform names to troubleshoot quickly before exports.
+            </p>
+          </div>
+        </motion.section>
+
+        <motion.section
+          variants={containerVariants}
+          className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
+        >
+          <MetricCard label="Connected" value={String(stats.total)} helper="Active data sources" icon={Plug} />
+          <MetricCard label="Healthy" value={String(stats.active)} helper="Currently synced" tone="teal" icon={CheckCircle2} />
+          <MetricCard label="Syncing" value={String(stats.syncing)} helper="In progress" tone="orange" icon={RefreshCw} />
+          <MetricCard label="Errors" value={String(stats.errors)} helper="Needs review" tone={stats.errors > 0 ? "red" : "teal"} icon={AlertTriangle} />
+        </motion.section>
+
+        <GlassCard className="mb-6 p-4">
+          <div className="mb-3 flex flex-wrap gap-2">
+            {STATUS_FILTERS.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => setStatusFilter(item.value)}
+                className={`relative overflow-hidden rounded-md px-4 py-1.5 text-xs font-medium uppercase tracking-wide transition-all ${
+                  statusFilter === item.value
+                    ? "text-[#0A0A0A]"
+                    : "text-white/60 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                {statusFilter === item.value && (
+                  <motion.div
+                    layoutId="status-filter-highlight"
+                    className="absolute inset-0 bg-[#56C5D0]"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10">{item.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search connected platforms"
+                className="h-9 border-white/10 bg-[#15151A] pl-9 text-[#F5F5F5] placeholder:text-white/20 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
               />
             </div>
-            <p className="mt-1 text-xs text-white/60">{stats.healthScore.toFixed(0)}% stable connection score</p>
-          </div>
-        </div>
-      </GlassCard>
 
-      <GlassCard className="mb-6">
-        <div className="border-b border-white/10 p-4">
-          <h2 className="text-lg font-semibold text-[#F5F5F5]">Connected accounts</h2>
-          <p className="mt-1 text-sm text-white/70">Live filtered list with direct sync controls.</p>
-        </div>
-
-        <div className="space-y-3 p-4">
-          {filteredConnections.length === 0 && (
-            <div className="rounded-lg border border-white/10 bg-[#15151A] p-6 text-center text-sm text-white/70">
-              {isLoading ? "Loading connected sources..." : "No connections match current filters."}
+            <div>
+              <p className="mb-1 text-xs text-white/60">Connection health</p>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, Math.max(0, stats.healthScore))}%` }}
+                  transition={{ duration: 1 }}
+                  className="h-full rounded-full bg-[#56C5D0]"
+                />
+              </div>
+              <p className="mt-1 text-xs text-white/40">{stats.healthScore.toFixed(0)}% stable connection score</p>
             </div>
-          )}
+          </div>
+        </GlassCard>
 
-          <AnimatePresence>
-            {filteredConnections.map((connection) => {
-              const platform = PLATFORMS.find((item) => item.id === connection.platform);
-              const Icon = platform?.icon;
-              const syncing = syncingId === connection.id || connection.sync_status === "syncing";
+        <GlassCard className="mb-6">
+          <div className="border-b border-white/10 p-4">
+            <h2 className="text-lg font-semibold text-[#F5F5F5]">Connected accounts</h2>
+            <p className="mt-1 text-sm text-white/70">Live filtered list with direct sync controls.</p>
+          </div>
+
+          <div className="space-y-3 p-4">
+            {filteredConnections.length === 0 && (
+              <div className="rounded-lg border border-white/10 bg-[#15151A] p-6 text-center text-sm text-white/70">
+                {isLoading ? "Loading connected sources..." : "No connections match current filters."}
+              </div>
+            )}
+
+            <AnimatePresence mode="popLayout">
+              {filteredConnections.map((connection) => {
+                const platform = PLATFORMS.find((item) => item.id === connection.platform);
+                const Icon = platform?.icon;
+                const syncing = syncingId === connection.id || connection.sync_status === "syncing";
+
+                return (
+                  <motion.div
+                    key={connection.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.2 }}
+                    className="group rounded-lg border border-white/5 bg-white/[0.02] p-4 hover:border-white/10 hover:bg-white/[0.04] transition-all"
+                  >
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className="relative mt-0.5 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-[#101014] transition-colors group-hover:border-white/20">
+                           {/* Status Indicator Dot */}
+                           <div className={`absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-[#15151A] ${
+                              connection.sync_status === 'active' ? 'bg-green-500' :
+                              connection.sync_status === 'error' ? 'bg-red-500' :
+                              connection.sync_status === 'syncing' ? 'bg-blue-500 animate-pulse' : 'bg-gray-500'
+                           }`} />
+                          {Icon ? <Icon className="h-5 w-5 text-white/70" /> : <Plug className="h-5 w-5 text-white/70" />}
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-medium text-[#F5F5F5]">{platform?.name || connection.platform}</p>
+                          <div className="mt-1 flex items-center gap-2 text-xs text-white/50">
+                             <span>Connected {connection.connected_at ? format(new Date(connection.connected_at), "MMM d") : "-"}</span>
+                             {connection.last_synced_at && (
+                                <>
+                                  <span className="h-1 w-1 rounded-full bg-white/20" />
+                                  <span>Synced {format(new Date(connection.last_synced_at), "h:mm a")}</span>
+                                </>
+                             )}
+                          </div>
+                          {connection.error_message && (
+                            <p className="mt-1 text-xs text-[#F06C6C]">{connection.error_message}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 opacity-60 transition-opacity group-hover:opacity-100">
+                        <span className={`rounded-md border px-2 py-1 text-xs font-medium uppercase tracking-wider ${statusTone(connection.sync_status)}`}>
+                          {statusLabel(connection.sync_status)}
+                        </span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={syncing}
+                          onClick={() => syncConnection(connection, false)}
+                          className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
+                        >
+                          {syncing ? (
+                            <>
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                              Syncing
+                            </>
+                          ) : (
+                            "Sync"
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={syncing}
+                          onClick={() => syncConnection(connection, true)}
+                          className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
+                        >
+                          Full sync
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setDisconnectTarget(connection)}
+                          className="h-8 border-[#F06C6C]/20 bg-transparent px-3 text-xs text-[#F06C6C] hover:bg-[#F06C6C]/10"
+                        >
+                          <Unplug className="mr-1.5 h-3.5 w-3.5" />
+                          Disconnect
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        </GlassCard>
+
+        <GlassCard className="mb-6">
+          <div className="border-b border-white/10 p-4">
+            <h2 className="text-lg font-semibold text-[#F5F5F5]">Available platforms</h2>
+            <p className="mt-1 text-sm text-white/70">Connect additional sources to improve data completeness.</p>
+          </div>
+
+          <motion.div
+             variants={containerVariants}
+             className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3"
+          >
+            {availablePlatforms.map((platform) => {
+              const Icon = platform.icon;
+              const connecting = connectingId === platform.id;
 
               return (
                 <motion.div
-                  key={connection.id}
+                  key={platform.id}
                   variants={itemVariants}
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="rounded-lg border border-white/10 bg-[#15151A] p-4"
+                  whileHover={{ scale: 1.02 }}
+                  className="rounded-lg border border-white/5 bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.04] hover:border-white/10"
                 >
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-[#101014]">
-                        {Icon ? <Icon className="h-4 w-4 text-white/70" /> : <Plug className="h-4 w-4 text-white/70" />}
-                      </div>
-
-                      <div>
-                        <p className="text-sm font-medium text-[#F5F5F5]">{platform?.name || connection.platform}</p>
-                        <p className="mt-1 text-xs text-white/60">
-                          Connected {connection.connected_at ? format(new Date(connection.connected_at), "MMM d, yyyy") : "-"}
-                          {connection.last_synced_at && (
-                            <>
-                              {" "}• Last sync {format(new Date(connection.last_synced_at), "MMM d, yyyy h:mm a")}
-                            </>
-                          )}
-                        </p>
-                        {connection.error_message && (
-                          <p className="mt-1 text-xs text-[#F06C6C]">{connection.error_message}</p>
-                        )}
-                      </div>
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-[#101014]">
+                      <Icon className="h-4 w-4 text-white/70" />
                     </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded-md border px-2 py-1 text-xs ${statusTone(connection.sync_status)}`}>
-                        {statusLabel(connection.sync_status)}
-                      </span>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={syncing}
-                        onClick={() => syncConnection(connection, false)}
-                        className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
-                      >
-                        {syncing ? (
-                          <>
-                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                            Syncing
-                          </>
-                        ) : (
-                          "Sync"
-                        )}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={syncing}
-                        onClick={() => syncConnection(connection, true)}
-                        className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
-                      >
-                        Full sync
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setDisconnectTarget(connection)}
-                        className="h-8 border-[#F06C6C]/40 bg-transparent px-3 text-xs text-[#F06C6C] hover:bg-[#F06C6C]/10"
-                      >
-                        <Unplug className="mr-1.5 h-3.5 w-3.5" />
-                        Disconnect
-                      </Button>
-                    </div>
+                    <p className="text-sm font-medium text-[#F5F5F5]">{platform.name}</p>
                   </div>
+
+                  <p className="mb-4 text-xs text-white/50 leading-relaxed min-h-[32px]">{platform.description}</p>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => beginConnect(platform)}
+                    disabled={connecting}
+                    className="h-8 w-full bg-[#56C5D0]/10 text-xs font-medium text-[#56C5D0] hover:bg-[#56C5D0] hover:text-[#0A0A0A] border border-[#56C5D0]/20 hover:border-[#56C5D0] transition-all"
+                  >
+                    {connecting ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        Connecting
+                      </>
+                    ) : (
+                      <>
+                        <Plug className="mr-1.5 h-3.5 w-3.5" />
+                        Connect
+                      </>
+                    )}
+                  </Button>
                 </motion.div>
               );
             })}
-          </AnimatePresence>
-        </div>
-      </GlassCard>
+          </motion.div>
+        </GlassCard>
 
-      <GlassCard className="mb-6">
-        <div className="border-b border-white/10 p-4">
-          <h2 className="text-lg font-semibold text-[#F5F5F5]">Available platforms</h2>
-          <p className="mt-1 text-sm text-white/70">Connect additional sources to improve data completeness.</p>
-        </div>
+        <GlassCard>
+          <div className="flex flex-col gap-2 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent sync evidence</h2>
+              <p className="mt-1 text-sm text-white/70">Expand when you need run-level details.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowHistory((prev) => !prev)}
+              className="h-8 rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white/75 hover:bg-white/10 transition-colors"
+            >
+              {showHistory ? "Hide history" : "Show history"}
+            </button>
+          </div>
 
-        <motion.div
-           variants={containerVariants}
-           className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3"
-        >
-          {availablePlatforms.map((platform) => {
-            const Icon = platform.icon;
-            const connecting = connectingId === platform.id;
-
-            return (
+          <AnimatePresence>
+            {showHistory && (
               <motion.div
-                key={platform.id}
-                variants={itemVariants}
-                className="rounded-lg border border-white/10 bg-[#15151A] p-4"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
               >
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-[#101014]">
-                    <Icon className="h-4 w-4 text-white/70" />
-                  </div>
-                  <p className="text-sm font-medium text-[#F5F5F5]">{platform.name}</p>
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-white/10 hover:bg-transparent">
+                      <TableHead className="text-[#D8D8D8]">Date</TableHead>
+                      <TableHead className="text-[#D8D8D8]">Platform</TableHead>
+                      <TableHead className="text-right text-[#D8D8D8]">Transactions</TableHead>
+                      <TableHead className="text-right text-[#D8D8D8]">Duration</TableHead>
+                      <TableHead className="text-right text-[#D8D8D8]">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {syncHistory.length === 0 && (
+                      <TableRow className="border-white/10 hover:bg-transparent">
+                        <TableCell colSpan={5} className="py-8 text-center text-sm text-white/60">
+                          No sync history recorded yet.
+                        </TableCell>
+                      </TableRow>
+                    )}
 
-                <p className="mb-3 text-sm text-white/70">{platform.description}</p>
-
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => beginConnect(platform)}
-                  disabled={connecting}
-                  className="h-8 w-full bg-[#56C5D0] text-xs font-medium text-[#0A0A0A] hover:bg-[#48AAB5]"
-                >
-                  {connecting ? (
-                    <>
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      Connecting
-                    </>
-                  ) : (
-                    <>
-                      <Plug className="mr-1.5 h-3.5 w-3.5" />
-                      Connect
-                    </>
-                  )}
-                </Button>
+                    {syncHistory.slice(0, 15).map((sync) => (
+                      <TableRow key={sync.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
+                        <TableCell className="text-sm text-white/75">
+                          {sync.sync_started_at
+                            ? format(new Date(sync.sync_started_at), "MMM d, yyyy h:mm a")
+                            : "-"}
+                        </TableCell>
+                        <TableCell className="text-sm text-[#F5F5F5]">
+                          {PLATFORMS.find((item) => item.id === sync.platform)?.name || sync.platform || "Unknown"}
+                        </TableCell>
+                        <TableCell className="text-right font-mono-financial text-white/80">
+                          {sync.transactions_synced || 0}
+                        </TableCell>
+                        <TableCell className="text-right font-mono-financial text-white/80">
+                          {typeof sync.duration_ms === "number" ? `${(sync.duration_ms / 1000).toFixed(1)}s` : "-"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className={`rounded-md border px-2 py-1 text-xs ${statusTone(sync.status)}`}>
+                            {statusLabel(sync.status)}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </motion.div>
-            );
-          })}
-        </motion.div>
-      </GlassCard>
+            )}
+          </AnimatePresence>
+        </GlassCard>
 
-      <GlassCard>
-        <div className="flex flex-col gap-2 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent sync evidence</h2>
-            <p className="mt-1 text-sm text-white/70">Expand when you need run-level details.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowHistory((prev) => !prev)}
-            className="h-8 rounded-md border border-white/20 px-3 text-sm text-white/75 hover:bg-white/10"
+        <Dialog open={credentialsOpen} onOpenChange={setCredentialsOpen}>
+          <DialogContent className="max-w-md rounded-xl border border-white/10 bg-[#111114] text-[#F5F5F5]">
+            <DialogHeader>
+              <DialogTitle>Connect {selectedPlatform?.name || "platform"}</DialogTitle>
+              <DialogDescription className="text-white/65">
+                Enter required connection details to complete setup.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-2">
+              {selectedPlatform?.requiresShopName && (
+                <div>
+                  <Label htmlFor="shop-name" className="mb-2 block text-sm text-white/80">
+                    Shopify store name
+                  </Label>
+                  <Input
+                    id="shop-name"
+                    value={shopName}
+                    onChange={(event) => setShopName(event.target.value)}
+                    placeholder="your-store"
+                    className="h-9 border-white/15 bg-[#15151A] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                  />
+                </div>
+              )}
+
+              {selectedPlatform?.requiresApiKey && (
+                <div>
+                  <Label htmlFor="api-key" className="mb-2 block text-sm text-white/80">
+                    API key
+                  </Label>
+                  <Input
+                    id="api-key"
+                    value={apiKey}
+                    onChange={(event) => setApiKey(event.target.value)}
+                    placeholder="Enter API key"
+                    className="h-9 border-white/15 bg-[#15151A] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                  />
+                </div>
+              )}
+
+              <Button
+                type="button"
+                onClick={handleCredentialConnect}
+                disabled={connectMutation.isPending}
+                className="h-9 w-full bg-[#56C5D0] text-[#0A0A0A] hover:bg-[#48AAB5]"
+              >
+                {connectMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connecting
+                  </>
+                ) : (
+                  "Continue"
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {stats.errors > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 rounded-lg border border-[#F0A562]/35 bg-[#F0A562]/10 p-4"
           >
-            {showHistory ? "Hide history" : "Show history"}
-          </button>
-        </div>
-
-        {showHistory && (
-          <Table>
-            <TableHeader>
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableHead className="text-[#D8D8D8]">Date</TableHead>
-                <TableHead className="text-[#D8D8D8]">Platform</TableHead>
-                <TableHead className="text-right text-[#D8D8D8]">Transactions</TableHead>
-                <TableHead className="text-right text-[#D8D8D8]">Duration</TableHead>
-                <TableHead className="text-right text-[#D8D8D8]">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {syncHistory.length === 0 && (
-                <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableCell colSpan={5} className="py-8 text-center text-sm text-white/60">
-                    No sync history recorded yet.
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {syncHistory.slice(0, 15).map((sync) => (
-                <TableRow key={sync.id} className="border-white/10 hover:bg-white/[0.02]">
-                  <TableCell className="text-sm text-white/75">
-                    {sync.sync_started_at
-                      ? format(new Date(sync.sync_started_at), "MMM d, yyyy h:mm a")
-                      : "-"}
-                  </TableCell>
-                  <TableCell className="text-sm text-[#F5F5F5]">
-                    {PLATFORMS.find((item) => item.id === sync.platform)?.name || sync.platform || "Unknown"}
-                  </TableCell>
-                  <TableCell className="text-right font-mono-financial text-white/80">
-                    {sync.transactions_synced || 0}
-                  </TableCell>
-                  <TableCell className="text-right font-mono-financial text-white/80">
-                    {typeof sync.duration_ms === "number" ? `${(sync.duration_ms / 1000).toFixed(1)}s` : "-"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span className={`rounded-md border px-2 py-1 text-xs ${statusTone(sync.status)}`}>
-                      {statusLabel(sync.status)}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 text-[#F0A562]" />
+              <p className="text-sm text-white/85">
+                {stats.errors} connection error{stats.errors > 1 ? "s" : ""} detected. Resolve before sharing exports.
+              </p>
+            </div>
+          </motion.section>
         )}
-      </GlassCard>
 
-      <Dialog open={credentialsOpen} onOpenChange={setCredentialsOpen}>
-        <DialogContent className="max-w-md rounded-xl border border-white/10 bg-[#111114] text-[#F5F5F5]">
-          <DialogHeader>
-            <DialogTitle>Connect {selectedPlatform?.name || "platform"}</DialogTitle>
-            <DialogDescription className="text-white/65">
-              Enter required connection details to complete setup.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-2">
-            {selectedPlatform?.requiresShopName && (
-              <div>
-                <Label htmlFor="shop-name" className="mb-2 block text-sm text-white/80">
-                  Shopify store name
-                </Label>
-                <Input
-                  id="shop-name"
-                  value={shopName}
-                  onChange={(event) => setShopName(event.target.value)}
-                  placeholder="your-store"
-                  className="h-9 border-white/15 bg-[#15151A] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-                />
-              </div>
-            )}
-
-            {selectedPlatform?.requiresApiKey && (
-              <div>
-                <Label htmlFor="api-key" className="mb-2 block text-sm text-white/80">
-                  API key
-                </Label>
-                <Input
-                  id="api-key"
-                  value={apiKey}
-                  onChange={(event) => setApiKey(event.target.value)}
-                  placeholder="Enter API key"
-                  className="h-9 border-white/15 bg-[#15151A] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-                />
-              </div>
-            )}
-
-            <Button
-              type="button"
-              onClick={handleCredentialConnect}
-              disabled={connectMutation.isPending}
-              className="h-9 w-full bg-[#56C5D0] text-[#0A0A0A] hover:bg-[#48AAB5]"
-            >
-              {connectMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connecting
-                </>
-              ) : (
-                "Continue"
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={Boolean(disconnectTarget)} onOpenChange={(open) => !open && setDisconnectTarget(null)}>
-        <DialogContent className="max-w-sm rounded-xl border border-white/10 bg-[#111114] text-[#F5F5F5]">
-          <DialogHeader>
-            <DialogTitle>Disconnect platform</DialogTitle>
-            <DialogDescription className="text-white/65">
-              This will stop future sync from {PLATFORMS.find((item) => item.id === disconnectTarget?.platform)?.name || disconnectTarget?.platform || "this source"}.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDisconnectTarget(null)}
-              className="h-8 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={() => disconnectTarget && disconnectMutation.mutate(disconnectTarget.id)}
-              disabled={disconnectMutation.isPending}
-              className="h-8 bg-[#F06C6C] text-white hover:bg-[#E45F5F]"
-            >
-              {disconnectMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  Disconnecting
-                </>
-              ) : (
-                "Disconnect"
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {stats.errors > 0 && (
-        <section className="mt-6 rounded-lg border border-[#F0A562]/35 bg-[#F0A562]/10 p-4">
-          <div className="flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 text-[#F0A562]" />
-            <p className="text-sm text-white/85">
-              {stats.errors} connection error{stats.errors > 1 ? "s" : ""} detected. Resolve before sharing exports.
-            </p>
-          </div>
-        </section>
-      )}
-
-      {stats.errors === 0 && stats.total > 0 && (
-        <section className="mt-6 rounded-lg border border-[#56C5D0]/35 bg-[#56C5D0]/10 p-4">
-          <div className="flex items-start gap-2">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
-            <p className="text-sm text-white/85">All connected platforms currently report healthy sync status.</p>
-          </div>
-        </section>
-      )}
-    </motion.div>
+        {stats.errors === 0 && stats.total > 0 && (
+          <motion.section
+             initial={{ opacity: 0, y: 10 }}
+             animate={{ opacity: 1, y: 0 }}
+             className="mt-6 rounded-lg border border-[#56C5D0]/35 bg-[#56C5D0]/10 p-4"
+          >
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
+              <p className="text-sm text-white/85">All connected platforms currently report healthy sync status.</p>
+            </div>
+          </motion.section>
+        )}
+      </motion.div>
+    </div>
   );
 }
