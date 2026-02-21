@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronDown, Loader2 } from "lucide-react";
+import { Check, ChevronDown, Loader2, Calculator, TrendingUp, Clock, DollarSign } from "lucide-react";
 import { base44 } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const PLANS = {
   monthly: [
@@ -208,6 +217,11 @@ export default function Pricing() {
   const [monthlyRevenue, setMonthlyRevenue] = useState(10000);
   const [viewMode, setViewMode] = useState("plans");
 
+  // ROI Calculator State
+  const [adminHours, setAdminHours] = useState(5);
+  const [hourlyRate, setHourlyRate] = useState(50);
+  const [accountantCost, setAccountantCost] = useState(250);
+
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -234,6 +248,23 @@ export default function Pricing() {
       window.history.replaceState({}, "", "/pricing");
     }
   }, []);
+
+  // Smart Defaults Logic
+  useEffect(() => {
+    // Estimate hourly rate based on revenue (assuming ~2000 work hours/year)
+    const estimatedHourlyRate = Math.max(20, Math.round((monthlyRevenue * 12) / 2000));
+    setHourlyRate(estimatedHourlyRate);
+
+    // Estimate admin burden based on scale
+    if (monthlyRevenue < 5000) setAdminHours(3);
+    else if (monthlyRevenue < 20000) setAdminHours(6);
+    else setAdminHours(12);
+
+    // Estimate accountant cost
+    if (monthlyRevenue < 5000) setAccountantCost(0);
+    else if (monthlyRevenue < 20000) setAccountantCost(150);
+    else setAccountantCost(500);
+  }, [monthlyRevenue]);
 
   const handlePlanSelect = async (plan) => {
     if (plan.price === 0) {
@@ -269,23 +300,45 @@ export default function Pricing() {
   };
 
   const plans = PLANS[billingPeriod];
-
   const recommendation = useMemo(() => estimateBestPlan(monthlyRevenue), [monthlyRevenue]);
+  const recommendedPlanObj = plans.find((p) => p.name === recommendation);
 
-  const annualSavings = useMemo(() => {
-    const monthlyPlans = PLANS.monthly;
-    const annualPlans = PLANS.annual;
+  const roiMetrics = useMemo(() => {
+    // Zerithum efficiency assumption: reduces manual work by 85%
+    const hoursSavedPerMonth = adminHours * 4.33 * 0.85;
+    const valueOfTimeSaved = hoursSavedPerMonth * hourlyRate;
+    const totalMonthlyBenefit = valueOfTimeSaved + accountantCost;
 
-    const savings = {};
+    // Cost of the recommended plan
+    const cost = recommendedPlanObj ? recommendedPlanObj.price : 0;
 
-    monthlyPlans.forEach((monthlyPlan) => {
-      const annualPlan = annualPlans.find((plan) => plan.name === monthlyPlan.name);
-      if (!annualPlan) return;
-      savings[monthlyPlan.name] = Math.max(0, (monthlyPlan.price - annualPlan.price) * 12);
+    // ROI Calculation
+    const netBenefit = totalMonthlyBenefit - cost;
+    const roiMultiplier = cost > 0 ? (netBenefit / cost) * 100 : 0; // %
+    const annualBenefit = netBenefit * 12;
+
+    // Chart Data Generation (Cumulative over 12 months)
+    const chartData = Array.from({ length: 12 }, (_, i) => {
+      const month = i + 1;
+      return {
+        month: `M${month}`,
+        investment: cost * month,
+        return: totalMonthlyBenefit * month,
+        net: (totalMonthlyBenefit - cost) * month,
+      };
     });
 
-    return savings;
-  }, []);
+    return {
+      hoursSavedPerMonth: Math.round(hoursSavedPerMonth),
+      valueOfTimeSaved: Math.round(valueOfTimeSaved),
+      totalMonthlyBenefit: Math.round(totalMonthlyBenefit),
+      netBenefit: Math.round(netBenefit),
+      roiMultiplier: Math.round(roiMultiplier),
+      annualBenefit: Math.round(annualBenefit),
+      chartData,
+      cost,
+    };
+  }, [adminHours, hourlyRate, accountantCost, recommendedPlanObj]);
 
   return (
     <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
@@ -337,12 +390,13 @@ export default function Pricing() {
           <button
             type="button"
             onClick={() => setViewMode("calculator")}
-            className={`h-8 rounded-md px-3 text-sm transition ${
+            className={`flex items-center gap-2 h-8 rounded-md px-3 text-sm transition ${
               viewMode === "calculator"
                 ? "bg-white/15 text-[#F5F5F5]"
                 : "text-white/60 hover:text-[#F5F5F5]"
             }`}
           >
+            <Calculator className="h-3.5 w-3.5" />
             ROI calculator
           </button>
         </div>
@@ -388,24 +442,180 @@ export default function Pricing() {
       )}
 
       {viewMode === "calculator" && (
-        <section className="mb-8 rounded-xl border border-white/10 bg-[#111114] p-4">
-          <h2 className="text-lg font-semibold text-[#F5F5F5]">Annual savings calculator</h2>
-          <p className="mt-1 text-sm text-white/70">Compare monthly vs annual billing by plan.</p>
-
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-            {PLANS.monthly.map((plan) => (
-              <div key={plan.name} className="rounded-lg border border-white/10 bg-[#15151A] p-4">
-                <p className="text-sm font-medium text-[#F5F5F5]">{plan.name}</p>
-                <p className="mt-2 text-xs text-white/60">Annual savings</p>
-                <p className="mt-1 font-mono-financial text-2xl text-[#56C5D0]">
-                  ${annualSavings[plan.name] || 0}
-                </p>
+        <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-12 animate-in fade-in zoom-in-95 duration-300">
+          {/* Left Column: Inputs */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="rounded-xl border border-white/10 bg-[#111114] p-5">
+              <div className="mb-4 flex items-center gap-2 text-[#56C5D0]">
+                <Clock className="h-5 w-5" />
+                <h3 className="font-semibold text-[#F5F5F5]">Time Investment</h3>
               </div>
-            ))}
+
+              <div className="space-y-6">
+                <div>
+                  <div className="mb-2 flex justify-between">
+                    <label className="text-sm text-white/70">Admin hours / week</label>
+                    <span className="font-mono text-sm text-[#F5F5F5]">{adminHours}h</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={40}
+                    step={1}
+                    value={adminHours}
+                    onChange={(e) => setAdminHours(Number(e.target.value))}
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-[#56C5D0]"
+                  />
+                  <p className="mt-1 text-xs text-white/50">Time spent on invoices, categorization, and spreadhseets.</p>
+                </div>
+
+                <div>
+                  <div className="mb-2 flex justify-between">
+                    <label className="text-sm text-white/70">Hourly Value</label>
+                    <span className="font-mono text-sm text-[#F5F5F5]">${hourlyRate}/hr</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={10}
+                    max={500}
+                    step={10}
+                    value={hourlyRate}
+                    onChange={(e) => setHourlyRate(Number(e.target.value))}
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-[#56C5D0]"
+                  />
+                  <p className="mt-1 text-xs text-white/50">What is your time worth?</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-[#111114] p-5">
+              <div className="mb-4 flex items-center gap-2 text-[#56C5D0]">
+                <DollarSign className="h-5 w-5" />
+                <h3 className="font-semibold text-[#F5F5F5]">Hard Costs</h3>
+              </div>
+
+              <div>
+                <div className="mb-2 flex justify-between">
+                  <label className="text-sm text-white/70">Accountant / Bookkeeper (monthly)</label>
+                  <span className="font-mono text-sm text-[#F5F5F5]">${accountantCost}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={2000}
+                  step={50}
+                  value={accountantCost}
+                  onChange={(e) => setAccountantCost(Number(e.target.value))}
+                  className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-[#56C5D0]"
+                />
+                <p className="mt-1 text-xs text-white/50">Savings from automated categorization and exports.</p>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-4 rounded-lg border border-white/10 bg-[#15151A] p-3 text-sm text-white/75">
-            Recommendation for current revenue assumption: <span className="font-medium text-[#56C5D0]">{recommendation}</span>
+          {/* Right Column: Results & Visualization */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="rounded-xl border border-white/10 bg-[#15151A] p-4">
+                <p className="text-sm font-medium text-white/60">Annual Value Unlocked</p>
+                <p className="mt-2 font-mono-financial text-2xl font-bold text-[#56C5D0]">
+                  ${roiMetrics.annualBenefit.toLocaleString()}
+                </p>
+                <p className="mt-1 text-xs text-white/50">Net benefit after subscription cost</p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-[#15151A] p-4">
+                <p className="text-sm font-medium text-white/60">Hours Reclaimed / Year</p>
+                <p className="mt-2 font-mono-financial text-2xl font-bold text-[#F5F5F5]">
+                  {(roiMetrics.hoursSavedPerMonth * 12).toLocaleString()}h
+                </p>
+                <p className="mt-1 text-xs text-white/50">~{roiMetrics.hoursSavedPerMonth} hours/month</p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-[#15151A] p-4">
+                <p className="text-sm font-medium text-white/60">ROI Multiplier</p>
+                <p className="mt-2 font-mono-financial text-2xl font-bold text-[#56C5D0]">
+                  {roiMetrics.roiMultiplier.toLocaleString()}%
+                </p>
+                <p className="mt-1 text-xs text-white/50">Return on {recommendedPlanObj?.name}</p>
+              </div>
+            </div>
+
+            {/* Chart */}
+            <div className="h-[350px] w-full rounded-xl border border-white/10 bg-[#111114] p-4">
+              <div className="mb-6 flex items-center justify-between">
+                 <h3 className="font-semibold text-[#F5F5F5] flex items-center gap-2">
+                   <TrendingUp className="h-4 w-4 text-[#56C5D0]" />
+                   Cumulative Value vs. Cost
+                 </h3>
+                 <div className="flex gap-4 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-[#56C5D0]" />
+                      <span className="text-white/70">Value Generated</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-red-500/50" />
+                      <span className="text-white/70">Cost</span>
+                    </div>
+                 </div>
+              </div>
+
+              <ResponsiveContainer width="100%" height="85%">
+                <AreaChart data={roiMetrics.chartData}>
+                  <defs>
+                    <linearGradient id="colorReturn" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#56C5D0" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#56C5D0" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    stroke="#666"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#666"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `$${value}`}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px' }}
+                    itemStyle={{ color: '#fff' }}
+                    formatter={(value, name) => [
+                      `$${value.toLocaleString()}`,
+                      name === 'return' ? 'Total Value' : name === 'investment' ? 'Cost' : 'Net'
+                    ]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="return"
+                    stroke="#56C5D0"
+                    fillOpacity={1}
+                    fill="url(#colorReturn)"
+                    strokeWidth={2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="investment"
+                    stroke="#ef4444"
+                    fillOpacity={1}
+                    fill="url(#colorCost)"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </section>
       )}
