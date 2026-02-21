@@ -41,7 +41,7 @@ describe('updatePassword', () => {
 
         vi.mock('../logic/security.ts', () => ({
             validatePassword: vi.fn(() => Promise.resolve({ valid: true, strength: 'strong', errors: [] })),
-            checkRateLimit: vi.fn(() => ({ allowed: true })),
+            checkRateLimit: vi.fn(() => Promise.resolve({ allowed: true, resetAt: new Date() })),
             isValidOTPFormat: vi.fn(() => true),
             RATE_LIMITS: { PASSWORD_CHANGE: 1 },
             SECURITY_ACTIONS: {},
