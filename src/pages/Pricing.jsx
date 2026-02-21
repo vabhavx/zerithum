@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { base44 } from "@/api/supabaseClient";
 import { toast } from "sonner";
@@ -122,13 +122,21 @@ const FAQS = [
   },
 ];
 
-function PlanCard({ plan, billingPeriod, processingPayment, onSelect }) {
+function estimateBestPlan(monthlyRevenue) {
+  if (monthlyRevenue < 3000) return "Free";
+  if (monthlyRevenue < 25000) return "Creator Pro";
+  return "Creator Max";
+}
+
+function PlanCard({ plan, billingPeriod, processingPayment, onSelect, isRecommended }) {
   return (
     <div
-      className={`rounded-xl border p-5 ${
-        plan.featured
-          ? "border-[#56C5D0]/45 bg-[#56C5D0]/10"
-          : "border-white/10 bg-[#111114]"
+      className={`rounded-xl border p-5 transition ${
+        isRecommended
+          ? "border-[#56C5D0]/50 bg-[#56C5D0]/12"
+          : plan.featured
+            ? "border-[#56C5D0]/40 bg-[#56C5D0]/8"
+            : "border-white/10 bg-[#111114]"
       }`}
     >
       <div className="mb-4 flex items-start justify-between gap-3">
@@ -136,18 +144,16 @@ function PlanCard({ plan, billingPeriod, processingPayment, onSelect }) {
           <h3 className="text-lg font-semibold text-[#F5F5F5]">{plan.name}</h3>
           <p className="mt-1 text-sm text-white/70">{plan.bestFor}</p>
         </div>
-        {plan.featured && (
-          <span className="rounded-md border border-[#56C5D0]/40 bg-[#56C5D0]/15 px-2 py-1 text-xs text-[#56C5D0]">
-            Most chosen
+        {isRecommended && (
+          <span className="rounded-md border border-[#56C5D0]/45 bg-[#56C5D0]/15 px-2 py-1 text-xs text-[#56C5D0]">
+            Recommended
           </span>
         )}
       </div>
 
       <div className="mb-4">
         <div className="flex items-end gap-2">
-          <p className="font-mono-financial text-3xl font-semibold text-[#F5F5F5]">
-            ${plan.price}
-          </p>
+          <p className="font-mono-financial text-3xl font-semibold text-[#F5F5F5]">${plan.price}</p>
           <p className="pb-1 text-sm text-white/60">/month</p>
           {plan.strikePrice && (
             <p className="pb-1 text-sm text-white/45 line-through">${plan.strikePrice}</p>
@@ -176,7 +182,7 @@ function PlanCard({ plan, billingPeriod, processingPayment, onSelect }) {
         onClick={() => onSelect(plan)}
         disabled={processingPayment === plan.name}
         className={`h-9 w-full ${
-          plan.featured
+          isRecommended || plan.featured
             ? "bg-[#56C5D0] text-[#0A0A0A] hover:bg-[#48AAB5]"
             : "bg-white/10 text-[#F5F5F5] hover:bg-white/15"
         }`}
@@ -199,6 +205,8 @@ export default function Pricing() {
   const [expandedFaq, setExpandedFaq] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(null);
   const [user, setUser] = useState(null);
+  const [monthlyRevenue, setMonthlyRevenue] = useState(10000);
+  const [viewMode, setViewMode] = useState("plans");
 
   useEffect(() => {
     const loadUser = async () => {
@@ -262,16 +270,33 @@ export default function Pricing() {
 
   const plans = PLANS[billingPeriod];
 
+  const recommendation = useMemo(() => estimateBestPlan(monthlyRevenue), [monthlyRevenue]);
+
+  const annualSavings = useMemo(() => {
+    const monthlyPlans = PLANS.monthly;
+    const annualPlans = PLANS.annual;
+
+    const savings = {};
+
+    monthlyPlans.forEach((monthlyPlan) => {
+      const annualPlan = annualPlans.find((plan) => plan.name === monthlyPlan.name);
+      if (!annualPlan) return;
+      savings[monthlyPlan.name] = Math.max(0, (monthlyPlan.price - annualPlan.price) * 12);
+    });
+
+    return savings;
+  }, []);
+
   return (
     <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
       <header className="mb-8 border-b border-white/10 pb-6">
         <h1 className="text-3xl font-semibold tracking-tight text-[#F5F5F5]">Pricing</h1>
         <p className="mt-2 max-w-3xl text-sm text-white/70">
-          Choose a plan that matches your workflow. Every plan is built for clear finance operations, not complexity.
+          Interactive pricing with recommendation controls so creators can choose confidently.
         </p>
       </header>
 
-      <section className="mb-6 flex justify-center">
+      <section className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex rounded-lg border border-white/10 bg-[#111114] p-1">
           <button
             type="button"
@@ -296,19 +321,94 @@ export default function Pricing() {
             Annual (save)
           </button>
         </div>
+
+        <div className="inline-flex rounded-lg border border-white/10 bg-[#111114] p-1">
+          <button
+            type="button"
+            onClick={() => setViewMode("plans")}
+            className={`h-8 rounded-md px-3 text-sm transition ${
+              viewMode === "plans"
+                ? "bg-white/15 text-[#F5F5F5]"
+                : "text-white/60 hover:text-[#F5F5F5]"
+            }`}
+          >
+            Plan view
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("calculator")}
+            className={`h-8 rounded-md px-3 text-sm transition ${
+              viewMode === "calculator"
+                ? "bg-white/15 text-[#F5F5F5]"
+                : "text-white/60 hover:text-[#F5F5F5]"
+            }`}
+          >
+            ROI calculator
+          </button>
+        </div>
       </section>
 
-      <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {plans.map((plan) => (
-          <PlanCard
-            key={plan.name}
-            plan={plan}
-            billingPeriod={billingPeriod}
-            processingPayment={processingPayment}
-            onSelect={handlePlanSelect}
-          />
-        ))}
+      <section className="mb-8 rounded-xl border border-white/10 bg-[#111114] p-4">
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-[#F5F5F5]">Monthly creator revenue estimate</p>
+            <p className="text-xs text-white/60">Used only to suggest the most practical plan for your scale.</p>
+          </div>
+          <p className="font-mono-financial text-xl font-semibold text-[#56C5D0]">
+            ${monthlyRevenue.toLocaleString()}
+          </p>
+        </div>
+        <input
+          type="range"
+          min={500}
+          max={100000}
+          step={500}
+          value={monthlyRevenue}
+          onChange={(event) => setMonthlyRevenue(Number(event.target.value))}
+          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-[#56C5D0]"
+        />
+        <p className="mt-2 text-xs text-white/70">
+          Suggested plan: <span className="font-medium text-[#56C5D0]">{recommendation}</span>
+        </p>
       </section>
+
+      {viewMode === "plans" && (
+        <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {plans.map((plan) => (
+            <PlanCard
+              key={plan.name}
+              plan={plan}
+              billingPeriod={billingPeriod}
+              processingPayment={processingPayment}
+              onSelect={handlePlanSelect}
+              isRecommended={plan.name === recommendation}
+            />
+          ))}
+        </section>
+      )}
+
+      {viewMode === "calculator" && (
+        <section className="mb-8 rounded-xl border border-white/10 bg-[#111114] p-4">
+          <h2 className="text-lg font-semibold text-[#F5F5F5]">Annual savings calculator</h2>
+          <p className="mt-1 text-sm text-white/70">Compare monthly vs annual billing by plan.</p>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+            {PLANS.monthly.map((plan) => (
+              <div key={plan.name} className="rounded-lg border border-white/10 bg-[#15151A] p-4">
+                <p className="text-sm font-medium text-[#F5F5F5]">{plan.name}</p>
+                <p className="mt-2 text-xs text-white/60">Annual savings</p>
+                <p className="mt-1 font-mono-financial text-2xl text-[#56C5D0]">
+                  ${annualSavings[plan.name] || 0}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 rounded-lg border border-white/10 bg-[#15151A] p-3 text-sm text-white/75">
+            Recommendation for current revenue assumption: <span className="font-medium text-[#56C5D0]">{recommendation}</span>
+          </div>
+        </section>
+      )}
 
       <section className="mb-8 rounded-xl border border-white/10 bg-[#111114]">
         <div className="border-b border-white/10 p-4">
@@ -357,9 +457,7 @@ export default function Pricing() {
                   className="flex w-full items-center justify-between gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
                 >
                   <span className="text-sm font-medium text-[#F5F5F5]">{faq.question}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 text-white/60 transition-transform ${open ? "rotate-180" : ""}`}
-                  />
+                  <ChevronDown className={`h-4 w-4 text-white/60 transition-transform ${open ? "rotate-180" : ""}`} />
                 </button>
                 {open && <p className="mt-3 text-sm text-white/75">{faq.answer}</p>}
               </div>

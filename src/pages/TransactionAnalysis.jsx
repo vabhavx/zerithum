@@ -50,6 +50,15 @@ const STATUS_NAMES = {
   reviewed: "Reviewed",
 };
 
+const QUICK_VIEWS = [
+  { value: "all", label: "All" },
+  { value: "unmatched", label: "Needs match" },
+  { value: "refunded", label: "Refunds" },
+  { value: "failed", label: "Failed" },
+];
+
+const PAGE_SIZE_OPTIONS = [20, 50, 100];
+
 const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -76,7 +85,7 @@ function SummaryCard({ label, value, helper, tone = "neutral" }) {
           : "text-[#F5F5F5]";
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
+    <div className="rounded-xl border border-white/10 bg-[#111114] p-4 transition-colors hover:border-white/20">
       <p className="text-xs uppercase tracking-wide text-white/60">{label}</p>
       <p className={`mt-2 font-mono-financial text-2xl font-semibold ${toneClass}`}>{value}</p>
       <p className="mt-1 text-xs text-white/60">{helper}</p>
@@ -89,11 +98,12 @@ export default function TransactionAnalysis() {
   const [platformFilter, setPlatformFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [quickView, setQuickView] = useState("all");
+  const [density, setDensity] = useState("comfortable");
   const [sortField, setSortField] = useState("transaction_date");
   const [sortDirection, setSortDirection] = useState("desc");
+  const [pageSize, setPageSize] = useState(20);
   const [page, setPage] = useState(1);
-
-  const pageSize = 20;
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["revenueTransactions"],
@@ -101,13 +111,20 @@ export default function TransactionAnalysis() {
     staleTime: 1000 * 60 * 5,
   });
 
+  const effectiveStatusFilter = quickView === "all" ? statusFilter : quickView;
+
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     const rows = transactions.filter((transaction) => {
       if (platformFilter !== "all" && transaction.platform !== platformFilter) return false;
       if (categoryFilter !== "all" && transaction.category !== categoryFilter) return false;
-      if (statusFilter !== "all" && (transaction.status || "completed") !== statusFilter) return false;
+      if (
+        effectiveStatusFilter !== "all" &&
+        (transaction.status || "completed") !== effectiveStatusFilter
+      ) {
+        return false;
+      }
 
       if (query) {
         const text = [
@@ -147,24 +164,43 @@ export default function TransactionAnalysis() {
     });
 
     return rows;
-  }, [transactions, search, platformFilter, categoryFilter, statusFilter, sortField, sortDirection]);
+  }, [
+    transactions,
+    search,
+    platformFilter,
+    categoryFilter,
+    effectiveStatusFilter,
+    sortField,
+    sortDirection,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
   const pagedRows = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
-  }, [filtered, page]);
+  }, [filtered, page, pageSize]);
 
   const totals = useMemo(() => {
     const gross = filtered.reduce((sum, row) => sum + (row.amount || 0), 0);
     const fee = filtered.reduce((sum, row) => sum + (row.platform_fee || 0), 0);
     const net = gross - fee;
+
+    const statusBreakdown = filtered.reduce(
+      (acc, row) => {
+        const status = row.status || "completed";
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      { completed: 0, unmatched: 0, refunded: 0, failed: 0, pending: 0 }
+    );
+
     return {
       count: filtered.length,
       gross,
       fee,
       net,
+      statusBreakdown,
     };
   }, [filtered]);
 
@@ -182,6 +218,7 @@ export default function TransactionAnalysis() {
     setPlatformFilter("all");
     setCategoryFilter("all");
     setStatusFilter("all");
+    setQuickView("all");
     setSortField("transaction_date");
     setSortDirection("desc");
     setPage(1);
@@ -201,7 +238,9 @@ export default function TransactionAnalysis() {
     ];
 
     const body = filtered.map((transaction) => [
-      transaction.transaction_date ? format(new Date(transaction.transaction_date), "yyyy-MM-dd") : "",
+      transaction.transaction_date
+        ? format(new Date(transaction.transaction_date), "yyyy-MM-dd")
+        : "",
       PLATFORM_NAMES[transaction.platform] || transaction.platform || "",
       CATEGORY_NAMES[transaction.category] || transaction.category || "",
       STATUS_NAMES[transaction.status] || transaction.status || "Completed",
@@ -236,11 +275,11 @@ export default function TransactionAnalysis() {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
-      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-start lg:justify-between">
+      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Transactions</h1>
           <p className="mt-1 text-sm text-white/70">
-            Filter, inspect, and export transaction records with clear fee and net visibility.
+            Interactive transaction intelligence with quick presets, density controls, and export-ready evidence.
           </p>
         </div>
 
@@ -256,31 +295,41 @@ export default function TransactionAnalysis() {
       </header>
 
       <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard
-          label="Filtered records"
-          value={String(totals.count)}
-          helper="Based on active filter set"
-        />
-        <SummaryCard
-          label="Gross"
-          value={formatMoney(totals.gross)}
-          helper="Before fees"
-        />
-        <SummaryCard
-          label="Fees"
-          value={formatMoney(totals.fee)}
-          helper="Reported platform fees"
-          tone="orange"
-        />
-        <SummaryCard
-          label="Net"
-          value={formatMoney(totals.net)}
-          helper="Gross minus fees"
-          tone="teal"
-        />
+        <SummaryCard label="Filtered records" value={String(totals.count)} helper="Based on active controls" />
+        <SummaryCard label="Gross" value={formatMoney(totals.gross)} helper="Before fees" />
+        <SummaryCard label="Fees" value={formatMoney(totals.fee)} helper="Reported platform fees" tone="orange" />
+        <SummaryCard label="Net" value={formatMoney(totals.net)} helper="Gross minus fees" tone="teal" />
       </section>
 
       <section className="mb-6 rounded-xl border border-white/10 bg-[#111114] p-4">
+        <div className="mb-3 flex flex-wrap gap-2">
+          {QUICK_VIEWS.map((view) => (
+            <button
+              key={view.value}
+              type="button"
+              onClick={() => {
+                setPage(1);
+                setQuickView(view.value);
+              }}
+              className={`h-8 rounded-md border px-3 text-sm transition ${
+                quickView === view.value
+                  ? "border-[#56C5D0]/45 bg-[#56C5D0]/10 text-[#56C5D0]"
+                  : "border-white/20 bg-transparent text-white/70 hover:bg-white/10"
+              }`}
+            >
+              {view.label}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => setDensity((prev) => (prev === "comfortable" ? "compact" : "comfortable"))}
+            className="h-8 rounded-md border border-white/20 bg-transparent px-3 text-sm text-white/70 transition hover:bg-white/10"
+          >
+            Density: {density === "comfortable" ? "Comfortable" : "Compact"}
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
           <div className="relative xl:col-span-2">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
@@ -340,6 +389,7 @@ export default function TransactionAnalysis() {
             onValueChange={(value) => {
               setPage(1);
               setStatusFilter(value);
+              setQuickView("all");
             }}
           >
             <SelectTrigger className="h-9 border-white/15 bg-[#15151A] text-[#F5F5F5] focus:ring-2 focus:ring-[#56C5D0]">
@@ -356,7 +406,10 @@ export default function TransactionAnalysis() {
           </Select>
         </div>
 
-        <div className="mt-3 flex justify-end">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-white/60">
+            Completed {totals.statusBreakdown.completed || 0} • Unmatched {totals.statusBreakdown.unmatched || 0} • Refunded {totals.statusBreakdown.refunded || 0}
+          </p>
           <Button
             type="button"
             variant="outline"
@@ -412,30 +465,32 @@ export default function TransactionAnalysis() {
               const status = transaction.status || "completed";
               return (
                 <TableRow key={transaction.id} className="border-white/10 hover:bg-white/[0.02]">
-                  <TableCell className="text-sm text-white/75">
-                    {transaction.transaction_date ? format(new Date(transaction.transaction_date), "MMM d, yyyy") : "-"}
+                  <TableCell className={`${density === "compact" ? "py-2" : "py-3"} text-sm text-white/75`}>
+                    {transaction.transaction_date
+                      ? format(new Date(transaction.transaction_date), "MMM d, yyyy")
+                      : "-"}
                   </TableCell>
-                  <TableCell className="text-sm text-[#F5F5F5]">
+                  <TableCell className={`${density === "compact" ? "py-2" : "py-3"} text-sm text-[#F5F5F5]`}>
                     {PLATFORM_NAMES[transaction.platform] || transaction.platform || "Unknown"}
                   </TableCell>
-                  <TableCell className="text-sm text-white/75">
+                  <TableCell className={`${density === "compact" ? "py-2" : "py-3"} text-sm text-white/75`}>
                     {CATEGORY_NAMES[transaction.category] || transaction.category || "-"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={density === "compact" ? "py-2" : "py-3"}>
                     <span className="rounded-md border border-white/20 bg-white/5 px-2 py-1 text-xs text-white/80">
                       {STATUS_NAMES[status] || status}
                     </span>
                   </TableCell>
-                  <TableCell className="max-w-[300px] truncate text-sm text-white/75">
+                  <TableCell className={`${density === "compact" ? "py-2" : "py-3"} max-w-[300px] truncate text-sm text-white/75`}>
                     {transaction.description || "-"}
                   </TableCell>
-                  <TableCell className="text-right font-mono-financial text-[#F5F5F5]">
+                  <TableCell className={`${density === "compact" ? "py-2" : "py-3"} text-right font-mono-financial text-[#F5F5F5]`}>
                     {formatMoney(transaction.amount || 0)}
                   </TableCell>
-                  <TableCell className="text-right font-mono-financial text-[#F0A562]">
+                  <TableCell className={`${density === "compact" ? "py-2" : "py-3"} text-right font-mono-financial text-[#F0A562]`}>
                     {formatMoney(fee)}
                   </TableCell>
-                  <TableCell className="text-right font-mono-financial text-[#56C5D0]">
+                  <TableCell className={`${density === "compact" ? "py-2" : "py-3"} text-right font-mono-financial text-[#56C5D0]`}>
                     {formatMoney(net)}
                   </TableCell>
                 </TableRow>
@@ -445,12 +500,31 @@ export default function TransactionAnalysis() {
         </Table>
       </section>
 
-      <section className="mt-4 flex items-center justify-between rounded-lg border border-white/10 bg-[#111114] px-4 py-3">
+      <section className="mt-4 flex flex-col gap-2 rounded-lg border border-white/10 bg-[#111114] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-white/70">
           Page {page} of {totalPages} • {filtered.length} filtered records
         </p>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            value={String(pageSize)}
+            onValueChange={(value) => {
+              setPage(1);
+              setPageSize(Number(value));
+            }}
+          >
+            <SelectTrigger className="h-8 w-[128px] border-white/20 bg-transparent text-xs text-[#F5F5F5]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-white/10 bg-[#0F0F12] text-[#F5F5F5]">
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <SelectItem key={size} value={String(size)}>
+                  {size} / page
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Button
             type="button"
             variant="outline"

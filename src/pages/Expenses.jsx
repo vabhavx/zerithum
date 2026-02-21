@@ -24,6 +24,20 @@ import {
 import ExpenseModal from "@/components/expense/ExpenseModal";
 import { CATEGORIES } from "@/lib/expenseCategories";
 
+const QUICK_VIEWS = [
+  { value: "all", label: "All" },
+  { value: "missing_receipts", label: "Missing receipts" },
+  { value: "deductible", label: "Deductible" },
+  { value: "high_value", label: "High value" },
+];
+
+const SORT_OPTIONS = [
+  { value: "date_desc", label: "Newest first" },
+  { value: "date_asc", label: "Oldest first" },
+  { value: "amount_desc", label: "Amount high to low" },
+  { value: "amount_asc", label: "Amount low to high" },
+];
+
 const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -46,7 +60,7 @@ function SummaryCard({ label, value, helper, tone = "neutral" }) {
           : "text-[#F5F5F5]";
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
+    <div className="rounded-xl border border-white/10 bg-[#111114] p-4 transition-colors hover:border-white/20">
       <p className="text-xs uppercase tracking-wide text-white/60">{label}</p>
       <p className={`mt-2 font-mono-financial text-2xl font-semibold ${valueClass}`}>{value}</p>
       <p className="mt-1 text-xs text-white/60">{helper}</p>
@@ -60,6 +74,8 @@ export default function Expenses() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [receiptFilter, setReceiptFilter] = useState("all");
+  const [quickView, setQuickView] = useState("all");
+  const [sortBy, setSortBy] = useState("date_desc");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
 
@@ -83,11 +99,15 @@ export default function Expenses() {
   const filteredExpenses = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return expenses.filter((expense) => {
+    const rows = expenses.filter((expense) => {
       if (categoryFilter !== "all" && expense.category !== categoryFilter) return false;
 
       if (receiptFilter === "missing" && expense.receipt_url) return false;
       if (receiptFilter === "with_receipt" && !expense.receipt_url) return false;
+
+      if (quickView === "missing_receipts" && expense.receipt_url) return false;
+      if (quickView === "deductible" && !expense.is_tax_deductible) return false;
+      if (quickView === "high_value" && (expense.amount || 0) < 500) return false;
 
       if (query) {
         const text = [expense.merchant, expense.description, expense.notes, expense.category]
@@ -99,19 +119,34 @@ export default function Expenses() {
 
       return true;
     });
-  }, [expenses, search, categoryFilter, receiptFilter]);
+
+    rows.sort((left, right) => {
+      if (sortBy === "date_asc") {
+        return new Date(left.expense_date || 0).getTime() - new Date(right.expense_date || 0).getTime();
+      }
+      if (sortBy === "date_desc") {
+        return new Date(right.expense_date || 0).getTime() - new Date(left.expense_date || 0).getTime();
+      }
+      if (sortBy === "amount_asc") {
+        return (left.amount || 0) - (right.amount || 0);
+      }
+      return (right.amount || 0) - (left.amount || 0);
+    });
+
+    return rows;
+  }, [expenses, search, categoryFilter, receiptFilter, quickView, sortBy]);
 
   const totals = useMemo(() => {
     const totalAmount = filteredExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+
     const deductibleAmount = filteredExpenses.reduce((sum, expense) => {
       if (!expense.is_tax_deductible) return sum;
       const percentage = expense.deduction_percentage ?? 100;
       return sum + (expense.amount || 0) * (percentage / 100);
     }, 0);
-    const missingReceipts = filteredExpenses.filter((expense) => !expense.receipt_url).length;
 
-    const avgExpense =
-      filteredExpenses.length > 0 ? totalAmount / filteredExpenses.length : 0;
+    const missingReceipts = filteredExpenses.filter((expense) => !expense.receipt_url).length;
+    const avgExpense = filteredExpenses.length > 0 ? totalAmount / filteredExpenses.length : 0;
 
     return {
       totalAmount,
@@ -119,6 +154,10 @@ export default function Expenses() {
       missingReceipts,
       avgExpense,
       count: filteredExpenses.length,
+      receiptCoverage:
+        filteredExpenses.length > 0
+          ? ((filteredExpenses.length - missingReceipts) / filteredExpenses.length) * 100
+          : 0,
     };
   }, [filteredExpenses]);
 
@@ -197,11 +236,11 @@ export default function Expenses() {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
-      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-start lg:justify-between">
+      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Expenses</h1>
           <p className="mt-1 text-sm text-white/70">
-            Keep receipts, categories, and deduction evidence in one clean workflow.
+            Interactive expense operations with receipt readiness and deduction proof.
           </p>
         </div>
 
@@ -227,22 +266,9 @@ export default function Expenses() {
       </header>
 
       <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard
-          label="Filtered expenses"
-          value={String(totals.count)}
-          helper="Based on active filters"
-        />
-        <SummaryCard
-          label="Total spend"
-          value={formatMoney(totals.totalAmount)}
-          helper="Selected range and filters"
-        />
-        <SummaryCard
-          label="Estimated deductible"
-          value={formatMoney(totals.deductibleAmount)}
-          helper="From deductible flags"
-          tone="teal"
-        />
+        <SummaryCard label="Filtered expenses" value={String(totals.count)} helper="Based on active controls" />
+        <SummaryCard label="Total spend" value={formatMoney(totals.totalAmount)} helper="Selected range and filters" />
+        <SummaryCard label="Estimated deductible" value={formatMoney(totals.deductibleAmount)} helper="From deductible flags" tone="teal" />
         <SummaryCard
           label="Missing receipts"
           value={String(totals.missingReceipts)}
@@ -252,12 +278,42 @@ export default function Expenses() {
       </section>
 
       <section className="mb-6 rounded-xl border border-white/10 bg-[#111114] p-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="mb-3 flex flex-wrap gap-2">
+          {QUICK_VIEWS.map((view) => (
+            <button
+              key={view.value}
+              type="button"
+              onClick={() => setQuickView(view.value)}
+              className={`h-8 rounded-md border px-3 text-sm transition ${
+                quickView === view.value
+                  ? "border-[#56C5D0]/45 bg-[#56C5D0]/10 text-[#56C5D0]"
+                  : "border-white/20 bg-transparent text-white/70 hover:bg-white/10"
+              }`}
+            >
+              {view.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mb-4">
+          <div className="mb-1 flex items-center justify-between text-xs text-white/65">
+            <span>Receipt completeness</span>
+            <span>{totals.receiptCoverage.toFixed(0)}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-[#56C5D0] transition-all"
+              style={{ width: `${Math.min(100, Math.max(0, totals.receiptCoverage))}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search merchant, description, notes"
-            className="h-9 border-white/15 bg-[#15151A] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+            className="h-9 border-white/15 bg-[#15151A] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0] md:col-span-2"
           />
 
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -285,6 +341,35 @@ export default function Expenses() {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="h-8 w-[180px] border-white/20 bg-transparent text-xs text-[#F5F5F5]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-white/10 bg-[#0F0F12] text-[#F5F5F5]">
+              {SORT_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setSearch("");
+              setCategoryFilter("all");
+              setReceiptFilter("all");
+              setQuickView("all");
+            }}
+            className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
+          >
+            Reset filters
+          </Button>
+        </div>
       </section>
 
       <section className="rounded-xl border border-white/10 bg-[#111114]">
@@ -305,7 +390,7 @@ export default function Expenses() {
             {filteredExpenses.length === 0 && (
               <TableRow className="border-white/10 hover:bg-transparent">
                 <TableCell colSpan={8} className="py-10 text-center text-sm text-white/60">
-                  {isLoading ? "Loading expenses..." : "No expenses match the selected filters."}
+                  {isLoading ? "Loading expenses..." : "No expenses match selected filters."}
                 </TableCell>
               </TableRow>
             )}
@@ -317,7 +402,9 @@ export default function Expenses() {
               return (
                 <TableRow key={expense.id} className="border-white/10 hover:bg-white/[0.02]">
                   <TableCell className="text-sm text-white/75">
-                    {expense.expense_date ? format(new Date(expense.expense_date), "MMM d, yyyy") : "-"}
+                    {expense.expense_date
+                      ? format(new Date(expense.expense_date), "MMM d, yyyy")
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-sm text-[#F5F5F5]">{expense.merchant || "-"}</TableCell>
                   <TableCell className="text-sm text-white/75">

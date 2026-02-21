@@ -7,6 +7,7 @@ import {
   Loader2,
   Plug,
   RefreshCw,
+  Search,
   ShieldCheck,
   Unplug,
 } from "lucide-react";
@@ -31,6 +32,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PLATFORMS } from "@/lib/platforms";
+
+const STATUS_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Healthy" },
+  { value: "syncing", label: "Syncing" },
+  { value: "error", label: "Errors" },
+  { value: "stale", label: "Stale" },
+];
 
 function statusTone(status) {
   if (status === "active") return "border-[#56C5D0]/40 bg-[#56C5D0]/10 text-[#56C5D0]";
@@ -58,7 +67,7 @@ function MetricCard({ label, value, helper, tone = "neutral" }) {
           : "text-[#F5F5F5]";
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
+    <div className="rounded-xl border border-white/10 bg-[#111114] p-4 transition-colors hover:border-white/20">
       <p className="text-xs uppercase tracking-wide text-white/60">{label}</p>
       <p className={`mt-2 font-mono-financial text-2xl font-semibold ${toneClass}`}>{value}</p>
       <p className="mt-1 text-xs text-white/60">{helper}</p>
@@ -76,6 +85,9 @@ export default function ConnectedPlatforms() {
   const [disconnectTarget, setDisconnectTarget] = useState(null);
   const [syncingId, setSyncingId] = useState(null);
   const [connectingId, setConnectingId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
 
   const {
     data: connectedPlatforms = [],
@@ -157,8 +169,28 @@ export default function ConnectedPlatforms() {
       syncing,
       errors,
       lastSyncDate: lastSyncDate || null,
+      healthScore:
+        connectedPlatforms.length > 0
+          ? Math.max(0, ((active + syncing * 0.5) / connectedPlatforms.length) * 100)
+          : 0,
     };
   }, [connectedPlatforms]);
+
+  const filteredConnections = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return connectedPlatforms.filter((connection) => {
+      if (statusFilter !== "all" && connection.sync_status !== statusFilter) return false;
+      if (!query) return true;
+
+      const platform = PLATFORMS.find((item) => item.id === connection.platform);
+      const text = [platform?.name, connection.platform, connection.error_message]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return text.includes(query);
+    });
+  }, [connectedPlatforms, statusFilter, search]);
 
   const syncConnection = async (connection, forceFullSync = false) => {
     setSyncingId(connection.id);
@@ -288,11 +320,11 @@ export default function ConnectedPlatforms() {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
-      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-start lg:justify-between">
+      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Connected platforms</h1>
           <p className="mt-1 text-sm text-white/70">
-            Manage source connections, sync state, and evidence for data reliability.
+            Interactive connection control center with live status filtering and sync evidence.
           </p>
           <p className="mt-2 text-xs text-white/60">
             Last sync: {stats.lastSyncDate ? format(stats.lastSyncDate, "MMM d, yyyy h:mm a") : "No sync history"}
@@ -318,7 +350,7 @@ export default function ConnectedPlatforms() {
         <div className="flex items-start gap-2">
           <ShieldCheck className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
           <p className="text-sm text-white/85">
-            Use this page as your connection control center. Keep errors at zero before exports.
+            Filter by status or search platform names to troubleshoot quickly before exports.
           </p>
         </div>
       </section>
@@ -330,29 +362,68 @@ export default function ConnectedPlatforms() {
         <MetricCard label="Errors" value={String(stats.errors)} helper="Needs review" tone={stats.errors > 0 ? "red" : "teal"} />
       </section>
 
+      <section className="mb-6 rounded-xl border border-white/10 bg-[#111114] p-4">
+        <div className="mb-3 flex flex-wrap gap-2">
+          {STATUS_FILTERS.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => setStatusFilter(item.value)}
+              className={`h-8 rounded-md border px-3 text-sm transition ${
+                statusFilter === item.value
+                  ? "border-[#56C5D0]/45 bg-[#56C5D0]/10 text-[#56C5D0]"
+                  : "border-white/20 bg-transparent text-white/70 hover:bg-white/10"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search connected platforms"
+              className="h-9 border-white/15 bg-[#15151A] pl-9 text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+            />
+          </div>
+
+          <div>
+            <p className="mb-1 text-xs text-white/60">Connection health</p>
+            <div className="h-2 rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-[#56C5D0] transition-all"
+                style={{ width: `${Math.min(100, Math.max(0, stats.healthScore))}%` }}
+              />
+            </div>
+            <p className="mt-1 text-xs text-white/60">{stats.healthScore.toFixed(0)}% stable connection score</p>
+          </div>
+        </div>
+      </section>
+
       <section className="mb-6 rounded-xl border border-white/10 bg-[#111114]">
         <div className="border-b border-white/10 p-4">
           <h2 className="text-lg font-semibold text-[#F5F5F5]">Connected accounts</h2>
-          <p className="mt-1 text-sm text-white/70">Sync each source frequently for accurate financial reporting.</p>
+          <p className="mt-1 text-sm text-white/70">Live filtered list with direct sync controls.</p>
         </div>
 
         <div className="space-y-3 p-4">
-          {connectedPlatforms.length === 0 && (
+          {filteredConnections.length === 0 && (
             <div className="rounded-lg border border-white/10 bg-[#15151A] p-6 text-center text-sm text-white/70">
-              {isLoading ? "Loading connected sources..." : "No connected platforms yet."}
+              {isLoading ? "Loading connected sources..." : "No connections match current filters."}
             </div>
           )}
 
-          {connectedPlatforms.map((connection) => {
+          {filteredConnections.map((connection) => {
             const platform = PLATFORMS.find((item) => item.id === connection.platform);
             const Icon = platform?.icon;
             const syncing = syncingId === connection.id || connection.sync_status === "syncing";
 
             return (
-              <div
-                key={connection.id}
-                className="rounded-lg border border-white/10 bg-[#15151A] p-4"
-              >
+              <div key={connection.id} className="rounded-lg border border-white/10 bg-[#15151A] p-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-start gap-3">
                     <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-[#101014]">
@@ -385,7 +456,7 @@ export default function ConnectedPlatforms() {
                       variant="outline"
                       disabled={syncing}
                       onClick={() => syncConnection(connection, false)}
-                      className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                      className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
                     >
                       {syncing ? (
                         <>
@@ -402,7 +473,7 @@ export default function ConnectedPlatforms() {
                       variant="outline"
                       disabled={syncing}
                       onClick={() => syncConnection(connection, true)}
-                      className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                      className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
                     >
                       Full sync
                     </Button>
@@ -411,7 +482,7 @@ export default function ConnectedPlatforms() {
                       size="sm"
                       variant="outline"
                       onClick={() => setDisconnectTarget(connection)}
-                      className="h-8 border-[#F06C6C]/40 bg-transparent px-3 text-xs text-[#F06C6C] hover:bg-[#F06C6C]/10 focus-visible:ring-2 focus-visible:ring-[#F06C6C]"
+                      className="h-8 border-[#F06C6C]/40 bg-transparent px-3 text-xs text-[#F06C6C] hover:bg-[#F06C6C]/10"
                     >
                       <Unplug className="mr-1.5 h-3.5 w-3.5" />
                       Disconnect
@@ -427,7 +498,7 @@ export default function ConnectedPlatforms() {
       <section className="mb-6 rounded-xl border border-white/10 bg-[#111114]">
         <div className="border-b border-white/10 p-4">
           <h2 className="text-lg font-semibold text-[#F5F5F5]">Available platforms</h2>
-          <p className="mt-1 text-sm text-white/70">Connect additional sources to improve reporting confidence.</p>
+          <p className="mt-1 text-sm text-white/70">Connect additional sources to improve data completeness.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -451,7 +522,7 @@ export default function ConnectedPlatforms() {
                   size="sm"
                   onClick={() => beginConnect(platform)}
                   disabled={connecting}
-                  className="h-8 w-full bg-[#56C5D0] text-xs font-medium text-[#0A0A0A] hover:bg-[#48AAB5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                  className="h-8 w-full bg-[#56C5D0] text-xs font-medium text-[#0A0A0A] hover:bg-[#48AAB5]"
                 >
                   {connecting ? (
                     <>
@@ -472,53 +543,66 @@ export default function ConnectedPlatforms() {
       </section>
 
       <section className="rounded-xl border border-white/10 bg-[#111114]">
-        <div className="border-b border-white/10 p-4">
-          <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent sync evidence</h2>
-          <p className="mt-1 text-sm text-white/70">Latest sync runs for audit and troubleshooting.</p>
+        <div className="flex flex-col gap-2 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent sync evidence</h2>
+            <p className="mt-1 text-sm text-white/70">Expand when you need run-level details.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowHistory((prev) => !prev)}
+            className="h-8 rounded-md border border-white/20 px-3 text-sm text-white/75 hover:bg-white/10"
+          >
+            {showHistory ? "Hide history" : "Show history"}
+          </button>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow className="border-white/10 hover:bg-transparent">
-              <TableHead className="text-[#D8D8D8]">Date</TableHead>
-              <TableHead className="text-[#D8D8D8]">Platform</TableHead>
-              <TableHead className="text-right text-[#D8D8D8]">Transactions</TableHead>
-              <TableHead className="text-right text-[#D8D8D8]">Duration</TableHead>
-              <TableHead className="text-right text-[#D8D8D8]">Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {syncHistory.length === 0 && (
+        {showHistory && (
+          <Table>
+            <TableHeader>
               <TableRow className="border-white/10 hover:bg-transparent">
-                <TableCell colSpan={5} className="py-8 text-center text-sm text-white/60">
-                  No sync history recorded yet.
-                </TableCell>
+                <TableHead className="text-[#D8D8D8]">Date</TableHead>
+                <TableHead className="text-[#D8D8D8]">Platform</TableHead>
+                <TableHead className="text-right text-[#D8D8D8]">Transactions</TableHead>
+                <TableHead className="text-right text-[#D8D8D8]">Duration</TableHead>
+                <TableHead className="text-right text-[#D8D8D8]">Status</TableHead>
               </TableRow>
-            )}
+            </TableHeader>
+            <TableBody>
+              {syncHistory.length === 0 && (
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableCell colSpan={5} className="py-8 text-center text-sm text-white/60">
+                    No sync history recorded yet.
+                  </TableCell>
+                </TableRow>
+              )}
 
-            {syncHistory.slice(0, 12).map((sync) => (
-              <TableRow key={sync.id} className="border-white/10 hover:bg-white/[0.02]">
-                <TableCell className="text-sm text-white/75">
-                  {sync.sync_started_at ? format(new Date(sync.sync_started_at), "MMM d, yyyy h:mm a") : "-"}
-                </TableCell>
-                <TableCell className="text-sm text-[#F5F5F5]">
-                  {PLATFORMS.find((item) => item.id === sync.platform)?.name || sync.platform || "Unknown"}
-                </TableCell>
-                <TableCell className="text-right font-mono-financial text-white/80">
-                  {sync.transactions_synced || 0}
-                </TableCell>
-                <TableCell className="text-right font-mono-financial text-white/80">
-                  {typeof sync.duration_ms === "number" ? `${(sync.duration_ms / 1000).toFixed(1)}s` : "-"}
-                </TableCell>
-                <TableCell className="text-right">
-                  <span className={`rounded-md border px-2 py-1 text-xs ${statusTone(sync.status)}`}>
-                    {statusLabel(sync.status)}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+              {syncHistory.slice(0, 15).map((sync) => (
+                <TableRow key={sync.id} className="border-white/10 hover:bg-white/[0.02]">
+                  <TableCell className="text-sm text-white/75">
+                    {sync.sync_started_at
+                      ? format(new Date(sync.sync_started_at), "MMM d, yyyy h:mm a")
+                      : "-"}
+                  </TableCell>
+                  <TableCell className="text-sm text-[#F5F5F5]">
+                    {PLATFORMS.find((item) => item.id === sync.platform)?.name || sync.platform || "Unknown"}
+                  </TableCell>
+                  <TableCell className="text-right font-mono-financial text-white/80">
+                    {sync.transactions_synced || 0}
+                  </TableCell>
+                  <TableCell className="text-right font-mono-financial text-white/80">
+                    {typeof sync.duration_ms === "number" ? `${(sync.duration_ms / 1000).toFixed(1)}s` : "-"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className={`rounded-md border px-2 py-1 text-xs ${statusTone(sync.status)}`}>
+                      {statusLabel(sync.status)}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </section>
 
       <Dialog open={credentialsOpen} onOpenChange={setCredentialsOpen}>
@@ -565,7 +649,7 @@ export default function ConnectedPlatforms() {
               type="button"
               onClick={handleCredentialConnect}
               disabled={connectMutation.isPending}
-              className="h-9 w-full bg-[#56C5D0] text-[#0A0A0A] hover:bg-[#48AAB5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+              className="h-9 w-full bg-[#56C5D0] text-[#0A0A0A] hover:bg-[#48AAB5]"
             >
               {connectMutation.isPending ? (
                 <>
@@ -622,7 +706,7 @@ export default function ConnectedPlatforms() {
           <div className="flex items-start gap-2">
             <AlertTriangle className="mt-0.5 h-4 w-4 text-[#F0A562]" />
             <p className="text-sm text-white/85">
-              {stats.errors} connection error{stats.errors > 1 ? "s" : ""} detected. Resolve these before sharing financial exports.
+              {stats.errors} connection error{stats.errors > 1 ? "s" : ""} detected. Resolve before sharing exports.
             </p>
           </div>
         </section>
