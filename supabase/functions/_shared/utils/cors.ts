@@ -18,9 +18,7 @@ export function getCorsHeaders(req: Request) {
 
     let allowOrigin = 'null';
 
-    if (!origin) {
-        allowOrigin = '*';
-    } else if (allowedOrigins.includes(origin) || origin.endsWith('.base44.app')) {
+    if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.base44.app'))) {
         allowOrigin = origin;
     }
 
