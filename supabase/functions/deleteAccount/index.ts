@@ -283,15 +283,17 @@ Deno.serve(async (req) => {
                     logger: console
                 };
 
-                for (const p of platforms) {
-                    if (!p.oauth_token) continue;
+                const revocationPromises = platforms.map(async (p) => {
+                    if (!p.oauth_token) return;
                     try {
                         console.log(`Revoking token for ${p.platform}`);
                         await revokeToken(revokeCtx, p.platform, p.oauth_token, p.refresh_token, p.shop_name);
                     } catch (e) {
                         console.error(`Error revoking token for ${p.platform}:`, e);
                     }
-                }
+                });
+
+                await Promise.allSettled(revocationPromises);
                 stepsCompleted.push('oauth_tokens_revoked');
             }
 
