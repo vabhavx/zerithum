@@ -9,13 +9,13 @@
        ═══════════════════════════════════════════════════════════════════════════ */
 
     /* Grayscale surfaces (true black) */
-    --z-bg-0: #09090B;
+    --z-bg-0: #0A0A0A;
     /* page background */
-    --z-bg-1: #0C0C0E;
+    --z-bg-1: #0F0F12;
     /* raised surfaces */
-    --z-bg-2: #111113;
+    --z-bg-2: #161619;
     /* cards */
-    --z-bg-3: #18181B;
+    --z-bg-3: #1C1C21;
     /* elevated panels */
 
     /* Borders */
