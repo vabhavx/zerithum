@@ -33,13 +33,15 @@ export async function detectAnomalies(
 
     transactions.forEach((tx: any) => {
       const date = new Date(tx.transaction_date);
-      const weekKey = `${date.getFullYear()}-W${Math.ceil(date.getDate() / 7)}`;
+      // Use monotonic week index to ensure correct sorting across month/year boundaries
+      const weekKey = Math.floor(date.getTime() / (7 * 24 * 60 * 60 * 1000)).toString();
 
       weeklyRevenue[weekKey] = (weeklyRevenue[weekKey] || 0) + tx.amount;
       platformRevenue[tx.platform] = (platformRevenue[tx.platform] || 0) + tx.amount;
     });
 
-    const weeks = Object.entries(weeklyRevenue).sort();
+    // Sort by week index numerically to ensure chronological order
+    const weeks = Object.entries(weeklyRevenue).sort((a, b) => Number(a[0]) - Number(b[0]));
 
     // Detect revenue drops/spikes
     const recentAutopsies = await ctx.fetchRecentAutopsies(user.id, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
