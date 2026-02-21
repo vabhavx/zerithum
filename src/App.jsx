@@ -39,6 +39,8 @@ const AuthenticatedApp = () => {
   const [showSlowLoadingMessage, setShowSlowLoadingMessage] = useState(false);
 
   useEffect(() => {
+    // Force cache bust for deployment: v2.1.1 Re-deploy
+    console.log("Zerithum UI v2.1.1 - Loaded with Glassmorphism & Animations");
     const timer = setTimeout(() => setShowSlowLoadingMessage(true), 3000);
     return () => clearTimeout(timer);
   }, []);
