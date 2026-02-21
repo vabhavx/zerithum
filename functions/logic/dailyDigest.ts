@@ -17,18 +17,17 @@ export interface AutopsyEvent {
 }
 
 export interface DailyDigestContext {
-  getUsers: () => Promise<User[]>;
+  getUsers: (limit: number, offset: number) => Promise<User[]>;
   getTransactions: (userId: string, date: string) => Promise<RevenueTransaction[]>;
   getTransactionsForUsers: (userIds: string[], date: string) => Promise<RevenueTransaction[]>;
   getAlerts: (userId: string) => Promise<AutopsyEvent[]>;
   getAlertsForUsers: (userIds: string[]) => Promise<AutopsyEvent[]>;
   sendEmail: (to: string, subject: string, body: string) => Promise<void>;
+  pageSize?: number;
 }
 
 export async function sendDailyDigestLogic(ctx: DailyDigestContext) {
-  // Get all users who have opt-in for daily digest
-  const users = await ctx.getUsers();
-  const notifiedUsers: string[] = [];
+  let notifiedCount = 0;
 
   // Calculate yesterday's date once
   const yesterday = new Date();
@@ -36,60 +35,74 @@ export async function sendDailyDigestLogic(ctx: DailyDigestContext) {
   const yesterdayStr = yesterday.toISOString().split('T')[0];
   const formattedDate = new Date(yesterday).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  const BATCH_SIZE = 50;
+  const PAGE_SIZE = ctx.pageSize || 100;
+  let offset = 0;
+  let hasMore = true;
 
-  for (let i = 0; i < users.length; i += BATCH_SIZE) {
-    const batchUsers = users.slice(i, i + BATCH_SIZE);
-    const userIds = batchUsers.map(u => u.id);
+  while (hasMore) {
+    // Get users in pages to avoid loading everyone into memory
+    const users = await ctx.getUsers(PAGE_SIZE, offset);
 
-    // Batch fetch transactions and alerts
-    const [transactionsBatch, alertsBatch] = await Promise.all([
-      ctx.getTransactionsForUsers(userIds, yesterdayStr),
-      ctx.getAlertsForUsers(userIds)
-    ]);
+    if (users.length === 0) {
+      hasMore = false;
+      break;
+    }
 
-    // Group transactions by user
-    const transactionsByUser = transactionsBatch.reduce((acc, t) => {
-      const uid = t.user_id;
-      if (!acc[uid]) acc[uid] = [];
-      acc[uid].push(t);
-      return acc;
-    }, {} as Record<string, RevenueTransaction[]>);
+    // Existing batch size for processing transactions/alerts
+    const BATCH_SIZE = 50;
 
-    // Group alerts by user
-    const alertsByUser = alertsBatch.reduce((acc, a) => {
-      const uid = a.user_id;
-      if (!acc[uid]) acc[uid] = [];
-      acc[uid].push(a);
-      return acc;
-    }, {} as Record<string, AutopsyEvent[]>);
+    for (let i = 0; i < users.length; i += BATCH_SIZE) {
+      const batchUsers = users.slice(i, i + BATCH_SIZE);
+      const userIds = batchUsers.map(u => u.id);
 
-    // Process each user in the batch
-    await Promise.all(batchUsers.map(async (user) => {
-      const transactions = transactionsByUser[user.id] || [];
+      // Batch fetch transactions and alerts
+      const [transactionsBatch, alertsBatch] = await Promise.all([
+        ctx.getTransactionsForUsers(userIds, yesterdayStr),
+        ctx.getAlertsForUsers(userIds)
+      ]);
 
-      if (transactions.length === 0) return;
-
-      const total = transactions.reduce((sum, t) => sum + t.amount, 0);
-
-      // Group by platform
-      const byPlatform = transactions.reduce((acc, t) => {
-        acc[t.platform] = (acc[t.platform] || 0) + t.amount;
+      // Group transactions by user
+      const transactionsByUser = transactionsBatch.reduce((acc, t) => {
+        const uid = t.user_id;
+        if (!acc[uid]) acc[uid] = [];
+        acc[uid].push(t);
         return acc;
-      }, {} as Record<string, number>);
+      }, {} as Record<string, RevenueTransaction[]>);
 
-      // Get autopsy alerts
-      const alerts = alertsByUser[user.id] || [];
+      // Group alerts by user
+      const alertsByUser = alertsBatch.reduce((acc, a) => {
+        const uid = a.user_id;
+        if (!acc[uid]) acc[uid] = [];
+        acc[uid].push(a);
+        return acc;
+      }, {} as Record<string, AutopsyEvent[]>);
 
-      const platformRows = Object.entries(byPlatform)
-        .map(([platform, amount]) => `
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${platform}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: 600;">$${amount.toFixed(2)}</td>
-          </tr>
-        `).join('');
+      // Process each user in the batch
+      await Promise.all(batchUsers.map(async (user) => {
+        const transactions = transactionsByUser[user.id] || [];
 
-      const emailBody = `
+        if (transactions.length === 0) return;
+
+        const total = transactions.reduce((sum, t) => sum + t.amount, 0);
+
+        // Group by platform
+        const byPlatform = transactions.reduce((acc, t) => {
+          acc[t.platform] = (acc[t.platform] || 0) + t.amount;
+          return acc;
+        }, {} as Record<string, number>);
+
+        // Get autopsy alerts
+        const alerts = alertsByUser[user.id] || [];
+
+        const platformRows = Object.entries(byPlatform)
+          .map(([platform, amount]) => `
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">${platform}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: 600;">$${amount.toFixed(2)}</td>
+            </tr>
+          `).join('');
+
+        const emailBody = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -140,12 +153,19 @@ export async function sendDailyDigestLogic(ctx: DailyDigestContext) {
 </div>
 </body>
 </html>
-      `;
+        `;
 
-      await ctx.sendEmail(user.email, `Your earnings digest: $${total.toFixed(2)}`, emailBody);
-      notifiedUsers.push(user.id);
-    }));
+        await ctx.sendEmail(user.email, `Your earnings digest: $${total.toFixed(2)}`, emailBody);
+        notifiedCount++;
+      }));
+    }
+
+    if (users.length < PAGE_SIZE) {
+      hasMore = false;
+    } else {
+      offset += PAGE_SIZE;
+    }
   }
 
-  return { success: true, users_notified: notifiedUsers.length };
+  return { success: true, users_notified: notifiedCount };
 }

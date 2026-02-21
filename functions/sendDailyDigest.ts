@@ -6,8 +6,9 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     
     const ctx: DailyDigestContext = {
-      getUsers: async () => {
-        return await base44.asServiceRole.entities.User.list();
+      getUsers: async (limit: number, offset: number) => {
+        // @ts-ignore: SDK supports pagination via list or filter with limit/offset
+        return await base44.asServiceRole.entities.User.list('-created_at', limit, offset);
       },
       getTransactions: async (userId, date) => {
         return await base44.asServiceRole.entities.RevenueTransaction.filter({
