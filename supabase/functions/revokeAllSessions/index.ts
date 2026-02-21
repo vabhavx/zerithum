@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
 
             // Rate limit OTP verification attempts
             const rateLimitKey = `otp_verify:${user.id}`;
-            const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.VERIFY_OTP);
+            const rateLimitResult = await checkRateLimit(adminClient, rateLimitKey, RATE_LIMITS.VERIFY_OTP);
 
             if (!rateLimitResult.allowed) {
                 return Response.json({

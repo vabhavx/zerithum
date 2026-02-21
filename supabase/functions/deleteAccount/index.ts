@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
         // Rate limiting
         const rateLimitKey = `delete_account:${user.id}`;
-        const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.DELETE_ACCOUNT);
+        const rateLimitResult = await checkRateLimit(adminClient, rateLimitKey, RATE_LIMITS.DELETE_ACCOUNT);
 
         if (!rateLimitResult.allowed) {
             await logAudit(null, {

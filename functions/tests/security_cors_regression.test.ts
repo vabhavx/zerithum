@@ -13,6 +13,10 @@ describe('CORS security regression', () => {
             },
             serve: vi.fn(),
         });
+
+        vi.mock('npm:@supabase/supabase-js@2', () => ({
+            createClient: vi.fn(() => ({})),
+        }));
     });
 
     afterEach(() => {
@@ -21,7 +25,7 @@ describe('CORS security regression', () => {
 
     it('updatePassword should use getCorsHeaders', async () => {
         const getCorsHeaders = vi.fn(() => ({ 'Access-Control-Allow-Origin': 'mocked' }));
-        vi.mock('../utils/cors.ts', () => ({
+        vi.doMock('../utils/cors.ts', () => ({
             getCorsHeaders,
             CORS_HEADERS: 'mock',
             CORS_METHODS: 'mock'

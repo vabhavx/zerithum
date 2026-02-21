@@ -3,6 +3,8 @@
  * and rate limiting. Testable without edge function runtime.
  */
 
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+
 /**
  * Supported OAuth providers for Supabase Auth.
  * Used to determine if a user has password-based auth.
@@ -113,55 +115,60 @@ export interface RateLimitResult {
     resetAt: Date;
 }
 
-// In-memory rate limit store (per instance, for edge functions)
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
-
 /**
  * Checks rate limit for a given key (userId + action).
- * Simple in-memory implementation suitable for edge functions.
+ * Uses PostgreSQL RPC function for persistent rate limiting.
  */
-export function checkRateLimit(
+export async function checkRateLimit(
+    client: SupabaseClient,
     key: string,
     config: RateLimitConfig
-): RateLimitResult {
-    const now = Date.now();
-    const entry = rateLimitStore.get(key);
-
-    // Clean up expired entries
-    if (entry && entry.resetAt <= now) {
-        rateLimitStore.delete(key);
-    }
-
-    const current = rateLimitStore.get(key);
-
-    if (!current) {
-        // First request in window
-        rateLimitStore.set(key, {
-            count: 1,
-            resetAt: now + config.windowMs
+): Promise<RateLimitResult> {
+    try {
+        const { data, error } = await client.rpc('increment_rate_limit', {
+            p_key: key,
+            p_window_ms: config.windowMs
         });
+
+        if (error) {
+            console.error('Rate limit error:', error);
+            // Fail open
+            return {
+                allowed: true,
+                remaining: config.maxAttempts,
+                resetAt: new Date(Date.now() + config.windowMs)
+            };
+        }
+
+        // RPC returns TABLE(current_count, current_reset_at)
+        const result = (Array.isArray(data) && data.length > 0) ? data[0] : data;
+
+        if (!result) {
+             console.error('Rate limit RPC returned no data');
+             return {
+                allowed: true,
+                remaining: config.maxAttempts,
+                resetAt: new Date(Date.now() + config.windowMs)
+            };
+        }
+
+        const count = result.current_count;
+        const resetAt = new Date(result.current_reset_at);
+
+        return {
+            allowed: count <= config.maxAttempts,
+            remaining: Math.max(0, config.maxAttempts - count),
+            resetAt: resetAt
+        };
+
+    } catch (e) {
+        console.error('Rate limit exception:', e);
         return {
             allowed: true,
-            remaining: config.maxAttempts - 1,
-            resetAt: new Date(now + config.windowMs)
+            remaining: config.maxAttempts,
+            resetAt: new Date(Date.now() + config.windowMs)
         };
     }
-
-    if (current.count >= config.maxAttempts) {
-        return {
-            allowed: false,
-            remaining: 0,
-            resetAt: new Date(current.resetAt)
-        };
-    }
-
-    // Increment count
-    current.count++;
-    return {
-        allowed: true,
-        remaining: config.maxAttempts - current.count,
-        resetAt: new Date(current.resetAt)
-    };
 }
 
 /**
@@ -210,7 +217,12 @@ export const SECURITY_ACTIONS = {
  * Sanitizes error messages to prevent leaking sensitive information.
  */
 export function sanitizeErrorMessage(error: any): string {
-    const message = error?.message || 'An unexpected error occurred';
+    let message = error?.message || 'An unexpected error occurred';
+
+    // Don't expose internal error details
+    if (message.includes('stack') || message.includes('at ')) {
+        return 'An unexpected error occurred. Please try again.';
+    }
 
     // List of patterns to redact
     const sensitivePatterns = [
@@ -222,9 +234,9 @@ export function sanitizeErrorMessage(error: any): string {
         /auth/gi
     ];
 
-    // Don't expose internal error details
-    if (message.includes('stack') || message.includes('at ')) {
-        return 'An unexpected error occurred. Please try again.';
+    // Redact sensitive information
+    for (const pattern of sensitivePatterns) {
+        message = message.replace(pattern, '********');
     }
 
     return message;

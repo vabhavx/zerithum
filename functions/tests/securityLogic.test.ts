@@ -44,54 +44,75 @@ describe('Security Logic', () => {
 
     describe('checkRateLimit', () => {
         const config = { maxAttempts: 3, windowMs: 1000 };
+        const mockRpc = vi.fn();
+        const mockClient = { rpc: mockRpc } as any;
 
         beforeEach(() => {
             vi.useFakeTimers();
             vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+            mockRpc.mockReset();
         });
 
         afterEach(() => {
             vi.useRealTimers();
         });
 
-        it('should allow requests within limit and track remaining', () => {
+        it('should allow requests within limit and track remaining', async () => {
             const testKey = 'key-within-limit';
-            let result = checkRateLimit(testKey, config);
+
+            // Mock RPC response for 1st attempt
+            mockRpc.mockResolvedValueOnce({
+                data: [{ current_count: 1, current_reset_at: new Date(Date.now() + 1000).toISOString() }],
+                error: null
+            });
+
+            let result = await checkRateLimit(mockClient, testKey, config);
             expect(result.allowed).toBe(true);
             expect(result.remaining).toBe(2);
+            expect(mockRpc).toHaveBeenCalledWith('increment_rate_limit', {
+                p_key: testKey,
+                p_window_ms: config.windowMs
+            });
 
-            result = checkRateLimit(testKey, config);
+            // Mock RPC response for 2nd attempt
+            mockRpc.mockResolvedValueOnce({
+                data: [{ current_count: 2, current_reset_at: new Date(Date.now() + 1000).toISOString() }],
+                error: null
+            });
+
+            result = await checkRateLimit(mockClient, testKey, config);
             expect(result.allowed).toBe(true);
             expect(result.remaining).toBe(1);
-
-            result = checkRateLimit(testKey, config);
-            expect(result.allowed).toBe(true);
-            expect(result.remaining).toBe(0);
         });
 
-        it('should reject requests over limit', () => {
+        it('should reject requests over limit', async () => {
             const testKey = 'key-over-limit';
-            checkRateLimit(testKey, config);
-            checkRateLimit(testKey, config);
-            checkRateLimit(testKey, config);
-            const result = checkRateLimit(testKey, config);
+
+            // Mock RPC response for exceeding limit (4th attempt)
+            mockRpc.mockResolvedValueOnce({
+                data: [{ current_count: 4, current_reset_at: new Date(Date.now() + 1000).toISOString() }],
+                error: null
+            });
+
+            const result = await checkRateLimit(mockClient, testKey, config);
             expect(result.allowed).toBe(false);
             expect(result.remaining).toBe(0);
         });
 
-        it('should reset after window expires', () => {
-            const testKey = 'key-reset';
-            checkRateLimit(testKey, config);
-            checkRateLimit(testKey, config);
-            checkRateLimit(testKey, config);
+        it('should fail open (allow) on DB error', async () => {
+            const testKey = 'key-error';
 
-            expect(checkRateLimit(testKey, config).allowed).toBe(false);
+            // Mock RPC error
+            mockRpc.mockResolvedValueOnce({
+                data: null,
+                error: { message: 'DB connection failed' }
+            });
 
-            vi.advanceTimersByTime(1001);
-
-            const result = checkRateLimit(testKey, config);
+            const result = await checkRateLimit(mockClient, testKey, config);
+            // Should be allowed (fail open)
             expect(result.allowed).toBe(true);
-            expect(result.remaining).toBe(2);
+            // Default return on error is full limit available
+            expect(result.remaining).toBe(3);
         });
     });
 

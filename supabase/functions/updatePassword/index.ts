@@ -56,6 +56,9 @@ Deno.serve(async (req) => {
 
         const { currentPassword, newPassword, verificationCode } = body;
 
+        // Create admin client early for rate limiting
+        const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
         // Validate new password
         if (!newPassword) {
             return Response.json({ error: 'New password is required' }, { status: 400, headers: corsHeaders });
@@ -72,7 +75,7 @@ Deno.serve(async (req) => {
 
         // Rate limiting
         const rateLimitKey = `password_change:${user.id}`;
-        const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.PASSWORD_CHANGE);
+        const rateLimitResult = await checkRateLimit(adminClient, rateLimitKey, RATE_LIMITS.PASSWORD_CHANGE);
 
         if (!rateLimitResult.allowed) {
             await logAudit(null, {
@@ -99,8 +102,6 @@ Deno.serve(async (req) => {
         // Determine auth method and verify re-authentication
         const hasPassword = user.app_metadata?.provider === 'email' ||
             user.app_metadata?.providers?.includes('email');
-
-        const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
         if (hasPassword && currentPassword) {
             // Verify via password
