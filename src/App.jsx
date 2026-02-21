@@ -30,7 +30,7 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated } = useAuth();
 
   // Public routes that don't require authentication
-  const publicRoutes = ['Login', 'Signup', 'AuthCallback', 'SignIn', 'Landing', 'Methodology', 'Privacy', 'Security', 'TermsOfService'];
+  const publicRoutes = ['Login', 'Signup', 'AuthCallback', 'SignIn', 'Landing', 'Methodology', 'Privacy', 'Security', 'TermsOfService', 'Pricing'];
   // Remove leading slash for matching
   const currentPath = window.location.pathname.substring(1);
   const isPublicRoute = publicRoutes.some(route => route.toLowerCase() === currentPath.toLowerCase());
