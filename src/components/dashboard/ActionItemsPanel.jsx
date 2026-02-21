@@ -4,20 +4,103 @@ import {
     CheckCircle2,
     FileSearch,
     Link2Off,
-    FileDown,
     AlertTriangle,
-    ChevronRight,
+    ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * ActionItemsPanel — "What needs attention" panel with real, actionable items.
+ * SeverityBadge — small colored pill.
+ */
+function SeverityBadge({ severity }) {
+    const config = {
+        critical: {
+            label: "Critical",
+            classes: "bg-[#FF5459]/10 text-[#FF5459] border border-[#FF5459]/20",
+        },
+        warning: {
+            label: "Warning",
+            classes: "bg-[#E68161]/10 text-[#E68161] border border-[#E68161]/20",
+        },
+        info: {
+            label: "Info",
+            classes: "bg-[#32B8C6]/10 text-[#32B8C6] border border-[#32B8C6]/20",
+        },
+    };
+    const c = config[severity] || config.info;
+    return (
+        <span
+            className={cn(
+                "flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide",
+                c.classes
+            )}
+        >
+            {c.label}
+        </span>
+    );
+}
+
+/**
+ * AttentionItem — a single action row inside the panel.
+ */
+function AttentionItem({ icon: Icon, iconBg, iconColor, severity, text, detail, actionLabel, onAction }) {
+    return (
+        <div className="flex items-start gap-3 p-3.5 rounded-lg bg-[var(--z-bg-3)] border border-[var(--z-border-1)] hover:border-[var(--z-border-2)] transition-colors duration-150">
+            {/* Icon */}
+            <div
+                className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5",
+                    iconBg
+                )}
+            >
+                <Icon className={cn("w-4 h-4", iconColor)} />
+            </div>
+
+            {/* Text */}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <p className="text-[13px] font-medium text-[var(--z-text-1)] leading-snug">
+                        {text}
+                    </p>
+                    <SeverityBadge severity={severity} />
+                </div>
+                {detail && (
+                    <p className="text-[12px] text-[var(--z-text-3)] leading-snug">
+                        {detail}
+                    </p>
+                )}
+            </div>
+
+            {/* CTA */}
+            <button
+                onClick={onAction}
+                className={cn(
+                    "flex-shrink-0 flex items-center gap-1 text-[12px] font-medium px-3 py-1.5 rounded-lg",
+                    "border transition-all duration-150 self-center",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#32B8C6] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--z-bg-3)]",
+                    severity === "critical"
+                        ? "border-[#FF5459]/30 text-[#FF5459] hover:bg-[#FF5459]/10"
+                        : severity === "warning"
+                            ? "border-[#E68161]/30 text-[#E68161] hover:bg-[#E68161]/10"
+                            : "border-[#32B8C6]/30 text-[#32B8C6] hover:bg-[#32B8C6]/10"
+                )}
+                aria-label={actionLabel}
+            >
+                {actionLabel}
+                <ArrowRight className="w-3 h-3" />
+            </button>
+        </div>
+    );
+}
+
+/**
+ * ActionItemsPanel — "Attention required" panel.
  *
  * Props:
- * - unreconciledCount: Number of transactions needing reconciliation
- * - stalePlatforms: Array of platform names with stale/error sync
- * - autopsyEventCount: Number of revenue anomalies pending review
- * - hasTaxExport: Boolean — whether a tax export is ready
+ *  - unreconciledCount: number
+ *  - stalePlatforms: string[] — platform names with sync errors
+ *  - autopsyEventCount: number
+ *  - hasTaxExport: bool
  */
 export default function ActionItemsPanel({
     unreconciledCount = 0,
@@ -29,98 +112,100 @@ export default function ActionItemsPanel({
 
     const items = [];
 
+    // 1. Revenue anomalies — critical
     if (autopsyEventCount > 0) {
         items.push({
             id: "autopsy",
             icon: AlertTriangle,
+            iconBg: "bg-[#FF5459]/10",
             iconColor: "text-[#FF5459]",
-            bgColor: "bg-[#FF5459]/10",
-            text: `${autopsyEventCount} revenue ${autopsyEventCount === 1 ? "anomaly" : "anomalies"} detected — review now`,
-            action: () => navigate("/RevenueAutopsy"),
-            priority: 1,
+            severity: "critical",
+            text: `${autopsyEventCount} revenue ${autopsyEventCount === 1 ? "anomaly" : "anomalies"} detected`,
+            detail: `${autopsyEventCount === 1 ? "A payment" : "Payments"} from your connected platforms ${autopsyEventCount === 1 ? "doesn't" : "don't"} match expected amounts — you may be missing income.`,
+            actionLabel: "Review now",
+            onAction: () => navigate("/RevenueAutopsy"),
         });
     }
 
+    // 2. Unreconciled transactions — warning
     if (unreconciledCount > 0) {
         items.push({
             id: "reconcile",
             icon: FileSearch,
+            iconBg: "bg-[#E68161]/10",
             iconColor: "text-[#E68161]",
-            bgColor: "bg-[#E68161]/10",
-            text: `${unreconciledCount} ${unreconciledCount === 1 ? "transaction needs" : "transactions need"} reconciliation review`,
-            action: () => navigate("/TransactionAnalysis"),
-            priority: 2,
+            severity: "warning",
+            text: `${unreconciledCount} ${unreconciledCount === 1 ? "transaction" : "transactions"} need matching`,
+            detail: `${unreconciledCount === 1 ? "This transaction hasn't" : "These transactions haven't"} been matched to a bank deposit yet. Confirm them to keep your records accurate.`,
+            actionLabel: "Match now",
+            onAction: () => navigate("/TransactionAnalysis"),
         });
     }
 
-    stalePlatforms.forEach((platform) => {
+    // 3. Stale platform syncs — warning (max 2 shown to keep panel scannable)
+    stalePlatforms.slice(0, 2).forEach((platform) => {
         items.push({
             id: `stale-${platform}`,
             icon: Link2Off,
+            iconBg: "bg-[#E68161]/10",
             iconColor: "text-[#E68161]",
-            bgColor: "bg-[#E68161]/10",
-            text: `${platform} data is stale — reconnect to resume syncing`,
-            action: () => navigate("/ConnectedPlatforms"),
-            priority: 3,
+            severity: "warning",
+            text: `${platform} sync is failing`,
+            detail: `${platform} stopped syncing. Your revenue totals may be incomplete until you reconnect.`,
+            actionLabel: "Reconnect",
+            onAction: () => navigate("/ConnectedPlatforms"),
         });
     });
 
+    // 4. Tax export ready — info
     if (hasTaxExport) {
         items.push({
             id: "tax-export",
-            icon: FileDown,
+            icon: FileSearch,
+            iconBg: "bg-[#32B8C6]/10",
             iconColor: "text-[#32B8C6]",
-            bgColor: "bg-[#32B8C6]/10",
-            text: "Tax export ready for download",
-            action: () => navigate("/TaxEstimator"),
-            priority: 4,
+            severity: "info",
+            text: "Tax export is ready for download",
+            detail: "Your annual income summary has been compiled and is ready to share with your accountant.",
+            actionLabel: "Download",
+            onAction: () => navigate("/TaxEstimator"),
         });
     }
 
-    // Sort by priority
-    items.sort((a, b) => a.priority - b.priority);
-
     return (
         <div className="rounded-xl bg-[var(--z-bg-2)] border border-[var(--z-border-1)] p-5">
-            <h3 className="text-base font-semibold text-[var(--z-text-1)] mb-1">
-                What needs attention
-            </h3>
-            <p className="text-[13px] text-[var(--z-text-3)] mb-4">
-                Action items based on your account activity
+            {/* Header */}
+            <div className="flex items-center justify-between mb-1">
+                <h3 className="text-[15px] font-semibold text-[var(--z-text-1)]">
+                    Attention required
+                </h3>
+                {items.length > 0 && (
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#E68161]/10 text-[#E68161] border border-[#E68161]/20">
+                        {items.length}
+                    </span>
+                )}
+            </div>
+            <p className="text-[12px] text-[var(--z-text-3)] mb-4">
+                Items that need your decision to keep records accurate
             </p>
 
             {items.length === 0 ? (
-                <div className="flex items-center gap-3 py-6 justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                    <p className="text-sm text-[var(--z-text-2)]">
-                        All clear. No actions needed.
-                    </p>
+                <div className="flex items-center gap-3 py-8 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                    <div>
+                        <p className="text-sm font-medium text-[var(--z-text-1)]">
+                            Everything looks good
+                        </p>
+                        <p className="text-[12px] text-[var(--z-text-3)]">
+                            No actions needed right now
+                        </p>
+                    </div>
                 </div>
             ) : (
-                <div className="space-y-2">
-                    {items.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={item.action}
-                                className="w-full flex items-center gap-3 p-3 rounded-lg bg-[var(--z-bg-3)]/50 border border-[var(--z-border-1)] hover:border-[var(--z-border-2)] hover:bg-[var(--z-bg-3)] transition-all duration-150 group text-left"
-                            >
-                                <div
-                                    className={cn(
-                                        "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
-                                        item.bgColor
-                                    )}
-                                >
-                                    <Icon className={cn("w-4 h-4", item.iconColor)} />
-                                </div>
-                                <span className="flex-1 text-[13px] text-[var(--z-text-2)] group-hover:text-[var(--z-text-1)] transition-colors">
-                                    {item.text}
-                                </span>
-                                <ChevronRight className="w-4 h-4 text-[var(--z-text-3)] group-hover:text-[var(--z-text-2)] transition-colors flex-shrink-0" />
-                            </button>
-                        );
-                    })}
+                <div className="space-y-2.5">
+                    {items.map((item) => (
+                        <AttentionItem key={item.id} {...item} />
+                    ))}
                 </div>
             )}
         </div>
