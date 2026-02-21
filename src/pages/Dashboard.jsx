@@ -1,21 +1,30 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { base44 } from "@/api/supabaseClient";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { subMonths, subDays, startOfMonth, endOfMonth } from "date-fns";
-import { RefreshCw } from "lucide-react";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  subMonths,
+  differenceInCalendarDays,
+} from "date-fns";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Database,
+  RefreshCw,
+  ShieldCheck,
+} from "lucide-react";
+import { base44 } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
-
-// ── Dashboard sub-components ─────────────────────────────────────────────────
-import KpiTile from "@/components/dashboard/KpiTile";
-import PlatformRevenueTable from "@/components/dashboard/PlatformRevenueTable";
-import RevenueTrendChart from "@/components/dashboard/RevenueTrendChart";
-import ActionItemsPanel from "@/components/dashboard/ActionItemsPanel";
-import AlertBanner from "@/components/dashboard/AlertBanner";
-import TrustBar from "@/components/dashboard/TrustBar";
-import ConnectionCtaBanner from "@/components/dashboard/ConnectionCtaBanner";
-
-// ── Constants ────────────────────────────────────────────────────────────────
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const PLATFORM_LABELS = {
   youtube: "YouTube",
@@ -28,407 +37,447 @@ const PLATFORM_LABELS = {
   substack: "Substack",
 };
 
-/**
- * Published platform fee rates (creator share subtracted from gross).
- * Net Revenue = Gross × (1 − fee rate) for the relevant platform.
- */
 const PLATFORM_FEE_RATES = {
   youtube: 0.45,
   patreon: 0.08,
   stripe: 0.029,
-  gumroad: 0.10,
+  gumroad: 0.1,
   instagram: 0.05,
-  tiktok: 0.50,
+  tiktok: 0.5,
   shopify: 0.02,
-  substack: 0.10,
+  substack: 0.1,
 };
 
-// ── Dashboard Page ────────────────────────────────────────────────────────────
+const money = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function formatMoney(value) {
+  return money.format(value || 0);
+}
+
+function calcFee(transaction) {
+  const explicitFee = Number(transaction.platform_fee || 0);
+  if (explicitFee > 0) return explicitFee;
+  const rate = PLATFORM_FEE_RATES[(transaction.platform || "").toLowerCase()] || 0;
+  return (transaction.amount || 0) * rate;
+}
+
+function DashboardMetric({ label, value, subtext, tone = "neutral" }) {
+  const toneClass =
+    tone === "teal"
+      ? "text-[#56C5D0]"
+      : tone === "orange"
+        ? "text-[#F0A562]"
+        : tone === "red"
+          ? "text-[#F06C6C]"
+          : "text-[#F5F5F5]";
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
+      <p className="text-xs uppercase tracking-wide text-white/60">{label}</p>
+      <p className={`mt-2 font-mono-financial text-2xl font-semibold ${toneClass}`}>{value}</p>
+      <p className="mt-1 text-xs text-white/60">{subtext}</p>
+    </div>
+  );
+}
 
 export default function Dashboard() {
-  const [alerts, setAlerts] = useState([]);
   const navigate = useNavigate();
-
-  // ── Data queries ─────────────────────────────────────────────────────────
 
   const {
     data: transactions = [],
     isLoading: txLoading,
-    refetch,
-    dataUpdatedAt,
+    refetch: refetchTransactions,
+    isFetching,
   } = useQuery({
     queryKey: ["revenueTransactions"],
-    queryFn: () =>
-      base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
+    queryFn: () => base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: user } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: () => base44.auth.me(),
+  const { data: expenses = [] } = useQuery({
+    queryKey: ["expenses"],
+    queryFn: () => base44.entities.Expense.list("-expense_date", 1000),
+    staleTime: 1000 * 60 * 5,
   });
 
-  const { data: autopsyEvents = [] } = useQuery({
-    queryKey: ["autopsyEvents"],
+  const {
+    data: connectedPlatforms = [],
+    isLoading: platformsLoading,
+    refetch: refetchPlatforms,
+  } = useQuery({
+    queryKey: ["connectedPlatforms"],
+    queryFn: async () => {
+      const user = await base44.auth.me();
+      return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
+    },
+    staleTime: 1000 * 60 * 2,
+  });
+
+  const { data: pendingAutopsyEvents = [] } = useQuery({
+    queryKey: ["autopsyEvents", "pending"],
     queryFn: async () => {
       const user = await base44.auth.me();
       return base44.entities.AutopsyEvent.filter(
         { user_id: user.id, status: "pending_review" },
         "-detected_at",
-        5
+        10
       );
     },
+    staleTime: 1000 * 60,
   });
 
-  const { data: connectedPlatforms = [], isLoading: platformsLoading } =
-    useQuery({
-      queryKey: ["connectedPlatforms"],
-      queryFn: async () => {
-        const user = await base44.auth.me();
-        return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
-      },
-    });
-
-  const { data: reconciliations = [] } = useQuery({
-    queryKey: ["reconciliations"],
-    queryFn: async () => {
-      const user = await base44.auth.me();
-      return base44.entities.Reconciliation.filter({ user_id: user.id });
-    },
-  });
-
-  const isLoading = txLoading || platformsLoading;
-  const noPlatforms = !isLoading && connectedPlatforms.length === 0;
-
-  // ── Alert banners ─────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    const newAlerts = [];
-    if (autopsyEvents.length > 0) {
-      newAlerts.push({
-        id: "autopsy",
-        type: "error",
-        title: `${autopsyEvents.length} Revenue ${autopsyEvents.length > 1 ? "Anomalies" : "Anomaly"} Detected`,
-        description: "Critical events require your decision. Review now to understand impact.",
-        dismissible: false,
-      });
-    }
-    const failedSyncs = connectedPlatforms.filter((p) => p.sync_status === "error");
-    if (failedSyncs.length > 0) {
-      newAlerts.push({
-        id: "sync",
-        type: "sync",
-        title: `${failedSyncs.length} Platform${failedSyncs.length > 1 ? "s" : ""} Failed to Sync`,
-        description: "Go to Connected Platforms to reconnect and resume data collection.",
-        dismissible: true,
-      });
-    }
-    setAlerts(newAlerts);
-  }, [autopsyEvents, connectedPlatforms]);
-
-  // ── Computed metrics ──────────────────────────────────────────────────────
-
-  const metrics = useMemo(() => {
+  const computed = useMemo(() => {
     const now = new Date();
-    const currentMonthStart = startOfMonth(now);
-    const currentMonthEnd = endOfMonth(now);
-    const prevMonthStart = startOfMonth(subMonths(now, 1));
-    const prevMonthEnd = endOfMonth(subMonths(now, 1));
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+    const prevStart = startOfMonth(subMonths(now, 1));
+    const prevEnd = endOfMonth(subMonths(now, 1));
 
-    const currentTxns = transactions.filter((t) => {
-      const d = new Date(t.transaction_date);
-      return d >= currentMonthStart && d <= currentMonthEnd;
+    const inMonth = transactions.filter((tx) => {
+      const d = new Date(tx.transaction_date);
+      return d >= monthStart && d <= monthEnd;
     });
-    const prevTxns = transactions.filter((t) => {
-      const d = new Date(t.transaction_date);
-      return d >= prevMonthStart && d <= prevMonthEnd;
+    const inPrevMonth = transactions.filter((tx) => {
+      const d = new Date(tx.transaction_date);
+      return d >= prevStart && d <= prevEnd;
     });
 
-    // ── Total Revenue (gross, MTD) ──────────────────────────────────────
-    const totalRevenue = currentTxns.reduce((s, t) => s + (t.amount || 0), 0);
-    const prevRevenue = prevTxns.reduce((s, t) => s + (t.amount || 0), 0);
+    const grossRevenue = inMonth.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+    const estimatedFees = inMonth.reduce((sum, tx) => sum + calcFee(tx), 0);
+    const netRevenue = grossRevenue - estimatedFees;
 
-    let revenueTrend = "neutral";
-    let revenueChange = "No prior data";
-    if (prevRevenue > 0) {
-      const pct = ((totalRevenue - prevRevenue) / prevRevenue) * 100;
-      revenueTrend = pct > 0 ? "up" : pct < 0 ? "down" : "neutral";
-      revenueChange = `${pct > 0 ? "+" : ""}${pct.toFixed(1)}% vs last month`;
+    const prevGrossRevenue = inPrevMonth.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+    const revenueDelta =
+      prevGrossRevenue > 0 ? ((grossRevenue - prevGrossRevenue) / prevGrossRevenue) * 100 : 0;
+
+    const monthExpenses = expenses
+      .filter((expense) => {
+        const d = new Date(expense.expense_date);
+        return d >= monthStart && d <= monthEnd;
+      })
+      .reduce((sum, expense) => sum + (expense.amount || 0), 0);
+
+    const operatingMargin = netRevenue - monthExpenses;
+
+    const byPlatformMap = new Map();
+    for (const tx of inMonth) {
+      const key = (tx.platform || "unknown").toLowerCase();
+      const existing = byPlatformMap.get(key) || {
+        key,
+        label: PLATFORM_LABELS[key] || key,
+        gross: 0,
+        fee: 0,
+        rows: 0,
+        withReportedFee: 0,
+      };
+      existing.gross += tx.amount || 0;
+      existing.fee += calcFee(tx);
+      existing.rows += 1;
+      if ((tx.platform_fee || 0) > 0) existing.withReportedFee += 1;
+      byPlatformMap.set(key, existing);
     }
 
-    // ── Net Revenue (after platform fees, estimated) ────────────────────
-    const netRevenue = currentTxns.reduce((s, t) => {
-      const rate = PLATFORM_FEE_RATES[(t.platform || "").toLowerCase()] ?? 0;
-      return s + (t.amount || 0) * (1 - rate);
-    }, 0);
-    const prevNetRevenue = prevTxns.reduce((s, t) => {
-      const rate = PLATFORM_FEE_RATES[(t.platform || "").toLowerCase()] ?? 0;
-      return s + (t.amount || 0) * (1 - rate);
-    }, 0);
-    let netTrend = "neutral";
-    let netChange = "No prior data";
-    if (prevNetRevenue > 0) {
-      const pct = ((netRevenue - prevNetRevenue) / prevNetRevenue) * 100;
-      netTrend = pct > 0 ? "up" : pct < 0 ? "down" : "neutral";
-      netChange = `${pct > 0 ? "+" : ""}${pct.toFixed(1)}% vs last month`;
-    }
+    const platformRows = [...byPlatformMap.values()]
+      .map((row) => ({
+        ...row,
+        net: row.gross - row.fee,
+        share: grossRevenue > 0 ? (row.gross / grossRevenue) * 100 : 0,
+        feeSource:
+          row.rows > 0 && row.withReportedFee === row.rows ? "Reported" : "Estimated where missing",
+      }))
+      .sort((a, b) => b.gross - a.gross);
 
-    // ── Cash Received (bank-matched) ────────────────────────────────────
-    const cashReceived = reconciliations
-      .filter((r) => r.status === "matched" || r.status === "reconciled")
-      .reduce((s, r) => s + (r.amount || 0), 0);
-
-    // ── Items needing review ────────────────────────────────────────────
-    const unreconciledCount = reconciliations.filter(
-      (r) => r.status === "pending" || r.status === "unmatched"
-    ).length;
-    const reviewCount = unreconciledCount + autopsyEvents.length;
-
-    // ── Platform breakdown ──────────────────────────────────────────────
-    const currentMap = {};
-    currentTxns.forEach((t) => {
-      currentMap[t.platform] = (currentMap[t.platform] || 0) + (t.amount || 0);
-    });
-    const prevMap = {};
-    prevTxns.forEach((t) => {
-      prevMap[t.platform] = (prevMap[t.platform] || 0) + (t.amount || 0);
-    });
-    const allPlatformKeys = new Set([
-      ...Object.keys(currentMap),
-      ...Object.keys(prevMap),
-    ]);
-    const platformData = Array.from(allPlatformKeys).map((p) => ({
-      platform: p,
-      currentMonth: currentMap[p] || 0,
-      lastMonth: prevMap[p] || 0,
-    }));
-
-    const activePlatformCount = Object.keys(currentMap).length;
-
-    // ── Stale platforms ────────────────────────────────────────────────
-    const stalePlatforms = connectedPlatforms
-      .filter((p) => p.sync_status === "error")
-      .map(
-        (p) =>
-          PLATFORM_LABELS[(p.platform_name || p.platform || "").toLowerCase()] ||
-          p.platform_name ||
-          p.platform
-      );
+    const latestTransactions = transactions
+      .slice(0, 8)
+      .map((tx) => ({
+        id: tx.id,
+        date: tx.transaction_date,
+        description: tx.description || "Untitled transaction",
+        platform: PLATFORM_LABELS[(tx.platform || "").toLowerCase()] || tx.platform || "Unknown",
+        gross: tx.amount || 0,
+        fee: calcFee(tx),
+      }));
 
     return {
-      totalRevenue,
-      prevRevenue,
-      revenueTrend,
-      revenueChange,
+      grossRevenue,
       netRevenue,
-      netTrend,
-      netChange,
-      cashReceived,
-      unreconciledCount,
-      reviewCount,
-      activePlatformCount,
-      platformData,
-      stalePlatforms,
+      estimatedFees,
+      revenueDelta,
+      monthExpenses,
+      operatingMargin,
+      platformRows,
+      latestTransactions,
+      transactionCount: inMonth.length,
     };
-  }, [transactions, reconciliations, autopsyEvents, connectedPlatforms]);
+  }, [transactions, expenses]);
 
-  // ── Greeting ──────────────────────────────────────────────────────────────
+  const dataCompleteness = useMemo(() => {
+    const allDates = transactions
+      .map((tx) => new Date(tx.transaction_date))
+      .filter((d) => !Number.isNaN(d.getTime()))
+      .sort((a, b) => a.getTime() - b.getTime());
 
-  const greeting = useMemo(() => {
-    const h = new Date().getHours();
-    if (h < 12) return "Good morning";
-    if (h < 17) return "Good afternoon";
-    return "Good evening";
-  }, []);
+    const firstDate = allDates[0] || null;
+    const daysHistory = firstDate ? Math.max(0, differenceInCalendarDays(new Date(), firstDate) + 1) : 0;
 
-  const firstName = user?.full_name?.split(" ")[0] || "";
+    const lastSyncDates = connectedPlatforms
+      .map((platform) => platform.last_synced_at || platform.updated_at)
+      .filter(Boolean)
+      .map((dateString) => new Date(dateString))
+      .filter((d) => !Number.isNaN(d.getTime()))
+      .sort((a, b) => b.getTime() - a.getTime());
 
-  // ── Last sync ─────────────────────────────────────────────────────────────
+    const errorPlatforms = connectedPlatforms.filter((platform) => platform.sync_status === "error");
 
-  const lastDataUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
+    return {
+      daysHistory,
+      platformCount: connectedPlatforms.length,
+      lastSync: lastSyncDates[0] || null,
+      errorPlatforms,
+    };
+  }, [transactions, connectedPlatforms]);
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  const isLoading = txLoading || platformsLoading;
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* ── Page Header ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+    <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
+      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-[26px] font-semibold text-[var(--z-text-1)] tracking-tight leading-tight">
-            {greeting}{firstName ? `, ${firstName}` : ""}
-          </h1>
-          <p className="text-[13px] text-[var(--z-text-3)] mt-0.5">
-            Your earnings overview — month to date
+          <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Dashboard</h1>
+          <p className="mt-1 text-sm text-white/70">
+            One clean view of revenue, fees, expenses, and follow-up actions.
+          </p>
+          <p className="mt-2 text-xs text-white/60">
+            Last sync: {dataCompleteness.lastSync ? format(dataCompleteness.lastSync, "MMM d, yyyy h:mm a") : "No sync data"}
           </p>
         </div>
-        <Button
-          onClick={() => refetch()}
-          disabled={isLoading}
-          className="rounded-lg bg-[var(--z-bg-3)] border border-[var(--z-border-1)] text-[var(--z-text-2)] hover:bg-[var(--z-bg-3)] hover:border-[var(--z-border-2)] hover:text-[var(--z-text-1)] transition-all text-sm h-9 px-4 focus-visible:ring-2 focus-visible:ring-[#32B8C6]"
-          aria-label="Refresh dashboard data"
-        >
-          <RefreshCw
-            className={`w-3.5 h-3.5 mr-2 ${isLoading ? "animate-spin" : ""}`}
-          />
-          Refresh
-        </Button>
-      </div>
 
-      {/* ── Connection CTA (new users only) ──────────────────────────── */}
-      {noPlatforms && (
-        <ConnectionCtaBanner onConnect={() => navigate("/ConnectedPlatforms")} />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            refetchTransactions();
+            refetchPlatforms();
+          }}
+          disabled={isFetching}
+          className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+          Refresh data
+        </Button>
+      </header>
+
+      <section className="mb-6 rounded-lg border border-[#56C5D0]/30 bg-[#56C5D0]/10 p-4">
+        <div className="flex items-start gap-2">
+          <ShieldCheck className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
+          <div>
+            <p className="text-sm font-medium text-[#F5F5F5]">Trusted view for decisions</p>
+            <p className="mt-1 text-xs text-white/75">
+              Missing platform fee fields are estimated using published defaults. Source labels are shown in tables below.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <DashboardMetric
+          label="Gross revenue (MTD)"
+          value={formatMoney(computed.grossRevenue)}
+          subtext={`${computed.transactionCount} transactions this month`}
+        />
+        <DashboardMetric
+          label="Estimated net revenue"
+          value={formatMoney(computed.netRevenue)}
+          subtext={`Fees estimate: ${formatMoney(computed.estimatedFees)}`}
+          tone="teal"
+        />
+        <DashboardMetric
+          label="Operating margin"
+          value={formatMoney(computed.operatingMargin)}
+          subtext={`Month expenses: ${formatMoney(computed.monthExpenses)}`}
+          tone={computed.operatingMargin < 0 ? "red" : "neutral"}
+        />
+        <DashboardMetric
+          label="Change vs last month"
+          value={`${computed.revenueDelta >= 0 ? "+" : ""}${computed.revenueDelta.toFixed(1)}%`}
+          subtext={`History: ${dataCompleteness.daysHistory} days`}
+          tone={computed.revenueDelta >= 0 ? "teal" : "orange"}
+        />
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <div className="rounded-xl border border-white/10 bg-[#111114] xl:col-span-8">
+          <div className="border-b border-white/10 p-4">
+            <h2 className="text-lg font-semibold text-[#F5F5F5]">Revenue by platform (month-to-date)</h2>
+            <p className="mt-1 text-sm text-white/70">All figures are traceable to transaction records.</p>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow className="border-white/10 hover:bg-transparent">
+                <TableHead className="text-[#D8D8D8]">Platform</TableHead>
+                <TableHead className="text-right text-[#D8D8D8]">Gross</TableHead>
+                <TableHead className="text-right text-[#D8D8D8]">Fee</TableHead>
+                <TableHead className="text-right text-[#D8D8D8]">Net</TableHead>
+                <TableHead className="text-right text-[#D8D8D8]">Share</TableHead>
+                <TableHead className="text-right text-[#D8D8D8]">Fee Source</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {computed.platformRows.length === 0 && (
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableCell colSpan={6} className="py-8 text-center text-sm text-white/60">
+                    {isLoading ? "Loading platform metrics..." : "No revenue yet for this month."}
+                  </TableCell>
+                </TableRow>
+              )}
+              {computed.platformRows.map((row) => (
+                <TableRow key={row.key} className="border-white/10 hover:bg-white/[0.02]">
+                  <TableCell className="font-medium text-[#F5F5F5]">{row.label}</TableCell>
+                  <TableCell className="text-right font-mono-financial text-[#F5F5F5]">{formatMoney(row.gross)}</TableCell>
+                  <TableCell className="text-right font-mono-financial text-[#F0A562]">{formatMoney(row.fee)}</TableCell>
+                  <TableCell className="text-right font-mono-financial text-[#56C5D0]">{formatMoney(row.net)}</TableCell>
+                  <TableCell className="text-right font-mono-financial text-white/80">{row.share.toFixed(1)}%</TableCell>
+                  <TableCell className="text-right text-sm text-white/60">{row.feeSource}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="space-y-6 xl:col-span-4">
+          <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
+            <h2 className="text-lg font-semibold text-[#F5F5F5]">Action queue</h2>
+            <p className="mt-1 text-sm text-white/70">Clear these items to keep reports dependable.</p>
+
+            <div className="mt-4 space-y-3">
+              <button
+                type="button"
+                onClick={() => navigate("/RevenueAutopsy")}
+                className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-[#15151A] px-3 py-2 text-left hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+              >
+                <div>
+                  <p className="text-sm font-medium text-[#F5F5F5]">Pending anomalies</p>
+                  <p className="text-xs text-white/65">{pendingAutopsyEvents.length} items need review</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-white/50" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/ConnectedPlatforms")}
+                className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-[#15151A] px-3 py-2 text-left hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+              >
+                <div>
+                  <p className="text-sm font-medium text-[#F5F5F5]">Platform sync issues</p>
+                  <p className="text-xs text-white/65">{dataCompleteness.errorPlatforms.length} connections in error</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-white/50" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/TaxEstimator")}
+                className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-[#15151A] px-3 py-2 text-left hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+              >
+                <div>
+                  <p className="text-sm font-medium text-[#F5F5F5]">Update tax set-aside</p>
+                  <p className="text-xs text-white/65">Recalculate based on latest month results</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-white/50" />
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
+            <h2 className="text-lg font-semibold text-[#F5F5F5]">Data completeness</h2>
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <span className="text-white/70">Platforms connected</span>
+                <span className="font-mono-financial text-[#F5F5F5]">{dataCompleteness.platformCount}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <span className="text-white/70">Days of history</span>
+                <span className="font-mono-financial text-[#F5F5F5]">{dataCompleteness.daysHistory}</span>
+              </div>
+              <div className="flex items-center justify-between pb-1">
+                <span className="text-white/70">Open issues</span>
+                <span className="font-mono-financial text-[#F5F5F5]">
+                  {pendingAutopsyEvents.length + dataCompleteness.errorPlatforms.length}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-xl border border-white/10 bg-[#111114]">
+        <div className="border-b border-white/10 p-4">
+          <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent transactions</h2>
+          <p className="mt-1 text-sm text-white/70">Most recent entries from your connected sources.</p>
+        </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow className="border-white/10 hover:bg-transparent">
+              <TableHead className="text-[#D8D8D8]">Date</TableHead>
+              <TableHead className="text-[#D8D8D8]">Description</TableHead>
+              <TableHead className="text-[#D8D8D8]">Platform</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Gross</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Fee</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Net</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {computed.latestTransactions.length === 0 && (
+              <TableRow className="border-white/10 hover:bg-transparent">
+                <TableCell colSpan={6} className="py-8 text-center text-sm text-white/60">
+                  No transaction activity yet.
+                </TableCell>
+              </TableRow>
+            )}
+            {computed.latestTransactions.map((tx) => (
+              <TableRow key={tx.id} className="border-white/10 hover:bg-white/[0.02]">
+                <TableCell className="text-sm text-white/75">{format(new Date(tx.date), "MMM d, yyyy")}</TableCell>
+                <TableCell className="max-w-[380px] truncate text-sm text-[#F5F5F5]">{tx.description}</TableCell>
+                <TableCell className="text-sm text-white/75">{tx.platform}</TableCell>
+                <TableCell className="text-right font-mono-financial text-[#F5F5F5]">{formatMoney(tx.gross)}</TableCell>
+                <TableCell className="text-right font-mono-financial text-[#F0A562]">{formatMoney(tx.fee)}</TableCell>
+                <TableCell className="text-right font-mono-financial text-[#56C5D0]">{formatMoney(tx.gross - tx.fee)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </section>
+
+      {(pendingAutopsyEvents.length > 0 || dataCompleteness.errorPlatforms.length > 0) && (
+        <section className="mt-6 rounded-lg border border-[#F0A562]/35 bg-[#F0A562]/10 p-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-[#F0A562]" />
+            <div className="text-sm text-white/85">
+              <p className="font-medium text-[#F5F5F5]">Follow-up needed</p>
+              <p className="mt-1">
+                {pendingAutopsyEvents.length} anomaly items and {dataCompleteness.errorPlatforms.length} sync issues are open.
+                Resolve these before sharing exports with your accountant.
+              </p>
+            </div>
+          </div>
+        </section>
       )}
 
-      {/* ── Trust Bar ───────────────────────────────────────────────────── */}
-      <TrustBar
-        connectedPlatforms={connectedPlatforms}
-        transactions={transactions}
-        totalPlatformCount={8}
-      />
-
-      {/* ── Alert Banners ───────────────────────────────────────────────── */}
-      <AlertBanner
-        alerts={alerts}
-        onDismiss={(id) => setAlerts(alerts.filter((a) => a.id !== id))}
-      />
-
-      {/* ── KPI Tiles ───────────────────────────────────────────────────── */}
-      <div
-        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8"
-        role="region"
-        aria-label="Key financial metrics"
-      >
-        {/* Tile 1: Total Revenue */}
-        <KpiTile
-          label="Total Revenue"
-          value={`$${metrics.totalRevenue.toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          })}`}
-          trend={metrics.revenueTrend}
-          trendValue={metrics.revenueChange}
-          source={
-            metrics.activePlatformCount > 0
-              ? `Synced from ${metrics.activePlatformCount} platform${metrics.activePlatformCount > 1 ? "s" : ""}`
-              : "Synced from connected platforms"
-          }
-          lastUpdatedAt={lastDataUpdated}
-          viewDetailsTo="/TransactionAnalysis"
-          disclosure={{
-            title: "How we calculate Total Revenue",
-            body: "Total Revenue is the sum of all gross transaction amounts received from your connected platforms for the current calendar month. This is the amount before any platform fees are subtracted.",
-            formula: "Sum of all platform payouts (gross) — month to date",
-            source: "Calculated from synced transactions",
-          }}
-          isLoading={isLoading}
-        />
-
-        {/* Tile 2: Net Revenue */}
-        <KpiTile
-          label="Net Revenue"
-          value={`$${metrics.netRevenue.toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          })}`}
-          trend={metrics.netTrend}
-          trendValue={metrics.netChange}
-          source="After estimated platform fees"
-          lastUpdatedAt={lastDataUpdated}
-          viewDetailsTo="/TransactionAnalysis"
-          disclosure={{
-            title: "How we calculate Net Revenue",
-            body: "Net Revenue is what you actually keep after each platform deducts its fee. We use each platform's published standard fee rate (e.g. YouTube keeps 45%, Patreon takes 8%). These are estimates — your actual rate may vary by tier.",
-            formula: "Gross Revenue × (1 − Platform Fee Rate)",
-            source: "Based on published platform fee rates",
-          }}
-          isLoading={isLoading}
-        />
-
-        {/* Tile 3: Cash Received */}
-        <KpiTile
-          label="Cash Received"
-          value={`$${metrics.cashReceived.toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          })}`}
-          source="Matched to bank deposits"
-          lastUpdatedAt={lastDataUpdated}
-          viewDetailsTo="/TransactionAnalysis"
-          disclosure={{
-            title: "What is Cash Received?",
-            body: "Cash Received is the amount we have been able to match to an actual bank deposit. This means money that has left the platform and arrived in your account. It will always be less than or equal to your Net Revenue, because some payments may still be in transit or pending.",
-            formula: "Reconciled transactions matched to bank deposits",
-            source: "Matched to bank deposits via reconciliation",
-          }}
-          isLoading={isLoading}
-        />
-
-        {/* Tile 4: Items Needing Review */}
-        <KpiTile
-          label="Needs Review"
-          value={metrics.reviewCount > 0 ? `${metrics.reviewCount} items` : "All clear"}
-          source={
-            metrics.reviewCount > 0
-              ? "Unmatched transactions + anomalies"
-              : "No unresolved items"
-          }
-          lastUpdatedAt={lastDataUpdated}
-          viewDetailsTo={
-            autopsyEvents.length > 0 ? "/RevenueAutopsy" : "/TransactionAnalysis"
-          }
-          viewDetailsLabel="Review now"
-          highlight={metrics.reviewCount > 0}
-          disclosure={{
-            title: "What needs review?",
-            body: "This count includes unreconciled transactions (payments we received from platforms but haven't matched to a bank deposit yet) and revenue anomalies (unusual changes in your earnings that may indicate a mistake or missed payment).",
-            source: "Unreconciled transactions + pending revenue anomalies",
-          }}
-          isLoading={isLoading}
-        />
-      </div>
-
-      {/* ── "Where your money came from" table ──────────────────────────── */}
-      <div className="mb-8">
-        <PlatformRevenueTable
-          platformData={metrics.platformData}
-          connectedPlatforms={connectedPlatforms}
-        />
-      </div>
-
-      {/* ── Trend + Attention panels ─────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Revenue trend chart — 2/3 width */}
-        <div className="lg:col-span-2">
-          <RevenueTrendChart transactions={transactions} />
+      <section className="mt-6 rounded-lg border border-white/10 bg-[#111114] p-4">
+        <div className="flex items-start gap-2">
+          <Database className="mt-0.5 h-4 w-4 text-white/65" />
+          <p className="text-sm text-white/75">
+            Data source: Revenue transactions, expenses, connected platform sync records, and pending anomaly events.
+          </p>
         </div>
-
-        {/* Attention required — 1/3 width */}
-        <div>
-          <ActionItemsPanel
-            unreconciledCount={metrics.unreconciledCount}
-            stalePlatforms={metrics.stalePlatforms}
-            autopsyEventCount={autopsyEvents.length}
-            hasTaxExport={false}
-          />
-        </div>
-      </div>
-
-      {/* ── Footer disclosure ────────────────────────────────────────────── */}
-      <div className="mt-8 pt-6 border-t border-[var(--z-border-1)]">
-        <p className="text-[11px] text-[var(--z-text-3)] leading-relaxed max-w-3xl">
-          <strong className="font-medium text-[var(--z-text-2)]">Data source: </strong>
-          Revenue figures are pulled from your connected platforms via OAuth API sync.
-          Platform fees are estimated using each platform's published standard rates and
-          may not reflect negotiated or tiered rates. Net Revenue and Cash Received are
-          estimates — consult your accountant for tax purposes.{" "}
-          <Link
-            to="/ConnectedPlatforms"
-            className="text-[#32B8C6] hover:text-[#21808D] transition-colors"
-          >
-            Manage connected platforms →
-          </Link>
-        </p>
-      </div>
+      </section>
     </div>
   );
 }

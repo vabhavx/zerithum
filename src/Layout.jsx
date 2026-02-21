@@ -46,10 +46,10 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090B]">
+    <div className="min-h-screen bg-[#0A0A0A]">
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#09090B] px-4 py-3 flex items-center justify-between border-b border-white/5">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#0A0A0A] px-4 py-3 flex items-center justify-between border-b border-white/5">
         <div className="relative">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png"
@@ -77,7 +77,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 bg-[#09090B] border-r border-white/5 z-50 transition-transform duration-150 ease-out",
+        "fixed left-0 top-0 h-full w-64 bg-[#0A0A0A] border-r border-white/5 z-50 transition-transform duration-150 ease-out",
         "lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
@@ -124,7 +124,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="pt-4 border-t border-white/5">
               <div className="rounded-lg bg-white/5 p-3 border border-white/5">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center border border-white/10">
+                  <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center border border-white/10">
                     <span className="font-semibold text-white/70 text-sm">
                       {user.full_name?.[0] || user.email?.[0] || "U"}
                     </span>
@@ -150,7 +150,7 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 bg-[#09090B]">
+      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 bg-[#0A0A0A]">
         <div className="p-6 lg:p-10 max-w-[1600px] mx-auto">
           {children}
         </div>

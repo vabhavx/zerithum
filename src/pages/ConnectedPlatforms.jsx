@@ -1,825 +1,640 @@
-import React, { useState, useCallback } from "react";
-import { base44 } from "@/api/supabaseClient";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
-  Plus,
-  Check,
-  ExternalLink,
+  AlertTriangle,
+  CheckCircle2,
   Loader2,
-  Key,
-  History,
+  Plug,
   RefreshCw,
   ShieldCheck,
-  AlertTriangle,
-  Store
+  Unplug,
 } from "lucide-react";
-import PlatformSyncHistory from "../components/platform/PlatformSyncHistory";
-import ConnectedPlatformRow from "../components/platform/ConnectedPlatformRow";
-import SyncHistoryRow from "../components/platform/SyncHistoryRow";
-import MotivationalQuote from "../components/shared/MotivationalQuote";
-import SuccessConfetti from "../components/shared/SuccessConfetti";
+import { base44 } from "@/api/supabaseClient";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { PLATFORMS } from "@/lib/platforms";
 
+function statusTone(status) {
+  if (status === "active") return "border-[#56C5D0]/40 bg-[#56C5D0]/10 text-[#56C5D0]";
+  if (status === "syncing") return "border-white/30 bg-white/10 text-white";
+  if (status === "error") return "border-[#F06C6C]/40 bg-[#F06C6C]/10 text-[#F06C6C]";
+  return "border-[#F0A562]/40 bg-[#F0A562]/10 text-[#F0A562]";
+}
+
+function statusLabel(status) {
+  if (status === "active") return "Synced";
+  if (status === "syncing") return "Syncing";
+  if (status === "error") return "Needs attention";
+  if (status === "stale") return "Stale";
+  return status || "Unknown";
+}
+
+function MetricCard({ label, value, helper, tone = "neutral" }) {
+  const toneClass =
+    tone === "teal"
+      ? "text-[#56C5D0]"
+      : tone === "orange"
+        ? "text-[#F0A562]"
+        : tone === "red"
+          ? "text-[#F06C6C]"
+          : "text-[#F5F5F5]";
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
+      <p className="text-xs uppercase tracking-wide text-white/60">{label}</p>
+      <p className={`mt-2 font-mono-financial text-2xl font-semibold ${toneClass}`}>{value}</p>
+      <p className="mt-1 text-xs text-white/60">{helper}</p>
+    </div>
+  );
+}
+
 export default function ConnectedPlatforms() {
-  const [showConnectDialog, setShowConnectDialog] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState(null);
-  const [disconnectPlatform, setDisconnectPlatform] = useState(null);
-  const [selectedHistoryPlatform, setSelectedHistoryPlatform] = useState(null);
-  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [connectingPlatform, setConnectingPlatform] = useState(null);
-  const [syncingPlatform, setSyncingPlatform] = useState(null);
-  const [validatingKey, setValidatingKey] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [shopifyShopName, setShopifyShopName] = useState("");
-  const [showAuditDialog, setShowAuditDialog] = useState(false);
-  const [auditResults, setAuditResults] = useState(null);
-  const [isAuditing, setIsAuditing] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: connectedPlatforms = [], isLoading } = useQuery({
+  const [selectedPlatform, setSelectedPlatform] = useState(null);
+  const [credentialsOpen, setCredentialsOpen] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [shopName, setShopName] = useState("");
+  const [disconnectTarget, setDisconnectTarget] = useState(null);
+  const [syncingId, setSyncingId] = useState(null);
+  const [connectingId, setConnectingId] = useState(null);
+
+  const {
+    data: connectedPlatforms = [],
+    isLoading,
+    refetch: refetchPlatforms,
+    isFetching,
+  } = useQuery({
     queryKey: ["connectedPlatforms"],
     queryFn: async () => {
-      // Fetch only current user's connections
       const user = await base44.auth.me();
       return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
     },
+    staleTime: 1000 * 60 * 2,
   });
 
-  const { data: syncHistory = [] } = useQuery({
+  const { data: syncHistory = [], refetch: refetchHistory } = useQuery({
     queryKey: ["syncHistory"],
     queryFn: async () => {
       const user = await base44.auth.me();
-      return base44.entities.SyncHistory.filter({ user_id: user.id }, "-sync_started_at", 50);
+      return base44.entities.SyncHistory.filter({ user_id: user.id }, "-sync_started_at", 100);
+    },
+    staleTime: 1000 * 30,
+  });
+
+  const connectMutation = useMutation({
+    mutationFn: (payload) => base44.entities.ConnectedPlatform.create(payload),
+    onSuccess: () => {
+      toast.success("Platform connected");
+      setCredentialsOpen(false);
+      setSelectedPlatform(null);
+      setApiKey("");
+      setShopName("");
+      setConnectingId(null);
+      queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
+    },
+    onError: () => {
+      toast.error("Could not connect platform");
+      setConnectingId(null);
     },
   });
 
   const disconnectMutation = useMutation({
     mutationFn: (id) => base44.entities.ConnectedPlatform.delete(id),
     onSuccess: () => {
+      toast.success("Platform disconnected");
+      setDisconnectTarget(null);
       queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
-      toast.success("Platform disconnected successfully");
-      setDisconnectPlatform(null);
+    },
+    onError: () => {
+      toast.error("Could not disconnect platform");
     },
   });
 
-  const connectMutation = useMutation({
-    mutationFn: (data) => base44.entities.ConnectedPlatform.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
-      setShowConnectDialog(false);
-      setSelectedPlatform(null);
-      setApiKey("");
-      setConnectingPlatform(null);
-      setValidatingKey(false);
-      setShowConfetti(true);
-      toast.success("Platform connected successfully! ✓");
-      setTimeout(() => setShowConfetti(false), 3000);
-    },
-    onError: (error) => {
-      setConnectingPlatform(null);
-      setValidatingKey(false);
-      toast.error("Failed to connect platform. Please retry.");
-    }
-  });
+  const connectedById = useMemo(
+    () => new Set(connectedPlatforms.map((platform) => platform.platform)),
+    [connectedPlatforms]
+  );
 
-  const syncMutation = useMutation({
-    mutationFn: async (platformId) => {
-      const connection = connectedPlatforms.find(p => p.id === platformId);
+  const availablePlatforms = useMemo(
+    () => PLATFORMS.filter((platform) => !connectedById.has(platform.id)),
+    [connectedById]
+  );
 
-      // Update to syncing status
-      await base44.entities.ConnectedPlatform.update(platformId, {
-        sync_status: "syncing"
+  const stats = useMemo(() => {
+    const active = connectedPlatforms.filter((platform) => platform.sync_status === "active").length;
+    const syncing = connectedPlatforms.filter((platform) => platform.sync_status === "syncing").length;
+    const errors = connectedPlatforms.filter((platform) => platform.sync_status === "error").length;
+
+    const lastSyncDate = connectedPlatforms
+      .map((platform) => platform.last_synced_at)
+      .filter(Boolean)
+      .map((entry) => new Date(entry))
+      .filter((date) => !Number.isNaN(date.getTime()))
+      .sort((left, right) => right.getTime() - left.getTime())[0];
+
+    return {
+      total: connectedPlatforms.length,
+      active,
+      syncing,
+      errors,
+      lastSyncDate: lastSyncDate || null,
+    };
+  }, [connectedPlatforms]);
+
+  const syncConnection = async (connection, forceFullSync = false) => {
+    setSyncingId(connection.id);
+
+    try {
+      const response = await base44.functions.invoke("syncPlatformData", {
+        connectionId: connection.id,
+        platform: connection.platform,
+        forceFullSync,
       });
 
-      // Simulate data fetch from platform API
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Random success/failure for demo (90% success rate)
-      const success = Math.random() > 0.1;
-
-      if (!success) {
-        throw new Error("Sync failed");
+      if (response?.data?.success) {
+        toast.success(
+          forceFullSync
+            ? `Full sync complete (${response.data.transactionCount || 0} transactions)`
+            : response.data.message || "Sync completed"
+        );
+      } else {
+        toast.success("Sync request submitted");
       }
 
-      return base44.entities.ConnectedPlatform.update(platformId, {
-        last_synced_at: new Date().toISOString(),
-        sync_status: "active",
-        error_message: null
-      });
-    },
-    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
-      setSyncingPlatform(null);
-      toast.success("Sync completed successfully! ✓");
-    },
-    onError: (error, platformId) => {
-      // Update to error status
-      const connection = connectedPlatforms.find(p => p.id === platformId);
-      if (connection) {
-        base44.entities.ConnectedPlatform.update(platformId, {
-          sync_status: "error",
-          error_message: "Failed to sync data. Please check your connection and try again."
-        });
-      }
-      queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
-      setSyncingPlatform(null);
-      toast.error("Sync failed. Please retry or reconnect the platform.");
+      queryClient.invalidateQueries({ queryKey: ["syncHistory"] });
+    } catch (error) {
+      toast.error(error?.response?.data?.error || error?.message || "Sync failed");
+    } finally {
+      setSyncingId(null);
     }
-  });
+  };
 
-  const initiateOAuthFlow = (platform) => {
+  const beginConnect = (platform) => {
     if (platform.requiresApiKey || platform.requiresShopName) {
       setSelectedPlatform(platform);
-      setShowConnectDialog(true);
+      setCredentialsOpen(true);
       return;
     }
 
-    setConnectingPlatform(platform.id);
+    setConnectingId(platform.id);
 
-    let params;
-
-    // Generate and store CSRF token
     const csrfToken = crypto.randomUUID();
-    sessionStorage.setItem('oauth_state', csrfToken);
-    // Sentinel: Set cookie for backend verification
+    sessionStorage.setItem("oauth_state", csrfToken);
     document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`;
     const stateValue = `${platform.id}:${csrfToken}`;
+
+    let params;
 
     if (platform.id === "tiktok") {
       params = new URLSearchParams({
         client_key: platform.clientKey,
         scope: platform.scope,
-        response_type: 'code',
+        response_type: "code",
         redirect_uri: platform.redirectUri,
-        state: stateValue
+        state: stateValue,
       });
-    } else if (platform.id === "shopify") {
-      // For Shopify, we need the shop name first
-      return;
     } else {
       params = new URLSearchParams({
         client_id: platform.clientId || platform.id,
         redirect_uri: platform.redirectUri,
-        response_type: 'code',
-        scope: platform.scope || '',
+        response_type: "code",
+        scope: platform.scope || "",
         state: stateValue,
-        access_type: platform.id === 'youtube' ? 'offline' : undefined,
-        prompt: platform.id === 'youtube' ? 'consent' : undefined
+        access_type: platform.id === "youtube" ? "offline" : undefined,
+        prompt: platform.id === "youtube" ? "consent" : undefined,
       });
     }
 
-    // Redirect to OAuth URL
     window.location.href = `${platform.oauthUrl}?${params.toString()}`;
   };
 
-  const handleApiKeyConnect = async () => {
-    if (!apiKey.trim()) {
-      toast.error("Please enter your API key");
+  const handleCredentialConnect = async () => {
+    if (!selectedPlatform) return;
+
+    if (selectedPlatform.requiresShopName && !shopName.trim()) {
+      toast.error("Enter your Shopify store name");
       return;
     }
 
-    setValidatingKey(true);
-    setConnectingPlatform(selectedPlatform.id);
+    if (selectedPlatform.requiresApiKey && !apiKey.trim()) {
+      toast.error("Enter your API key");
+      return;
+    }
+
+    setConnectingId(selectedPlatform.id);
 
     try {
-      // Validate API key
       if (selectedPlatform.id === "gumroad") {
         const response = await fetch(`${selectedPlatform.validationUrl}?access_token=${apiKey}`);
-
-        if (!response.ok) {
-          throw new Error("Invalid API key");
-        }
-      } else if (selectedPlatform.id === "substack") {
-        // Substack validation - basic check
-        const response = await fetch(selectedPlatform.validationUrl, {
-          headers: { 'Authorization': `Bearer ${apiKey}` }
-        });
-
-        if (!response.ok) {
-          throw new Error("Invalid API key");
-        }
+        if (!response.ok) throw new Error("Invalid API key");
       }
 
-      // Key is valid, save connection
+      if (selectedPlatform.id === "substack") {
+        const response = await fetch(selectedPlatform.validationUrl, {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        });
+        if (!response.ok) throw new Error("Invalid API key");
+      }
+
+      if (selectedPlatform.id === "shopify") {
+        const csrfToken = crypto.randomUUID();
+        sessionStorage.setItem("oauth_state", csrfToken);
+        document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`;
+        const stateValue = `shopify:${csrfToken}`;
+
+        const params = new URLSearchParams({
+          client_id: selectedPlatform.clientId,
+          scope: selectedPlatform.scope,
+          redirect_uri: selectedPlatform.redirectUri,
+          state: stateValue,
+        });
+
+        window.location.href = `https://${shopName}.myshopify.com/admin/oauth/authorize?${params.toString()}`;
+        return;
+      }
+
       connectMutation.mutate({
         platform: selectedPlatform.id,
         oauth_token: apiKey,
         sync_status: "active",
         connected_at: new Date().toISOString(),
-        last_synced_at: new Date().toISOString()
+        last_synced_at: new Date().toISOString(),
       });
-    } catch (error) {
-      setConnectingPlatform(null);
-      setValidatingKey(false);
-      toast.error("Invalid API key. Please check and try again.");
+    } catch {
+      toast.error("Could not validate provided credentials");
+      setConnectingId(null);
     }
   };
-
-  const handleShopifyConnect = () => {
-    if (!shopifyShopName.trim()) {
-      toast.error("Please enter your Shopify store name");
-      return;
-    }
-
-    // Generate and store CSRF token
-    const csrfToken = crypto.randomUUID();
-    sessionStorage.setItem('oauth_state', csrfToken);
-    // Sentinel: Set cookie for backend verification
-    document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`;
-    const stateValue = `shopify:${csrfToken}`;
-
-    const shopifyOAuthUrl = `https://${shopifyShopName}.myshopify.com/admin/oauth/authorize`;
-    const params = new URLSearchParams({
-      client_id: selectedPlatform.clientId,
-      scope: selectedPlatform.scope,
-      redirect_uri: selectedPlatform.redirectUri,
-      state: stateValue
-    });
-
-    window.location.href = `${shopifyOAuthUrl}?${params.toString()}`;
-  };
-
-  const handleSync = useCallback(async (connection, forceFullSync = false) => {
-    if (!connection) return;
-
-    setSyncingPlatform(connection.id);
-
-    try {
-      const response = await base44.functions.invoke('syncPlatformData', {
-        connectionId: connection.id,
-        platform: connection.platform,
-        forceFullSync
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['connectedPlatforms'] });
-      queryClient.invalidateQueries({ queryKey: ['syncHistory'] });
-
-      if (response.data.success) {
-        setShowConfetti(true);
-        const message = forceFullSync
-          ? `Full sync completed! ${response.data.transactionCount} transactions synced.`
-          : response.data.message || 'Sync completed successfully!';
-        toast.success(message);
-        setTimeout(() => setShowConfetti(false), 3000);
-      }
-    } catch (error) {
-      const errorMessage = error.response?.data?.error || error.message || 'Sync failed. Please try again.';
-      toast.error(errorMessage, { duration: 6000 });
-    } finally {
-      setSyncingPlatform(null);
-    }
-  }, [queryClient]);
-
-  const handleViewHistory = useCallback((connection) => {
-    setSelectedHistoryPlatform(connection);
-    setShowHistoryDialog(true);
-  }, []);
-
-  const handleDisconnect = useCallback((connection, platform) => {
-    setDisconnectPlatform({ id: connection.id, name: platform.name });
-  }, []);
-
-  const handleAudit = async () => {
-    setIsAuditing(true);
-    try {
-      // Simulate audit process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const results = connectedPlatforms.map(p => {
-        const platform = PLATFORMS.find(pl => pl.id === p.platform);
-        const isHealthy = p.sync_status === 'active' && (!p.last_synced_at || (new Date() - new Date(p.last_synced_at)) < 7 * 24 * 60 * 60 * 1000);
-
-        return {
-          id: p.id,
-          name: platform?.name || p.platform,
-          status: isHealthy ? "healthy" : "attention",
-          message: isHealthy ? "Connection secure and active" : "Sync data is stale or connection error",
-          lastSynced: p.last_synced_at
-        };
-      });
-
-      setAuditResults(results);
-      setShowAuditDialog(true);
-      toast.success("Platform audit completed");
-    } catch (error) {
-      toast.error("Audit failed. Please try again.");
-    } finally {
-      setIsAuditing(false);
-    }
-  };
-
-  const connectedIds = connectedPlatforms.map(p => p.platform);
-  const availablePlatforms = PLATFORMS.filter(p => !connectedIds.includes(p.id));
-
-  // Chart data calculations
-  const statusData = [
-    { name: "Active", value: connectedPlatforms.filter(c => c.sync_status === "active").length, color: "#10B981" },
-    { name: "Error", value: connectedPlatforms.filter(c => c.sync_status === "error").length, color: "#EF4444" },
-    { name: "Stale", value: connectedPlatforms.filter(c => c.sync_status === "stale").length, color: "#F59E0B" },
-  ].filter(d => d.value > 0);
-
-  const platformUsageData = connectedPlatforms.map(conn => {
-    const syncCount = syncHistory.filter(h => h.platform === conn.platform).length;
-    const platform = PLATFORMS.find(p => p.id === conn.platform);
-    return {
-      name: platform?.name || conn.platform,
-      syncs: syncCount,
-    };
-  }).sort((a, b) => b.syncs - a.syncs);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <SuccessConfetti trigger={showConfetti} />
-
-      <MotivationalQuote className="mb-6" />
-
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
-      >
+    <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
+      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Connected Platforms</h1>
-          <p className="text-white/40 mt-1 text-sm">Manage your revenue sources</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Connected platforms</h1>
+          <p className="mt-1 text-sm text-white/70">
+            Manage source connections, sync state, and evidence for data reliability.
+          </p>
+          <p className="mt-2 text-xs text-white/60">
+            Last sync: {stats.lastSyncDate ? format(stats.lastSyncDate, "MMM d, yyyy h:mm a") : "No sync history"}
+          </p>
         </div>
-        <div className="flex gap-3">
-          {connectedPlatforms.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={handleAudit}
-              disabled={isAuditing}
-              className="rounded-lg border-white/10 text-white hover:bg-white/5 transition-all text-sm h-9"
-            >
-              {isAuditing ? (
-                <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-              ) : (
-                <ShieldCheck className="w-3.5 h-3.5 mr-2" />
-              )}
-              {isAuditing ? "Auditing..." : "Run Audit"}
-            </Button>
-          )}
-          {availablePlatforms.length > 0 && (
-            <Button
-              onClick={() => setShowConnectDialog(true)}
-              className="rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white border-0 transition-colors text-sm h-9"
-            >
-              <Plus className="w-3.5 h-3.5 mr-2" />
-              Connect Platform
-            </Button>
-          )}
-        </div>
-      </motion.div>
 
-      {/* Analytics Charts */}
-      {connectedPlatforms.length > 0 && (
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {/* Platform Status Distribution */}
-          {statusData.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="card-modern rounded-2xl p-6"
-            >
-              <h3 className="text-lg font-semibold text-white mb-4">Connection Status</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: "rgba(0, 0, 0, 0.8)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: "8px",
-                      color: "#fff"
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    formatter={(value) => <span className="text-white/70 text-sm">{value}</span>}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </motion.div>
-          )}
-
-          {/* Platform Sync Frequency */}
-          {platformUsageData.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-              className="card-modern rounded-2xl p-6"
-            >
-              <h3 className="text-lg font-semibold text-white mb-4">Sync Activity</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={platformUsageData}>
-                  <XAxis
-                    dataKey="name"
-                    stroke="rgba(255, 255, 255, 0.3)"
-                    tick={{ fill: "rgba(255, 255, 255, 0.5)", fontSize: 12 }}
-                  />
-                  <YAxis
-                    stroke="rgba(255, 255, 255, 0.3)"
-                    tick={{ fill: "rgba(255, 255, 255, 0.5)", fontSize: 12 }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: "rgba(0, 0, 0, 0.8)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: "8px",
-                      color: "#fff"
-                    }}
-                    cursor={{ fill: "rgba(75, 163, 184, 0.1)" }}
-                  />
-                  <Bar dataKey="syncs" fill="#4BA3B8" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </motion.div>
-          )}
-        </div>
-      )}
-
-      {/* Connected Platforms */}
-      {connectingPlatform && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="rounded-xl p-4 mb-6 bg-zteal-400/10 border border-zteal-400/30 backdrop-blur-sm"
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            refetchPlatforms();
+            refetchHistory();
+          }}
+          disabled={isFetching}
+          className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
         >
-          <div className="flex items-center gap-3">
-            <Loader2 className="w-5 h-5 animate-spin text-zteal-400" />
-            <div>
-              <p className="font-semibold text-zteal-400 text-sm">Connecting Platform...</p>
-              <p className="text-xs text-zteal-300/80">Establishing secure connection</p>
-            </div>
-          </div>
-        </motion.div>
-      )}
+          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      </header>
 
-      {isLoading ? (
-        <div className="card-modern rounded-xl p-8 text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-white/30 mx-auto" />
-          <p className="text-white/40 mt-4 text-sm">Loading platforms...</p>
+      <section className="mb-6 rounded-lg border border-[#56C5D0]/30 bg-[#56C5D0]/10 p-4">
+        <div className="flex items-start gap-2">
+          <ShieldCheck className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
+          <p className="text-sm text-white/85">
+            Use this page as your connection control center. Keep errors at zero before exports.
+          </p>
         </div>
-      ) : connectedPlatforms.length === 0 ? (
-        <div className="card-modern rounded-xl p-12 text-center">
-          <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/10">
-            <ExternalLink className="w-8 h-8 text-white/30" />
-          </div>
-          <h3 className="text-lg font-semibold text-white mb-2">No platforms connected</h3>
-          <p className="text-white/40 mb-6 text-sm">Connect your first platform to start tracking revenue</p>
-          <Button
-            onClick={() => setShowConnectDialog(true)}
-            className="rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white border-0"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Connect Platform
-          </Button>
+      </section>
+
+      <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Connected" value={String(stats.total)} helper="Active data sources" />
+        <MetricCard label="Healthy" value={String(stats.active)} helper="Currently synced" tone="teal" />
+        <MetricCard label="Syncing" value={String(stats.syncing)} helper="In progress" tone="orange" />
+        <MetricCard label="Errors" value={String(stats.errors)} helper="Needs review" tone={stats.errors > 0 ? "red" : "teal"} />
+      </section>
+
+      <section className="mb-6 rounded-xl border border-white/10 bg-[#111114]">
+        <div className="border-b border-white/10 p-4">
+          <h2 className="text-lg font-semibold text-[#F5F5F5]">Connected accounts</h2>
+          <p className="mt-1 text-sm text-white/70">Sync each source frequently for accurate financial reporting.</p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
+
+        <div className="space-y-3 p-4">
+          {connectedPlatforms.length === 0 && (
+            <div className="rounded-lg border border-white/10 bg-[#15151A] p-6 text-center text-sm text-white/70">
+              {isLoading ? "Loading connected sources..." : "No connected platforms yet."}
+            </div>
+          )}
+
           {connectedPlatforms.map((connection) => {
-            const platform = PLATFORMS.find(p => p.id === connection.platform);
-            if (!platform) return null;
+            const platform = PLATFORMS.find((item) => item.id === connection.platform);
+            const Icon = platform?.icon;
+            const syncing = syncingId === connection.id || connection.sync_status === "syncing";
 
             return (
-              <ConnectedPlatformRow
+              <div
                 key={connection.id}
-                connection={connection}
-                platform={platform}
-                isSyncing={syncingPlatform === connection.id}
-                onViewHistory={handleViewHistory}
-                onSync={handleSync}
-                onDisconnect={handleDisconnect}
-                isDisconnecting={disconnectMutation.isPending}
-              />
+                className="rounded-lg border border-white/10 bg-[#15151A] p-4"
+              >
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-[#101014]">
+                      {Icon ? <Icon className="h-4 w-4 text-white/70" /> : <Plug className="h-4 w-4 text-white/70" />}
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-[#F5F5F5]">{platform?.name || connection.platform}</p>
+                      <p className="mt-1 text-xs text-white/60">
+                        Connected {connection.connected_at ? format(new Date(connection.connected_at), "MMM d, yyyy") : "-"}
+                        {connection.last_synced_at && (
+                          <>
+                            {" "}• Last sync {format(new Date(connection.last_synced_at), "MMM d, yyyy h:mm a")}
+                          </>
+                        )}
+                      </p>
+                      {connection.error_message && (
+                        <p className="mt-1 text-xs text-[#F06C6C]">{connection.error_message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded-md border px-2 py-1 text-xs ${statusTone(connection.sync_status)}`}>
+                      {statusLabel(connection.sync_status)}
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={syncing}
+                      onClick={() => syncConnection(connection, false)}
+                      className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                    >
+                      {syncing ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          Syncing
+                        </>
+                      ) : (
+                        "Sync"
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={syncing}
+                      onClick={() => syncConnection(connection, true)}
+                      className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                    >
+                      Full sync
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setDisconnectTarget(connection)}
+                      className="h-8 border-[#F06C6C]/40 bg-transparent px-3 text-xs text-[#F06C6C] hover:bg-[#F06C6C]/10 focus-visible:ring-2 focus-visible:ring-[#F06C6C]"
+                    >
+                      <Unplug className="mr-1.5 h-3.5 w-3.5" />
+                      Disconnect
+                    </Button>
+                  </div>
+                </div>
+              </div>
             );
           })}
         </div>
-      )}
+      </section>
 
-      {/* Connect Dialog */}
-      <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
-        <DialogContent className="card-modern rounded-2xl border max-w-2xl !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 max-h-[85vh] overflow-y-auto" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-white">
-              {selectedPlatform ? `Connect ${selectedPlatform.name}` : "Connect Platform"}
-            </DialogTitle>
-            <DialogDescription className="text-white/40 text-sm">
-              {selectedPlatform
-                ? "Enter your API key to securely connect"
-                : "Choose a platform to sync your revenue data"}
-            </DialogDescription>
-          </DialogHeader>
+      <section className="mb-6 rounded-xl border border-white/10 bg-[#111114]">
+        <div className="border-b border-white/10 p-4">
+          <h2 className="text-lg font-semibold text-[#F5F5F5]">Available platforms</h2>
+          <p className="mt-1 text-sm text-white/70">Connect additional sources to improve reporting confidence.</p>
+        </div>
 
-          {selectedPlatform?.requiresApiKey ? (
-            <div className="space-y-4 mt-4">
-              <div className="rounded-lg p-4 flex items-center gap-3 bg-white/[0.02] border border-white/[0.05]">
-                <div className={cn(
-                  "w-11 h-11 rounded-lg flex items-center justify-center border",
-                  selectedPlatform.color
-                )}>
-                  {React.createElement(selectedPlatform.icon, { className: "w-5 h-5" })}
+        <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
+          {availablePlatforms.map((platform) => {
+            const Icon = platform.icon;
+            const connecting = connectingId === platform.id;
+
+            return (
+              <div key={platform.id} className="rounded-lg border border-white/10 bg-[#15151A] p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-[#101014]">
+                    <Icon className="h-4 w-4 text-white/70" />
+                  </div>
+                  <p className="text-sm font-medium text-[#F5F5F5]">{platform.name}</p>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-white text-sm">{selectedPlatform.name}</h4>
-                  <p className="text-xs text-white/40">{selectedPlatform.description}</p>
-                </div>
-              </div>
 
-              <div>
-                <Label htmlFor="apiKey" className="text-white/60 mb-2 block text-sm">API Key</Label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                  <Input
-                    id="apiKey"
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder={`Enter your ${selectedPlatform.name} API key`}
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-lg"
-                  />
-                </div>
-                <p className="text-xs text-white/30 mt-2">
-                  Find your API key in {selectedPlatform.name} Settings → Advanced
-                </p>
-              </div>
+                <p className="mb-3 text-sm text-white/70">{platform.description}</p>
 
-              <div className="flex gap-3">
                 <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedPlatform(null);
-                    setApiKey("");
-                  }}
-                  className="flex-1 rounded-lg border-white/10 text-white/70 hover:bg-white/5"
-                  disabled={connectingPlatform || validatingKey}
+                  type="button"
+                  size="sm"
+                  onClick={() => beginConnect(platform)}
+                  disabled={connecting}
+                  className="h-8 w-full bg-[#56C5D0] text-xs font-medium text-[#0A0A0A] hover:bg-[#48AAB5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
                 >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleApiKeyConnect}
-                  disabled={connectingPlatform || validatingKey || !apiKey.trim()}
-                  className="flex-1 rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white"
-                >
-                  {(connectingPlatform || validatingKey) ? (
+                  {connecting ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {validatingKey ? "Validating..." : "Connecting..."}
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      Connecting
                     </>
                   ) : (
                     <>
-                      <Check className="w-4 h-4 mr-2" />
+                      <Plug className="mr-1.5 h-3.5 w-3.5" />
                       Connect
                     </>
                   )}
                 </Button>
               </div>
-            </div>
-          ) : selectedPlatform?.requiresShopName ? (
-            <div className="space-y-4 mt-4">
-              <div className="rounded-lg p-4 flex items-center gap-3 bg-white/[0.02] border border-white/[0.05]">
-                <div className={cn(
-                  "w-11 h-11 rounded-lg flex items-center justify-center border",
-                  selectedPlatform.color
-                )}>
-                  {React.createElement(selectedPlatform.icon, { className: "w-5 h-5" })}
-                </div>
-                <div>
-                  <h4 className="font-semibold text-white text-sm">{selectedPlatform.name}</h4>
-                  <p className="text-xs text-white/40">{selectedPlatform.description}</p>
-                </div>
-              </div>
+            );
+          })}
+        </div>
+      </section>
 
-              <div>
-                <Label htmlFor="shopName" className="text-white/60 mb-2 block text-sm">Store Name</Label>
-                <div className="relative">
-                  <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                  <Input
-                    id="shopName"
-                    type="text"
-                    value={shopifyShopName}
-                    onChange={(e) => setShopifyShopName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    placeholder="your-store-name"
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-lg"
-                  />
-                </div>
-                <p className="text-xs text-white/30 mt-2">
-                  Enter your Shopify store name (e.g., "your-store" from your-store.myshopify.com)
-                </p>
-              </div>
+      <section className="rounded-xl border border-white/10 bg-[#111114]">
+        <div className="border-b border-white/10 p-4">
+          <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent sync evidence</h2>
+          <p className="mt-1 text-sm text-white/70">Latest sync runs for audit and troubleshooting.</p>
+        </div>
 
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedPlatform(null);
-                    setShopifyShopName("");
-                  }}
-                  className="flex-1 rounded-lg border-white/10 text-white/70 hover:bg-white/5"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleShopifyConnect}
-                  disabled={!shopifyShopName.trim()}
-                  className="flex-1 rounded-lg bg-zteal-400 hover:bg-zteal-600 text-white"
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Continue to Shopify
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pointer-events-auto">
-              {availablePlatforms.map((platform) => {
-                const Icon = platform.icon;
-                return (
-                  <button
-                    key={platform.id}
-                    type="button"
-                    onClick={() => initiateOAuthFlow(platform)}
-                    disabled={connectingPlatform}
-                    className="rounded-lg p-4 flex flex-col items-center gap-3 text-center bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className={cn(
-                      "w-12 h-12 rounded-lg flex items-center justify-center border flex-shrink-0",
-                      platform.color
-                    )}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-white text-sm mb-1">{platform.name}</h4>
-                      <p className="text-xs text-white/40 line-clamp-2">{platform.description}</p>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-zteal-400">
-                      <span>Connect</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-white/10 hover:bg-transparent">
+              <TableHead className="text-[#D8D8D8]">Date</TableHead>
+              <TableHead className="text-[#D8D8D8]">Platform</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Transactions</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Duration</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {syncHistory.length === 0 && (
+              <TableRow className="border-white/10 hover:bg-transparent">
+                <TableCell colSpan={5} className="py-8 text-center text-sm text-white/60">
+                  No sync history recorded yet.
+                </TableCell>
+              </TableRow>
+            )}
 
-      <PlatformSyncHistory
-        platform={selectedHistoryPlatform}
-        open={showHistoryDialog}
-        onOpenChange={setShowHistoryDialog}
-      />
+            {syncHistory.slice(0, 12).map((sync) => (
+              <TableRow key={sync.id} className="border-white/10 hover:bg-white/[0.02]">
+                <TableCell className="text-sm text-white/75">
+                  {sync.sync_started_at ? format(new Date(sync.sync_started_at), "MMM d, yyyy h:mm a") : "-"}
+                </TableCell>
+                <TableCell className="text-sm text-[#F5F5F5]">
+                  {PLATFORMS.find((item) => item.id === sync.platform)?.name || sync.platform || "Unknown"}
+                </TableCell>
+                <TableCell className="text-right font-mono-financial text-white/80">
+                  {sync.transactions_synced || 0}
+                </TableCell>
+                <TableCell className="text-right font-mono-financial text-white/80">
+                  {typeof sync.duration_ms === "number" ? `${(sync.duration_ms / 1000).toFixed(1)}s` : "-"}
+                </TableCell>
+                <TableCell className="text-right">
+                  <span className={`rounded-md border px-2 py-1 text-xs ${statusTone(sync.status)}`}>
+                    {statusLabel(sync.status)}
+                  </span>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </section>
 
-      <Dialog open={showAuditDialog} onOpenChange={setShowAuditDialog}>
-        <DialogContent className="card-modern rounded-2xl border max-w-md !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+      <Dialog open={credentialsOpen} onOpenChange={setCredentialsOpen}>
+        <DialogContent className="max-w-md rounded-xl border border-white/10 bg-[#111114] text-[#F5F5F5]">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-emerald-400" />
-              Platform Audit Report
-            </DialogTitle>
-            <DialogDescription className="text-white/60">
-              Security and connection health analysis
+            <DialogTitle>Connect {selectedPlatform?.name || "platform"}</DialogTitle>
+            <DialogDescription className="text-white/65">
+              Enter required connection details to complete setup.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4 space-y-3">
-            {auditResults?.map((result) => (
-              <div
-                key={result.id}
-                className={cn(
-                  "p-3 rounded-lg border flex items-start gap-3",
-                  result.status === "healthy"
-                    ? "bg-emerald-500/5 border-emerald-500/20"
-                    : "bg-amber-500/5 border-amber-500/20"
-                )}
-              >
-                <div className={cn(
-                  "mt-0.5 p-1 rounded-full",
-                  result.status === "healthy" ? "bg-emerald-500/20" : "bg-amber-500/20"
-                )}>
-                  {result.status === "healthy" ? (
-                    <Check className={cn("w-3 h-3", result.status === "healthy" ? "text-emerald-400" : "text-amber-400")} />
-                  ) : (
-                    <AlertTriangle className="w-3 h-3 text-amber-400" />
-                  )}
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-white">{result.name}</h4>
-                  <p className={cn("text-xs", result.status === "healthy" ? "text-emerald-400/80" : "text-amber-400/80")}>
-                    {result.message}
-                  </p>
-                  {result.lastSynced && (
-                    <p className="text-[10px] text-white/30 mt-1">
-                      Last Check: {format(new Date(result.lastSynced), "MMM d, h:mm a")}
-                    </p>
-                  )}
-                </div>
+
+          <div className="space-y-4 pt-2">
+            {selectedPlatform?.requiresShopName && (
+              <div>
+                <Label htmlFor="shop-name" className="mb-2 block text-sm text-white/80">
+                  Shopify store name
+                </Label>
+                <Input
+                  id="shop-name"
+                  value={shopName}
+                  onChange={(event) => setShopName(event.target.value)}
+                  placeholder="your-store"
+                  className="h-9 border-white/15 bg-[#15151A] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                />
               </div>
-            ))}
-            {auditResults?.length === 0 && (
-              <p className="text-center text-white/40 py-4">No platforms connected to audit.</p>
             )}
-          </div>
-          <div className="flex justify-end mt-4">
+
+            {selectedPlatform?.requiresApiKey && (
+              <div>
+                <Label htmlFor="api-key" className="mb-2 block text-sm text-white/80">
+                  API key
+                </Label>
+                <Input
+                  id="api-key"
+                  value={apiKey}
+                  onChange={(event) => setApiKey(event.target.value)}
+                  placeholder="Enter API key"
+                  className="h-9 border-white/15 bg-[#15151A] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                />
+              </div>
+            )}
+
             <Button
-              onClick={() => setShowAuditDialog(false)}
-              className="rounded-lg bg-white/10 text-white hover:bg-white/20"
+              type="button"
+              onClick={handleCredentialConnect}
+              disabled={connectMutation.isPending}
+              className="h-9 w-full bg-[#56C5D0] text-[#0A0A0A] hover:bg-[#48AAB5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
             >
-              Done
+              {connectMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Connecting
+                </>
+              ) : (
+                "Continue"
+              )}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!disconnectPlatform} onOpenChange={(open) => !open && setDisconnectPlatform(null)}>
-        <DialogContent className="card-modern rounded-2xl border max-w-md !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 max-h-[85vh] overflow-y-auto" style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+      <Dialog open={Boolean(disconnectTarget)} onOpenChange={(open) => !open && setDisconnectTarget(null)}>
+        <DialogContent className="max-w-sm rounded-xl border border-white/10 bg-[#111114] text-[#F5F5F5]">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-white">Disconnect {disconnectPlatform?.name}?</DialogTitle>
-            <DialogDescription className="text-white/60">
-              This will stop syncing revenue data from {disconnectPlatform?.name}. Your existing history will be preserved.
+            <DialogTitle>Disconnect platform</DialogTitle>
+            <DialogDescription className="text-white/65">
+              This will stop future sync from {PLATFORMS.find((item) => item.id === disconnectTarget?.platform)?.name || disconnectTarget?.platform || "this source"}.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-end gap-2 mt-4">
+
+          <div className="flex items-center justify-end gap-2">
             <Button
-              variant="ghost"
-              onClick={() => setDisconnectPlatform(null)}
-              className="rounded-lg border-white/10 text-white/70 hover:bg-white/5"
+              type="button"
+              variant="outline"
+              onClick={() => setDisconnectTarget(null)}
+              className="h-8 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10"
             >
               Cancel
             </Button>
             <Button
-              onClick={() => disconnectMutation.mutate(disconnectPlatform.id)}
+              type="button"
+              onClick={() => disconnectTarget && disconnectMutation.mutate(disconnectTarget.id)}
               disabled={disconnectMutation.isPending}
-              className="rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20"
+              className="h-8 bg-[#F06C6C] text-white hover:bg-[#E45F5F]"
             >
-              {disconnectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Disconnect"}
+              {disconnectMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  Disconnecting
+                </>
+              ) : (
+                "Disconnect"
+              )}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Sync History */}
-      {syncHistory.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card-modern rounded-xl p-6 mt-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center">
-                <History className="w-5 h-5 text-blue-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Sync History</h3>
-                <p className="text-xs text-white/40">Recent synchronization activity</p>
-              </div>
-            </div>
+      {stats.errors > 0 && (
+        <section className="mt-6 rounded-lg border border-[#F0A562]/35 bg-[#F0A562]/10 p-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-[#F0A562]" />
+            <p className="text-sm text-white/85">
+              {stats.errors} connection error{stats.errors > 1 ? "s" : ""} detected. Resolve these before sharing financial exports.
+            </p>
           </div>
+        </section>
+      )}
 
-          <div className="space-y-2">
-            {syncHistory.slice(0, 10).map((sync) => {
-              const platform = PLATFORMS.find(p => p.id === sync.platform);
-              if (!platform) return null;
-
-              return (
-                <SyncHistoryRow
-                  key={sync.id}
-                  sync={sync}
-                  platform={platform}
-                />
-              );
-            })}
+      {stats.errors === 0 && stats.total > 0 && (
+        <section className="mt-6 rounded-lg border border-[#56C5D0]/35 bg-[#56C5D0]/10 p-4">
+          <div className="flex items-start gap-2">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
+            <p className="text-sm text-white/85">All connected platforms currently report healthy sync status.</p>
           </div>
-        </motion.div>
+        </section>
       )}
     </div>
   );

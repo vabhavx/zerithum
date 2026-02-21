@@ -1,29 +1,28 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { endOfMonth, format, startOfMonth, subDays, subMonths } from "date-fns";
+import { AlertTriangle, ArrowRight, RefreshCw, ShieldCheck } from "lucide-react";
 import { base44 } from "@/api/supabaseClient";
-import { format, startOfMonth, subMonths, endOfMonth, subDays } from "date-fns";
-import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
-  TrendingDown,
-  TrendingUp,
-  AlertTriangle,
-  Link2,
-  RefreshCw,
-  CheckCircle2,
-  Loader2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-// ─── Platform fee rates (published rates, same as Dashboard) ──────────────────
 const PLATFORM_FEE_RATES = {
   youtube: 0.45,
   patreon: 0.08,
   stripe: 0.029,
-  gumroad: 0.10,
+  gumroad: 0.1,
   instagram: 0.05,
-  tiktok: 0.50,
+  tiktok: 0.5,
   shopify: 0.02,
-  substack: 0.10,
+  substack: 0.1,
 };
 
 const PLATFORM_LABELS = {
@@ -37,591 +36,426 @@ const PLATFORM_LABELS = {
   substack: "Substack",
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const money = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
-function fmt(n) {
-  return "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+function formatMoney(value) {
+  return money.format(value || 0);
 }
 
-function pct(n) {
-  return (n >= 0 ? "+" : "") + n.toFixed(1) + "%";
+function feeFor(tx) {
+  const reported = Number(tx.platform_fee || 0);
+  if (reported > 0) return reported;
+  const rate = PLATFORM_FEE_RATES[(tx.platform || "").toLowerCase()] || 0;
+  return (tx.amount || 0) * rate;
 }
 
-// ─── Loading skeleton ─────────────────────────────────────────────────────────
-function Skeleton({ className = "" }) {
+function MetricCard({ title, value, sub, tone = "neutral" }) {
+  const valueClass =
+    tone === "teal"
+      ? "text-[#56C5D0]"
+      : tone === "orange"
+        ? "text-[#F0A562]"
+        : tone === "red"
+          ? "text-[#F06C6C]"
+          : "text-[#F5F5F5]";
+
   return (
-    <div
-      className={"rounded animate-pulse " + className}
-      style={{ background: "var(--z-bg-3)" }}
-      aria-hidden="true"
-    />
+    <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
+      <p className="text-xs uppercase tracking-wide text-white/60">{title}</p>
+      <p className={`mt-2 font-mono-financial text-2xl font-semibold ${valueClass}`}>{value}</p>
+      <p className="mt-1 text-xs text-white/60">{sub}</p>
+    </div>
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
 export default function RevenueAutopsy() {
-  // ── Data ──────────────────────────────────────────────────────────────────
-  const { data: transactions = [], isLoading: txLoading, refetch: refetchTx, isFetching: isFetchingTx } = useQuery({
+  const navigate = useNavigate();
+
+  const {
+    data: transactions = [],
+    isLoading: txLoading,
+    refetch: refetchTransactions,
+    isFetching: isFetchingTransactions,
+  } = useQuery({
     queryKey: ["revenueTransactions"],
     queryFn: () => base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: autopsyEvents = [], isLoading: eventsLoading, refetch: refetchEvents } = useQuery({
-    queryKey: ["autopsyEvents"],
-    queryFn: async () => {
-      const user = await base44.auth.me();
-      return base44.entities.AutopsyEvent.filter({ user_id: user.id }, "-detected_at", 20);
-    },
-  });
-
-  const { data: connectedPlatforms = [], isLoading: platformsLoading, refetch: refetchPlatforms, isFetching: isFetchingPlatforms } = useQuery({
+  const {
+    data: connectedPlatforms = [],
+    refetch: refetchPlatforms,
+    isFetching: isFetchingPlatforms,
+  } = useQuery({
     queryKey: ["connectedPlatforms"],
     queryFn: async () => {
       const user = await base44.auth.me();
       return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
     },
+    staleTime: 1000 * 60 * 2,
   });
 
-  const isRefreshing = isFetchingTx || isFetchingPlatforms;
+  const { data: autopsyEvents = [], isLoading: eventsLoading } = useQuery({
+    queryKey: ["autopsyEvents"],
+    queryFn: async () => {
+      const user = await base44.auth.me();
+      return base44.entities.AutopsyEvent.filter({ user_id: user.id }, "-detected_at", 30);
+    },
+    staleTime: 1000 * 60,
+  });
 
-  const handleRefresh = async () => {
-    await Promise.all([refetchTx(), refetchPlatforms(), refetchEvents()]);
-  };
+  const isRefreshing = isFetchingTransactions || isFetchingPlatforms;
 
-  const isLoading = txLoading || eventsLoading || platformsLoading;
-
-  // ── Computed metrics ──────────────────────────────────────────────────────
-  const metrics = useMemo(() => {
+  const analysis = useMemo(() => {
     const now = new Date();
-    const thisMonthStart = startOfMonth(now);
-    const lastMonthStart = startOfMonth(subMonths(now, 1));
-    const lastMonthEnd = endOfMonth(subMonths(now, 1));
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+    const prevStart = startOfMonth(subMonths(now, 1));
+    const prevEnd = endOfMonth(subMonths(now, 1));
     const trailing90Start = subDays(now, 89);
 
-    // MTD transactions
-    const mtdTxns = transactions.filter(t => {
-      if (!t.transaction_date) return false;
-      const d = new Date(t.transaction_date);
-      return d >= thisMonthStart && (t.amount || 0) > 0;
+    const monthRows = transactions.filter((tx) => {
+      const date = new Date(tx.transaction_date);
+      return date >= monthStart && date <= monthEnd;
     });
 
-    // Prior month transactions
-    const prevTxns = transactions.filter(t => {
-      if (!t.transaction_date) return false;
-      const d = new Date(t.transaction_date);
-      return d >= lastMonthStart && d <= lastMonthEnd && (t.amount || 0) > 0;
+    const prevRows = transactions.filter((tx) => {
+      const date = new Date(tx.transaction_date);
+      return date >= prevStart && date <= prevEnd;
     });
 
-    // Trailing 90 days
-    const t90 = transactions.filter(t => {
-      if (!t.transaction_date) return false;
-      const d = new Date(t.transaction_date);
-      return d >= trailing90Start && (t.amount || 0) > 0;
+    const trailing90Rows = transactions.filter((tx) => {
+      const date = new Date(tx.transaction_date);
+      return date >= trailing90Start;
     });
 
-    // ── Revenue MTD
-    const revenueMTD = mtdTxns.reduce((s, t) => s + (t.amount || 0), 0);
-    const revenuePrev = prevTxns.reduce((s, t) => s + (t.amount || 0), 0);
-    const revenueDelta = revenuePrev > 0 ? ((revenueMTD - revenuePrev) / revenuePrev) * 100 : null;
+    const monthGross = monthRows.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+    const monthFee = monthRows.reduce((sum, tx) => sum + feeFor(tx), 0);
+    const monthNet = monthGross - monthFee;
 
-    // ── Net revenue MTD (after estimated fees)
-    const netMTD = mtdTxns.reduce((s, t) => {
-      const rate = PLATFORM_FEE_RATES[(t.platform || "").toLowerCase()] ?? 0;
-      return s + (t.amount || 0) * (1 - rate);
-    }, 0);
+    const prevGross = prevRows.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+    const changePct = prevGross > 0 ? ((monthGross - prevGross) / prevGross) * 100 : 0;
 
-    // ── Refunds (90-day)
-    const refundTxns = transactions.filter(t => {
-      if (!t.transaction_date) return false;
-      const d = new Date(t.transaction_date);
-      return d >= trailing90Start && (t.amount || 0) < 0;
+    const refunds90 = trailing90Rows
+      .filter((tx) => (tx.amount || 0) < 0)
+      .reduce((sum, tx) => sum + Math.abs(tx.amount || 0), 0);
+
+    const gross90 = trailing90Rows
+      .filter((tx) => (tx.amount || 0) > 0)
+      .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+    const refundRate = gross90 > 0 ? (refunds90 / gross90) * 100 : 0;
+
+    const byPlatform = new Map();
+    for (const tx of monthRows) {
+      const key = (tx.platform || "unknown").toLowerCase();
+      const existing = byPlatform.get(key) || {
+        key,
+        label: PLATFORM_LABELS[key] || key,
+        gross: 0,
+        fee: 0,
+        rows: 0,
+        withReportedFee: 0,
+      };
+      existing.gross += tx.amount || 0;
+      existing.fee += feeFor(tx);
+      existing.rows += 1;
+      if ((tx.platform_fee || 0) > 0) existing.withReportedFee += 1;
+      byPlatform.set(key, existing);
+    }
+
+    const platformRows = [...byPlatform.values()]
+      .map((row) => ({
+        ...row,
+        net: row.gross - row.fee,
+        share: monthGross > 0 ? (row.gross / monthGross) * 100 : 0,
+        source:
+          row.rows > 0 && row.withReportedFee === row.rows ? "Reported" : "Estimated where fee missing",
+      }))
+      .sort((a, b) => b.gross - a.gross);
+
+    const topPlatform = platformRows[0] || null;
+    const concentrationShare = topPlatform ? topPlatform.share : 0;
+
+    const plainInsights = [];
+
+    if (concentrationShare >= 65) {
+      plainInsights.push({
+        id: "concentration-high",
+        tone: "red",
+        title: "Revenue is highly concentrated",
+        text: `${topPlatform.label} contributes ${concentrationShare.toFixed(1)}% of month revenue. Consider diversifying channels.`,
+      });
+    } else if (concentrationShare >= 40) {
+      plainInsights.push({
+        id: "concentration-medium",
+        tone: "orange",
+        title: "Revenue concentration is moderate",
+        text: `${topPlatform.label} contributes ${concentrationShare.toFixed(1)}% of month revenue.`,
+      });
+    } else {
+      plainInsights.push({
+        id: "concentration-low",
+        tone: "teal",
+        title: "Revenue concentration looks healthy",
+        text: "No single platform dominates your month revenue.",
+      });
+    }
+
+    if (refundRate > 5) {
+      plainInsights.push({
+        id: "refund-high",
+        tone: "red",
+        title: "Refund rate is elevated",
+        text: `Trailing 90-day refunds are ${refundRate.toFixed(1)}% of gross inflows. Review fulfillment and refund causes.`,
+      });
+    } else {
+      plainInsights.push({
+        id: "refund-ok",
+        tone: "teal",
+        title: "Refund rate is in normal range",
+        text: `Trailing 90-day refund rate: ${refundRate.toFixed(1)}%.`,
+      });
+    }
+
+    plainInsights.push({
+      id: "trend",
+      tone: changePct >= 0 ? "teal" : "orange",
+      title: changePct >= 0 ? "Revenue trend is positive" : "Revenue trend softened",
+      text: `Month-to-date gross is ${changePct >= 0 ? "up" : "down"} ${Math.abs(changePct).toFixed(1)}% vs last month.`,
     });
-    const refundAmount = refundTxns.reduce((s, t) => s + Math.abs(t.amount || 0), 0);
-    const gross90 = t90.reduce((s, t) => s + (t.amount || 0), 0);
-    const refundRate = gross90 > 0 ? (refundAmount / gross90) * 100 : 0;
-
-    // ── Platform breakdown (MTD)
-    const platformMap = {};
-    mtdTxns.forEach(t => {
-      const key = (t.platform || "unknown").toLowerCase();
-      platformMap[key] = (platformMap[key] || 0) + (t.amount || 0);
-    });
-    const platformRows = Object.entries(platformMap)
-      .sort((a, b) => b[1] - a[1])
-      .map(([platform, revenue]) => ({
-        platform,
-        label: PLATFORM_LABELS[platform] || platform,
-        revenue,
-        share: revenueMTD > 0 ? (revenue / revenueMTD) * 100 : 0,
-        feeRate: (PLATFORM_FEE_RATES[platform] ?? 0) * 100,
-      }));
-
-    // ── Concentration risk: top platform share
-    const topShare = platformRows.length > 0 ? platformRows[0].share : 0;
-    const topPlatform = platformRows.length > 0 ? platformRows[0].label : null;
 
     return {
-      revenueMTD,
-      revenuePrev,
-      revenueDelta,
-      netMTD,
+      monthGross,
+      monthNet,
+      monthFee,
+      changePct,
       refundRate,
-      refundAmount,
       platformRows,
-      topShare,
       topPlatform,
-      hasMTDData: mtdTxns.length > 0,
-      totalTxCount: transactions.length,
+      concentrationShare,
+      plainInsights,
     };
   }, [transactions]);
 
-  // ── Loading state ─────────────────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <div className="max-w-3xl mx-auto space-y-5 py-8">
-        <div className="flex items-center gap-3 mb-6">
-          <Skeleton className="h-7 w-40" />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-32 w-full" />
-      </div>
-    );
-  }
+  const pendingEvents = useMemo(
+    () => autopsyEvents.filter((event) => event.status === "pending_review"),
+    [autopsyEvents]
+  );
 
-  // ── Determine concentration risk level ───────────────────────────────────
-  const riskLevel =
-    metrics.topShare >= 70 ? "high" :
-      metrics.topShare >= 40 ? "medium" : "low";
+  const lastSync = useMemo(() => {
+    const syncDates = connectedPlatforms
+      .map((platform) => platform.last_synced_at || platform.updated_at)
+      .filter(Boolean)
+      .map((entry) => new Date(entry))
+      .filter((d) => !Number.isNaN(d.getTime()))
+      .sort((a, b) => b.getTime() - a.getTime());
 
-  const riskConfig = {
-    high: { label: "High risk", color: "#FF5459", bg: "rgba(255,84,89,0.08)", border: "rgba(255,84,89,0.25)" },
-    medium: { label: "Medium risk", color: "#f59e0b", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.25)" },
-    low: { label: "Low risk", color: "#4ade80", bg: "rgba(74,222,128,0.08)", border: "rgba(74,222,128,0.25)" },
-  }[riskLevel];
+    return syncDates[0] || null;
+  }, [connectedPlatforms]);
 
-  const refundRiskLevel = metrics.refundRate > 5 ? "high" : metrics.refundRate > 3 ? "medium" : "low";
-
-  // ── Pending autopsy events ────────────────────────────────────────────────
-  const pendingEvents = autopsyEvents.filter(e => e.status === "pending_review");
+  const loading = txLoading || eventsLoading;
 
   return (
-    <main className="max-w-3xl mx-auto py-8 px-4 space-y-6" id="revenue-autopsy-page">
-
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
+      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-[22px] font-semibold tracking-tight" style={{ color: "var(--z-text-1)" }}>
-            Revenue Autopsy
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: "var(--z-text-3)" }}>
-            A plain-language breakdown of how your revenue is composed.
+          <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Revenue Autopsy</h1>
+          <p className="mt-1 text-sm text-white/70">Plain-language analysis of where revenue is strong and where risk is building.</p>
+          <p className="mt-2 text-xs text-white/60">
+            Last sync: {lastSync ? format(lastSync, "MMM d, yyyy h:mm a") : "No sync data"}
           </p>
-
-          {/* ── Last sync logic ── */}
-          {connectedPlatforms.length > 0 && (
-            <p className="text-[11px] font-mono mt-2" style={{ color: "var(--z-text-3)" }}>
-              Data sync: {(() => {
-                const dates = connectedPlatforms
-                  .map(p => p.last_synced_at || p.updated_at)
-                  .filter(Boolean)
-                  .map(d => new Date(d))
-                  .filter(d => !isNaN(d.getTime()));
-                if (dates.length === 0) return "Never";
-                const latest = dates.reduce((a, b) => (a > b ? a : b));
-                return format(latest, "MMM d, yyyy · HH:mm");
-              })()} UTC
-            </p>
-          )}
         </div>
 
-        {connectedPlatforms.length === 0 && (
-          <Link
-            to="/ConnectedPlatforms"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#32B8C6]"
-            style={{ background: "#32B8C6", color: "#09090B" }}
-          >
-            <Link2 className="w-4 h-4" />
-            Connect Platforms
-          </Link>
-        )}
-      </div>
-
-      {/* ── No Data Warning Banner ────────────────────────────────────────── */}
-      {metrics.totalTxCount === 0 && (
-        <div
-          className="rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-          style={{ background: "rgba(50,184,198,0.05)", borderColor: "rgba(50,184,198,0.2)" }}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            refetchTransactions();
+            refetchPlatforms();
+          }}
+          disabled={isRefreshing}
+          className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
         >
-          <div className="flex items-start gap-3">
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="p-1.5 rounded-lg border transition-all hover:bg-[rgba(50,184,198,0.1)] focus:outline-none focus:ring-2 focus:ring-[#32B8C6] disabled:opacity-50"
-              style={{ borderColor: "rgba(50,184,198,0.3)", background: "rgba(50,184,198,0.05)" }}
-              aria-label="Refresh data"
-            >
-              <RefreshCw
-                className={cn("w-4 h-4", isRefreshing && "animate-spin")}
-                style={{ color: "#32B8C6" }}
-              />
-            </button>
-            <div className="space-y-1">
-              <p className="text-sm font-medium" style={{ color: "var(--z-text-1)" }}>
-                Currently showing $0 baseline
-              </p>
-              <p className="text-xs" style={{ color: "var(--z-text-3)" }}>
-                {connectedPlatforms.length === 0
-                  ? "Connect your first platform to start seeing real revenue intelligence."
-                  : "Waiting for your first transactions to sync. This usually takes a few hours."
-                }
-              </p>
-            </div>
-          </div>
-          {connectedPlatforms.length === 0 && (
-            <p className="text-[11px] font-medium uppercase tracking-wider" style={{ color: "#32B8C6" }}>
-              Data Readiness 0%
-            </p>
-          )}
-        </div>
-      )}
+          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          Refresh analysis
+        </Button>
+      </header>
 
-      {/* ── Section 1: Your numbers this month ──────────────────────────── */}
-      <section aria-label="Revenue this month">
-        <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--z-text-3)" }}>
-          This month
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Revenue */}
-          <div
-            className="rounded-xl border p-4"
-            style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
-          >
-            <p className="text-xs mb-1" style={{ color: "var(--z-text-3)" }}>Gross Revenue</p>
-            <p
-              className="text-2xl font-semibold font-mono-financial tabular-nums"
-              style={{ color: "var(--z-text-1)" }}
-            >
-              {fmt(metrics.revenueMTD)}
-            </p>
-            {metrics.revenueDelta !== null ? (
-              <div className="flex items-center gap-1 mt-1.5">
-                {metrics.revenueDelta >= 0
-                  ? <TrendingUp className="w-3.5 h-3.5" style={{ color: "#4ade80" }} aria-hidden="true" />
-                  : <TrendingDown className="w-3.5 h-3.5" style={{ color: "#FF5459" }} aria-hidden="true" />
-                }
-                <span
-                  className="text-xs font-mono-financial"
-                  style={{ color: metrics.revenueDelta >= 0 ? "#4ade80" : "#FF5459" }}
-                >
-                  {pct(metrics.revenueDelta)} vs last month
-                </span>
-              </div>
-            ) : (
-              <p className="text-xs mt-1.5" style={{ color: "var(--z-text-3)" }}>
-                {metrics.totalTxCount > 0 ? "First month of data" : "No history yet"}
-              </p>
-            )}
-            <p className="text-[10px] mt-2 pt-2 border-t" style={{ color: "var(--z-text-3)", borderColor: "var(--z-border-1)" }}>
-              Total earned, before fees
-            </p>
-          </div>
-
-          {/* Net revenue */}
-          <div
-            className="rounded-xl border p-4"
-            style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
-          >
-            <p className="text-xs mb-1" style={{ color: "var(--z-text-3)" }}>Est. Net Revenue</p>
-            <p
-              className="text-2xl font-semibold font-mono-financial tabular-nums"
-              style={{ color: "var(--z-text-1)" }}
-            >
-              {fmt(metrics.netMTD)}
-            </p>
-            <p className="text-xs mt-1.5" style={{ color: "var(--z-text-3)" }}>
-              {metrics.revenueMTD > 0
-                ? fmt(metrics.revenueMTD - metrics.netMTD) + " in platform fees"
-                : "Estimate pending data"}
-            </p>
-            <p className="text-[10px] mt-2 pt-2 border-t" style={{ color: "var(--z-text-3)", borderColor: "var(--z-border-1)" }}>
-              After estimated fees · based on published rates
-            </p>
-          </div>
-
-          {/* Refund rate */}
-          <div
-            className="rounded-xl border p-4"
-            style={{
-              background: "var(--z-bg-2)",
-              borderColor: refundRiskLevel === "high"
-                ? "rgba(255,84,89,0.35)"
-                : refundRiskLevel === "medium"
-                  ? "rgba(245,158,11,0.3)"
-                  : "var(--z-border-1)",
-            }}
-          >
-            <p className="text-xs mb-1" style={{ color: "var(--z-text-3)" }}>Refund Rate</p>
-            <p
-              className="text-2xl font-semibold font-mono-financial tabular-nums"
-              style={{ color: "var(--z-text-1)" }}
-            >
-              {metrics.refundRate.toFixed(1)}%
-            </p>
-            <p className="text-xs mt-1.5" style={{ color: "var(--z-text-3)" }}>
-              {fmt(metrics.refundAmount)} refunded · 90 days
-            </p>
-            <p className="text-[10px] mt-2 pt-2 border-t" style={{ color: "var(--z-text-3)", borderColor: "var(--z-border-1)" }}>
-              Refunds ÷ gross revenue · trailing 90 days
-            </p>
-          </div>
+      <section className="mb-6 rounded-lg border border-[#56C5D0]/30 bg-[#56C5D0]/10 p-4">
+        <div className="flex items-start gap-2">
+          <ShieldCheck className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
+          <p className="text-sm text-white/85">
+            This section explains your numbers in direct language. Every figure below can be traced to a transaction record.
+          </p>
         </div>
       </section>
 
-      {/* ── Section 2: Where your money comes from ───────────────────────── */}
-      <section aria-label="Revenue by platform">
-        <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--z-text-3)" }}>
-          Where your money comes from this month
-        </p>
+      <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          title="Gross revenue (MTD)"
+          value={formatMoney(analysis.monthGross)}
+          sub="Before fees"
+        />
+        <MetricCard
+          title="Estimated net (MTD)"
+          value={formatMoney(analysis.monthNet)}
+          sub={`Fee impact: ${formatMoney(analysis.monthFee)}`}
+          tone="teal"
+        />
+        <MetricCard
+          title="Month trend"
+          value={`${analysis.changePct >= 0 ? "+" : ""}${analysis.changePct.toFixed(1)}%`}
+          sub="Compared with previous month"
+          tone={analysis.changePct >= 0 ? "teal" : "orange"}
+        />
+        <MetricCard
+          title="Refund rate (90 days)"
+          value={`${analysis.refundRate.toFixed(1)}%`}
+          sub="Lower is better"
+          tone={analysis.refundRate > 5 ? "red" : analysis.refundRate > 3 ? "orange" : "teal"}
+        />
+      </section>
 
-        {metrics.platformRows.length === 0 ? (
-          <div
-            className="rounded-xl border px-4 py-8 text-center"
-            style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
-          >
-            <p className="text-sm" style={{ color: "var(--z-text-3)" }}>
-              Connect platforms to see your revenue breakdown.
-            </p>
-          </div>
-        ) : (
-          <div
-            className="rounded-xl border overflow-hidden"
-            style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
-          >
-            {metrics.platformRows.map((row, idx) => (
-              <div
-                key={row.platform}
-                className="px-4 py-3 flex items-center gap-4"
-                style={{
-                  borderBottom: idx < metrics.platformRows.length - 1
-                    ? "1px solid var(--z-border-1)"
-                    : "none",
-                }}
-              >
-                {/* Platform name */}
-                <span
-                  className="text-sm font-medium w-28 flex-shrink-0"
-                  style={{ color: "var(--z-text-1)" }}
-                >
-                  {row.label}
-                </span>
-
-                {/* Bar */}
-                <div className="flex-1 min-w-0">
-                  <div
-                    className="h-2 rounded-full overflow-hidden"
-                    style={{ background: "var(--z-bg-3)" }}
-                    role="progressbar"
-                    aria-valuenow={Math.round(row.share)}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={row.label + " contributes " + row.share.toFixed(1) + "% of revenue"}
-                  >
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{
-                        width: row.share + "%",
-                        background: idx === 0 ? "#32B8C6" : "var(--z-border-2)",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Revenue */}
-                <span
-                  className="text-sm font-mono-financial tabular-nums w-20 text-right flex-shrink-0"
-                  style={{ color: "var(--z-text-1)" }}
-                >
-                  {fmt(row.revenue)}
-                </span>
-
-                {/* Share */}
-                <span
-                  className="text-xs w-10 text-right flex-shrink-0"
-                  style={{ color: "var(--z-text-3)" }}
-                >
-                  {row.share.toFixed(0)}%
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Concentration notice */}
-        {metrics.platformRows.length > 0 && metrics.topShare > 0 ? (
-          <div
-            className="mt-3 rounded-lg border px-4 py-3 flex items-start gap-2.5"
-            style={{
-              background: riskConfig.bg,
-              borderColor: riskConfig.border,
-            }}
-          >
+      <section className="mb-6 rounded-xl border border-white/10 bg-[#111114] p-4">
+        <h2 className="text-lg font-semibold text-[#F5F5F5]">What this means</h2>
+        <div className="mt-4 space-y-3">
+          {analysis.plainInsights.map((item) => (
             <div
-              className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-              style={{ background: riskConfig.color }}
-              aria-hidden="true"
-            />
-            <div>
-              <span
-                className="text-xs font-semibold mr-1"
-                style={{ color: riskConfig.color }}
-              >
-                {riskConfig.label}:
-              </span>
-              <span className="text-xs" style={{ color: "var(--z-text-2)" }}>
-                {metrics.topPlatform} makes up {metrics.topShare.toFixed(0)}% of your income.
-                {riskLevel === "high"
-                  ? " If this platform changes its rules or pauses payouts, most of your revenue is affected."
-                  : riskLevel === "medium"
-                    ? " Consider growing a second income stream to reduce dependency."
-                    : " Your income is reasonably spread across platforms."}
-              </span>
+              key={item.id}
+              className={`rounded-lg border p-3 ${
+                item.tone === "red"
+                  ? "border-[#F06C6C]/40 bg-[#F06C6C]/10"
+                  : item.tone === "orange"
+                    ? "border-[#F0A562]/40 bg-[#F0A562]/10"
+                    : "border-[#56C5D0]/40 bg-[#56C5D0]/10"
+              }`}
+            >
+              <p className="text-sm font-medium text-[#F5F5F5]">{item.title}</p>
+              <p className="mt-1 text-sm text-white/80">{item.text}</p>
             </div>
-          </div>
-        ) : metrics.totalTxCount > 0 && (
-          <div
-            className="mt-3 rounded-lg border px-4 py-3"
-            style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
-          >
-            <p className="text-xs" style={{ color: "var(--z-text-3)" }}>
-              No platform concentration data yet.
-            </p>
-          </div>
-        )}
+          ))}
+        </div>
       </section>
 
-      {/* ── Section 3: Flagged events ─────────────────────────────────────── */}
-      <section aria-label="Flagged revenue events">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--z-text-3)" }}>
-            Flagged events
-          </p>
-          {pendingEvents.length > 0 && (
-            <span
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
-              style={{
-                background: "rgba(255,84,89,0.08)",
-                borderColor: "rgba(255,84,89,0.3)",
-                color: "#FF5459",
-              }}
-            >
-              {pendingEvents.length} need{pendingEvents.length === 1 ? "s" : ""} review
-            </span>
-          )}
+      <section className="mb-6 rounded-xl border border-white/10 bg-[#111114]">
+        <div className="border-b border-white/10 p-4">
+          <h2 className="text-lg font-semibold text-[#F5F5F5]">Platform evidence (month-to-date)</h2>
+          <p className="mt-1 text-sm text-white/70">Source and share are shown for trust and audit readiness.</p>
         </div>
 
-        {pendingEvents.length === 0 ? (
-          <div
-            className="rounded-xl border px-4 py-5 flex items-center gap-3"
-            style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
-          >
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" style={{ color: "#4ade80" }} aria-hidden="true" />
-            <p className="text-sm" style={{ color: "var(--z-text-2)" }}>
-              No anomalies detected. Your revenue patterns look normal.
-            </p>
-          </div>
-        ) : (
-          <div
-            className="rounded-xl border overflow-hidden divide-y"
-            style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
-            role="list"
-          >
-            {pendingEvents.slice(0, 5).map(event => {
-              const isPositive = (event.impact_percentage || 0) > 0;
-              const severityColor =
-                event.severity === "critical" ? "#FF5459"
-                  : event.severity === "high" ? "#E68161"
-                    : "#f59e0b";
-
-              return (
-                <div
-                  key={event.id}
-                  className="px-4 py-3.5 flex items-start gap-3"
-                  style={{ borderColor: "var(--z-border-1)" }}
-                  role="listitem"
-                >
-                  <AlertTriangle
-                    className="w-4 h-4 mt-0.5 flex-shrink-0"
-                    style={{ color: severityColor }}
-                    aria-hidden="true"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                      <p className="text-sm font-medium capitalize" style={{ color: "var(--z-text-1)" }}>
-                        {(event.event_type || "anomaly").replace(/_/g, " ")}
-                      </p>
-                      <span
-                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase"
-                        style={{
-                          background: severityColor + "15",
-                          border: "1px solid " + severityColor + "40",
-                          color: severityColor,
-                        }}
-                      >
-                        {event.severity}
-                      </span>
-                    </div>
-                    <p className="text-xs" style={{ color: "var(--z-text-3)" }}>
-                      {event.detected_at
-                        ? format(new Date(event.detected_at), "MMM d, yyyy")
-                        : "—"}
-                      {event.impact_percentage
-                        ? " · " + (isPositive ? "+" : "") + event.impact_percentage.toFixed(1) + "% impact"
-                        : ""}
-                    </p>
-                  </div>
-                  <Link
-                    to="/Transactions"
-                    className="text-xs flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#32B8C6] rounded"
-                    style={{ color: "#32B8C6" }}
-                    aria-label={"Review " + (event.event_type || "anomaly") + " event"}
-                  >
-                    View Ledger →
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {autopsyEvents.filter(e => e.status !== "pending_review").length > 0 && (
-          <p className="mt-2 text-xs text-right" style={{ color: "var(--z-text-3)" }}>
-            {autopsyEvents.filter(e => e.status !== "pending_review").length} previously resolved
-          </p>
-        )}
+        <Table>
+          <TableHeader>
+            <TableRow className="border-white/10 hover:bg-transparent">
+              <TableHead className="text-[#D8D8D8]">Platform</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Gross</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Fee</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Net</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Share</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Source</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {analysis.platformRows.length === 0 && (
+              <TableRow className="border-white/10 hover:bg-transparent">
+                <TableCell colSpan={6} className="py-8 text-center text-sm text-white/60">
+                  {loading ? "Loading revenue evidence..." : "No revenue rows available for this month."}
+                </TableCell>
+              </TableRow>
+            )}
+            {analysis.platformRows.map((row) => (
+              <TableRow key={row.key} className="border-white/10 hover:bg-white/[0.02]">
+                <TableCell className="font-medium text-[#F5F5F5]">{row.label}</TableCell>
+                <TableCell className="text-right font-mono-financial text-[#F5F5F5]">{formatMoney(row.gross)}</TableCell>
+                <TableCell className="text-right font-mono-financial text-[#F0A562]">{formatMoney(row.fee)}</TableCell>
+                <TableCell className="text-right font-mono-financial text-[#56C5D0]">{formatMoney(row.net)}</TableCell>
+                <TableCell className="text-right font-mono-financial text-white/80">{row.share.toFixed(1)}%</TableCell>
+                <TableCell className="text-right text-sm text-white/60">{row.source}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </section>
 
-      {/* ── Footer note ───────────────────────────────────────────────────── */}
-      <div
-        className="pt-4 border-t text-xs leading-relaxed"
-        style={{ borderColor: "var(--z-border-1)", color: "var(--z-text-3)" }}
-      >
-        <strong style={{ color: "var(--z-text-2)" }}>About these numbers: </strong>
-        Gross revenue is pulled directly from your connected platforms. Net revenue deducts estimated fees using each platform's published standard rate — your actual rate may differ. Refund rate covers the trailing 90 days.{" "}
-        <Link
-          to="/Methodology"
-          style={{ color: "#32B8C6" }}
-          className="hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#32B8C6] rounded"
-        >
-          Read our full methodology →
-        </Link>
-      </div>
+      <section className="rounded-xl border border-white/10 bg-[#111114]">
+        <div className="flex flex-col gap-3 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-[#F5F5F5]">Pending anomaly decisions</h2>
+            <p className="mt-1 text-sm text-white/70">Review these before preparing external reports.</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+            onClick={() => navigate("/Dashboard")}
+          >
+            Back to dashboard
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
 
-    </main>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-white/10 hover:bg-transparent">
+              <TableHead className="text-[#D8D8D8]">Detected</TableHead>
+              <TableHead className="text-[#D8D8D8]">Event</TableHead>
+              <TableHead className="text-[#D8D8D8]">Severity</TableHead>
+              <TableHead className="text-right text-[#D8D8D8]">Impact</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pendingEvents.length === 0 && (
+              <TableRow className="border-white/10 hover:bg-transparent">
+                <TableCell colSpan={4} className="py-8 text-center text-sm text-white/60">
+                  No pending anomaly items.
+                </TableCell>
+              </TableRow>
+            )}
+            {pendingEvents.slice(0, 8).map((event) => (
+              <TableRow key={event.id} className="border-white/10 hover:bg-white/[0.02]">
+                <TableCell className="text-sm text-white/75">
+                  {event.detected_at ? format(new Date(event.detected_at), "MMM d, yyyy") : "-"}
+                </TableCell>
+                <TableCell className="text-sm text-[#F5F5F5]">
+                  {(event.event_type || "Unknown").replaceAll("_", " ")}
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`rounded-md border px-2 py-1 text-xs capitalize ${
+                      event.severity === "critical" || event.severity === "high"
+                        ? "border-[#F06C6C]/40 bg-[#F06C6C]/10 text-[#F06C6C]"
+                        : event.severity === "medium"
+                          ? "border-[#F0A562]/40 bg-[#F0A562]/10 text-[#F0A562]"
+                          : "border-[#56C5D0]/40 bg-[#56C5D0]/10 text-[#56C5D0]"
+                    }`}
+                  >
+                    {event.severity || "low"}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right font-mono-financial text-white/80">
+                  {typeof event.impact_amount === "number" ? formatMoney(event.impact_amount) : "-"}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </section>
+
+      {pendingEvents.length > 0 && (
+        <section className="mt-6 rounded-lg border border-[#F0A562]/35 bg-[#F0A562]/10 p-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-[#F0A562]" />
+            <p className="text-sm text-white/85">
+              {pendingEvents.length} anomaly decision{pendingEvents.length > 1 ? "s" : ""} still open. Clear them for cleaner executive and accountant reporting.
+            </p>
+          </div>
+        </section>
+      )}
+    </div>
   );
 }
