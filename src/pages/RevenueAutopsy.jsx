@@ -57,60 +57,6 @@ function Skeleton({ className = "" }) {
   );
 }
 
-// ─── Empty state (no platforms connected) ─────────────────────────────────────
-function EmptyNoPlatforms() {
-  const navigate = useNavigate();
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
-      <div
-        className="w-14 h-14 rounded-xl border flex items-center justify-center mb-5"
-        style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
-        aria-hidden="true"
-      >
-        <Link2 className="w-6 h-6" style={{ color: "var(--z-text-3)" }} />
-      </div>
-      <h2 className="text-lg font-semibold mb-1" style={{ color: "var(--z-text-1)" }}>
-        No platforms connected
-      </h2>
-      <p className="text-sm mb-6 max-w-sm" style={{ color: "var(--z-text-3)", lineHeight: 1.6 }}>
-        Connect your revenue platforms so Zerithum can analyse your earnings, fees, and income patterns.
-      </p>
-      <button
-        onClick={() => navigate("/ConnectedPlatforms")}
-        className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#32B8C6]"
-        style={{ background: "#32B8C6", color: "#09090B" }}
-      >
-        Connect platforms
-      </button>
-    </div>
-  );
-}
-
-// ─── Empty state (platforms connected, no transactions yet) ───────────────────
-function EmptyNoData({ connectedPlatforms }) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
-      <div
-        className="w-14 h-14 rounded-xl border flex items-center justify-center mb-5"
-        style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
-        aria-hidden="true"
-      >
-        <RefreshCw className="w-6 h-6" style={{ color: "var(--z-text-3)" }} />
-      </div>
-      <h2 className="text-lg font-semibold mb-1" style={{ color: "var(--z-text-1)" }}>
-        Waiting for transactions
-      </h2>
-      <p className="text-sm mb-2 max-w-sm" style={{ color: "var(--z-text-3)", lineHeight: 1.6 }}>
-        You have {connectedPlatforms.length} platform{connectedPlatforms.length !== 1 ? "s" : ""} connected.
-        Revenue Autopsy will appear once your first transactions sync.
-      </p>
-      <p className="text-xs" style={{ color: "var(--z-text-3)" }}>
-        Syncs happen automatically every few hours.
-      </p>
-    </div>
-  );
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function RevenueAutopsy() {
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -197,7 +143,7 @@ export default function RevenueAutopsy() {
         label: PLATFORM_LABELS[platform] || platform,
         revenue,
         share: revenueMTD > 0 ? (revenue / revenueMTD) * 100 : 0,
-          feeRate: (PLATFORM_FEE_RATES[platform] ?? 0) * 100,
+        feeRate: (PLATFORM_FEE_RATES[platform] ?? 0) * 100,
       }));
 
     // ── Concentration risk: top platform share
@@ -237,19 +183,10 @@ export default function RevenueAutopsy() {
     );
   }
 
-  // ── Empty states ──────────────────────────────────────────────────────────
-  if (connectedPlatforms.length === 0) {
-    return <EmptyNoPlatforms />;
-  }
-
-  if (metrics.totalTxCount === 0) {
-    return <EmptyNoData connectedPlatforms={connectedPlatforms} />;
-  }
-
   // ── Determine concentration risk level ───────────────────────────────────
   const riskLevel =
     metrics.topShare >= 70 ? "high" :
-    metrics.topShare >= 40 ? "medium" : "low";
+      metrics.topShare >= 40 ? "medium" : "low";
 
   const riskConfig = {
     high: { label: "High risk", color: "#FF5459", bg: "rgba(255,84,89,0.08)", border: "rgba(255,84,89,0.25)" },
@@ -266,14 +203,55 @@ export default function RevenueAutopsy() {
     <main className="max-w-3xl mx-auto py-8 px-4 space-y-6" id="revenue-autopsy-page">
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div>
-        <h1 className="text-[22px] font-semibold tracking-tight" style={{ color: "var(--z-text-1)" }}>
-          Revenue Autopsy
-        </h1>
-        <p className="text-sm mt-0.5" style={{ color: "var(--z-text-3)" }}>
-          A plain-language breakdown of how your revenue is composed.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-[22px] font-semibold tracking-tight" style={{ color: "var(--z-text-1)" }}>
+            Revenue Autopsy
+          </h1>
+          <p className="text-sm mt-0.5" style={{ color: "var(--z-text-3)" }}>
+            A plain-language breakdown of how your revenue is composed.
+          </p>
+        </div>
+
+        {connectedPlatforms.length === 0 && (
+          <Link
+            to="/ConnectedPlatforms"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#32B8C6]"
+            style={{ background: "#32B8C6", color: "#09090B" }}
+          >
+            <Link2 className="w-4 h-4" />
+            Connect Platforms
+          </Link>
+        )}
       </div>
+
+      {/* ── No Data Warning Banner ────────────────────────────────────────── */}
+      {metrics.totalTxCount === 0 && (
+        <div
+          className="rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          style={{ background: "rgba(50,184,198,0.05)", borderColor: "rgba(50,184,198,0.2)" }}
+        >
+          <div className="flex items-start gap-3">
+            <RefreshCw className="w-5 h-5 mt-0.5" style={{ color: "#32B8C6" }} aria-hidden="true" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium" style={{ color: "var(--z-text-1)" }}>
+                Currently showing $0 baseline
+              </p>
+              <p className="text-xs" style={{ color: "var(--z-text-3)" }}>
+                {connectedPlatforms.length === 0
+                  ? "Connect your first platform to start seeing real revenue intelligence."
+                  : "Waiting for your first transactions to sync. This usually takes a few hours."
+                }
+              </p>
+            </div>
+          </div>
+          {connectedPlatforms.length === 0 && (
+            <p className="text-[11px] font-medium uppercase tracking-wider" style={{ color: "#32B8C6" }}>
+              Data Readiness 0%
+            </p>
+          )}
+        </div>
+      )}
 
       {/* ── Section 1: Your numbers this month ──────────────────────────── */}
       <section aria-label="Revenue this month">
@@ -308,7 +286,7 @@ export default function RevenueAutopsy() {
               </div>
             ) : (
               <p className="text-xs mt-1.5" style={{ color: "var(--z-text-3)" }}>
-                First month of data
+                {metrics.totalTxCount > 0 ? "First month of data" : "No history yet"}
               </p>
             )}
             <p className="text-[10px] mt-2 pt-2 border-t" style={{ color: "var(--z-text-3)", borderColor: "var(--z-border-1)" }}>
@@ -331,7 +309,7 @@ export default function RevenueAutopsy() {
             <p className="text-xs mt-1.5" style={{ color: "var(--z-text-3)" }}>
               {metrics.revenueMTD > 0
                 ? fmt(metrics.revenueMTD - metrics.netMTD) + " in platform fees"
-                : "—"}
+                : "Estimate pending data"}
             </p>
             <p className="text-[10px] mt-2 pt-2 border-t" style={{ color: "var(--z-text-3)", borderColor: "var(--z-border-1)" }}>
               After estimated fees · based on published rates
@@ -346,8 +324,8 @@ export default function RevenueAutopsy() {
               borderColor: refundRiskLevel === "high"
                 ? "rgba(255,84,89,0.35)"
                 : refundRiskLevel === "medium"
-                ? "rgba(245,158,11,0.3)"
-                : "var(--z-border-1)",
+                  ? "rgba(245,158,11,0.3)"
+                  : "var(--z-border-1)",
             }}
           >
             <p className="text-xs mb-1" style={{ color: "var(--z-text-3)" }}>Refund Rate</p>
@@ -368,11 +346,21 @@ export default function RevenueAutopsy() {
       </section>
 
       {/* ── Section 2: Where your money comes from ───────────────────────── */}
-      {metrics.platformRows.length > 0 && (
-        <section aria-label="Revenue by platform">
-          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--z-text-3)" }}>
-            Where your money comes from this month
-          </p>
+      <section aria-label="Revenue by platform">
+        <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--z-text-3)" }}>
+          Where your money comes from this month
+        </p>
+
+        {metrics.platformRows.length === 0 ? (
+          <div
+            className="rounded-xl border px-4 py-8 text-center"
+            style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
+          >
+            <p className="text-sm" style={{ color: "var(--z-text-3)" }}>
+              Connect platforms to see your revenue breakdown.
+            </p>
+          </div>
+        ) : (
           <div
             className="rounded-xl border overflow-hidden"
             style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
@@ -434,41 +422,50 @@ export default function RevenueAutopsy() {
               </div>
             ))}
           </div>
+        )}
 
-          {/* Concentration notice */}
-          {metrics.platformRows.length > 0 && metrics.topShare > 0 && (
+        {/* Concentration notice */}
+        {metrics.platformRows.length > 0 && metrics.topShare > 0 ? (
+          <div
+            className="mt-3 rounded-lg border px-4 py-3 flex items-start gap-2.5"
+            style={{
+              background: riskConfig.bg,
+              borderColor: riskConfig.border,
+            }}
+          >
             <div
-              className="mt-3 rounded-lg border px-4 py-3 flex items-start gap-2.5"
-              style={{
-                background: riskConfig.bg,
-                borderColor: riskConfig.border,
-              }}
-            >
-              <div
-                className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-                style={{ background: riskConfig.color }}
-                aria-hidden="true"
-              />
-              <div>
-                <span
-                  className="text-xs font-semibold mr-1"
-                  style={{ color: riskConfig.color }}
-                >
-                  {riskConfig.label}:
-                </span>
-                <span className="text-xs" style={{ color: "var(--z-text-2)" }}>
-                  {metrics.topPlatform} makes up {metrics.topShare.toFixed(0)}% of your income.
-                  {riskLevel === "high"
-                    ? " If this platform changes its rules or pauses payouts, most of your revenue is affected."
-                    : riskLevel === "medium"
+              className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+              style={{ background: riskConfig.color }}
+              aria-hidden="true"
+            />
+            <div>
+              <span
+                className="text-xs font-semibold mr-1"
+                style={{ color: riskConfig.color }}
+              >
+                {riskConfig.label}:
+              </span>
+              <span className="text-xs" style={{ color: "var(--z-text-2)" }}>
+                {metrics.topPlatform} makes up {metrics.topShare.toFixed(0)}% of your income.
+                {riskLevel === "high"
+                  ? " If this platform changes its rules or pauses payouts, most of your revenue is affected."
+                  : riskLevel === "medium"
                     ? " Consider growing a second income stream to reduce dependency."
                     : " Your income is reasonably spread across platforms."}
-                </span>
-              </div>
+              </span>
             </div>
-          )}
-        </section>
-      )}
+          </div>
+        ) : metrics.totalTxCount > 0 && (
+          <div
+            className="mt-3 rounded-lg border px-4 py-3"
+            style={{ background: "var(--z-bg-2)", borderColor: "var(--z-border-1)" }}
+          >
+            <p className="text-xs" style={{ color: "var(--z-text-3)" }}>
+              No platform concentration data yet.
+            </p>
+          </div>
+        )}
+      </section>
 
       {/* ── Section 3: Flagged events ─────────────────────────────────────── */}
       <section aria-label="Flagged revenue events">
@@ -510,8 +507,8 @@ export default function RevenueAutopsy() {
               const isPositive = (event.impact_percentage || 0) > 0;
               const severityColor =
                 event.severity === "critical" ? "#FF5459"
-                : event.severity === "high" ? "#E68161"
-                : "#f59e0b";
+                  : event.severity === "high" ? "#E68161"
+                    : "#f59e0b";
 
               return (
                 <div
