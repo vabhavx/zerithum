@@ -62,7 +62,8 @@ export async function handleOAuthCallback(
        return { statusCode: 400, body: { error: 'Security validation failed (CSRF mismatch)' } };
     }
 
-    const redirectUri = `${urlObj.origin}/auth/callback`; // Note: This might need adjustment based on environment
+    // Use configured redirect URI if available, otherwise fallback to request origin (less secure)
+    const redirectUri = ctx.envGet('OAUTH_REDIRECT_URI') || `${urlObj.origin}/auth/callback`;
 
     let tokenData;
 

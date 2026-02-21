@@ -115,6 +115,35 @@ describe('handleOAuthCallback', () => {
       });
   });
 
+  it('should use OAUTH_REDIRECT_URI env var if present', async () => {
+      mockEnvGet.mockImplementation((key: string) => {
+         if (key === 'OAUTH_REDIRECT_URI') return 'https://custom-redirect.com/cb';
+         if (key === 'YOUTUBE_CLIENT_ID') return 'client_id';
+         if (key === 'YOUTUBE_CLIENT_SECRET') return 'secret';
+         return undefined;
+      });
+
+      mockFetch.mockResolvedValue({
+          ok: true,
+          json: async () => ({ access_token: 'at_123', expires_in: 3600 })
+      });
+
+      const url = new URL(`https://app.com/callback?code=code_123&state=youtube:csrf`);
+      await handleOAuthCallback(ctx, url, 'oauth_state=csrf');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+          'https://oauth2.googleapis.com/token',
+          expect.objectContaining({
+              body: expect.any(URLSearchParams)
+          })
+      );
+
+      // Verify body params
+      const callArgs = mockFetch.mock.calls[0];
+      const body = callArgs[1].body as URLSearchParams;
+      expect(body.get('redirect_uri')).toBe('https://custom-redirect.com/cb');
+  });
+
   describe('Platform Specifics', () => {
       const validState = 'youtube:csrf';
       const validCookie = 'oauth_state=csrf';
