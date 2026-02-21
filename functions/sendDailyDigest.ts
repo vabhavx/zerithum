@@ -3,6 +3,11 @@ import { sendDailyDigestLogic, DailyDigestContext } from './logic/dailyDigest.ts
 
 Deno.serve(async (req) => {
   try {
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader !== `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const base44 = createClientFromRequest(req);
     
     const ctx: DailyDigestContext = {
