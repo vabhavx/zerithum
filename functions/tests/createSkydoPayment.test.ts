@@ -109,8 +109,33 @@ describe('createSkydoPayment', () => {
 
     expect(result.status).toBe(422);
     expect(result.body.error).toBe('Failed to create payment link');
-    expect(result.body.details).toEqual(errorData);
+    expect(result.body.details).toBeUndefined();
     expect(mockLogError).toHaveBeenCalledWith('Skydo API error:', errorData);
+  });
+
+  it('should not leak sensitive details in error response', async () => {
+    const sensitiveErrorData = {
+      message: 'Internal Server Error',
+      stack: 'Error: Something went wrong\n    at /app/server.js:10:15',
+      internal_ip: '10.0.0.5',
+      db_connection_string: 'postgres://user:pass@db:5432/production'
+    };
+
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => sensitiveErrorData
+    });
+
+    const result = await createSkydoPayment(ctx, user, 'Creator Pro', 'monthly');
+
+    expect(result.status).toBe(500);
+    expect(result.body.error).toBe('Failed to create payment link');
+    // The details field should NOT be present to prevent information disclosure
+    expect(result.body.details).toBeUndefined();
+
+    // But it should still be logged internally
+    expect(mockLogError).toHaveBeenCalledWith('Skydo API error:', sensitiveErrorData);
   });
 
   it('should handle fetch exceptions', async () => {

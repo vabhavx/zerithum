@@ -78,8 +78,7 @@ export async function createSkydoPayment(
       return {
         status: skydoResponse.status,
         body: {
-            error: 'Failed to create payment link',
-            details: errorData
+            error: 'Failed to create payment link'
         }
       };
     }
