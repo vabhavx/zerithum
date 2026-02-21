@@ -7,18 +7,22 @@ export interface User {
 }
 
 export interface RevenueTransaction {
+  user_id?: string;
   platform: string;
   amount: number;
 }
 
 export interface Expense {
+  user_id?: string;
   amount: number;
 }
 
 export interface TaxReportContext {
   getUsers: () => Promise<User[]>;
   getTransactions: (userId: string, start: string, end: string) => Promise<RevenueTransaction[]>;
+  getTransactionsForUsers: (userIds: string[], start: string, end: string) => Promise<RevenueTransaction[]>;
   getExpenses: (userId: string, start: string, end: string) => Promise<Expense[]>;
+  getExpensesForUsers: (userIds: string[], start: string, end: string) => Promise<Expense[]>;
   sendEmail: (to: string, subject: string, body: string) => Promise<void>;
 }
 
@@ -30,41 +34,67 @@ export async function sendQuarterlyTaxReportLogic(ctx: TaxReportContext) {
   const quarter = Math.floor(now.getMonth() / 3) + 1;
   const year = now.getFullYear();
 
+  const quarterStart = new Date(year, (quarter - 1) * 3, 1);
+  const quarterEnd = new Date(year, quarter * 3, 0);
+
+  const startStr = quarterStart.toISOString().split('T')[0];
+  const endStr = quarterEnd.toISOString().split('T')[0];
+
   const notifiedUsers = [];
+  const BATCH_SIZE = 50;
 
-  for (const user of users) {
-    if (!user.email) continue;
+  for (let i = 0; i < users.length; i += BATCH_SIZE) {
+    const batchUsers = users.slice(i, i + BATCH_SIZE);
+    const userIds = batchUsers.map(u => u.id);
 
-    // Get transactions for the quarter
-    const quarterStart = new Date(year, (quarter - 1) * 3, 1);
-    const quarterEnd = new Date(year, quarter * 3, 0);
+    // Batch fetch
+    const [transactionsBatch, expensesBatch] = await Promise.all([
+      ctx.getTransactionsForUsers(userIds, startStr, endStr),
+      ctx.getExpensesForUsers(userIds, startStr, endStr)
+    ]);
 
-    const startStr = quarterStart.toISOString().split('T')[0];
-    const endStr = quarterEnd.toISOString().split('T')[0];
-
-    const transactions = await ctx.getTransactions(user.id, startStr, endStr);
-    const expenses = await ctx.getExpenses(user.id, startStr, endStr);
-
-    const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-    const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-    const netIncome = totalRevenue - totalExpenses;
-
-    // Group by platform
-    const byPlatform: Record<string, number> = transactions.reduce((acc, t) => {
-      const platformName = t.platform || 'Unknown';
-      acc[platformName] = (acc[platformName] || 0) + (t.amount || 0);
+    // Group by user
+    const transactionsByUser = transactionsBatch.reduce((acc, t) => {
+      const uid = t.user_id || '';
+      if (!acc[uid]) acc[uid] = [];
+      acc[uid].push(t);
       return acc;
-    }, {});
+    }, {} as Record<string, RevenueTransaction[]>);
 
-    const platformRows = Object.entries(byPlatform)
-      .map(([platform, amount]) => `
-        <tr>
-          <td style="padding: 10px; border-bottom: 1px solid #eee;">${escapeHtml(platform)}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-weight: 600;">$${amount.toFixed(2)}</td>
-        </tr>
-      `).join('');
+    const expensesByUser = expensesBatch.reduce((acc, e) => {
+      const uid = e.user_id || '';
+      if (!acc[uid]) acc[uid] = [];
+      acc[uid].push(e);
+      return acc;
+    }, {} as Record<string, Expense[]>);
 
-    const emailBody = `
+    // Process each user in batch in parallel
+    await Promise.all(batchUsers.map(async (user) => {
+      if (!user.email) return;
+
+      const transactions = transactionsByUser[user.id] || [];
+      const expenses = expensesByUser[user.id] || [];
+
+      const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+      const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const netIncome = totalRevenue - totalExpenses;
+
+      // Group by platform
+      const byPlatform: Record<string, number> = transactions.reduce((acc, t) => {
+        const platformName = t.platform || 'Unknown';
+        acc[platformName] = (acc[platformName] || 0) + (t.amount || 0);
+        return acc;
+      }, {});
+
+      const platformRows = Object.entries(byPlatform)
+        .map(([platform, amount]) => `
+          <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${escapeHtml(platform)}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-weight: 600;">$${amount.toFixed(2)}</td>
+          </tr>
+        `).join('');
+
+      const emailBody = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -129,10 +159,11 @@ export async function sendQuarterlyTaxReportLogic(ctx: TaxReportContext) {
   </div>
 </body>
 </html>
-    `;
+      `;
 
-    await ctx.sendEmail(user.email, `Your Q${quarter} ${year} tax report is ready`, emailBody);
-    notifiedUsers.push(user.id);
+      await ctx.sendEmail(user.email, `Your Q${quarter} ${year} tax report is ready`, emailBody);
+      notifiedUsers.push(user.id);
+    }));
   }
 
   return { success: true, users_notified: notifiedUsers.length };
