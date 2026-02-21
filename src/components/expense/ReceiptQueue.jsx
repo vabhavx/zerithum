@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Receipt, Upload, Clock, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { Upload, Clock, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { base44 } from "@/api/supabaseClient";
 import { toast } from "sonner";
