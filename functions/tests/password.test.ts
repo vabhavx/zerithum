@@ -64,9 +64,9 @@ describe('validatePassword', () => {
             text: async () => ''
         }));
 
-        expect((await validatePassword('onlylowercase12')).strength).toBe('weak');
+        expect((await validatePassword('onlylowercase12')).strength).toBe('medium');
         expect((await validatePassword('OnlylowercaseWithUpper')).strength).toBe('medium');
-        expect((await validatePassword('OnlylowercaseWithUpper1')).strength).toBe('medium');
+        expect((await validatePassword('OnlylowercaseWithUpper1')).strength).toBe('strong');
         expect((await validatePassword('OnlylowercaseWithUpper1!')).strength).toBe('strong');
     });
 

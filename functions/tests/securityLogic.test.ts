@@ -10,36 +10,36 @@ import {
 
 describe('Security Logic', () => {
     describe('validatePassword', () => {
-        it('should reject passwords shorter than 12 characters', () => {
-            expect(validatePassword('Short1!').valid).toBe(false);
-            expect(validatePassword('Short1!').errors).toContain('Password must be at least 12 characters');
+        it('should reject passwords shorter than 12 characters', async () => {
+            expect((await validatePassword('Short1!')).valid).toBe(false);
+            expect((await validatePassword('Short1!')).errors).toContain('Password must be at least 12 characters');
         });
 
-        it('should reject common passwords', () => {
-            const result = validatePassword('password12345');
+        it('should reject common passwords', async () => {
+            const result = await validatePassword('password12345');
             expect(result.valid).toBe(false);
-            expect(result.errors).toContain('This password is too common. Please choose a stronger password');
+            expect(result.errors).toContain('This password has appeared in a data breach. Please choose a different, more unique password');
         });
 
-        it('should calculate strength correctly', () => {
+        it('should calculate strength correctly', async () => {
             // Weak: length 12, only lowercase
-            expect(validatePassword('abcdefghijkl').strength).toBe('weak');
+            expect((await validatePassword('abcdefghijkl')).strength).toBe('weak');
 
             // Medium: length 12, upper and lower
-            expect(validatePassword('Abcdefghijkl').strength).toBe('medium');
+            expect((await validatePassword('Abcdefghijkl')).strength).toBe('medium');
 
             // Medium: length 12, upper, lower, digit
-            expect(validatePassword('Abcdefghij12').strength).toBe('medium');
+            expect((await validatePassword('Abcdefghij12')).strength).toBe('medium');
 
             // Strong: length 12, upper, lower, digit, special, length
-            expect(validatePassword('Abcdefghij1!').strength).toBe('strong');
+            expect((await validatePassword('Abcdefghij1!')).strength).toBe('strong');
 
             // Strong: length 16, upper, lower, digit
-            expect(validatePassword('Abcdefghijklmnop1').strength).toBe('strong');
+            expect((await validatePassword('Abcdefghijklmnop1')).strength).toBe('strong');
         });
 
-        it('should return valid true for strong passwords', () => {
-            const result = validatePassword('SuperSecurePassword123!');
+        it('should return valid true for strong passwords', async () => {
+            const result = await validatePassword('SuperSecurePassword123!');
             expect(result.valid).toBe(true);
             expect(result.errors).toHaveLength(0);
         });
@@ -81,54 +81,62 @@ describe('Security Logic', () => {
 
     describe('checkRateLimit', () => {
         const config = { maxAttempts: 3, windowMs: 1000 };
+        let mockClient: any;
+        let mockRpc: any;
 
         beforeEach(() => {
             vi.useFakeTimers();
             vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+
+            mockRpc = vi.fn();
+            mockClient = {
+                rpc: mockRpc
+            } as any;
         });
 
         afterEach(() => {
             vi.useRealTimers();
         });
 
-        it('should allow requests within limit and track remaining', () => {
+        it('should allow requests within limit and track remaining', async () => {
             const testKey = 'key-within-limit';
-            let result = checkRateLimit(testKey, config);
+
+            mockRpc
+                .mockResolvedValueOnce({ data: { allowed: true, remaining: 2, reset_at: Date.now() + 1000 }, error: null })
+                .mockResolvedValueOnce({ data: { allowed: true, remaining: 1, reset_at: Date.now() + 1000 }, error: null })
+                .mockResolvedValueOnce({ data: { allowed: true, remaining: 0, reset_at: Date.now() + 1000 }, error: null });
+
+            let result = await checkRateLimit(mockClient, testKey, config);
             expect(result.allowed).toBe(true);
             expect(result.remaining).toBe(2);
 
-            result = checkRateLimit(testKey, config);
+            result = await checkRateLimit(mockClient, testKey, config);
             expect(result.allowed).toBe(true);
             expect(result.remaining).toBe(1);
 
-            result = checkRateLimit(testKey, config);
+            result = await checkRateLimit(mockClient, testKey, config);
             expect(result.allowed).toBe(true);
             expect(result.remaining).toBe(0);
         });
 
-        it('should reject requests over limit', () => {
+        it('should reject requests over limit', async () => {
             const testKey = 'key-over-limit';
-            checkRateLimit(testKey, config);
-            checkRateLimit(testKey, config);
-            checkRateLimit(testKey, config);
-            const result = checkRateLimit(testKey, config);
+
+            mockRpc.mockResolvedValue({ data: { allowed: false, remaining: 0, reset_at: Date.now() + 1000 }, error: null });
+
+            const result = await checkRateLimit(mockClient, testKey, config);
             expect(result.allowed).toBe(false);
             expect(result.remaining).toBe(0);
         });
 
-        it('should reset after window expires', () => {
-            const testKey = 'key-reset';
-            checkRateLimit(testKey, config);
-            checkRateLimit(testKey, config);
-            checkRateLimit(testKey, config);
+        it('should handle RPC errors gracefully (fail open)', async () => {
+            const testKey = 'key-error';
 
-            expect(checkRateLimit(testKey, config).allowed).toBe(false);
+            mockRpc.mockResolvedValue({ data: null, error: { message: 'DB Error' } });
 
-            vi.advanceTimersByTime(1001);
-
-            const result = checkRateLimit(testKey, config);
+            const result = await checkRateLimit(mockClient, testKey, config);
             expect(result.allowed).toBe(true);
-            expect(result.remaining).toBe(2);
+            expect(result.remaining).toBe(1);
         });
     });
 

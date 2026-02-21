@@ -94,9 +94,12 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Invalid purpose' }, { status: 400, headers: corsHeaders });
         }
 
+        // Create admin client for rate limiting and service operations
+        const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
         // Rate limiting
         const rateLimitKey = `otp_send:${user.id}`;
-        const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.SEND_OTP);
+        const rateLimitResult = await checkRateLimit(adminClient, rateLimitKey, RATE_LIMITS.SEND_OTP);
 
         if (!rateLimitResult.allowed) {
             await logAudit(null, {
@@ -115,9 +118,6 @@ Deno.serve(async (req) => {
                 retryAfter: Math.ceil((rateLimitResult.resetAt.getTime() - Date.now()) / 1000)
             }, { status: 429, headers: corsHeaders });
         }
-
-        // Create admin client for service operations
-        const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
         // Generate OTP
         const code = generateOTPCode();

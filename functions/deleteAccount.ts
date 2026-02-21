@@ -80,13 +80,14 @@ Deno.serve(async (req) => {
 
         const { confirmationText, currentPassword, verificationCode } = body;
 
+        // Create admin client for rate limiting and updates
+        const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
         if (confirmationText !== 'DELETE') {
             return Response.json({
                 error: 'Please type DELETE to confirm account deletion'
             }, { status: 400, headers: corsHeaders });
         }
-
-        const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
         // Check existing request
         const { data: existingRequest } = await adminClient
@@ -115,7 +116,7 @@ Deno.serve(async (req) => {
 
         // Rate limiting
         const rateLimitKey = `delete_account:${user.id}`;
-        const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.DELETE_ACCOUNT);
+        const rateLimitResult = await checkRateLimit(adminClient, rateLimitKey, RATE_LIMITS.DELETE_ACCOUNT);
 
         if (!rateLimitResult.allowed) {
             await logAudit(null, {
