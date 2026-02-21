@@ -153,9 +153,7 @@ function createEntityHelper(tableName) {
                 .select('*');
 
             // Apply filters
-            Object.entries(filters).forEach(([key, value]) => {
-                query = query.eq(key, value);
-            });
+            query = applyFilters(query, filters);
 
             query = query.order(column, { ascending: !isDesc }).limit(limit);
 
@@ -243,9 +241,7 @@ function createEntityHelper(tableName) {
                     .select('*');
 
                 // Apply filters
-                Object.entries(filters).forEach(([key, value]) => {
-                    query = query.eq(key, value);
-                });
+                query = applyFilters(query, filters);
 
                 query = query
                     .order(column, { ascending: !isDesc })
@@ -270,6 +266,24 @@ function createEntityHelper(tableName) {
             return allData;
         }
     };
+}
+
+function applyFilters(query, filters) {
+    let q = query;
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            if ('$gte' in value) q = q.gte(key, value.$gte);
+            if ('$lte' in value) q = q.lte(key, value.$lte);
+            if ('$gt' in value) q = q.gt(key, value.$gt);
+            if ('$lt' in value) q = q.lt(key, value.$lt);
+            if ('$in' in value) q = q.in(key, value.$in);
+            if ('$neq' in value) q = q.neq(key, value.$neq);
+            if ('$eq' in value) q = q.eq(key, value.$eq);
+        } else {
+            q = q.eq(key, value);
+        }
+    });
+    return q;
 }
 
 // Map entity names to table names
