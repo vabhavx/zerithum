@@ -11,11 +11,17 @@ import {
   ShieldCheck,
   Unplug,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  GlassCard,
+  containerVariants,
+  itemVariants,
+} from "@/components/ui/glass-card";
 import {
   Dialog,
   DialogContent,
@@ -67,11 +73,11 @@ function MetricCard({ label, value, helper, tone = "neutral" }) {
           : "text-[#F5F5F5]";
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#111114] p-4 transition-colors hover:border-white/20">
+    <GlassCard hoverEffect className="p-4">
       <p className="text-xs uppercase tracking-wide text-white/60">{label}</p>
       <p className={`mt-2 font-mono-financial text-2xl font-semibold ${toneClass}`}>{value}</p>
       <p className="mt-1 text-xs text-white/60">{helper}</p>
-    </div>
+    </GlassCard>
   );
 }
 
@@ -319,11 +325,19 @@ export default function ConnectedPlatforms() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
-      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 xl:flex-row xl:items-start xl:justify-between">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="mx-auto w-full max-w-[1400px] p-6 lg:p-8"
+    >
+      <motion.header
+        variants={itemVariants}
+        className="mb-6 flex flex-col gap-4 border-b border-white/5 pb-6 xl:flex-row xl:items-start xl:justify-between"
+      >
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Connected platforms</h1>
-          <p className="mt-1 text-sm text-white/70">
+          <h1 className="text-3xl font-bold tracking-tight text-[#F5F5F5] sm:text-4xl">Connected platforms</h1>
+          <p className="mt-2 text-base text-white/60">
             Interactive connection control center with live status filtering and sync evidence.
           </p>
           <p className="mt-2 text-xs text-white/60">
@@ -344,25 +358,31 @@ export default function ConnectedPlatforms() {
           <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
           Refresh
         </Button>
-      </header>
+      </motion.header>
 
-      <section className="mb-6 rounded-lg border border-[#56C5D0]/30 bg-[#56C5D0]/10 p-4">
+      <motion.section
+        variants={itemVariants}
+        className="mb-6 rounded-lg border border-[#56C5D0]/30 bg-[#56C5D0]/10 p-4"
+      >
         <div className="flex items-start gap-2">
           <ShieldCheck className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
           <p className="text-sm text-white/85">
             Filter by status or search platform names to troubleshoot quickly before exports.
           </p>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <motion.section
+        variants={containerVariants}
+        className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
+      >
         <MetricCard label="Connected" value={String(stats.total)} helper="Active data sources" />
         <MetricCard label="Healthy" value={String(stats.active)} helper="Currently synced" tone="teal" />
         <MetricCard label="Syncing" value={String(stats.syncing)} helper="In progress" tone="orange" />
         <MetricCard label="Errors" value={String(stats.errors)} helper="Needs review" tone={stats.errors > 0 ? "red" : "teal"} />
-      </section>
+      </motion.section>
 
-      <section className="mb-6 rounded-xl border border-white/10 bg-[#111114] p-4">
+      <GlassCard className="mb-6 p-4">
         <div className="mb-3 flex flex-wrap gap-2">
           {STATUS_FILTERS.map((item) => (
             <button
@@ -402,9 +422,9 @@ export default function ConnectedPlatforms() {
             <p className="mt-1 text-xs text-white/60">{stats.healthScore.toFixed(0)}% stable connection score</p>
           </div>
         </div>
-      </section>
+      </GlassCard>
 
-      <section className="mb-6 rounded-xl border border-white/10 bg-[#111114]">
+      <GlassCard className="mb-6">
         <div className="border-b border-white/10 p-4">
           <h2 className="text-lg font-semibold text-[#F5F5F5]">Connected accounts</h2>
           <p className="mt-1 text-sm text-white/70">Live filtered list with direct sync controls.</p>
@@ -417,97 +437,114 @@ export default function ConnectedPlatforms() {
             </div>
           )}
 
-          {filteredConnections.map((connection) => {
-            const platform = PLATFORMS.find((item) => item.id === connection.platform);
-            const Icon = platform?.icon;
-            const syncing = syncingId === connection.id || connection.sync_status === "syncing";
+          <AnimatePresence>
+            {filteredConnections.map((connection) => {
+              const platform = PLATFORMS.find((item) => item.id === connection.platform);
+              const Icon = platform?.icon;
+              const syncing = syncingId === connection.id || connection.sync_status === "syncing";
 
-            return (
-              <div key={connection.id} className="rounded-lg border border-white/10 bg-[#15151A] p-4">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-[#101014]">
-                      {Icon ? <Icon className="h-4 w-4 text-white/70" /> : <Plug className="h-4 w-4 text-white/70" />}
-                    </div>
+              return (
+                <motion.div
+                  key={connection.id}
+                  variants={itemVariants}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="rounded-lg border border-white/10 bg-[#15151A] p-4"
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-[#101014]">
+                        {Icon ? <Icon className="h-4 w-4 text-white/70" /> : <Plug className="h-4 w-4 text-white/70" />}
+                      </div>
 
-                    <div>
-                      <p className="text-sm font-medium text-[#F5F5F5]">{platform?.name || connection.platform}</p>
-                      <p className="mt-1 text-xs text-white/60">
-                        Connected {connection.connected_at ? format(new Date(connection.connected_at), "MMM d, yyyy") : "-"}
-                        {connection.last_synced_at && (
-                          <>
-                            {" "}• Last sync {format(new Date(connection.last_synced_at), "MMM d, yyyy h:mm a")}
-                          </>
+                      <div>
+                        <p className="text-sm font-medium text-[#F5F5F5]">{platform?.name || connection.platform}</p>
+                        <p className="mt-1 text-xs text-white/60">
+                          Connected {connection.connected_at ? format(new Date(connection.connected_at), "MMM d, yyyy") : "-"}
+                          {connection.last_synced_at && (
+                            <>
+                              {" "}• Last sync {format(new Date(connection.last_synced_at), "MMM d, yyyy h:mm a")}
+                            </>
+                          )}
+                        </p>
+                        {connection.error_message && (
+                          <p className="mt-1 text-xs text-[#F06C6C]">{connection.error_message}</p>
                         )}
-                      </p>
-                      {connection.error_message && (
-                        <p className="mt-1 text-xs text-[#F06C6C]">{connection.error_message}</p>
-                      )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-md border px-2 py-1 text-xs ${statusTone(connection.sync_status)}`}>
+                        {statusLabel(connection.sync_status)}
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={syncing}
+                        onClick={() => syncConnection(connection, false)}
+                        className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
+                      >
+                        {syncing ? (
+                          <>
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            Syncing
+                          </>
+                        ) : (
+                          "Sync"
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={syncing}
+                        onClick={() => syncConnection(connection, true)}
+                        className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
+                      >
+                        Full sync
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setDisconnectTarget(connection)}
+                        className="h-8 border-[#F06C6C]/40 bg-transparent px-3 text-xs text-[#F06C6C] hover:bg-[#F06C6C]/10"
+                      >
+                        <Unplug className="mr-1.5 h-3.5 w-3.5" />
+                        Disconnect
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`rounded-md border px-2 py-1 text-xs ${statusTone(connection.sync_status)}`}>
-                      {statusLabel(connection.sync_status)}
-                    </span>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={syncing}
-                      onClick={() => syncConnection(connection, false)}
-                      className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
-                    >
-                      {syncing ? (
-                        <>
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                          Syncing
-                        </>
-                      ) : (
-                        "Sync"
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={syncing}
-                      onClick={() => syncConnection(connection, true)}
-                      className="h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10"
-                    >
-                      Full sync
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setDisconnectTarget(connection)}
-                      className="h-8 border-[#F06C6C]/40 bg-transparent px-3 text-xs text-[#F06C6C] hover:bg-[#F06C6C]/10"
-                    >
-                      <Unplug className="mr-1.5 h-3.5 w-3.5" />
-                      Disconnect
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
-      </section>
+      </GlassCard>
 
-      <section className="mb-6 rounded-xl border border-white/10 bg-[#111114]">
+      <GlassCard className="mb-6">
         <div className="border-b border-white/10 p-4">
           <h2 className="text-lg font-semibold text-[#F5F5F5]">Available platforms</h2>
           <p className="mt-1 text-sm text-white/70">Connect additional sources to improve data completeness.</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
+        <motion.div
+           variants={containerVariants}
+           className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3"
+        >
           {availablePlatforms.map((platform) => {
             const Icon = platform.icon;
             const connecting = connectingId === platform.id;
 
             return (
-              <div key={platform.id} className="rounded-lg border border-white/10 bg-[#15151A] p-4">
+              <motion.div
+                key={platform.id}
+                variants={itemVariants}
+                className="rounded-lg border border-white/10 bg-[#15151A] p-4"
+              >
                 <div className="mb-3 flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-[#101014]">
                     <Icon className="h-4 w-4 text-white/70" />
@@ -536,13 +573,13 @@ export default function ConnectedPlatforms() {
                     </>
                   )}
                 </Button>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
-      </section>
+        </motion.div>
+      </GlassCard>
 
-      <section className="rounded-xl border border-white/10 bg-[#111114]">
+      <GlassCard>
         <div className="flex flex-col gap-2 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent sync evidence</h2>
@@ -603,7 +640,7 @@ export default function ConnectedPlatforms() {
             </TableBody>
           </Table>
         )}
-      </section>
+      </GlassCard>
 
       <Dialog open={credentialsOpen} onOpenChange={setCredentialsOpen}>
         <DialogContent className="max-w-md rounded-xl border border-white/10 bg-[#111114] text-[#F5F5F5]">
@@ -720,6 +757,6 @@ export default function ConnectedPlatforms() {
           </div>
         </section>
       )}
-    </div>
+    </motion.div>
   );
 }

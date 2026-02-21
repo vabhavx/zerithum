@@ -13,9 +13,20 @@ import {
   Database,
   RefreshCw,
   ShieldCheck,
+  TrendingUp,
+  Activity,
+  Zap,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+
 import { base44 } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
+import {
+  GlassCard,
+  containerVariants,
+  itemVariants,
+} from "@/components/ui/glass-card";
 import {
   Table,
   TableBody,
@@ -34,6 +45,18 @@ const PLATFORM_LABELS = {
   tiktok: "TikTok",
   shopify: "Shopify",
   substack: "Substack",
+};
+
+const PLATFORM_COLORS = {
+  youtube: "#FF0000",
+  patreon: "#F96854",
+  stripe: "#635BFF",
+  gumroad: "#ff90e8",
+  instagram: "#E1306C",
+  tiktok: "#00f2ea",
+  shopify: "#96bf48",
+  substack: "#FF6719",
+  default: "#56C5D0",
 };
 
 const PLATFORM_FEE_RATES = {
@@ -94,30 +117,57 @@ function getRange(period) {
   return { start, end: now, comparisonStart, comparisonEnd };
 }
 
-function DashboardMetric({ label, value, subtext, tone = "neutral" }) {
+function DashboardMetric({ label, value, subtext, tone = "neutral", icon: Icon }) {
   const toneClass =
     tone === "teal"
       ? "text-[#56C5D0]"
       : tone === "orange"
-        ? "text-[#F0A562]"
-        : tone === "red"
-          ? "text-[#F06C6C]"
-          : "text-[#F5F5F5]";
+      ? "text-[#F0A562]"
+      : tone === "red"
+      ? "text-[#F06C6C]"
+      : "text-[#F5F5F5]";
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#111114] p-4 transition-colors hover:border-white/20">
-      <p className="text-xs uppercase tracking-wide text-white/60">{label}</p>
-      <p className={`mt-2 font-mono-financial text-2xl font-semibold ${toneClass}`}>{value}</p>
-      <p className="mt-1 text-xs text-white/60">{subtext}</p>
-    </div>
+    <GlassCard hoverEffect className="p-5">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-white/50">{label}</p>
+          <p className={`mt-2 font-mono-financial text-3xl font-bold tracking-tight ${toneClass}`}>
+            {value}
+          </p>
+        </div>
+        {Icon && (
+          <div className={`rounded-full p-2 ${tone === 'teal' ? 'bg-[#56C5D0]/10 text-[#56C5D0]' : 'bg-white/5 text-white/40'}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+        )}
+      </div>
+      <p className="mt-2 text-xs font-medium text-white/60">{subtext}</p>
+    </GlassCard>
   );
 }
+
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="rounded-lg border border-white/10 bg-black/90 p-3 shadow-xl backdrop-blur-xl">
+        <p className="text-sm font-semibold text-white">{data.label}</p>
+        <p className="font-mono-financial text-xs text-[#56C5D0]">
+          {formatMoney(data.gross)} ({data.share.toFixed(1)}%)
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
 
   const [period, setPeriod] = useState("mtd");
   const [panelView, setPanelView] = useState("overview");
+  const [activeChartIndex, setActiveChartIndex] = useState(null);
 
   const {
     data: transactions = [],
@@ -283,330 +333,387 @@ export default function Dashboard() {
   const isLoading = txLoading || platformsLoading;
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
-      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 xl:flex-row xl:items-start xl:justify-between">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="mx-auto w-full max-w-[1400px] p-6 lg:p-8"
+    >
+      <motion.header
+        variants={itemVariants}
+        className="mb-8 flex flex-col gap-6 border-b border-white/5 pb-6 xl:flex-row xl:items-start xl:justify-between"
+      >
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Dashboard</h1>
-          <p className="mt-1 text-sm text-white/70">
-            Serious finance view with interactive controls for faster daily decisions.
+          <h1 className="text-3xl font-bold tracking-tight text-[#F5F5F5] sm:text-4xl">Dashboard</h1>
+          <p className="mt-2 text-base text-white/60">
+            Real-time financial intelligence and operational command.
           </p>
-          <p className="mt-2 text-xs text-white/60">
+          <div className="mt-3 flex items-center gap-2 text-xs font-medium text-white/40">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#56C5D0] opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#56C5D0]"></span>
+            </span>
             Last sync:{" "}
             {dataCompleteness.lastSync
               ? format(dataCompleteness.lastSync, "MMM d, yyyy h:mm a")
               : "No sync data"}
-          </p>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-white/5 p-1 backdrop-blur-sm">
           {PERIODS.map((item) => (
             <button
               key={item.value}
               type="button"
               onClick={() => setPeriod(item.value)}
-              className={`h-9 rounded-md border px-3 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0] ${
+              className={`relative rounded-md px-4 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0] ${
                 period === item.value
-                  ? "border-[#56C5D0]/45 bg-[#56C5D0]/10 text-[#56C5D0]"
-                  : "border-white/20 bg-transparent text-white/75 hover:bg-white/10"
+                  ? "text-[#0A0A0A] shadow-sm"
+                  : "text-white/60 hover:text-white"
               }`}
             >
-              {item.label}
+              {period === item.value && (
+                <motion.div
+                  layoutId="period-highlight"
+                  className="absolute inset-0 rounded-md bg-[#56C5D0]"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              <span className="relative z-10">{item.label}</span>
             </button>
           ))}
+          <div className="mx-1 h-6 w-px bg-white/10" />
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             onClick={() => {
               refetchTransactions();
               refetchPlatforms();
             }}
             disabled={isFetching}
-            className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+            className="h-8 w-8 rounded-full p-0 text-white/60 hover:bg-white/10 hover:text-white"
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-            Refresh
+            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
           </Button>
         </div>
-      </header>
+      </motion.header>
 
-      <section className="mb-6 rounded-lg border border-[#56C5D0]/30 bg-[#56C5D0]/10 p-4">
-        <div className="flex items-start gap-2">
-          <ShieldCheck className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
-          <div>
-            <p className="text-sm font-medium text-[#F5F5F5]">Interactive but audit-safe</p>
-            <p className="mt-1 text-xs text-white/75">
-              Missing platform fees are estimated from published defaults and labeled in the evidence table.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {/* Hero Metrics */}
+      <motion.section
+        variants={containerVariants}
+        className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
+      >
         <DashboardMetric
-          label="Gross revenue"
+          label="Gross Revenue"
           value={formatMoney(computed.grossRevenue)}
-          subtext={`${computed.transactionCount} transactions in selected period`}
+          subtext={`${computed.transactionCount} transactions`}
+          icon={Activity}
         />
         <DashboardMetric
-          label="Net revenue"
+          label="Net Revenue"
           value={formatMoney(computed.netRevenue)}
-          subtext={`Estimated fees: ${formatMoney(computed.estimatedFees)}`}
+          subtext={`Est. fees: ${formatMoney(computed.estimatedFees)}`}
           tone="teal"
+          icon={TrendingUp}
         />
         <DashboardMetric
-          label="Operating margin"
+          label="Operating Margin"
           value={formatMoney(computed.operatingMargin)}
-          subtext={`Expenses in period: ${formatMoney(computed.periodExpenses)}`}
+          subtext={`Expenses: ${formatMoney(computed.periodExpenses)}`}
           tone={computed.operatingMargin < 0 ? "red" : "neutral"}
+          icon={Database}
         />
         <DashboardMetric
-          label="Period change"
+          label="Period Change"
           value={`${computed.revenueDelta >= 0 ? "+" : ""}${computed.revenueDelta.toFixed(1)}%`}
-          subtext="Versus previous equivalent period"
+          subtext="vs previous period"
           tone={computed.revenueDelta >= 0 ? "teal" : "orange"}
+          icon={Zap}
         />
-      </section>
+      </motion.section>
 
-      <section className="mb-6 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setPanelView("overview")}
-          className={`h-8 rounded-md border px-3 text-sm transition ${
-            panelView === "overview"
-              ? "border-[#56C5D0]/45 bg-[#56C5D0]/10 text-[#56C5D0]"
-              : "border-white/20 bg-transparent text-white/70 hover:bg-white/10"
-          }`}
-        >
-          Financial overview
-        </button>
-        <button
-          type="button"
-          onClick={() => setPanelView("operations")}
-          className={`h-8 rounded-md border px-3 text-sm transition ${
-            panelView === "operations"
-              ? "border-[#56C5D0]/45 bg-[#56C5D0]/10 text-[#56C5D0]"
-              : "border-white/20 bg-transparent text-white/70 hover:bg-white/10"
-          }`}
-        >
-          Operations queue
-        </button>
-      </section>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        <div className="rounded-xl border border-white/10 bg-[#111114] xl:col-span-8">
-          <div className="border-b border-white/10 p-4">
-            <h2 className="text-lg font-semibold text-[#F5F5F5]">Revenue by platform</h2>
-            <p className="mt-1 text-sm text-white/70">
-              Period: {format(computed.range.start, "MMM d, yyyy")} to {format(computed.range.end, "MMM d, yyyy")}
-            </p>
+      {/* Main Content Grid */}
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 gap-6 xl:grid-cols-12"
+      >
+        {/* Left Column: Revenue Breakdown */}
+        <GlassCard className="xl:col-span-8">
+          <div className="flex items-center justify-between border-b border-white/10 p-5">
+            <div>
+              <h2 className="text-lg font-semibold text-[#F5F5F5]">Revenue by Platform</h2>
+              <p className="mt-1 text-sm text-white/60">
+                Performance breakdown for selected period.
+              </p>
+            </div>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableHead className="text-[#D8D8D8]">Platform</TableHead>
-                <TableHead className="text-right text-[#D8D8D8]">Gross</TableHead>
-                <TableHead className="text-right text-[#D8D8D8]">Fee</TableHead>
-                <TableHead className="text-right text-[#D8D8D8]">Net</TableHead>
-                <TableHead className="text-right text-[#D8D8D8]">Share</TableHead>
-                <TableHead className="text-right text-[#D8D8D8]">Fee source</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {computed.platformRows.length === 0 && (
-                <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableCell colSpan={6} className="py-8 text-center text-sm text-white/60">
-                    {isLoading ? "Loading platform metrics..." : "No revenue rows in selected period."}
-                  </TableCell>
-                </TableRow>
-              )}
-              {computed.platformRows.map((row) => (
-                <TableRow key={row.key} className="border-white/10 hover:bg-white/[0.02]">
-                  <TableCell className="font-medium text-[#F5F5F5]">{row.label}</TableCell>
-                  <TableCell className="text-right font-mono-financial text-[#F5F5F5]">
-                    {formatMoney(row.gross)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono-financial text-[#F0A562]">
-                    {formatMoney(row.fee)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono-financial text-[#56C5D0]">
-                    {formatMoney(row.net)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="ml-auto w-28">
-                      <div className="flex items-center justify-end gap-2">
-                        <span className="font-mono-financial text-white/80">{row.share.toFixed(1)}%</span>
-                      </div>
-                      <div className="mt-1 h-1.5 rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-[#56C5D0] transition-all"
-                          style={{ width: `${Math.min(100, Math.max(0, row.share))}%` }}
+          <div className="flex flex-col gap-8 p-6 lg:flex-row">
+             {/* Chart Section */}
+            <div className="flex h-[300px] w-full items-center justify-center lg:w-1/3">
+              {computed.platformRows.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={computed.platformRows}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="gross"
+                      stroke="none"
+                      onMouseEnter={(_, index) => setActiveChartIndex(index)}
+                      onMouseLeave={() => setActiveChartIndex(null)}
+                    >
+                      {computed.platformRows.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={PLATFORM_COLORS[entry.key] || PLATFORM_COLORS.default}
+                          opacity={activeChartIndex === null || activeChartIndex === index ? 1 : 0.3}
+                          className="transition-all duration-300"
                         />
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right text-sm text-white/60">{row.feeSource}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center text-white/30">
+                   <div className="mb-2 rounded-full bg-white/5 p-4">
+                      <Database className="h-6 w-6" />
+                   </div>
+                   <p className="text-sm">No data available</p>
+                </div>
+              )}
+            </div>
 
+            {/* Table Section */}
+            <div className="w-full lg:w-2/3">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-white/5 hover:bg-transparent">
+                    <TableHead className="text-[#888] h-10">Platform</TableHead>
+                    <TableHead className="text-right text-[#888] h-10">Net Revenue</TableHead>
+                    <TableHead className="text-right text-[#888] h-10">Share</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {computed.platformRows.map((row, index) => (
+                    <motion.tr
+                      key={row.key}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onMouseEnter={() => setActiveChartIndex(index)}
+                      onMouseLeave={() => setActiveChartIndex(null)}
+                      className={`cursor-pointer border-b border-white/5 transition-colors ${
+                        activeChartIndex === index ? "bg-white/5" : "hover:bg-white/[0.02]"
+                      }`}
+                    >
+                      <TableCell className="font-medium text-[#F5F5F5] py-3">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: PLATFORM_COLORS[row.key] || PLATFORM_COLORS.default }}
+                          />
+                          {row.label}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-mono-financial text-[#56C5D0] py-3">
+                        {formatMoney(row.net)}
+                      </TableCell>
+                      <TableCell className="text-right py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="font-mono-financial text-white/60">{row.share.toFixed(1)}%</span>
+                        </div>
+                      </TableCell>
+                    </motion.tr>
+                  ))}
+                  {computed.platformRows.length === 0 && (
+                     <TableRow>
+                        <TableCell colSpan={3} className="text-center text-white/40 h-24">No revenue data for this period.</TableCell>
+                     </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </GlassCard>
+
+        {/* Right Column: Insights & Actions */}
         <div className="space-y-6 xl:col-span-4">
-          {panelView === "overview" ? (
-            <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
-              <h2 className="text-lg font-semibold text-[#F5F5F5]">Data completeness</h2>
-              <p className="mt-1 text-sm text-white/70">Interactive health snapshot for this account.</p>
-              <div className="mt-4 space-y-2 text-sm">
-                <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                  <span className="text-white/70">Platforms connected</span>
-                  <span className="font-mono-financial text-[#F5F5F5]">{dataCompleteness.platformCount}</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                  <span className="text-white/70">Days of history</span>
-                  <span className="font-mono-financial text-[#F5F5F5]">{dataCompleteness.daysHistory}</span>
-                </div>
-                <div className="flex items-center justify-between pb-1">
-                  <span className="text-white/70">Open issues</span>
-                  <span className="font-mono-financial text-[#F5F5F5]">
-                    {pendingAutopsyEvents.length + dataCompleteness.errorPlatforms.length}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 h-2 rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-[#56C5D0] transition-all"
-                  style={{
-                    width: `${Math.min(
-                      100,
-                      Math.max(
-                        0,
-                        (Math.min(dataCompleteness.daysHistory / 365, 1) * 50) +
-                          (Math.min(dataCompleteness.platformCount / 5, 1) * 50)
-                      )
-                    )}%`,
-                  }}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
-              <h2 className="text-lg font-semibold text-[#F5F5F5]">Action queue</h2>
-              <p className="mt-1 text-sm text-white/70">Quick actions for today.</p>
-              <div className="mt-4 space-y-3">
+            <GlassCard className="p-1">
+              <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-black/40">
                 <button
-                  type="button"
-                  onClick={() => navigate("/RevenueAutopsy")}
-                  className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-[#15151A] px-3 py-2 text-left hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                  onClick={() => setPanelView("overview")}
+                  className={`relative z-10 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                    panelView === "overview" ? "text-white" : "text-white/40 hover:text-white/70"
+                  }`}
                 >
-                  <div>
-                    <p className="text-sm font-medium text-[#F5F5F5]">Review anomalies</p>
-                    <p className="text-xs text-white/65">{pendingAutopsyEvents.length} pending decisions</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-white/50" />
+                  {panelView === "overview" && (
+                    <motion.div
+                      layoutId="panel-tab"
+                      className="absolute inset-0 rounded-md bg-white/10 shadow-sm"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10">Health</span>
                 </button>
-
                 <button
-                  type="button"
-                  onClick={() => navigate("/ConnectedPlatforms")}
-                  className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-[#15151A] px-3 py-2 text-left hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+                  onClick={() => setPanelView("operations")}
+                  className={`relative z-10 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                    panelView === "operations" ? "text-white" : "text-white/40 hover:text-white/70"
+                  }`}
                 >
-                  <div>
-                    <p className="text-sm font-medium text-[#F5F5F5]">Resolve sync errors</p>
-                    <p className="text-xs text-white/65">{dataCompleteness.errorPlatforms.length} connections in error</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-white/50" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => navigate("/TaxEstimator")}
-                  className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-[#15151A] px-3 py-2 text-left hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-[#F5F5F5]">Recalculate tax set-aside</p>
-                    <p className="text-xs text-white/65">Update estimates with current period numbers</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-white/50" />
+                  {panelView === "operations" && (
+                     <motion.div
+                       layoutId="panel-tab"
+                       className="absolute inset-0 rounded-md bg-white/10 shadow-sm"
+                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                     />
+                  )}
+                  <span className="relative z-10">Actions</span>
                 </button>
               </div>
-            </div>
-          )}
+
+              <div className="p-4">
+                 <AnimatePresence mode="wait">
+                    {panelView === "overview" ? (
+                       <motion.div
+                          key="overview"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                       >
+                          <div className="space-y-4">
+                             <div className="flex items-center justify-between">
+                                <span className="text-sm text-white/60">Data Completeness</span>
+                                <span className="font-mono-financial text-sm text-[#56C5D0]">{dataCompleteness.daysHistory} days</span>
+                             </div>
+                             <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
+                                <motion.div
+                                   initial={{ width: 0 }}
+                                   animate={{ width: `${Math.min(100, (dataCompleteness.daysHistory / 365) * 100)}%` }}
+                                   transition={{ duration: 1, delay: 0.5 }}
+                                   className="h-full rounded-full bg-[#56C5D0]"
+                                />
+                             </div>
+
+                             <div className="mt-6 space-y-3">
+                                <div className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-3">
+                                   <div className={`flex h-8 w-8 items-center justify-center rounded-full ${dataCompleteness.errorPlatforms.length > 0 ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                                      {dataCompleteness.errorPlatforms.length > 0 ? <AlertTriangle className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                                   </div>
+                                   <div>
+                                      <p className="text-sm font-medium text-[#F5F5F5]">
+                                         {dataCompleteness.errorPlatforms.length > 0 ? "Sync Issues Detected" : "Systems Healthy"}
+                                      </p>
+                                      <p className="text-xs text-white/50">
+                                         {dataCompleteness.errorPlatforms.length} platform(s) need attention
+                                      </p>
+                                   </div>
+                                </div>
+                             </div>
+                          </div>
+                       </motion.div>
+                    ) : (
+                       <motion.div
+                          key="operations"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className="space-y-2"
+                       >
+                          {[
+                             { label: "Review anomalies", count: pendingAutopsyEvents.length, path: "/RevenueAutopsy", urgent: pendingAutopsyEvents.length > 0 },
+                             { label: "Resolve sync errors", count: dataCompleteness.errorPlatforms.length, path: "/ConnectedPlatforms", urgent: dataCompleteness.errorPlatforms.length > 0 },
+                             { label: "Recalculate tax set-aside", count: null, path: "/TaxEstimator", urgent: false }
+                          ].map((action, i) => (
+                             <motion.button
+                                key={action.label}
+                                whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => navigate(action.path)}
+                                className={`flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors ${
+                                   action.urgent ? "border-[#F0A562]/40 bg-[#F0A562]/5" : "border-white/5 bg-white/[0.02]"
+                                }`}
+                             >
+                                <div>
+                                   <p className="text-sm font-medium text-[#F5F5F5]">{action.label}</p>
+                                   {action.count !== null && (
+                                      <p className={`text-xs ${action.urgent ? "text-[#F0A562]" : "text-white/50"}`}>
+                                         {action.count} items pending
+                                      </p>
+                                   )}
+                                </div>
+                                <ArrowRight className="h-4 w-4 text-white/30" />
+                             </motion.button>
+                          ))}
+                       </motion.div>
+                    )}
+                 </AnimatePresence>
+              </div>
+            </GlassCard>
         </div>
-      </div>
+      </motion.div>
 
-      <section className="mt-6 rounded-xl border border-white/10 bg-[#111114]">
-        <div className="border-b border-white/10 p-4">
-          <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent transactions in selected period</h2>
-          <p className="mt-1 text-sm text-white/70">Interactive view updates automatically with the period chips above.</p>
+      {/* Recent Transactions Section */}
+      <GlassCard className="mt-6">
+        <div className="border-b border-white/10 p-5">
+          <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent Activity</h2>
         </div>
-
         <Table>
           <TableHeader>
-            <TableRow className="border-white/10 hover:bg-transparent">
-              <TableHead className="text-[#D8D8D8]">Date</TableHead>
-              <TableHead className="text-[#D8D8D8]">Description</TableHead>
-              <TableHead className="text-[#D8D8D8]">Platform</TableHead>
-              <TableHead className="text-right text-[#D8D8D8]">Gross</TableHead>
-              <TableHead className="text-right text-[#D8D8D8]">Fee</TableHead>
-              <TableHead className="text-right text-[#D8D8D8]">Net</TableHead>
+            <TableRow className="border-white/5 hover:bg-transparent">
+              <TableHead className="text-[#888]">Date</TableHead>
+              <TableHead className="text-[#888]">Description</TableHead>
+              <TableHead className="text-[#888]">Platform</TableHead>
+              <TableHead className="text-right text-[#888]">Gross</TableHead>
+              <TableHead className="text-right text-[#888]">Net</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {computed.latestTransactions.length === 0 && (
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableCell colSpan={6} className="py-8 text-center text-sm text-white/60">
-                  No transaction activity for selected period.
-                </TableCell>
-              </TableRow>
-            )}
-            {computed.latestTransactions.map((tx) => (
-              <TableRow key={tx.id} className="border-white/10 hover:bg-white/[0.02]">
-                <TableCell className="text-sm text-white/75">
+            {computed.latestTransactions.map((tx, i) => (
+              <motion.tr
+                key={tx.id}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="group border-b border-white/5 hover:bg-white/[0.02]"
+              >
+                <TableCell className="text-sm text-white/60 group-hover:text-white/80 transition-colors">
                   {format(new Date(tx.date), "MMM d, yyyy")}
                 </TableCell>
-                <TableCell className="max-w-[380px] truncate text-sm text-[#F5F5F5]">
+                <TableCell className="max-w-[300px] truncate text-sm text-[#F5F5F5]">
                   {tx.description}
                 </TableCell>
-                <TableCell className="text-sm text-white/75">{tx.platform}</TableCell>
-                <TableCell className="text-right font-mono-financial text-[#F5F5F5]">
-                  {formatMoney(tx.gross)}
+                <TableCell className="text-sm text-white/60">
+                   <span className="inline-flex items-center rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-white/80">
+                      {tx.platform}
+                   </span>
                 </TableCell>
-                <TableCell className="text-right font-mono-financial text-[#F0A562]">
-                  {formatMoney(tx.fee)}
+                <TableCell className="text-right font-mono-financial text-white/80">
+                  {formatMoney(tx.gross)}
                 </TableCell>
                 <TableCell className="text-right font-mono-financial text-[#56C5D0]">
                   {formatMoney(tx.gross - tx.fee)}
                 </TableCell>
-              </TableRow>
+              </motion.tr>
             ))}
+             {computed.latestTransactions.length === 0 && (
+                <TableRow>
+                   <TableCell colSpan={5} className="py-8 text-center text-sm text-white/40">
+                      No recent activity found.
+                   </TableCell>
+                </TableRow>
+             )}
           </TableBody>
         </Table>
-      </section>
-
-      {(pendingAutopsyEvents.length > 0 || dataCompleteness.errorPlatforms.length > 0) && (
-        <section className="mt-6 rounded-lg border border-[#F0A562]/35 bg-[#F0A562]/10 p-4">
-          <div className="flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 text-[#F0A562]" />
-            <div className="text-sm text-white/85">
-              <p className="font-medium text-[#F5F5F5]">Follow-up needed</p>
-              <p className="mt-1">
-                {pendingAutopsyEvents.length} anomaly items and {dataCompleteness.errorPlatforms.length} sync issues are open.
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="mt-6 rounded-lg border border-white/10 bg-[#111114] p-4">
-        <div className="flex items-start gap-2">
-          <Database className="mt-0.5 h-4 w-4 text-white/65" />
-          <p className="text-sm text-white/75">
-            Data source: Revenue transactions, expense records, connected platform sync logs, and anomaly queue.
-          </p>
-        </div>
-      </section>
-    </div>
+      </GlassCard>
+    </motion.div>
   );
 }
