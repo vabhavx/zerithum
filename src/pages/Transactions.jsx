@@ -1,263 +1,390 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { base44 } from '@/api/supabaseClient';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Download, ChevronDown, ChevronUp } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import TransactionRow from '@/components/TransactionRow';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Download, RefreshCw, Link2 } from 'lucide-react';
+import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { generateCSV, downloadCSV } from '@/utils/csvExport';
-import { format } from 'date-fns';
-import moment from 'moment';
+import { Button } from '@/components/ui/button';
+import MetricsStrip from '@/components/transactions/MetricsStrip';
+import FilterBar from '@/components/transactions/FilterBar';
+import SavedViews from '@/components/transactions/SavedViews';
+import TransactionsTable from '@/components/transactions/TransactionsTable';
+import RowDrawer from '@/components/transactions/RowDrawer';
+import BulkActionBar from '@/components/transactions/BulkActionBar';
 
-const SortIcon = ({ field, sortField, sortDirection }) => {
-  if (sortField !== field) return null;
-  return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
+// ═══════════════════════════════════════════════════
+//  SEED DATA  (30 transactions, mixed statuses)
+// ═══════════════════════════════════════════════════
+const now = new Date();
+function daysAgo(n) { return subDays(now, n).toISOString(); }
+function randomId(prefix) { return `${prefix}_${Math.random().toString(36).slice(2, 11).toUpperCase()}`; }
+
+const SEED_TRANSACTIONS = [
+  { id: 'txn_001', date: daysAgo(1), platform: 'youtube', description: 'YouTube Partner Program — Jan 2026', gross: 4820.00, fees: 289.20, net: 4530.80, category: 'ad_revenue', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('yt'), lastUpdated: daysAgo(0.5) },
+  { id: 'txn_002', date: daysAgo(2), platform: 'patreon', description: 'Patreon monthly patron payouts', gross: 2150.00, fees: 193.50, net: 1956.50, category: 'membership', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('pt'), lastUpdated: daysAgo(1) },
+  { id: 'txn_003', date: daysAgo(3), platform: 'stripe', description: 'Notion template bundle — Premium', gross: 399.00, fees: 14.37, net: 384.63, category: 'product_sale', status: 'completed', source: 'webhook', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('str'), lastUpdated: daysAgo(2) },
+  { id: 'txn_004', date: daysAgo(4), platform: 'gumroad', description: 'eBook: Creator Finance Masterclass', gross: 97.00, fees: 9.70, net: 87.30, category: 'product_sale', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('gm'), lastUpdated: daysAgo(3) },
+  { id: 'txn_005', date: daysAgo(5), platform: 'instagram', description: 'Brand deal — SkinCo Q1 campaign', gross: 3500.00, fees: 0, net: 3500.00, category: 'sponsorship', status: 'unmatched', source: 'manual', eventId: randomId('evt'), payoutId: null, platformTxnId: randomId('ig'), lastUpdated: daysAgo(4) },
+  { id: 'txn_006', date: daysAgo(6), platform: 'youtube', description: 'YouTube Super Thanks — Q4 bonus', gross: 812.40, fees: 48.74, net: 763.66, category: 'ad_revenue', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('yt'), lastUpdated: daysAgo(5) },
+  { id: 'txn_007', date: daysAgo(7), platform: 'stripe', description: 'Cohort course — Winter 2026 batch', gross: 2800.00, fees: 101.20, net: 2698.80, category: 'service', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('str'), lastUpdated: daysAgo(6) },
+  { id: 'txn_008', date: daysAgo(8), platform: 'tiktok', description: 'TikTok Creator Fund — Jan', gross: 328.90, fees: 0, net: 328.90, category: 'ad_revenue', status: 'pending', source: 'api', eventId: randomId('evt'), payoutId: null, platformTxnId: randomId('tt'), lastUpdated: daysAgo(7) },
+  { id: 'txn_009', date: daysAgo(9), platform: 'gumroad', description: 'Preset pack — Lightroom Pro Vol 3', gross: 49.00, fees: 4.90, net: 44.10, category: 'product_sale', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('gm'), lastUpdated: daysAgo(8) },
+  { id: 'txn_010', date: daysAgo(10), platform: 'stripe', description: 'Refund — Course cancellation', gross: -299.00, fees: -10.78, net: -288.22, category: 'service', status: 'refunded', source: 'webhook', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('str'), lastUpdated: daysAgo(9) },
+  { id: 'txn_011', date: daysAgo(11), platform: 'patreon', description: 'Patron pledge — Tier 3 exclusive', gross: 500.00, fees: 45.00, net: 455.00, category: 'membership', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('pt'), lastUpdated: daysAgo(10) },
+  { id: 'txn_012', date: daysAgo(12), platform: 'youtube', description: 'Channel membership payouts', gross: 1240.00, fees: 124.00, net: 1116.00, category: 'membership', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('yt'), lastUpdated: daysAgo(11) },
+  { id: 'txn_013', date: daysAgo(14), platform: 'shopify', description: 'Merch drop — Hoodies & Caps', gross: 1875.50, fees: 112.53, net: 1762.97, category: 'product_sale', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('sh'), lastUpdated: daysAgo(13) },
+  { id: 'txn_014', date: daysAgo(15), platform: 'instagram', description: 'Affiliate commission — TechGear', gross: 214.75, fees: 0, net: 214.75, category: 'affiliate', status: 'unmatched', source: 'manual', eventId: randomId('evt'), payoutId: null, platformTxnId: randomId('ig'), lastUpdated: daysAgo(14) },
+  { id: 'txn_015', date: daysAgo(16), platform: 'stripe', description: '1:1 Consulting — Brand strategy', gross: 800.00, fees: 28.80, net: 771.20, category: 'service', status: 'reviewed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('str'), lastUpdated: daysAgo(15) },
+  { id: 'txn_016', date: daysAgo(18), platform: 'substack', description: 'Newsletter paid subscriptions', gross: 960.00, fees: 96.00, net: 864.00, category: 'membership', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('ss'), lastUpdated: daysAgo(17) },
+  { id: 'txn_017', date: daysAgo(19), platform: 'gumroad', description: 'Audio sample kit — Lo-fi Vol 2', gross: 29.00, fees: 2.90, net: 26.10, category: 'product_sale', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('gm'), lastUpdated: daysAgo(18) },
+  { id: 'txn_018', date: daysAgo(21), platform: 'youtube', description: 'YouTube Premium revenue share', gross: 380.20, fees: 22.81, net: 357.39, category: 'ad_revenue', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('yt'), lastUpdated: daysAgo(20) },
+  { id: 'txn_019', date: daysAgo(22), platform: 'stripe', description: 'SaaS tool subscription — Annual', gross: 199.00, fees: 7.16, net: 191.84, category: 'service', status: 'failed', source: 'webhook', eventId: randomId('evt'), payoutId: null, platformTxnId: randomId('str'), lastUpdated: daysAgo(21) },
+  { id: 'txn_020', date: daysAgo(23), platform: 'patreon', description: 'Patreon — Declined pledge retry', gross: 25.00, fees: 2.25, net: 22.75, category: 'membership', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('pt'), lastUpdated: daysAgo(22) },
+  { id: 'txn_021', date: daysAgo(25), platform: 'shopify', description: 'Preset bundle — Wedding Photo', gross: 149.00, fees: 8.94, net: 140.06, category: 'product_sale', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('sh'), lastUpdated: daysAgo(24) },
+  { id: 'txn_022', date: daysAgo(27), platform: 'tiktok', description: 'TikTok LIVE gifts payout', gross: 642.10, fees: 192.63, net: 449.47, category: 'ad_revenue', status: 'unmatched', source: 'api', eventId: randomId('evt'), payoutId: null, platformTxnId: randomId('tt'), lastUpdated: daysAgo(26) },
+  { id: 'txn_023', date: daysAgo(28), platform: 'youtube', description: 'Brand integration — NordVPN', gross: 6500.00, fees: 0, net: 6500.00, category: 'sponsorship', status: 'completed', source: 'manual', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('yt'), lastUpdated: daysAgo(27) },
+  { id: 'txn_024', date: daysAgo(30), platform: 'gumroad', description: 'Video transitions pack', gross: 39.00, fees: 3.90, net: 35.10, category: 'product_sale', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('gm'), lastUpdated: daysAgo(29) },
+  { id: 'txn_025', date: daysAgo(32), platform: 'stripe', description: 'Workshop ticket — Video Editing', gross: 79.00, fees: 2.84, net: 76.16, category: 'service', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('str'), lastUpdated: daysAgo(31) },
+  { id: 'txn_026', date: daysAgo(35), platform: 'instagram', description: 'Affiliate — Skincare brand Q4', gross: 1200.00, fees: 0, net: 1200.00, category: 'affiliate', status: 'completed', source: 'manual', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('ig'), lastUpdated: daysAgo(34) },
+  { id: 'txn_027', date: daysAgo(40), platform: 'substack', description: 'Annual upgrade — 12 subscribers', gross: 1188.00, fees: 118.80, net: 1069.20, category: 'membership', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('ss'), lastUpdated: daysAgo(39) },
+  { id: 'txn_028', date: daysAgo(45), platform: 'youtube', description: 'YouTube — Dec 2025 Ad Revenue', gross: 3910.00, fees: 234.60, net: 3675.40, category: 'ad_revenue', status: 'completed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('yt'), lastUpdated: daysAgo(44) },
+  { id: 'txn_029', date: daysAgo(50), platform: 'stripe', description: 'Refund — Duplicate charge', gross: -99.00, fees: -3.56, net: -95.44, category: 'product_sale', status: 'refunded', source: 'webhook', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('str'), lastUpdated: daysAgo(49) },
+  { id: 'txn_030', date: daysAgo(60), platform: 'patreon', description: 'Patreon — Dec 2025 patron payouts', gross: 1990.00, fees: 179.10, net: 1810.90, category: 'membership', status: 'reviewed', source: 'api', eventId: randomId('evt'), payoutId: randomId('pay'), platformTxnId: randomId('pt'), lastUpdated: daysAgo(59) },
+];
+
+// ═══════════════════════════════════════════════════════════
+//  SAVED VIEW FILTER PRESETS
+// ═══════════════════════════════════════════════════════════
+const VIEW_PRESETS = {
+  all: {},
+  unmatched: { status: 'unmatched' },
+  refunds: { status: 'refunded' },
+  high_fees: { minFeeRatio: 0.08 }, // 8%+ fee ratio
 };
 
-const SortableColumnHeader = ({ label, field, currentSortField, currentSortDirection, onSort }) => {
+// ═══════════════════════════════════════════════════════════
+//  DATE RANGE HELPER
+// ═══════════════════════════════════════════════════════════
+function getDateRange(preset) {
+  const n = new Date();
+  switch (preset) {
+    case '7d': return { from: subDays(n, 7), to: n };
+    case '30d': return { from: subDays(n, 30), to: n };
+    case '90d': return { from: subDays(n, 90), to: n };
+    case 'this_month': return { from: startOfMonth(n), to: endOfMonth(n) };
+    case 'last_month': return { from: startOfMonth(subMonths(n, 1)), to: endOfMonth(subMonths(n, 1)) };
+    default: return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EMPTY STATE COMPONENTS
+// ═══════════════════════════════════════════════════════════
+function EmptyNoPlatforms({ onConnect }) {
   return (
-    <th
-      className="p-0 text-left text-xs font-semibold text-[#5E5240]"
-      aria-sort={currentSortField === field ? (currentSortDirection === 'asc' ? 'ascending' : 'descending') : undefined}
-    >
+    <div className="flex flex-col items-center justify-center py-24 text-center space-y-5">
+      <div className="w-14 h-14 rounded-2xl bg-[var(--z-bg-3)] border border-[var(--z-border-1)] flex items-center justify-center">
+        <Link2 className="w-6 h-6 text-[var(--z-text-3)]" />
+      </div>
+      <div className="space-y-1.5">
+        <h3 className="text-[15px] font-semibold text-[var(--z-text-1)]">No platforms connected</h3>
+        <p className="text-sm text-[var(--z-text-3)] max-w-xs">
+          Connect your revenue platforms to start tracking transactions, fees, and payouts.
+        </p>
+      </div>
       <button
-        onClick={() => onSort(field)}
-        className="flex items-center gap-1 w-full h-full py-4 px-4 hover:bg-[#5E5240]/10 focus-visible:bg-[#5E5240]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#208D9E] focus-visible:ring-inset"
+        onClick={onConnect}
+        className="h-9 px-5 rounded-lg bg-[var(--z-accent)] text-black text-sm font-semibold hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--z-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--z-bg-0)]"
       >
-        {label}
-        <SortIcon field={field} sortField={currentSortField} sortDirection={currentSortDirection} />
+        Connect platforms
       </button>
-    </th>
+    </div>
   );
+}
+
+function EmptyNoResults({ onClear }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
+      <div className="w-14 h-14 rounded-2xl bg-[var(--z-bg-3)] border border-[var(--z-border-1)] flex items-center justify-center">
+        <RefreshCw className="w-6 h-6 text-[var(--z-text-3)]" />
+      </div>
+      <div className="space-y-1.5">
+        <h3 className="text-[15px] font-semibold text-[var(--z-text-1)]">No transactions match</h3>
+        <p className="text-sm text-[var(--z-text-3)] max-w-xs">
+          Try adjusting or clearing your filters to see more results.
+        </p>
+      </div>
+      <button
+        onClick={onClear}
+        className="h-9 px-5 rounded-lg bg-[var(--z-bg-3)] border border-[var(--z-border-1)] text-sm text-[var(--z-text-2)] hover:text-[var(--z-text-1)] hover:border-[var(--z-border-2)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--z-accent)]"
+      >
+        Clear filters
+      </button>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MAIN PAGE
+// ═══════════════════════════════════════════════════════════
+
+// For demo: toggle this to test "no platforms" empty state
+const DEMO_HAS_PLATFORMS = true;
+
+const DEFAULT_FILTERS = {
+  search: '', platform: 'all', datePreset: 'all',
+  status: 'all', category: 'all', amountMin: '', amountMax: '',
 };
 
 export default function Transactions() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [platformFilter, setPlatformFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [expandedRow, setExpandedRow] = useState(null);
-  const [sortField, setSortField] = useState('transaction_date');
-  const [sortDirection, setSortDirection] = useState('desc');
+  const navigate = useNavigate();
 
-  const { data: transactions = [], isLoading } = useQuery({
-    queryKey: ['transactions'],
-    queryFn: () => base44.entities.Transaction.list('-transaction_date', 500)
+  // ── State ─────────────────────────────────────────────────
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [activeView, setActiveView] = useState('all');
+  const [savedViews, setSavedViews] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('zr_saved_txn_views') || '[]'); } catch { return []; }
   });
+  const [sortField, setSortField] = useState('date');
+  const [sortDir, setSortDir] = useState('desc');
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [drawerTxn, setDrawerTxn] = useState(null);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
 
-  // Filter and sort transactions
-  const filteredTransactions = useMemo(() => transactions
-    .filter(t => {
-      const matchesSearch = !searchTerm ||
-        t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.platform_transaction_id?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesPlatform = platformFilter === 'all' || t.platform === platformFilter;
-      const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
-      const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
-      return matchesSearch && matchesPlatform && matchesCategory && matchesStatus;
-    })
-    .sort((a, b) => {
-      const aVal = a[sortField];
-      const bVal = b[sortField];
-      const modifier = sortDirection === 'asc' ? 1 : -1;
-      if (aVal < bVal) return -1 * modifier;
-      if (aVal > bVal) return 1 * modifier;
-      return 0;
-    }), [transactions, searchTerm, platformFilter, categoryFilter, statusFilter, sortField, sortDirection]);
+  // Persist saved views
+  useEffect(() => {
+    localStorage.setItem('zr_saved_txn_views', JSON.stringify(savedViews));
+  }, [savedViews]);
 
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+  // Escape key deselects all
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape' && !drawerTxn) setSelectedIds(new Set()); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [drawerTxn]);
+
+  // ── View switching ─────────────────────────────────────────
+  const handleViewChange = (viewId) => {
+    setActiveView(viewId);
+    setSelectedIds(new Set());
+    // Apply built-in or saved view preset filters
+    const preset = VIEW_PRESETS[viewId];
+    if (preset !== undefined) {
+      // Built-in view
+      setFilters({ ...DEFAULT_FILTERS, ...(preset.status ? { status: preset.status } : {}) });
     } else {
-      setSortField(field);
-      setSortDirection('desc');
+      // Custom saved view
+      const sv = savedViews.find(v => v.id === viewId);
+      if (sv?.filters) setFilters(sv.filters);
     }
   };
 
-  const handleToggleExpand = useCallback((id) => {
-    setExpandedRow(prev => prev === id ? null : id);
-  }, []);
-
-  const totalRevenue = useMemo(() => filteredTransactions
-    .filter(t => t.status === 'completed')
-    .reduce((sum, t) => sum + (t.net_amount || t.amount), 0), [filteredTransactions]);
-
-  const handleExportCSV = () => {
-    const columns = [
-      { header: 'Transaction ID', key: 'platform_transaction_id' },
-      { header: 'Date', key: 'transaction_date', formatter: (item) => moment(item.transaction_date).format('YYYY-MM-DD HH:mm:ss') },
-      { header: 'Platform', key: 'platform' },
-      { header: 'Category', key: 'category' },
-      { header: 'Description', key: 'description' },
-      { header: 'Status', key: 'status' },
-      { header: 'Currency', key: 'currency', formatter: (item) => item.currency || 'USD' },
-      { header: 'Gross Amount', key: 'gross_amount', formatter: (item) => (item.gross_amount || item.amount).toFixed(2) },
-      { header: 'Fees', key: 'fees_amount', formatter: (item) => (item.fees_amount || item.platform_fee || 0).toFixed(2) },
-      { header: 'Net Amount', key: 'net_amount', formatter: (item) => (item.net_amount || (item.gross_amount || item.amount) - (item.fees_amount || item.platform_fee || 0)).toFixed(2) },
-      { header: 'Synced Date', key: 'synced_date', formatter: (item) => moment(item.synced_date || item.created_date).format('YYYY-MM-DD HH:mm:ss') }
-    ];
-
-    const csvContent = generateCSV(filteredTransactions, columns);
-    const filename = `transactions_export_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    downloadCSV(csvContent, filename);
+  const handleSaveView = (view) => {
+    setSavedViews(prev => [...prev, view]);
+    setActiveView(view.id);
   };
 
+  const handleDeleteSavedView = (id) => {
+    setSavedViews(prev => prev.filter(v => v.id !== id));
+    if (activeView === id) setActiveView('all');
+  };
+
+  // ── Sorting ────────────────────────────────────────────────
+  const handleSort = useCallback((field) => {
+    setSortField(prev => {
+      if (prev === field) { setSortDir(d => d === 'asc' ? 'desc' : 'asc'); return field; }
+      setSortDir('desc');
+      return field;
+    });
+  }, []);
+
+  // ── Filtering + Sorting ────────────────────────────────────
+  const filteredTransactions = useMemo(() => {
+    const dateRange = getDateRange(filters.datePreset);
+    const minAmt = filters.amountMin ? parseFloat(filters.amountMin) : null;
+    const maxAmt = filters.amountMax ? parseFloat(filters.amountMax) : null;
+    const q = filters.search.toLowerCase().trim();
+
+    return SEED_TRANSACTIONS
+      .filter((t) => {
+        if (q && !(
+          t.description?.toLowerCase().includes(q) ||
+          t.platform?.toLowerCase().includes(q) ||
+          t.platformTxnId?.toLowerCase().includes(q) ||
+          t.eventId?.toLowerCase().includes(q)
+        )) return false;
+        if (filters.platform !== 'all' && t.platform !== filters.platform) return false;
+        if (filters.status !== 'all' && t.status !== filters.status) return false;
+        if (filters.category !== 'all' && t.category !== filters.category) return false;
+        if (dateRange) {
+          const d = new Date(t.date);
+          if (d < dateRange.from || d > dateRange.to) return false;
+        }
+        const net = t.net ?? t.amount;
+        if (minAmt != null && net < minAmt) return false;
+        if (maxAmt != null && net > maxAmt) return false;
+        // High fees view: 8%+ fee-to-gross ratio
+        if (activeView === 'high_fees') {
+          const ratio = t.gross > 0 ? t.fees / t.gross : 0;
+          if (ratio < 0.08) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const dir = sortDir === 'asc' ? 1 : -1;
+        const av = a[sortField];
+        const bv = b[sortField];
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        if (typeof av === 'number') return (av - bv) * dir;
+        return String(av).localeCompare(String(bv)) * dir;
+      });
+  }, [filters, sortField, sortDir, activeView]);
+
+  // ── Row selection ──────────────────────────────────────────
+  const handleSelectRow = useCallback((id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedIds(prev => {
+      const allIds = filteredTransactions.map(t => t.id);
+      const allSelected = allIds.every(id => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(allIds);
+    });
+  }, [filteredTransactions]);
+
+  // ── Bulk actions ───────────────────────────────────────────
+  const handleBulkCategorize = () => {
+    // In a real app: open a category picker modal
+    alert(`Categorize ${selectedIds.size} selected transactions (placeholder — wire to your backend).`);
+  };
+
+  const handleBulkMarkReviewed = () => {
+    alert(`Mark ${selectedIds.size} transactions as reviewed (placeholder — wire to your backend).`);
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkExport = () => {
+    const selected = filteredTransactions.filter(t => selectedIds.has(t.id));
+    exportToCSV(selected);
+  };
+
+  // ── Export ─────────────────────────────────────────────────
+  const exportToCSV = (rows = filteredTransactions) => {
+    const columns = [
+      { header: 'ID', key: 'id' },
+      { header: 'Date', key: 'date', formatter: (t) => format(new Date(t.date), 'yyyy-MM-dd') },
+      { header: 'Platform', key: 'platform' },
+      { header: 'Description', key: 'description' },
+      { header: 'Gross', key: 'gross', formatter: (t) => (t.gross ?? t.amount ?? 0).toFixed(2) },
+      { header: 'Fees', key: 'fees', formatter: (t) => (t.fees ?? 0).toFixed(2) },
+      { header: 'Net', key: 'net', formatter: (t) => (t.net ?? t.amount ?? 0).toFixed(2) },
+      { header: 'Category', key: 'category' },
+      { header: 'Status', key: 'status' },
+      { header: 'Source', key: 'source' },
+      { header: 'Last Updated', key: 'lastUpdated', formatter: (t) => t.lastUpdated ? format(new Date(t.lastUpdated), 'yyyy-MM-dd HH:mm') : '' },
+      { header: 'Event ID', key: 'eventId' },
+      { header: 'Payout ID', key: 'payoutId' },
+    ];
+    const csv = generateCSV(rows, columns);
+    downloadCSV(csv, `zerithum_transactions_${format(now, 'yyyy-MM-dd')}.csv`);
+  };
+
+  // ── Render ─────────────────────────────────────────────────
+  const hasPlatforms = DEMO_HAS_PLATFORMS;
+
   return (
-    <div className="max-w-[1200px] mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-[1400px] mx-auto space-y-5 pb-24">
+
+      {/* ── Page header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#5E5240] mb-2">Transactions</h1>
-          <p className="text-[#5E5240]/60">View and manage all your revenue transactions</p>
-        </div>
-        <Button
-          className="bg-[#208D9E] text-white hover:bg-[#1A7B8A]"
-          onClick={handleExportCSV}
-          disabled={filteredTransactions.length === 0}
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Export CSV
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <div className="clay-card p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#5E5240]/40" />
-            <Input
-              placeholder="Search transactions..."
-              aria-label="Search transactions"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-clay pl-10"
-            />
-          </div>
-
-          <Select value={platformFilter} onValueChange={setPlatformFilter}>
-            <SelectTrigger className="input-clay">
-              <SelectValue placeholder="All Platforms" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Platforms</SelectItem>
-              <SelectItem value="youtube">YouTube</SelectItem>
-              <SelectItem value="patreon">Patreon</SelectItem>
-              <SelectItem value="gumroad">Gumroad</SelectItem>
-              <SelectItem value="stripe">Stripe</SelectItem>
-              <SelectItem value="instagram">Instagram</SelectItem>
-              <SelectItem value="tiktok">TikTok</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="input-clay">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="ad_revenue">Ad Revenue</SelectItem>
-              <SelectItem value="sponsorship">Sponsorship</SelectItem>
-              <SelectItem value="affiliate">Affiliate</SelectItem>
-              <SelectItem value="product_sale">Product Sale</SelectItem>
-              <SelectItem value="membership">Membership</SelectItem>
-              <SelectItem value="service">Service</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="input-clay">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="refunded">Refunded</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-            </SelectContent>
-          </Select>
+          <h1 className="text-[22px] font-semibold text-[var(--z-text-1)] tracking-tight leading-tight">
+            Transactions
+          </h1>
+          <p className="text-sm text-[var(--z-text-3)] mt-0.5">
+            Full ledger of synced revenue events across all platforms.
+            &nbsp;
+            <span className="text-[11px] font-mono text-[var(--z-text-3)]">
+              Last sync: {format(subDays(now, 0.02), 'MMM d, yyyy · HH:mm')} UTC
+            </span>
+          </p>
         </div>
 
-        <div className="mt-4 flex items-center justify-between text-sm">
-          <span className="text-[#5E5240]/60">
-            Showing {filteredTransactions.length} transactions
-          </span>
-          <span className="font-semibold text-[#208D9E]">
-            Total: ${totalRevenue.toFixed(2)}
-          </span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            onClick={() => exportToCSV()}
+            disabled={filteredTransactions.length === 0}
+            variant="outline"
+            className="h-9 px-4 text-sm bg-[var(--z-bg-3)] border-[var(--z-border-1)] text-[var(--z-text-2)] hover:text-[var(--z-text-1)] hover:border-[var(--z-border-2)] transition-all focus-visible:ring-1 focus-visible:ring-[var(--z-accent)]"
+            aria-label="Export all filtered transactions as CSV"
+          >
+            <Download className="w-3.5 h-3.5 mr-2" aria-hidden="true" />
+            Export CSV
+          </Button>
         </div>
       </div>
 
-      {/* Transactions Table */}
-      <div className="clay-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-[#5E5240]/5">
-              <tr>
-                <SortableColumnHeader
-                  label="Date"
-                  field="transaction_date"
-                  currentSortField={sortField}
-                  currentSortDirection={sortDirection}
-                  onSort={handleSort}
-                />
-                <SortableColumnHeader
-                  label="Platform"
-                  field="platform"
-                  currentSortField={sortField}
-                  currentSortDirection={sortDirection}
-                  onSort={handleSort}
-                />
-                <SortableColumnHeader
-                  label="Amount"
-                  field="amount"
-                  currentSortField={sortField}
-                  currentSortDirection={sortDirection}
-                  onSort={handleSort}
-                />
-                <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Category</th>
-                <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Status</th>
-                <th className="text-left py-4 px-4 text-xs font-semibold text-[#5E5240]">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-t border-[#5E524012]">
-                    <td className="py-4 px-4"><Skeleton className="h-4 w-24" /></td>
-                    <td className="py-4 px-4"><Skeleton className="h-4 w-20" /></td>
-                    <td className="py-4 px-4">
-                      <Skeleton className="h-4 w-16 mb-1" />
-                      <Skeleton className="h-3 w-12" />
-                    </td>
-                    <td className="py-4 px-4"><Skeleton className="h-4 w-24" /></td>
-                    <td className="py-4 px-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
-                    <td className="py-4 px-4"><Skeleton className="h-8 w-16" /></td>
-                  </tr>
-                ))
-              ) : filteredTransactions.length > 0 ? (
-                filteredTransactions.map((transaction) => (
-                  <TransactionRow
-                    key={transaction.id}
-                    transaction={transaction}
-                    isExpanded={expandedRow === transaction.id}
-                    onToggleExpand={handleToggleExpand}
-                  />
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-[#5E5240]/40">
-                    No transactions found. Try adjusting your filters.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {/* ── Metrics strip ── */}
+      <MetricsStrip transactions={filteredTransactions} />
+
+      {/* ── Filter bar ── */}
+      <FilterBar filters={filters} onChange={setFilters} />
+
+      {/* ── Saved views ── */}
+      <SavedViews
+        activeView={activeView}
+        onViewChange={handleViewChange}
+        savedViews={savedViews}
+        onSaveView={handleSaveView}
+        onDeleteSavedView={handleDeleteSavedView}
+        currentFilters={filters}
+      />
+
+      {/* ── Empty state: no platforms ── */}
+      {!hasPlatforms ? (
+        <div className="bg-[var(--z-bg-2)] border border-[var(--z-border-1)] rounded-lg">
+          <EmptyNoPlatforms onConnect={() => navigate('/ConnectedPlatforms')} />
         </div>
-      </div>
+      ) : filteredTransactions.length === 0 ? (
+        /* ── Empty state: no results ── */
+        <div className="bg-[var(--z-bg-2)] border border-[var(--z-border-1)] rounded-lg">
+          <EmptyNoResults onClear={() => { setFilters(DEFAULT_FILTERS); setActiveView('all'); }} />
+        </div>
+      ) : (
+        /* ── Transactions table ── */
+        <TransactionsTable
+          transactions={filteredTransactions}
+          isLoading={false}
+          sortField={sortField}
+          sortDir={sortDir}
+          onSort={handleSort}
+          selectedIds={selectedIds}
+          onSelectRow={handleSelectRow}
+          onSelectAll={handleSelectAll}
+          onRowClick={(txn) => setDrawerTxn(txn)}
+          focusedIndex={focusedIndex}
+          onFocusRow={setFocusedIndex}
+        />
+      )}
+
+      {/* ── Row detail drawer ── */}
+      <RowDrawer transaction={drawerTxn} onClose={() => setDrawerTxn(null)} />
+
+      {/* ── Bulk action bar ── */}
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onCategorize={handleBulkCategorize}
+        onMarkReviewed={handleBulkMarkReviewed}
+        onExport={handleBulkExport}
+        onClear={() => setSelectedIds(new Set())}
+      />
     </div>
   );
 }
