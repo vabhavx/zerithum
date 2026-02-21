@@ -11,7 +11,9 @@ import {
   Zap,
   Microscope,
   Stethoscope,
-  Scan
+  Scan,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from "recharts";
@@ -335,10 +337,18 @@ export default function RevenueAutopsy() {
   const loading = txLoading || eventsLoading;
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-hidden">
+       {/* Diagnostic Scanner Animation Line */}
+       <motion.div
+         initial={{ top: "-20%" }}
+         animate={{ top: "120%" }}
+         transition={{ duration: 4, repeat: Infinity, ease: "linear", repeatDelay: 5 }}
+         className="pointer-events-none fixed left-0 right-0 h-32 bg-gradient-to-b from-transparent via-[#56C5D0]/10 to-transparent z-50"
+       />
+
        {/* Background "Scan" Grid Effect */}
        <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none" />
-       <div className="fixed inset-x-0 top-0 h-[500px] bg-gradient-to-b from-[#F06C6C]/5 via-transparent to-transparent blur-[120px] pointer-events-none" />
+       <div className="fixed inset-x-0 top-0 h-[500px] bg-gradient-to-b from-[#F06C6C]/10 via-transparent to-transparent blur-[120px] pointer-events-none" />
 
       <motion.div
          initial="hidden"
@@ -352,7 +362,7 @@ export default function RevenueAutopsy() {
         >
           <div>
             <div className="flex items-center gap-3">
-               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F06C6C]/10 text-[#F06C6C]">
+               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F06C6C]/10 text-[#F06C6C] ring-1 ring-[#F06C6C]/20">
                   <Microscope className="h-6 w-6" />
                </div>
                <div>
@@ -362,7 +372,7 @@ export default function RevenueAutopsy() {
                   </p>
                </div>
             </div>
-            <div className="ml-13 mt-2 flex items-center gap-2 text-xs font-medium text-white/40">
+            <div className="ml-15 mt-2 flex items-center gap-2 text-xs font-medium text-white/40 pl-1">
                <span className={`relative flex h-2 w-2 ${isRefreshing ? 'opacity-100' : 'opacity-50'}`}>
                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#F06C6C] opacity-75"></span>
                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#F06C6C]"></span>
@@ -465,21 +475,21 @@ export default function RevenueAutopsy() {
                 key={item.id}
                 hoverEffect
                 glowEffect={item.tone === 'red'}
-                className={`p-5 transition-all hover:scale-[1.01] ${
-                  item.tone === "red" ? "border-[#F06C6C]/30 bg-[#F06C6C]/5" :
+                className={`p-5 transition-all hover:scale-[1.01] hover:shadow-lg ${
+                  item.tone === "red" ? "border-[#F06C6C]/30 bg-[#F06C6C]/5 shadow-[0_0_20px_-5px_rgba(240,108,108,0.2)]" :
                   item.tone === "orange" ? "border-[#F0A562]/30 bg-[#F0A562]/5" : ""
                 }`}
               >
                 <div className="flex items-start gap-3">
-                   <div className={`mt-0.5 rounded-full p-1.5 ${
+                   <div className={`mt-0.5 rounded-full p-2 ${
                       item.tone === "red" ? "bg-[#F06C6C]/20 text-[#F06C6C]" :
                       item.tone === "orange" ? "bg-[#F0A562]/20 text-[#F0A562]" :
                       "bg-[#56C5D0]/20 text-[#56C5D0]"
                    }`}>
-                      <item.icon className="h-4 w-4" />
+                      <item.icon className="h-5 w-5" />
                    </div>
                    <div>
-                      <p className="font-medium text-[#F5F5F5]">{item.title}</p>
+                      <p className="font-semibold text-[#F5F5F5] tracking-tight">{item.title}</p>
                       <p className="mt-1 text-sm text-white/70 leading-relaxed">{item.text}</p>
                    </div>
                 </div>
@@ -498,7 +508,7 @@ export default function RevenueAutopsy() {
              exit={{ opacity: 0, height: 0 }}
              transition={{ duration: 0.3 }}
           >
-             <GlassCard className="mb-8">
+             <GlassCard className="mb-8 overflow-visible">
                <div className="border-b border-white/10 p-5">
                  <h2 className="text-lg font-semibold text-[#F5F5F5]">Platform Concentration</h2>
                  <p className="mt-1 text-sm text-white/60">Revenue distribution visualization.</p>
@@ -520,13 +530,20 @@ export default function RevenueAutopsy() {
                               tickLine={false}
                            />
                            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                           <Bar dataKey="gross" radius={[0, 4, 4, 0]} barSize={24} onMouseEnter={(_, idx) => setActivePlatformIndex(idx)} onMouseLeave={() => setActivePlatformIndex(null)}>
+                           <Bar
+                             dataKey="gross"
+                             radius={[0, 4, 4, 0]}
+                             barSize={24}
+                             onMouseEnter={(_, idx) => setActivePlatformIndex(idx)}
+                             onMouseLeave={() => setActivePlatformIndex(null)}
+                             className="cursor-pointer"
+                            >
                               {analysis.platformRows.map((entry, index) => (
                                  <Cell
                                     key={`cell-${index}`}
                                     fill={PLATFORM_COLORS[entry.key] || PLATFORM_COLORS.default}
                                     fillOpacity={activePlatformIndex === null || activePlatformIndex === index ? 1 : 0.4}
-                                    className="transition-all duration-300"
+                                    className="transition-all duration-300 hover:filter hover:brightness-110"
                                  />
                               ))}
                            </Bar>
@@ -551,12 +568,12 @@ export default function RevenueAutopsy() {
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.05 }}
-                              className={`border-b border-white/5 transition-colors ${activePlatformIndex === index ? 'bg-white/10' : 'hover:bg-white/[0.02]'}`}
+                              className={`cursor-pointer border-b border-white/5 transition-all duration-200 ${activePlatformIndex === index ? 'bg-white/10 scale-[1.01]' : 'hover:bg-white/[0.02]'}`}
                               onMouseEnter={() => setActivePlatformIndex(index)}
                               onMouseLeave={() => setActivePlatformIndex(null)}
                            >
                              <TableCell className="font-medium text-[#F5F5F5] flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: PLATFORM_COLORS[row.key] || PLATFORM_COLORS.default }} />
+                                <div className="h-2 w-2 rounded-full shadow-[0_0_5px_currentColor]" style={{ backgroundColor: PLATFORM_COLORS[row.key] || PLATFORM_COLORS.default, color: PLATFORM_COLORS[row.key] || PLATFORM_COLORS.default }} />
                                 {row.label}
                              </TableCell>
                              <TableCell className="text-right font-mono-financial text-[#F5F5F5]">{formatMoney(row.gross)}</TableCell>
@@ -618,12 +635,13 @@ export default function RevenueAutopsy() {
                 {filteredEvents.length === 0 && (
                   <TableRow className="border-white/10 hover:bg-transparent">
                     <TableCell colSpan={4} className="py-12 text-center text-sm text-white/60">
+                      <CheckCircle2 className="mx-auto h-8 w-8 text-white/20 mb-2" />
                       No pending events for this severity filter.
                     </TableCell>
                   </TableRow>
                 )}
                 {filteredEvents.slice(0, 12).map((event) => (
-                  <TableRow key={event.id} className="border-white/10 hover:bg-white/[0.02]">
+                  <TableRow key={event.id} className="border-white/10 hover:bg-white/[0.02] transition-colors">
                     <TableCell className="text-sm text-white/75">
                       {event.detected_at ? format(new Date(event.detected_at), "MMM d, yyyy") : "-"}
                     </TableCell>
