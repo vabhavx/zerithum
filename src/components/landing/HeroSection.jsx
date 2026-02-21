@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { CheckCircle2, ShieldCheck, FileText, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DashboardPreview from './DashboardPreview';
+import SplitText from '../ui/SplitText';
 
 const HeroSection = () => {
   const scrollToProduct = () => {
@@ -18,9 +19,20 @@ const HeroSection = () => {
       <ContainerScroll
         titleComponent={
           <div className="flex flex-col items-center justify-center space-y-8 mb-10 mt-10 md:mt-0">
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-white tracking-tight leading-[1.1] text-center max-w-4xl drop-shadow-2xl">
-              Reconcile creator payouts <br /> to bank deposits.
-            </h1>
+            <SplitText
+              text={`Reconcile creator payouts
+to bank deposits.`}
+              className="text-5xl md:text-7xl font-serif font-bold text-white tracking-tight leading-[1.1] text-center max-w-4xl drop-shadow-2xl !whitespace-pre-line"
+              delay={130}
+              duration={0.8}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 0, y: 40 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              rootMargin="-100px"
+              textAlign="center"
+            />
 
             <p className="text-lg md:text-xl text-zinc-400 max-w-2xl text-center leading-relaxed">
               Connect your revenue platforms. Zerithum matches platform reported earnings to bank deposits, flags discrepancies with reason codes, and stores an audit trail you can export to your accountant.
