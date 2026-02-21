@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { logAudit } from './utils/audit.ts';
+import { getCorsHeaders } from './utils/cors.ts';
 import {
     checkRateLimit,
     isValidOTPFormat,
@@ -13,10 +14,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 Deno.serve(async (req) => {
-    const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    };
+    const corsHeaders = getCorsHeaders(req);
 
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders });

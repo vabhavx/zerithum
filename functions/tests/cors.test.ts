@@ -14,10 +14,10 @@ describe('getCorsHeaders', () => {
         vi.unstubAllGlobals();
     });
 
-    it('should return * when no origin is present', () => {
+    it('should return null when no origin is present', () => {
         const req = new Request('http://localhost');
         const headers = getCorsHeaders(req);
-        expect(headers['Access-Control-Allow-Origin']).toBe('*');
+        expect(headers['Access-Control-Allow-Origin']).toBe('null');
     });
 
     it('should allow localhost:3000', () => {
