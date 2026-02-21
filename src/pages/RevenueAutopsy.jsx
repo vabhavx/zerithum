@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Loader2,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // ─── Platform fee rates (published rates, same as Dashboard) ──────────────────
 const PLATFORM_FEE_RATES = {
@@ -60,13 +61,13 @@ function Skeleton({ className = "" }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function RevenueAutopsy() {
   // ── Data ──────────────────────────────────────────────────────────────────
-  const { data: transactions = [], isLoading: txLoading } = useQuery({
+  const { data: transactions = [], isLoading: txLoading, refetch: refetchTx, isFetching: isFetchingTx } = useQuery({
     queryKey: ["revenueTransactions"],
     queryFn: () => base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: autopsyEvents = [], isLoading: eventsLoading } = useQuery({
+  const { data: autopsyEvents = [], isLoading: eventsLoading, refetch: refetchEvents } = useQuery({
     queryKey: ["autopsyEvents"],
     queryFn: async () => {
       const user = await base44.auth.me();
@@ -74,13 +75,19 @@ export default function RevenueAutopsy() {
     },
   });
 
-  const { data: connectedPlatforms = [], isLoading: platformsLoading } = useQuery({
+  const { data: connectedPlatforms = [], isLoading: platformsLoading, refetch: refetchPlatforms, isFetching: isFetchingPlatforms } = useQuery({
     queryKey: ["connectedPlatforms"],
     queryFn: async () => {
       const user = await base44.auth.me();
       return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
     },
   });
+
+  const isRefreshing = isFetchingTx || isFetchingPlatforms;
+
+  const handleRefresh = async () => {
+    await Promise.all([refetchTx(), refetchPlatforms(), refetchEvents()]);
+  };
 
   const isLoading = txLoading || eventsLoading || platformsLoading;
 
@@ -215,6 +222,22 @@ export default function RevenueAutopsy() {
           <p className="text-sm mt-0.5" style={{ color: "var(--z-text-3)" }}>
             A plain-language breakdown of how your revenue is composed.
           </p>
+
+          {/* ── Last sync logic ── */}
+          {connectedPlatforms.length > 0 && (
+            <p className="text-[11px] font-mono mt-2" style={{ color: "var(--z-text-3)" }}>
+              Data sync: {(() => {
+                const dates = connectedPlatforms
+                  .map(p => p.last_synced_at || p.updated_at)
+                  .filter(Boolean)
+                  .map(d => new Date(d))
+                  .filter(d => !isNaN(d.getTime()));
+                if (dates.length === 0) return "Never";
+                const latest = dates.reduce((a, b) => (a > b ? a : b));
+                return format(latest, "MMM d, yyyy · HH:mm");
+              })()} UTC
+            </p>
+          )}
         </div>
 
         {connectedPlatforms.length === 0 && (
@@ -236,7 +259,18 @@ export default function RevenueAutopsy() {
           style={{ background: "rgba(50,184,198,0.05)", borderColor: "rgba(50,184,198,0.2)" }}
         >
           <div className="flex items-start gap-3">
-            <RefreshCw className="w-5 h-5 mt-0.5" style={{ color: "#32B8C6" }} aria-hidden="true" />
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="p-1.5 rounded-lg border transition-all hover:bg-[rgba(50,184,198,0.1)] focus:outline-none focus:ring-2 focus:ring-[#32B8C6] disabled:opacity-50"
+              style={{ borderColor: "rgba(50,184,198,0.3)", background: "rgba(50,184,198,0.05)" }}
+              aria-label="Refresh data"
+            >
+              <RefreshCw
+                className={cn("w-4 h-4", isRefreshing && "animate-spin")}
+                style={{ color: "#32B8C6" }}
+              />
+            </button>
             <div className="space-y-1">
               <p className="text-sm font-medium" style={{ color: "var(--z-text-1)" }}>
                 Currently showing $0 baseline
