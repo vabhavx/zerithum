@@ -43,6 +43,7 @@ describe('deleteAccount type check', () => {
             SECURITY_ACTIONS: {},
             extractClientInfo: vi.fn(() => ({})),
             sanitizeErrorMessage: vi.fn((e: any) => e),
+            OAUTH_PROVIDERS: ['google', 'github', 'gitlab', 'bitbucket', 'azure', 'facebook', 'twitter'],
         }));
 
         vi.mock('../logic/revokeToken.ts', () => ({
