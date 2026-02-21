@@ -100,9 +100,15 @@ Be specific and data-driven. No speculation.`,
       }
 
       if (llmPrompts.length > 0) {
-        const results = await Promise.all(llmPrompts);
+        const results = await Promise.allSettled(llmPrompts);
 
-        results.forEach((causalAnalysis, index) => {
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            console.error(`LLM Analysis failed for anomaly index ${index}:`, result.reason);
+            return;
+          }
+
+          const causalAnalysis = result.value;
           const { prevAmount, currAmount, change, platformsAtRisk } = pendingAnomaliesContext[index];
 
           anomalies.push({
