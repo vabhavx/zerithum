@@ -94,18 +94,21 @@ export default function RevenueAutopsy() {
 
     // MTD transactions
     const mtdTxns = transactions.filter(t => {
+      if (!t.transaction_date) return false;
       const d = new Date(t.transaction_date);
       return d >= thisMonthStart && (t.amount || 0) > 0;
     });
 
     // Prior month transactions
     const prevTxns = transactions.filter(t => {
+      if (!t.transaction_date) return false;
       const d = new Date(t.transaction_date);
       return d >= lastMonthStart && d <= lastMonthEnd && (t.amount || 0) > 0;
     });
 
     // Trailing 90 days
     const t90 = transactions.filter(t => {
+      if (!t.transaction_date) return false;
       const d = new Date(t.transaction_date);
       return d >= trailing90Start && (t.amount || 0) > 0;
     });
@@ -123,6 +126,7 @@ export default function RevenueAutopsy() {
 
     // ── Refunds (90-day)
     const refundTxns = transactions.filter(t => {
+      if (!t.transaction_date) return false;
       const d = new Date(t.transaction_date);
       return d >= trailing90Start && (t.amount || 0) < 0;
     });
@@ -548,12 +552,12 @@ export default function RevenueAutopsy() {
                     </p>
                   </div>
                   <Link
-                    to="/RevenueAutopsyEvents"
+                    to="/Transactions"
                     className="text-xs flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#32B8C6] rounded"
                     style={{ color: "#32B8C6" }}
                     aria-label={"Review " + (event.event_type || "anomaly") + " event"}
                   >
-                    Review →
+                    View Ledger →
                   </Link>
                 </div>
               );
