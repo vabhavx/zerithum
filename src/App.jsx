@@ -96,21 +96,27 @@ const AuthenticatedApp = () => {
             <LandingPage />
           )
         } />
-        {Object.entries(Pages).map(([path, Page]) => (
-          <Route
-            key={path}
-            path={`/${path}`}
-            element={
-              publicRoutes.includes(path) ? (
-                <Page />
-              ) : (
-                <LayoutWrapper currentPageName={path}>
+        {Object.entries(Pages).map(([path, Page]) => {
+          // Define routes that should NOT have the sidebar even if logged in
+          const noLayoutRoutes = ['Login', 'Signup', 'SignIn', 'AuthCallback', 'Landing'];
+          const shouldShowLayout = !publicRoutes.includes(path) || (isAuthenticated && !noLayoutRoutes.includes(path));
+
+          return (
+            <Route
+              key={path}
+              path={`/${path}`}
+              element={
+                shouldShowLayout ? (
+                  <LayoutWrapper currentPageName={path}>
+                    <Page />
+                  </LayoutWrapper>
+                ) : (
                   <Page />
-                </LayoutWrapper>
-              )
-            }
-          />
-        ))}
+                )
+              }
+            />
+          );
+        })}
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </Suspense>
