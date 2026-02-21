@@ -84,7 +84,15 @@ export function GlassCard({
   );
 }
 
-export function InteractiveMetricCard({ title, value, sub, tone = "neutral", trend = null, onClick }) {
+export function InteractiveMetricCard({
+  title,
+  value,
+  sub,
+  tone = "neutral",
+  trend = null,
+  onClick,
+  ...props
+}) {
   const valueClass =
     tone === "teal"
       ? "text-[#56C5D0]"
@@ -95,7 +103,7 @@ export function InteractiveMetricCard({ title, value, sub, tone = "neutral", tre
           : "text-[#F5F5F5]";
 
   return (
-    <GlassCard hoverEffect={!!onClick} onClick={onClick} className="p-4">
+    <GlassCard hoverEffect={!!onClick} onClick={onClick} className="p-4" {...props}>
       <div className="flex justify-between items-start">
         <p className="text-xs uppercase tracking-wide text-white/60">{title}</p>
         {trend && (
