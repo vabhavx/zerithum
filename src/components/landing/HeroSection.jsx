@@ -23,8 +23,8 @@ const HeroSection = () => {
               text={`Reconcile creator payouts
 to bank deposits.`}
               className="text-5xl md:text-7xl font-serif font-bold text-white tracking-tight leading-[1.1] text-center max-w-4xl drop-shadow-2xl !whitespace-pre-line"
-              delay={130}
-              duration={0.8}
+              delay={40}
+              duration={0.3}
               ease="power3.out"
               splitType="chars"
               from={{ opacity: 0, y: 40 }}
