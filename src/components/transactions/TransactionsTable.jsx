@@ -88,7 +88,7 @@ function SkeletonRow({ cols }) {
 }
 
 const TransactionRowItem = React.memo(function TransactionRowItem({
-    txn, isSelected, onSelect, onClick, isFocused, rowRef,
+    txn, isSelected, onSelect, onClick, isFocused, rowRef, onKeyDown,
 }) {
     return (
         <tr
@@ -100,6 +100,7 @@ const TransactionRowItem = React.memo(function TransactionRowItem({
             onClick={() => onClick(txn)}
             onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(txn); }
+                else if (onKeyDown) onKeyDown(e);
             }}
             className={[
                 'border-b border-[var(--z-border-1)] cursor-pointer outline-none group transition-colors duration-75',
@@ -283,6 +284,7 @@ export default function TransactionsTable({
                                     onSelect={onSelectRow}
                                     onClick={onRowClick}
                                     isFocused={focusedIndex === idx}
+                                    onKeyDown={(e) => handleKeyDown(e, idx)}
                                     rowRef={(el) => (rowRefs.current[idx] = el)}
                                 />
                             ))
