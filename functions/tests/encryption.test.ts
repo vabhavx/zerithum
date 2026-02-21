@@ -32,20 +32,38 @@ describe('Encryption Utils', () => {
     expect(decrypted).toBe(original);
   });
 
-  it('should return plain text for legacy tokens', async () => {
+  it('should decrypt legacy tokens correctly using decryptLegacy', async () => {
+    const { decryptLegacy } = await import('../utils/encryption.ts');
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const legacy = 'legacy-plain-token';
+    const result = await decryptLegacy(legacy);
+
+    expect(result).toBe(legacy);
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Legacy plain-text token encountered'));
+  });
+
+  it('should THROW for legacy tokens using strict decrypt', async () => {
     const { decrypt } = await import('../utils/encryption.ts');
 
     const legacy = 'legacy-plain-token';
-    const result = await decrypt(legacy);
+    await expect(decrypt(legacy)).rejects.toThrow('Invalid token format: Not encrypted');
+  });
 
-    expect(result).toBe(legacy);
+  it('decryptLegacy should also decrypt new tokens', async () => {
+      const { encrypt, decryptLegacy } = await import('../utils/encryption.ts');
+      const original = 'secret';
+      const encrypted = await encrypt(original);
+      const decrypted = await decryptLegacy(encrypted);
+      expect(decrypted).toBe(original);
   });
 
   it('should handle empty strings', async () => {
-    const { encrypt, decrypt } = await import('../utils/encryption.ts');
+    const { encrypt, decrypt, decryptLegacy } = await import('../utils/encryption.ts');
 
     expect(await encrypt('')).toBe('');
     expect(await decrypt('')).toBe('');
+    expect(await decryptLegacy('')).toBe('');
   });
 
   it('should throw error if ENCRYPTION_KEY is missing', async () => {

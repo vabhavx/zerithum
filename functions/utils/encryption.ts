@@ -2,6 +2,7 @@
 // Basic AES-GCM encryption/decryption
 // Format: v1:{iv_base64}:{ciphertext_base64}
 
+export const VERSION_PREFIX = 'v1:';
 const ALGORITHM = 'AES-GCM';
 const KEY_LENGTH = 256;
 
@@ -85,18 +86,42 @@ export async function encrypt(text: string): Promise<string> {
     data
   );
 
-  return `v1:${arrayBufferToBase64(iv.buffer)}:${arrayBufferToBase64(ciphertext)}`;
+  return `${VERSION_PREFIX}${arrayBufferToBase64(iv.buffer)}:${arrayBufferToBase64(ciphertext)}`;
 }
 
+/**
+ * Decrypts text, strictly requiring the version prefix.
+ * Throws an error if the text is not encrypted.
+ */
 export async function decrypt(text: string): Promise<string> {
   if (!text) return text;
 
+  if (!text.startsWith(VERSION_PREFIX)) {
+    throw new Error('Invalid token format: Not encrypted');
+  }
+
+  return decryptInternal(text);
+}
+
+/**
+ * Decrypts text, falling back to returning the plain text if it's not encrypted.
+ * Use this ONLY for migrating legacy data.
+ * @deprecated Use decrypt() instead and migrate data.
+ */
+export async function decryptLegacy(text: string): Promise<string> {
+  if (!text) return text;
+
   // Check for v1 prefix
-  if (!text.startsWith('v1:')) {
+  if (!text.startsWith(VERSION_PREFIX)) {
+    console.warn('[Security] Legacy plain-text token encountered. This is deprecated and will be removed.');
     // Legacy support: return plain text
     return text;
   }
 
+  return decryptInternal(text);
+}
+
+async function decryptInternal(text: string): Promise<string> {
   const parts = text.split(':');
   if (parts.length !== 3) {
     throw new Error('Invalid encrypted token format');
