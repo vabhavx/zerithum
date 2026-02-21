@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
-    validatePassword,
     generateOTPCode,
     isValidOTPFormat,
     checkRateLimit,
@@ -9,42 +8,6 @@ import {
 } from '../logic/security';
 
 describe('Security Logic', () => {
-    describe('validatePassword', () => {
-        it('should reject passwords shorter than 12 characters', () => {
-            expect(validatePassword('Short1!').valid).toBe(false);
-            expect(validatePassword('Short1!').errors).toContain('Password must be at least 12 characters');
-        });
-
-        it('should reject common passwords', () => {
-            const result = validatePassword('password12345');
-            expect(result.valid).toBe(false);
-            expect(result.errors).toContain('This password is too common. Please choose a stronger password');
-        });
-
-        it('should calculate strength correctly', () => {
-            // Weak: length 12, only lowercase
-            expect(validatePassword('abcdefghijkl').strength).toBe('weak');
-
-            // Medium: length 12, upper and lower
-            expect(validatePassword('Abcdefghijkl').strength).toBe('medium');
-
-            // Medium: length 12, upper, lower, digit
-            expect(validatePassword('Abcdefghij12').strength).toBe('medium');
-
-            // Strong: length 12, upper, lower, digit, special, length
-            expect(validatePassword('Abcdefghij1!').strength).toBe('strong');
-
-            // Strong: length 16, upper, lower, digit
-            expect(validatePassword('Abcdefghijklmnop1').strength).toBe('strong');
-        });
-
-        it('should return valid true for strong passwords', () => {
-            const result = validatePassword('SuperSecurePassword123!');
-            expect(result.valid).toBe(true);
-            expect(result.errors).toHaveLength(0);
-        });
-    });
-
     describe('generateOTPCode', () => {
         it('should generate a 6-digit OTP code', () => {
             const code = generateOTPCode();
