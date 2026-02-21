@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { subMonths, subDays, startOfMonth, endOfMonth } from "date-fns";
-import { RefreshCw, Link2, LayoutDashboard } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // ── Dashboard sub-components ─────────────────────────────────────────────────
@@ -13,6 +13,7 @@ import RevenueTrendChart from "@/components/dashboard/RevenueTrendChart";
 import ActionItemsPanel from "@/components/dashboard/ActionItemsPanel";
 import AlertBanner from "@/components/dashboard/AlertBanner";
 import TrustBar from "@/components/dashboard/TrustBar";
+import ConnectionCtaBanner from "@/components/dashboard/ConnectionCtaBanner";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -41,36 +42,6 @@ const PLATFORM_FEE_RATES = {
   shopify: 0.02,
   substack: 0.10,
 };
-
-// ── Empty State (new user) ───────────────────────────────────────────────────
-
-function EmptyState({ onConnect }) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-      <div className="w-16 h-16 rounded-2xl bg-[var(--z-bg-2)] border border-[var(--z-border-1)] flex items-center justify-center mb-6">
-        <LayoutDashboard className="w-7 h-7 text-[var(--z-text-3)]" />
-      </div>
-      <h2 className="text-[22px] font-semibold text-[var(--z-text-1)] tracking-tight mb-2">
-        Connect platforms to see your dashboard
-      </h2>
-      <p className="text-[14px] text-[var(--z-text-3)] max-w-md mb-8 leading-relaxed">
-        Zerithum pulls your revenue from YouTube, Patreon, Stripe, and more
-        in one place — so you always know what you earned, what was taken
-        as fees, and what hit your bank.
-      </p>
-      <button
-        onClick={onConnect}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#32B8C6] text-[#09090B] text-[14px] font-semibold hover:bg-[#21808D] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#32B8C6] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--z-bg-0)]"
-      >
-        <Link2 className="w-4 h-4" />
-        Connect your platforms
-      </button>
-      <p className="text-[11px] text-[var(--z-text-3)] mt-4">
-        Supported: YouTube, Patreon, Stripe, Gumroad, TikTok, Shopify, Substack, Instagram
-      </p>
-    </div>
-  );
-}
 
 // ── Dashboard Page ────────────────────────────────────────────────────────────
 
@@ -127,6 +98,7 @@ export default function Dashboard() {
   });
 
   const isLoading = txLoading || platformsLoading;
+  const noPlatforms = !isLoading && connectedPlatforms.length === 0;
 
   // ── Alert banners ─────────────────────────────────────────────────────────
 
@@ -275,12 +247,6 @@ export default function Dashboard() {
 
   const lastDataUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
 
-  // ── Empty state ───────────────────────────────────────────────────────────
-
-  if (!isLoading && connectedPlatforms.length === 0) {
-    return <EmptyState onConnect={() => navigate("/ConnectedPlatforms")} />;
-  }
-
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -307,6 +273,11 @@ export default function Dashboard() {
           Refresh
         </Button>
       </div>
+
+      {/* ── Connection CTA (new users only) ──────────────────────────── */}
+      {noPlatforms && (
+        <ConnectionCtaBanner onConnect={() => navigate("/ConnectedPlatforms")} />
+      )}
 
       {/* ── Trust Bar ───────────────────────────────────────────────────── */}
       <TrustBar
