@@ -380,9 +380,13 @@ export default function Transactions() {
         onRowClick={(txn) => setDrawerTxn(txn)}
         focusedIndex={focusedIndex}
         onFocusRow={setFocusedIndex}
-        emptyState={filteredTransactions.length === 0 ? (
-          hasPlatforms ? <EmptyNoResults onClear={() => { setFilters(DEFAULT_FILTERS); setActiveView('all'); }} /> : null
-        ) : null}
+        emptyState={
+          !hasPlatforms ? (
+            <EmptyNoPlatforms onConnect={() => navigate('/ConnectedPlatforms')} />
+          ) : filteredTransactions.length === 0 ? (
+            <EmptyNoResults onClear={() => { setFilters(DEFAULT_FILTERS); setActiveView('all'); }} />
+          ) : null
+        }
       />
 
       {/* ── Row detail drawer ── */}
