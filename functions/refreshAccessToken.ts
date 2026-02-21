@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import { encrypt, decrypt } from './utils/encryption.ts';
+import { encrypt, decryptLegacy } from './utils/encryption.ts';
 import { refreshAccessTokenLogic } from './logic/refreshAccessTokenLogic.ts';
 
 Deno.serve(async (req) => {
@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
         },
         fetch: globalThis.fetch.bind(globalThis),
         encrypt,
-        decrypt
+        decrypt: decryptLegacy
     };
 
     const result = await refreshAccessTokenLogic(ctx, user, body);

@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { logAudit } from './utils/audit.ts';
 import { syncPlatform, SyncContext } from './logic/sync.ts';
-import { decrypt } from './utils/encryption.ts';
+import { decryptLegacy } from './utils/encryption.ts';
 
 Deno.serve(async (req) => {
   let syncHistoryId: string | null = null;
@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     }
 
     const conn = connection[0];
-    let oauthToken = await decrypt(conn.oauth_token);
+    let oauthToken = await decryptLegacy(conn.oauth_token);
 
     // Check expiry
     const expiresAt = new Date(conn.expires_at);
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
         throw new Error('Failed to refresh access token');
       }
       const refreshedConn = await base44.asServiceRole.entities.ConnectedPlatform.filter({ id: connectionId });
-      oauthToken = await decrypt(refreshedConn[0].oauth_token);
+      oauthToken = await decryptLegacy(refreshedConn[0].oauth_token);
     }
 
     // Create Context
