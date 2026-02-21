@@ -274,8 +274,6 @@ export default function Expenses() {
         <div className="flex items-center justify-center py-24">
           <Loader2 className="w-6 h-6 animate-spin text-[var(--z-text-3)]" />
         </div>
-      ) : expenses.length === 0 ? (
-        <EmptyState onAdd={handleAdd} />
       ) : (
         <>
           {/* ── KPI Metrics strip ──────────────────────────────────────── */}
@@ -338,6 +336,7 @@ export default function Expenses() {
             expenses={expenses}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onAdd={handleAdd}
           />
 
           {/* ── Footer disclaimer ──────────────────────────────────────── */}

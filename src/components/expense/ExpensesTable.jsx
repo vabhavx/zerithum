@@ -11,6 +11,7 @@ import {
     Trash2,
     Search,
     X,
+    Plus,
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/expenseCategories";
 import { cn } from "@/lib/utils";
@@ -99,7 +100,7 @@ function SortButton({ field, sortField, sortDir, onSort, children }) {
  * ExpensesTable
  * Full expense table with search, filter, sort, and row actions.
  */
-export default function ExpensesTable({ expenses, onEdit, onDelete }) {
+export default function ExpensesTable({ expenses, onEdit, onDelete, onAdd }) {
     const [search, setSearch] = useState("");
     const [filterCategory, setFilterCategory] = useState("all");
     const [filterDeductible, setFilterDeductible] = useState("all");
@@ -270,11 +271,32 @@ export default function ExpensesTable({ expenses, onEdit, onDelete }) {
                             <tr>
                                 <td
                                     colSpan={8}
-                                    className="px-4 py-16 text-center text-[13px] text-[var(--z-text-3)]"
+                                    className="px-4 py-16 text-center"
                                 >
-                                    {expenses.length === 0
-                                        ? "No expenses yet. Add your first expense to get started."
-                                        : "No expenses match your filters. Try clearing the search."}
+                                    <div className="flex flex-col items-center justify-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-[var(--z-bg-3)] flex items-center justify-center border border-[var(--z-border-1)]">
+                                            <Receipt className="w-4 h-4 text-[var(--z-text-3)]" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-[13px] font-medium text-[var(--z-text-1)]">
+                                                {expenses.length === 0 ? "No expense records found" : "No matches found"}
+                                            </h4>
+                                            <p className="text-[11px] text-[var(--z-text-3)] mt-1 max-w-[240px] mx-auto">
+                                                {expenses.length === 0
+                                                    ? "Add your first creator business expense to start building your audit trail."
+                                                    : "Try adjusting your filters or search terms."}
+                                            </p>
+                                        </div>
+                                        {expenses.length === 0 && onAdd && (
+                                            <button
+                                                onClick={onAdd}
+                                                className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--z-accent)] text-[#09090B] text-[12px] font-semibold hover:bg-[var(--z-accent-2)] transition-colors"
+                                            >
+                                                <Plus className="w-3.5 h-3.5" />
+                                                Add Expense
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ) : (

@@ -347,32 +347,43 @@ export default function Transactions() {
         currentFilters={filters}
       />
 
-      {/* ── Empty state: no platforms ── */}
-      {!hasPlatforms ? (
-        <div className="bg-[var(--z-bg-2)] border border-[var(--z-border-1)] rounded-lg">
-          <EmptyNoPlatforms onConnect={() => navigate('/ConnectedPlatforms')} />
+      {/* ── No Platform Notice ── */}
+      {!hasPlatforms && (
+        <div className="bg-[var(--z-bg-2)] border border-[#32B8C6]/20 rounded-xl px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <div className="flex items-start gap-3">
+            <Link2 className="w-5 h-5 text-[#32B8C6] mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-[var(--z-text-1)]">No platforms connected</p>
+              <p className="text-xs text-[var(--z-text-3)]">Connect your revenue platforms to start tracking real-time transactions.</p>
+            </div>
+          </div>
+          <Button
+            onClick={() => navigate('/ConnectedPlatforms')}
+            size="sm"
+            className="bg-[#32B8C6] text-black hover:bg-[#21808D] font-semibold"
+          >
+            Connect Platform
+          </Button>
         </div>
-      ) : filteredTransactions.length === 0 ? (
-        /* ── Empty state: no results ── */
-        <div className="bg-[var(--z-bg-2)] border border-[var(--z-border-1)] rounded-lg">
-          <EmptyNoResults onClear={() => { setFilters(DEFAULT_FILTERS); setActiveView('all'); }} />
-        </div>
-      ) : (
-        /* ── Transactions table ── */
-        <TransactionsTable
-          transactions={filteredTransactions}
-          isLoading={false}
-          sortField={sortField}
-          sortDir={sortDir}
-          onSort={handleSort}
-          selectedIds={selectedIds}
-          onSelectRow={handleSelectRow}
-          onSelectAll={handleSelectAll}
-          onRowClick={(txn) => setDrawerTxn(txn)}
-          focusedIndex={focusedIndex}
-          onFocusRow={setFocusedIndex}
-        />
       )}
+
+      {/* ── Transactions table ── */}
+      <TransactionsTable
+        transactions={filteredTransactions}
+        isLoading={false}
+        sortField={sortField}
+        sortDir={sortDir}
+        onSort={handleSort}
+        selectedIds={selectedIds}
+        onSelectRow={handleSelectRow}
+        onSelectAll={handleSelectAll}
+        onRowClick={(txn) => setDrawerTxn(txn)}
+        focusedIndex={focusedIndex}
+        onFocusRow={setFocusedIndex}
+        emptyState={filteredTransactions.length === 0 ? (
+          hasPlatforms ? <EmptyNoResults onClear={() => { setFilters(DEFAULT_FILTERS); setActiveView('all'); }} /> : null
+        ) : null}
+      />
 
       {/* ── Row detail drawer ── */}
       <RowDrawer transaction={drawerTxn} onClose={() => setDrawerTxn(null)} />

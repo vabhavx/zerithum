@@ -18,25 +18,29 @@ export default function AuditReadinessCard({ expenses, onScrollToQueue }) {
     const pct = total > 0 ? Math.round((withReceipts / total) * 100) : 0;
 
     const { barColor, labelColor, statusLabel } =
-        pct >= 80
+        total === 0
             ? {
-                barColor: "bg-emerald-500",
-                labelColor: "text-emerald-400",
-                statusLabel: "Audit Ready",
+                barColor: "bg-[var(--z-bg-3)]",
+                labelColor: "text-[var(--z-text-3)]",
+                statusLabel: "Awaiting Records",
             }
-            : pct >= 50
+            : pct >= 80
                 ? {
-                    barColor: "bg-amber-500",
-                    labelColor: "text-amber-400",
-                    statusLabel: "Needs Attention",
+                    barColor: "bg-emerald-500",
+                    labelColor: "text-emerald-400",
+                    statusLabel: "Audit Ready",
                 }
-                : {
-                    barColor: "bg-[var(--z-danger)]",
-                    labelColor: "text-[var(--z-danger)]",
-                    statusLabel: "High Risk",
-                };
-
-    if (total === 0) return null;
+                : pct >= 50
+                    ? {
+                        barColor: "bg-amber-500",
+                        labelColor: "text-amber-400",
+                        statusLabel: "Needs Attention",
+                    }
+                    : {
+                        barColor: "bg-[var(--z-danger)]",
+                        labelColor: "text-[var(--z-danger)]",
+                        statusLabel: "High Risk",
+                    };
 
     return (
         <section
