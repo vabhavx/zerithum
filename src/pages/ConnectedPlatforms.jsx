@@ -9,9 +9,7 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
-  Unplug,
-  Activity,
-  Server
+  Unplug
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/supabaseClient";

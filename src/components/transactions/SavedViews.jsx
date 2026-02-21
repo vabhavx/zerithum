@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bookmark, Plus, X, Check } from 'lucide-react';
+import { Plus, X, Check } from 'lucide-react';
 
 const BUILT_IN_VIEWS = [
     { id: 'all', label: 'All' },

@@ -3,13 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { differenceInCalendarDays, format, startOfYear, endOfYear } from "date-fns";
 import { jsPDF } from "jspdf";
 import {
-  AlertTriangle,
   CheckCircle2,
-  Database,
-  Download,
   FileText,
   ShieldCheck,
+  Calculator,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Download
 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -39,6 +43,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { PageTransition, AnimatedItem } from "@/components/ui/PageTransition";
+import { GlassCard } from "@/components/ui/glass-card";
 
 const INPUT_STORAGE_KEY = "zerithum-tax-estimator-inputs-v1";
 const PAYMENT_STORAGE_KEY = "zerithum-tax-estimator-payment-status-v1";
@@ -304,15 +310,15 @@ function getQuarterSchedule(year) {
 }
 
 function getConfidenceLabel(confidenceScore) {
-  if (confidenceScore >= 80) return "High confidence";
-  if (confidenceScore >= 55) return "Medium confidence";
-  return "Low confidence";
+  if (confidenceScore >= 80) return "High";
+  if (confidenceScore >= 55) return "Medium";
+  return "Low";
 }
 
 function getConfidenceTone(confidenceScore) {
-  if (confidenceScore >= 80) return "text-[#56C5D0] border-[#56C5D0]/40 bg-[#56C5D0]/10";
-  if (confidenceScore >= 55) return "text-[#F0A562] border-[#F0A562]/40 bg-[#F0A562]/10";
-  return "text-[#F06C6C] border-[#F06C6C]/40 bg-[#F06C6C]/10";
+  if (confidenceScore >= 80) return "text-[#56C5D0]";
+  if (confidenceScore >= 55) return "text-[#F0A562]";
+  return "text-[#F06C6C]";
 }
 
 function getUncertaintyBand({
@@ -332,7 +338,7 @@ export function AssumptionsDrawer({ open, onOpenChange, assumptions }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-full max-w-[560px] rounded-none border-l border-white/10 bg-[#0F0F12] p-0 text-[#F5F5F5]"
+        className="w-full max-w-[560px] border-l border-white/10 bg-[#0F0F12]/95 p-0 text-[#F5F5F5] backdrop-blur-xl"
         style={{
           left: "auto",
           top: "0",
@@ -374,21 +380,6 @@ export function AssumptionsDrawer({ open, onOpenChange, assumptions }) {
                 {formatPercent(assumptions.stateRate)}.
               </p>
             </div>
-
-            <div className="rounded-lg border border-white/10 bg-[#141418] p-4">
-              <p className="mb-2 font-medium text-[#F5F5F5]">Confidence and ranges</p>
-              <p>
-                Range width increases when data completeness is lower. Confidence uses history length, number of connected platforms,
-                and whether a bank source is connected.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-white/10 bg-[#141418] p-4">
-              <p className="mb-2 font-medium text-[#F5F5F5]">What improves estimate quality</p>
-              <p>
-                Connect more platforms, keep sync current, include full expense history, and add other taxable income when applicable.
-              </p>
-            </div>
           </div>
         </div>
       </DialogContent>
@@ -396,177 +387,56 @@ export function AssumptionsDrawer({ open, onOpenChange, assumptions }) {
   );
 }
 
-export function CalculationBreakdownTable({ rows }) {
+export function CalculationBreakdown({ rows }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="rounded-xl border border-white/10 bg-[#111114]">
-      <div className="border-b border-white/10 p-4">
-        <h2 className="text-lg font-semibold text-[#F5F5F5]">How calculated</h2>
-        <p className="mt-1 text-sm text-white/70">
-          Every value is traceable to an input or a published calculation rule.
-        </p>
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow className="border-white/10 hover:bg-transparent">
-            <TableHead className="text-[#D8D8D8]">Step</TableHead>
-            <TableHead className="text-[#D8D8D8]">Formula</TableHead>
-            <TableHead className="text-right text-[#D8D8D8]">Result</TableHead>
-            <TableHead className="text-right text-[#D8D8D8]">Source</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.step} className="border-white/10 hover:bg-white/[0.02]">
-              <TableCell className="font-medium text-[#F5F5F5]">{row.step}</TableCell>
-              <TableCell className="text-sm text-white/70">{row.formula}</TableCell>
-              <TableCell className="text-right font-mono-financial text-[#F5F5F5]">
-                {row.result}
-              </TableCell>
-              <TableCell className="text-right text-sm text-white/60">{row.source}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-
-export function PaymentSchedule({
-  schedule,
-  paymentStatus,
-  onTogglePaid,
-  setAsideLower,
-  setAsideUpper,
-}) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-[#111114]">
-      <div className="border-b border-white/10 p-4">
-        <h2 className="text-lg font-semibold text-[#F5F5F5]">Payment schedule</h2>
-        <p className="mt-1 text-sm text-white/70">
-          Estimated quarterly set-aside range: {formatCurrency(setAsideLower)} to {formatCurrency(setAsideUpper)}
-        </p>
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow className="border-white/10 hover:bg-transparent">
-            <TableHead className="text-[#D8D8D8]">Quarter</TableHead>
-            <TableHead className="text-[#D8D8D8]">Coverage period</TableHead>
-            <TableHead className="text-[#D8D8D8]">Due date</TableHead>
-            <TableHead className="text-right text-[#D8D8D8]">Status</TableHead>
-            <TableHead className="text-right text-[#D8D8D8]">Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {schedule.map((quarter) => {
-            const status = paymentStatus[quarter.id] || DEFAULT_PAYMENT_STATUS[quarter.id];
-            const paidAtDate = status.paidAt ? new Date(status.paidAt) : null;
-            const hasValidPaidAtDate = Boolean(paidAtDate) && !Number.isNaN(paidAtDate.getTime());
-            return (
-              <TableRow key={quarter.id} className="border-white/10 hover:bg-white/[0.02]">
-                <TableCell className="font-medium text-[#F5F5F5]">{quarter.label}</TableCell>
-                <TableCell className="text-sm text-white/70">{quarter.period}</TableCell>
-                <TableCell className="text-sm text-white/80">{format(quarter.dueDate, "MMM d, yyyy")}</TableCell>
-                <TableCell className="text-right">
-                  {status.paid ? (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-[#56C5D0]/40 bg-[#56C5D0]/10 px-2 py-1 text-xs text-[#56C5D0]">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      {hasValidPaidAtDate ? `Paid ${format(paidAtDate, "MMM d")}` : "Paid"}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center rounded-md border border-white/20 bg-white/5 px-2 py-1 text-xs text-white/70">
-                      Not marked paid
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className={cn(
-                      "h-8 border-white/20 bg-transparent px-3 text-xs text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]",
-                      status.paid && "border-[#56C5D0]/40 text-[#56C5D0]"
-                    )}
-                    onClick={() => onTogglePaid(quarter.id)}
-                  >
-                    {status.paid ? "Mark unpaid" : "Mark as paid"}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-
-export function DataCompletenessCard({
-  daysHistory,
-  platformsConnected,
-  bankConnected,
-  confidenceScore,
-  confidenceLabel,
-  lastSyncedAt,
-  lastUpdatedAt,
-  dataSourcesUsed,
-}) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-[#111114] p-5">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold text-[#F5F5F5]">Data completeness</h2>
-          <p className="mt-1 text-sm text-white/70">Confidence is based on connected and historical evidence.</p>
+    <GlassCard className="mt-6">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 hover:bg-white/[0.03] transition-colors"
+      >
+        <div className="flex items-center gap-2">
+           <Calculator className="h-4 w-4 text-[#56C5D0]" />
+           <span className="font-semibold text-[#F5F5F5]">Detailed Calculation Breakdown</span>
         </div>
-        <span className={cn("rounded-md border px-2.5 py-1 text-xs font-medium", getConfidenceTone(confidenceScore))}>
-          {confidenceLabel}
-        </span>
-      </div>
+        {isOpen ? <ChevronUp className="h-4 w-4 text-white/50" /> : <ChevronDown className="h-4 w-4 text-white/50" />}
+      </button>
 
-      <div className="mb-4 rounded-lg border border-white/10 bg-[#15151A] p-3">
-        <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="text-white/75">Confidence score</span>
-          <span className="font-mono-financial text-[#F5F5F5]">{confidenceScore}/100</span>
-        </div>
-        <div className="h-2 rounded-full bg-white/10">
-          <div
-            className={cn(
-              "h-full rounded-full",
-              confidenceScore >= 80 ? "bg-[#56C5D0]" : confidenceScore >= 55 ? "bg-[#F0A562]" : "bg-[#F06C6C]"
-            )}
-            style={{ width: `${confidenceScore}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2 text-sm">
-        <div className="flex items-center justify-between border-b border-white/10 pb-2">
-          <span className="text-white/70">Days of history</span>
-          <span className="font-mono-financial text-[#F5F5F5]">{daysHistory}</span>
-        </div>
-        <div className="flex items-center justify-between border-b border-white/10 pb-2">
-          <span className="text-white/70">Platforms connected</span>
-          <span className="font-mono-financial text-[#F5F5F5]">{platformsConnected}</span>
-        </div>
-        <div className="flex items-center justify-between pb-1">
-          <span className="text-white/70">Bank connected</span>
-          <span className={cn("font-mono-financial", bankConnected ? "text-[#56C5D0]" : "text-white/70")}>
-            {bankConnected ? "Yes" : "No"}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-lg border border-white/10 bg-[#15151A] p-3">
-        <p className="mb-2 text-xs uppercase tracking-wide text-white/60">Trust metadata</p>
-        <p className="text-sm text-white/80">Last updated: {format(lastUpdatedAt, "MMM d, yyyy h:mm a")}</p>
-        <p className="text-sm text-white/80">
-          Last sync: {lastSyncedAt ? format(lastSyncedAt, "MMM d, yyyy h:mm a") : "No sync timestamp available"}
-        </p>
-        <p className="mt-2 text-sm text-white/80">Data sources used: {dataSourcesUsed.length ? dataSourcesUsed.join(", ") : "None connected"}</p>
-      </div>
-    </div>
+      <AnimatePresence>
+        {isOpen && (
+           <motion.div
+             initial={{ height: 0, opacity: 0 }}
+             animate={{ height: "auto", opacity: 1 }}
+             exit={{ height: 0, opacity: 0 }}
+             className="overflow-hidden"
+           >
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-white/10 hover:bg-transparent">
+                    <TableHead className="text-[#D8D8D8]">Step</TableHead>
+                    <TableHead className="text-[#D8D8D8]">Formula</TableHead>
+                    <TableHead className="text-right text-[#D8D8D8]">Result</TableHead>
+                    <TableHead className="text-right text-[#D8D8D8]">Source</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((row) => (
+                    <TableRow key={row.step} className="border-white/10 hover:bg-white/[0.02]">
+                      <TableCell className="font-medium text-[#F5F5F5]">{row.step}</TableCell>
+                      <TableCell className="text-sm text-white/70">{row.formula}</TableCell>
+                      <TableCell className="text-right font-mono-financial text-[#F5F5F5]">
+                        {row.result}
+                      </TableCell>
+                      <TableCell className="text-right text-sm text-white/60">{row.source}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+           </motion.div>
+        )}
+      </AnimatePresence>
+    </GlassCard>
   );
 }
 
@@ -621,6 +491,7 @@ export default function TaxEstimatorPage() {
     };
   }, [transactions, expenses, currentYear]);
 
+  // Load/Save Effects (Keep existing logic)
   useEffect(() => {
     try {
       const storedInputs = window.localStorage.getItem(INPUT_STORAGE_KEY);
@@ -634,11 +505,7 @@ export default function TaxEstimatorPage() {
           otherIncome: toNonNegativeNumber(parsed.otherIncome),
         }));
       }
-    } catch {
-      // Ignore unreadable local state and keep safe defaults.
-    } finally {
-      setDidLoadStoredInputs(true);
-    }
+    } catch { } finally { setDidLoadStoredInputs(true); }
   }, []);
 
   useEffect(() => {
@@ -646,37 +513,27 @@ export default function TaxEstimatorPage() {
       const storedPayments = window.localStorage.getItem(PAYMENT_STORAGE_KEY);
       if (storedPayments) {
         const parsed = JSON.parse(storedPayments);
-        setPaymentStatus((previousStatus) => ({
-          ...previousStatus,
-          ...parsed,
-        }));
+        setPaymentStatus((previousStatus) => ({ ...previousStatus, ...parsed }));
       }
-    } catch {
-      // Ignore unreadable local state and keep safe defaults.
-    } finally {
-      setDidLoadStoredPayments(true);
-    }
+    } catch { } finally { setDidLoadStoredPayments(true); }
   }, []);
 
   useEffect(() => {
     if (!didLoadStoredInputs || didAutoFillFromData) return;
-    const hasUserValue =
-      inputs.expectedAnnualRevenue !== DEFAULT_INPUTS.expectedAnnualRevenue ||
-      inputs.expenseRate !== DEFAULT_INPUTS.expenseRate;
+    const hasUserValue = inputs.expectedAnnualRevenue !== DEFAULT_INPUTS.expectedAnnualRevenue;
     if (hasUserValue) {
       setDidAutoFillFromData(true);
       return;
     }
-
     if (observedRevenueAndExpenseRate.annualRevenue <= 0) return;
 
-    setInputs((previousInputs) => ({
-      ...previousInputs,
+    setInputs((prev) => ({
+      ...prev,
       expectedAnnualRevenue: observedRevenueAndExpenseRate.annualRevenue,
       expenseRate: observedRevenueAndExpenseRate.expenseRate,
     }));
     setDidAutoFillFromData(true);
-  }, [didLoadStoredInputs, didAutoFillFromData, inputs.expectedAnnualRevenue, inputs.expenseRate, observedRevenueAndExpenseRate]);
+  }, [didLoadStoredInputs, didAutoFillFromData, inputs.expectedAnnualRevenue, observedRevenueAndExpenseRate]);
 
   useEffect(() => {
     if (!didLoadStoredInputs) return;
@@ -690,17 +547,8 @@ export default function TaxEstimatorPage() {
 
   useEffect(() => {
     setLastUpdatedAt(new Date());
-  }, [
-    inputs.filingStatus,
-    inputs.state,
-    inputs.expectedAnnualRevenue,
-    inputs.expenseRate,
-    inputs.includeOtherIncome,
-    inputs.otherIncome,
-    transactions.length,
-    expenses.length,
-    connectedPlatforms.length,
-  ]);
+  }, [inputs, transactions.length, expenses.length, connectedPlatforms.length]);
+
 
   const dataCompleteness = useMemo(() => {
     const dateCandidates = [
@@ -713,11 +561,9 @@ export default function TaxEstimatorPage() {
       : null;
 
     const daysHistory = earliestDate ? Math.max(0, differenceInCalendarDays(new Date(), earliestDate) + 1) : 0;
-
-    const normalizedPlatforms = connectedPlatforms.map((platform) => (platform.platform || "").toLowerCase());
     const platformsConnected = connectedPlatforms.length;
-    const bankConnected = normalizedPlatforms.some((platformName) =>
-      [...BANK_PLATFORM_HINTS].some((hint) => platformName.includes(hint))
+    const bankConnected = connectedPlatforms.some((p) =>
+      [...BANK_PLATFORM_HINTS].some((hint) => (p.platform || "").toLowerCase().includes(hint))
     );
 
     const historyScore = Math.min(daysHistory / 365, 1) * 40;
@@ -726,17 +572,10 @@ export default function TaxEstimatorPage() {
     const confidenceScore = Math.round(historyScore + platformScore + bankScore);
 
     const lastSyncedAt = connectedPlatforms
-      .map((platform) => platform.last_synced_at)
+      .map((p) => p.last_synced_at)
       .filter(Boolean)
-      .map((value) => new Date(value))
-      .filter((date) => !Number.isNaN(date.getTime()))
-      .sort((left, right) => right.getTime() - left.getTime())[0] || null;
-
-    const dataSourcesUsed = [
-      `Revenue transactions (${transactions.length})`,
-      `Expenses (${expenses.length})`,
-      `Connected platforms (${platformsConnected})`,
-    ];
+      .map((d) => new Date(d))
+      .sort((a, b) => b.getTime() - a.getTime())[0] || null;
 
     return {
       daysHistory,
@@ -745,7 +584,11 @@ export default function TaxEstimatorPage() {
       confidenceScore,
       confidenceLabel: getConfidenceLabel(confidenceScore),
       lastSyncedAt,
-      dataSourcesUsed,
+      dataSourcesUsed: [
+        `Revenue (${transactions.length})`,
+        `Expenses (${expenses.length})`,
+        `Platforms (${platformsConnected})`,
+      ],
     };
   }, [transactions, expenses, connectedPlatforms]);
 
@@ -821,61 +664,31 @@ export default function TaxEstimatorPage() {
         source: "Expense rate input",
       },
       {
-        step: "3. Business income after expenses",
-        formula: `max(0, gross income - estimated expenses)`,
+        step: "3. Business income",
+        formula: `max(0, gross - expenses)`,
         result: formatCurrency(calculations.businessIncomeAfterExpenses),
         source: "Estimator rule",
       },
       {
-        step: "4. Self-employment tax",
+        step: "4. SE tax",
         formula: `${formatCurrency(calculations.businessIncomeAfterExpenses)} × 15.30%`,
         result: formatCurrency(calculations.selfEmploymentTax),
         source: "IRS SE baseline",
       },
       {
-        step: "5. SE deduction",
-        formula: `${formatCurrency(calculations.selfEmploymentTax)} × 50%`,
-        result: formatCurrency(calculations.halfSelfEmploymentDeduction),
-        source: "Estimator assumption",
-      },
-      {
-        step: "6. Taxable income",
+        step: "5. Taxable income",
         formula: `max(0, business income - SE deduction)`,
         result: formatCurrency(calculations.taxableIncomeForFederalAndState),
         source: "Estimator rule",
       },
       {
-        step: "7. Federal tax",
-        formula: `Progressive brackets (${FILING_STATUS_OPTIONS.find((item) => item.value === inputs.filingStatus)?.label || "Single"})`,
-        result: formatCurrency(calculations.federalIncomeTax),
-        source: `Effective ${formatPercent(calculations.federalEffectiveRate)}`,
-      },
-      {
-        step: "8. State tax",
-        formula: `${formatCurrency(calculations.taxableIncomeForFederalAndState)} × ${formatPercent(calculations.stateRate)}`,
-        result: formatCurrency(calculations.stateIncomeTax),
-        source: `${inputs.state} estimate`,
-      },
-      {
-        step: "9. Total annual estimate",
-        formula: `SE tax + federal tax + state tax`,
+        step: "6. Total Annual Estimate",
+        formula: `SE + Federal + State`,
         result: formatCurrency(calculations.totalEstimatedAnnualTax),
         source: "Computed",
       },
-      {
-        step: "10. Effective rate range",
-        formula: `Point estimate ± uncertainty (${formatPercent(calculations.uncertaintyBand)})`,
-        result: `${formatPercent(calculations.effectiveRateLower)} to ${formatPercent(calculations.effectiveRateUpper)}`,
-        source: `${dataCompleteness.confidenceLabel}`,
-      },
-      {
-        step: "11. Quarterly set-aside",
-        formula: `(business income × effective rate range) ÷ 4`,
-        result: `${formatCurrency(calculations.quarterlySetAsideLower)} to ${formatCurrency(calculations.quarterlySetAsideUpper)}`,
-        source: "Computed range",
-      },
     ];
-  }, [inputs, calculations, dataCompleteness.confidenceLabel]);
+  }, [inputs, calculations]);
 
   const paymentSchedule = useMemo(() => getQuarterSchedule(currentYear), [currentYear]);
 
@@ -891,58 +704,6 @@ export default function TaxEstimatorPage() {
         },
       };
     });
-  };
-
-  const handleExportInputsJson = () => {
-    const exportPayload = {
-      generated_at: new Date().toISOString(),
-      year: currentYear,
-      inputs,
-      outputs: {
-        quarterly_set_aside_range: {
-          lower: calculations.quarterlySetAsideLower,
-          upper: calculations.quarterlySetAsideUpper,
-          point_estimate: calculations.quarterlySetAsidePoint,
-        },
-        effective_rate_range: {
-          lower: calculations.effectiveRateLower,
-          upper: calculations.effectiveRateUpper,
-          point_estimate: calculations.effectiveRatePointEstimate,
-        },
-        confidence_score: dataCompleteness.confidenceScore,
-      },
-      data_completeness: {
-        days_history: dataCompleteness.daysHistory,
-        platforms_connected: dataCompleteness.platformsConnected,
-        bank_connected: dataCompleteness.bankConnected,
-        last_sync: dataCompleteness.lastSyncedAt ? dataCompleteness.lastSyncedAt.toISOString() : null,
-      },
-      payment_schedule: paymentSchedule.map((quarter) => ({
-        quarter: quarter.label,
-        due_date: format(quarter.dueDate, "yyyy-MM-dd"),
-        paid: paymentStatus[quarter.id]?.paid || false,
-        paid_at: paymentStatus[quarter.id]?.paidAt || null,
-      })),
-      calculation_breakdown: calculationRows.map((row) => ({
-        step: row.step,
-        formula: row.formula,
-        result: row.result,
-        source: row.source,
-      })),
-    };
-
-    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `zerithum-tax-inputs-${currentYear}.json`;
-    document.body.appendChild(link);
-    link.click();
-    URL.revokeObjectURL(url);
-    link.remove();
-    toast.success("Input export downloaded");
   };
 
   const handleDownloadPdf = () => {
@@ -1025,300 +786,307 @@ export default function TaxEstimatorPage() {
     }
   };
 
+  const handleExportInputsJson = () => {
+    const exportPayload = {
+      generated_at: new Date().toISOString(),
+      year: currentYear,
+      inputs,
+      outputs: {
+        quarterly_set_aside_range: {
+          lower: calculations.quarterlySetAsideLower,
+          upper: calculations.quarterlySetAsideUpper,
+          point_estimate: calculations.quarterlySetAsidePoint,
+        },
+        effective_rate_range: {
+          lower: calculations.effectiveRateLower,
+          upper: calculations.effectiveRateUpper,
+          point_estimate: calculations.effectiveRatePointEstimate,
+        },
+        confidence_score: dataCompleteness.confidenceScore,
+      },
+      data_completeness: {
+        days_history: dataCompleteness.daysHistory,
+        platforms_connected: dataCompleteness.platformsConnected,
+        bank_connected: dataCompleteness.bankConnected,
+        last_sync: dataCompleteness.lastSyncedAt ? dataCompleteness.lastSyncedAt.toISOString() : null,
+      },
+      payment_schedule: paymentSchedule.map((quarter) => ({
+        quarter: quarter.label,
+        due_date: format(quarter.dueDate, "yyyy-MM-dd"),
+        paid: paymentStatus[quarter.id]?.paid || false,
+        paid_at: paymentStatus[quarter.id]?.paidAt || null,
+      })),
+      calculation_breakdown: calculationRows.map((row) => ({
+        step: row.step,
+        formula: row.formula,
+        result: row.result,
+        source: row.source,
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `zerithum-tax-inputs-${currentYear}.json`;
+    document.body.appendChild(link);
+    link.click();
+    URL.revokeObjectURL(url);
+    link.remove();
+    toast.success("Input export downloaded");
+  };
+
+  const rateData = [
+    { name: "Effective Tax", value: calculations.effectiveRatePointEstimate * 100 },
+    { name: "Remaining", value: 100 - (calculations.effectiveRatePointEstimate * 100) },
+  ];
+
   return (
-    <div className="mx-auto w-full max-w-[1400px] rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 lg:p-8">
-      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-start lg:justify-between">
+    <PageTransition className="mx-auto w-full max-w-[1400px] p-6 lg:p-8">
+      <header className="mb-8 flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Tax Estimator</h1>
-          <p className="mt-2 max-w-2xl text-sm text-white/70">
-            Conservative estimated tax planning for creator income with transparent formulas and exportable evidence.
+          <h1 className="text-3xl font-bold tracking-tight text-[#F5F5F5]">Tax Command Center</h1>
+          <p className="mt-2 text-base text-white/70">
+            Real-time tax liability estimation and payment tracking.
           </p>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-            onClick={handleDownloadPdf}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Download calculation report PDF
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-            onClick={handleExportInputsJson}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export inputs JSON
-          </Button>
+        <div className="flex gap-2">
+           <Button variant="outline" className="border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10" onClick={handleDownloadPdf}>
+             <FileText className="mr-2 h-4 w-4" /> PDF Report
+           </Button>
+           <Button variant="outline" className="border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10" onClick={handleExportInputsJson}>
+             <Download className="mr-2 h-4 w-4" /> Export JSON
+           </Button>
+           <Button variant="outline" className="border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10" onClick={() => setAssumptionsOpen(true)}>
+             <Info className="mr-2 h-4 w-4" /> Assumptions
+           </Button>
         </div>
       </header>
 
-      <section className="mb-6 rounded-lg border border-[#F0A562]/35 bg-[#F0A562]/10 p-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-[#F0A562]" />
-            <p className="text-sm font-medium text-[#F5F5F5]">Estimates only, not tax advice</p>
-          </div>
-          <button
-            type="button"
-            className="inline-flex items-center text-sm font-medium text-[#56C5D0] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
-            onClick={() => setAssumptionsOpen(true)}
-          >
-            View assumptions
-          </button>
-        </div>
-      </section>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        {/* LEFT COLUMN: CONTROL PANEL */}
+        <div className="lg:col-span-4 space-y-6">
+          <AnimatedItem delay={0.1}>
+            <GlassCard variant="panel" className="p-6">
+              <h2 className="mb-6 text-sm font-semibold uppercase tracking-wider text-[#56C5D0]">
+                Input Parameters
+              </h2>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <section className="rounded-xl border border-white/10 bg-[#111114] p-5 lg:col-span-4">
-          <h2 className="text-lg font-semibold text-[#F5F5F5]">Inputs</h2>
-          <p className="mt-1 text-sm text-white/70">Edit assumptions directly. Values are stored locally in your browser.</p>
-
-          <div className="mt-5 space-y-4">
-            <div>
-              <Label htmlFor="filing-status" className="mb-2 block text-sm text-white/80">
-                Filing status
-              </Label>
-              <Select
-                value={inputs.filingStatus}
-                onValueChange={(value) =>
-                  setInputs((previousInputs) => ({
-                    ...previousInputs,
-                    filingStatus: value,
-                  }))
-                }
-              >
-                <SelectTrigger
-                  id="filing-status"
-                  className="border-white/15 bg-[#15151A] text-[#F5F5F5] focus:ring-2 focus:ring-[#56C5D0]"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="border-white/10 bg-[#0F0F12] text-[#F5F5F5]">
-                  {FILING_STATUS_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value} className="focus:bg-white/10 focus:text-[#F5F5F5]">
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="state" className="mb-2 block text-sm text-white/80">
-                State
-              </Label>
-              <Select
-                value={inputs.state}
-                onValueChange={(value) =>
-                  setInputs((previousInputs) => ({
-                    ...previousInputs,
-                    state: value,
-                  }))
-                }
-              >
-                <SelectTrigger
-                  id="state"
-                  className="border-white/15 bg-[#15151A] text-[#F5F5F5] focus:ring-2 focus:ring-[#56C5D0]"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-80 border-white/10 bg-[#0F0F12] text-[#F5F5F5]">
-                  {STATE_OPTIONS.map((state) => (
-                    <SelectItem key={state.value} value={state.value} className="focus:bg-white/10 focus:text-[#F5F5F5]">
-                      {state.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="expected-annual-revenue" className="mb-2 block text-sm text-white/80">
-                Expected annual revenue (USD)
-              </Label>
-              <Input
-                id="expected-annual-revenue"
-                type="number"
-                min="0"
-                step="0.01"
-                value={inputs.expectedAnnualRevenue}
-                onChange={(event) =>
-                  setInputs((previousInputs) => ({
-                    ...previousInputs,
-                    expectedAnnualRevenue: toNonNegativeNumber(event.target.value),
-                  }))
-                }
-                className="border-white/15 bg-[#15151A] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="expense-rate" className="mb-2 block text-sm text-white/80">
-                Expense rate (% of creator revenue)
-              </Label>
-              <Input
-                id="expense-rate"
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={inputs.expenseRate}
-                onChange={(event) =>
-                  setInputs((previousInputs) => ({
-                    ...previousInputs,
-                    expenseRate: clamp(toNonNegativeNumber(event.target.value), 0, 100),
-                  }))
-                }
-                className="border-white/15 bg-[#15151A] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-              />
-            </div>
-
-            <div className="rounded-lg border border-white/10 bg-[#15151A] p-3">
-              <div className="flex items-center justify-between gap-3">
-                <Label htmlFor="other-income-toggle" className="text-sm text-white/85">
-                  Include other taxable income
-                </Label>
-                <Switch
-                  id="other-income-toggle"
-                  checked={inputs.includeOtherIncome}
-                  onCheckedChange={(checked) =>
-                    setInputs((previousInputs) => ({
-                      ...previousInputs,
-                      includeOtherIncome: checked,
-                    }))
-                  }
-                  className="data-[state=checked]:bg-[#56C5D0] data-[state=unchecked]:bg-white/25"
-                />
-              </div>
-
-              {inputs.includeOtherIncome && (
-                <div className="mt-3">
-                  <Label htmlFor="other-income" className="mb-2 block text-sm text-white/80">
-                    Other income amount (USD)
-                  </Label>
-                  <Input
-                    id="other-income"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={inputs.otherIncome}
-                    onChange={(event) =>
-                      setInputs((previousInputs) => ({
-                        ...previousInputs,
-                        otherIncome: toNonNegativeNumber(event.target.value),
-                      }))
-                    }
-                    className="border-white/15 bg-[#101014] text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="space-y-6 lg:col-span-8">
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <div className="rounded-xl border border-white/10 bg-[#111114] p-5">
-              <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="space-y-5">
                 <div>
-                  <h2 className="text-lg font-semibold text-[#F5F5F5]">Estimated output</h2>
-                  <p className="mt-1 text-sm text-white/70">Conservative range shown to reduce under-saving risk.</p>
-                </div>
-                <span className="inline-flex items-center gap-1 rounded-md border border-[#56C5D0]/35 bg-[#56C5D0]/10 px-2 py-1 text-xs text-[#56C5D0]">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  Traceable
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                <div className="rounded-lg border border-white/10 bg-[#15151A] p-4">
-                  <p className="text-sm text-white/70">Estimated quarterly set aside</p>
-                  <p className="mt-1 font-mono-financial text-2xl font-semibold text-[#F5F5F5]">
-                    {formatCurrency(calculations.quarterlySetAsideLower)} - {formatCurrency(calculations.quarterlySetAsideUpper)}
-                  </p>
-                  <p className="mt-1 text-xs text-white/60">
-                    Point estimate: {formatCurrency(calculations.quarterlySetAsidePoint)}
-                  </p>
-                </div>
-
-                <div className="rounded-lg border border-white/10 bg-[#15151A] p-4">
-                  <p className="text-sm text-white/70">Effective rate range</p>
-                  <p className="mt-1 font-mono-financial text-2xl font-semibold text-[#F5F5F5]">
-                    {formatPercent(calculations.effectiveRateLower)} - {formatPercent(calculations.effectiveRateUpper)}
-                  </p>
-                  <p className="mt-1 text-xs text-white/60">
-                    Uncertainty band: {formatPercent(calculations.uncertaintyBand)}
-                  </p>
-                </div>
-
-                <div className="rounded-lg border border-white/10 bg-[#15151A] p-4">
-                  <p className="text-sm text-white/70">Source of numbers</p>
-                  <div className="mt-2 space-y-1.5 text-sm text-white/85">
-                    <div className="flex items-center justify-between">
-                      <span>Expected revenue input</span>
-                      <span className="font-mono-financial">{formatCurrency(inputs.expectedAnnualRevenue)}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Expense rate input</span>
-                      <span className="font-mono-financial">{percentFormatter.format(inputs.expenseRate)}%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Other income input</span>
-                      <span className="font-mono-financial">{formatCurrency(calculations.otherIncome)}</span>
-                    </div>
+                  <Label className="text-white/80 text-xs mb-1.5 block">Expected Annual Revenue</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+                    <Input
+                      type="number"
+                      value={inputs.expectedAnnualRevenue}
+                      onChange={(e) => setInputs(prev => ({...prev, expectedAnnualRevenue: toNonNegativeNumber(e.target.value)}))}
+                      className="pl-7 bg-[#0A0A0A] border-white/10 focus-visible:ring-[#56C5D0]"
+                    />
                   </div>
                 </div>
+
+                <div>
+                   <Label className="text-white/80 text-xs mb-1.5 block">Expense Rate (%)</Label>
+                   <Input
+                      type="number"
+                      value={inputs.expenseRate}
+                      onChange={(e) => setInputs(prev => ({...prev, expenseRate: clamp(toNonNegativeNumber(e.target.value), 0, 100)}))}
+                      className="bg-[#0A0A0A] border-white/10 focus-visible:ring-[#56C5D0]"
+                    />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                   <div>
+                     <Label className="text-white/80 text-xs mb-1.5 block">Filing Status</Label>
+                     <Select value={inputs.filingStatus} onValueChange={(v) => setInputs(prev => ({...prev, filingStatus: v}))}>
+                       <SelectTrigger className="bg-[#0A0A0A] border-white/10"><SelectValue /></SelectTrigger>
+                       <SelectContent className="bg-[#18181B] border-white/10">
+                         {FILING_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   <div>
+                     <Label className="text-white/80 text-xs mb-1.5 block">State</Label>
+                     <Select value={inputs.state} onValueChange={(v) => setInputs(prev => ({...prev, state: v}))}>
+                       <SelectTrigger className="bg-[#0A0A0A] border-white/10"><SelectValue /></SelectTrigger>
+                       <SelectContent className="bg-[#18181B] border-white/10 h-60">
+                         {STATE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.value}</SelectItem>)}
+                       </SelectContent>
+                     </Select>
+                   </div>
+                </div>
+
+                <div className="pt-4 border-t border-white/5">
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="text-white/80 text-xs">Include Other Income</Label>
+                    <Switch
+                      checked={inputs.includeOtherIncome}
+                      onCheckedChange={(c) => setInputs(prev => ({...prev, includeOtherIncome: c}))}
+                      className="data-[state=checked]:bg-[#56C5D0]"
+                    />
+                  </div>
+                  {inputs.includeOtherIncome && (
+                     <Input
+                       type="number"
+                       placeholder="Amount"
+                       value={inputs.otherIncome}
+                       onChange={(e) => setInputs(prev => ({...prev, otherIncome: toNonNegativeNumber(e.target.value)}))}
+                       className="bg-[#0A0A0A] border-white/10 focus-visible:ring-[#56C5D0]"
+                     />
+                  )}
+                </div>
               </div>
-            </div>
+            </GlassCard>
+          </AnimatedItem>
 
-            <DataCompletenessCard
-              daysHistory={dataCompleteness.daysHistory}
-              platformsConnected={dataCompleteness.platformsConnected}
-              bankConnected={dataCompleteness.bankConnected}
-              confidenceScore={dataCompleteness.confidenceScore}
-              confidenceLabel={dataCompleteness.confidenceLabel}
-              lastSyncedAt={dataCompleteness.lastSyncedAt}
-              lastUpdatedAt={lastUpdatedAt}
-              dataSourcesUsed={dataCompleteness.dataSourcesUsed}
-            />
-          </div>
+          <AnimatedItem delay={0.2}>
+            <GlassCard variant="panel" className="p-6 bg-gradient-to-br from-[#121214]/60 to-[#56C5D0]/5">
+               <div className="flex items-center justify-between mb-2">
+                 <span className="text-sm font-medium text-white/80">Data Confidence</span>
+                 <span className={cn("text-xs font-bold uppercase", getConfidenceTone(dataCompleteness.confidenceScore))}>
+                   {dataCompleteness.confidenceLabel}
+                 </span>
+               </div>
+               <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden mb-4">
+                  <div
+                    className={cn("h-full transition-all duration-1000",
+                      dataCompleteness.confidenceScore > 80 ? "bg-[#56C5D0]" : "bg-[#F0A562]"
+                    )}
+                    style={{ width: `${dataCompleteness.confidenceScore}%` }}
+                  />
+               </div>
+               <div className="text-xs text-white/50 space-y-1">
+                 <div className="flex justify-between">
+                   <span>History</span>
+                   <span>{dataCompleteness.daysHistory} days</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span>Platforms</span>
+                   <span>{dataCompleteness.platformsConnected} connected</span>
+                 </div>
+               </div>
+            </GlassCard>
+          </AnimatedItem>
+        </div>
 
-          <CalculationBreakdownTable rows={calculationRows} />
+        {/* RIGHT COLUMN: HUD OUTPUT */}
+        <div className="lg:col-span-8 space-y-6">
 
-          <PaymentSchedule
-            schedule={paymentSchedule}
-            paymentStatus={paymentStatus}
-            onTogglePaid={handlePaymentToggle}
-            setAsideLower={calculations.quarterlySetAsideLower}
-            setAsideUpper={calculations.quarterlySetAsideUpper}
-          />
+           {/* Top HUD Row */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <AnimatedItem delay={0.3}>
+                 <GlassCard variant="hud" className="p-6 h-full flex flex-col justify-between relative overflow-hidden group">
+                    <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                       <ShieldCheck className="h-24 w-24 text-[#56C5D0]" />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-widest text-[#56C5D0] mb-2">Estimated Quarterly Set Aside</p>
+                      <div className="text-4xl lg:text-5xl font-mono-financial font-bold text-white tracking-tighter shadow-glow">
+                        {formatCurrency(calculations.quarterlySetAsidePoint)}
+                      </div>
+                      <p className="text-sm text-white/50 mt-2">
+                         Range: {formatCurrency(calculations.quarterlySetAsideLower)} - {formatCurrency(calculations.quarterlySetAsideUpper)}
+                      </p>
+                    </div>
+                    <div className="mt-6 flex items-center gap-2 text-xs text-white/40">
+                       <div className="h-1.5 w-1.5 rounded-full bg-[#56C5D0] animate-pulse" />
+                       Live Calculation
+                    </div>
+                 </GlassCard>
+              </AnimatedItem>
 
-          <div className="rounded-xl border border-white/10 bg-[#111114] p-4">
-            <div className="flex items-start gap-2">
-              <Database className="mt-0.5 h-4 w-4 text-white/65" />
-              <div className="text-sm text-white/75">
-                <p>
-                  Data sources used:{" "}
-                  <span className="text-white/90">{dataCompleteness.dataSourcesUsed.join(", ")}</span>
-                </p>
-                <p className="mt-1">
-                  Last updated: <span className="text-white/90">{format(lastUpdatedAt, "MMM d, yyyy h:mm a")}</span>
-                </p>
-                <p className="mt-1">
-                  Last sync timestamp:{" "}
-                  <span className="text-white/90">
-                    {dataCompleteness.lastSyncedAt ? format(dataCompleteness.lastSyncedAt, "MMM d, yyyy h:mm a") : "No sync timestamp available"}
-                  </span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+              <AnimatedItem delay={0.4}>
+                 <GlassCard variant="hud" className="p-6 h-full flex items-center justify-between">
+                    <div>
+                       <p className="text-xs uppercase tracking-widest text-white/60 mb-2">Effective Tax Rate</p>
+                       <div className="text-3xl font-mono-financial font-bold text-[#F5F5F5]">
+                          {formatPercent(calculations.effectiveRatePointEstimate)}
+                       </div>
+                       <p className="text-xs text-white/40 mt-1 max-w-[140px]">
+                         Combined Federal, State, and Self-Employment
+                       </p>
+                    </div>
+                    <div className="h-[100px] w-[100px]">
+                       <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                             <Pie
+                               data={rateData}
+                               innerRadius={35}
+                               outerRadius={45}
+                               startAngle={90}
+                               endAngle={-270}
+                               dataKey="value"
+                               stroke="none"
+                             >
+                                <Cell fill="#56C5D0" />
+                                <Cell fill="rgba(255,255,255,0.1)" />
+                             </Pie>
+                          </PieChart>
+                       </ResponsiveContainer>
+                    </div>
+                 </GlassCard>
+              </AnimatedItem>
+           </div>
+
+           {/* Payment Schedule */}
+           <AnimatedItem delay={0.5}>
+              <GlassCard className="p-0 overflow-hidden">
+                 <div className="p-4 border-b border-white/5 bg-white/[0.02]">
+                    <h3 className="font-semibold text-[#F5F5F5]">Payment Schedule</h3>
+                 </div>
+                 <div className="overflow-x-auto">
+                 <Table>
+                   <TableHeader>
+                     <TableRow className="border-white/5 hover:bg-transparent">
+                       <TableHead className="text-xs font-medium uppercase text-white/50">Quarter</TableHead>
+                       <TableHead className="text-xs font-medium uppercase text-white/50">Due Date</TableHead>
+                       <TableHead className="text-right text-xs font-medium uppercase text-white/50">Status</TableHead>
+                       <TableHead className="text-right w-[100px]"></TableHead>
+                     </TableRow>
+                   </TableHeader>
+                   <TableBody>
+                      {paymentSchedule.map((q) => {
+                         const status = paymentStatus[q.id] || DEFAULT_PAYMENT_STATUS[q.id];
+                         return (
+                           <TableRow key={q.id} className="border-white/5 hover:bg-white/[0.02]">
+                             <TableCell className="font-medium text-[#F5F5F5]">{q.label}</TableCell>
+                             <TableCell className="text-white/70 text-sm">{format(q.dueDate, "MMM d, yyyy")}</TableCell>
+                             <TableCell className="text-right">
+                                {status.paid ? (
+                                   <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium bg-[#56C5D0]/10 text-[#56C5D0] border border-[#56C5D0]/20">
+                                      <CheckCircle2 className="h-3 w-3" /> Paid
+                                   </span>
+                                ) : (
+                                   <span className="text-xs text-white/40">Unpaid</span>
+                                )}
+                             </TableCell>
+                             <TableCell className="text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handlePaymentToggle(q.id)}
+                                  className="h-7 text-xs hover:bg-white/10 text-white/70"
+                                >
+                                  {status.paid ? "Undo" : "Mark Paid"}
+                                </Button>
+                             </TableCell>
+                           </TableRow>
+                         );
+                      })}
+                   </TableBody>
+                 </Table>
+                 </div>
+              </GlassCard>
+           </AnimatedItem>
+
+           <AnimatedItem delay={0.6}>
+              <CalculationBreakdown rows={calculationRows} />
+           </AnimatedItem>
+
+        </div>
       </div>
 
       <AssumptionsDrawer
@@ -1329,6 +1097,6 @@ export default function TaxEstimatorPage() {
           stateRate: STATE_EFFECTIVE_RATE[inputs.state] ?? 0.04,
         }}
       />
-    </div>
+    </PageTransition>
   );
 }

@@ -18,7 +18,7 @@ vi.mock("framer-motion", () => {
         get: (target, prop) => {
             return ({ children, ...props }) => {
                 // Filter out animation props
-                // eslint-disable-next-line no-unused-vars
+
                 const { initial, animate, exit, variants, transition, whileHover, whileTap, ...domProps } = props;
                 const Component = prop;
                 return <Component {...domProps}>{children}</Component>;
