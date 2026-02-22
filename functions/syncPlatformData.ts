@@ -18,6 +18,9 @@ Deno.serve(async (req) => {
 
     try {
       body = await req.json();
+      if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
     } catch (e) {
       return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     }

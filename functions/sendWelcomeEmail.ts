@@ -4,7 +4,18 @@ import { sendWelcomeEmailLogic, WelcomeEmailContext } from './logic/welcomeEmail
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { userId, userEmail, userName } = await req.json();
+
+    let body;
+    try {
+      body = await req.json();
+      if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
+    } catch {
+      return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const { userId, userEmail, userName } = body;
 
     const ctx: WelcomeEmailContext = {
       sendEmail: async (to, subject, body) => {

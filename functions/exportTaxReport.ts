@@ -10,7 +10,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { taxYear } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+      if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
+    } catch {
+      return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const { taxYear } = body;
     const year = taxYear || new Date().getFullYear();
 
     const ctx = {

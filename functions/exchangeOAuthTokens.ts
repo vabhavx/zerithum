@@ -14,6 +14,9 @@ Deno.serve(async (req) => {
     let body;
     try {
       body = await req.json();
+      if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        body = {};
+      }
     } catch (e) {
       body = {};
     }

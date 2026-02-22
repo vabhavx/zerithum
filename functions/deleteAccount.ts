@@ -68,13 +68,12 @@ Deno.serve(async (req) => {
         }
         user = authUser;
 
-        let body: {
-            confirmationText: string;
-            currentPassword?: string;
-            verificationCode?: string;
-        };
+        let body: any;
         try {
             body = await req.json();
+            if (!body || typeof body !== 'object' || Array.isArray(body)) {
+                return Response.json({ error: 'Invalid JSON body' }, { status: 400, headers: corsHeaders });
+            }
         } catch {
             return Response.json({ error: 'Invalid JSON body' }, { status: 400, headers: corsHeaders });
         }
