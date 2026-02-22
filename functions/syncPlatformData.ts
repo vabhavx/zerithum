@@ -1,7 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { logAudit } from './utils/audit.ts';
 import { syncPlatform, SyncContext } from './logic/sync.ts';
-import { decryptLegacy } from './utils/encryption.ts';
+import { decryptLegacy, encrypt } from './utils/encryption.ts';
+import { refreshAccessTokenLogic } from './logic/refreshAccessTokenLogic.ts';
 
 Deno.serve(async (req) => {
   let syncHistoryId: string | null = null;
@@ -53,11 +54,22 @@ Deno.serve(async (req) => {
     // Check expiry
     const expiresAt = new Date(conn.expires_at);
     if (expiresAt <= new Date() && conn.refresh_token) {
-      const refreshResult = await base44.functions.invoke('refreshAccessToken', { 
+      // Direct logic call instead of HTTP invoke for performance
+      const refreshCtx = {
+        base44,
+        env: {
+          get: (key: string) => Deno.env.get(key)
+        },
+        fetch: globalThis.fetch.bind(globalThis),
+        encrypt,
+        decrypt: decryptLegacy
+      };
+
+      const refreshResult = await refreshAccessTokenLogic(refreshCtx, user, {
         connectionId: conn.id 
       });
       
-      if (!refreshResult.data.success) {
+      if (refreshResult.status !== 200 || !refreshResult.body.success) {
         throw new Error('Failed to refresh access token');
       }
       const refreshedConn = await base44.asServiceRole.entities.ConnectedPlatform.filter({ id: connectionId });
