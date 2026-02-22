@@ -77,12 +77,12 @@
     --muted: 240 5% 10%;
     --muted-foreground: 240 4% 46%;
     /* muted text */
-    --accent: 186 60% 49%;
+    --accent: oklch(0.89 0 0);
     /* #32B8C6 */
     --accent-foreground: 0 0% 100%;
     --destructive: 358 100% 67%;
     /* #FF5459 */
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: oklch(0.985 0 0);
     --border: 0 0% 100% / 0.08;
     /* subtle white border */
     --input: 0 0% 100% / 0.08;
@@ -101,7 +101,7 @@
     --chart-5: 160 60% 50%;
     /* green */
 
-    --radius: 0.625rem;
+    --radius: 1rem;
 
     /* Sidebar - mapped to Zerithum palette */
     --sidebar-background: 240 6% 4%;
@@ -116,7 +116,7 @@
 
   /* Dark class - same as root for always-dark theme */
   .dark {
-    --background: 240 6% 4%;
+    --background: oklch(0.125 0 0);
     --foreground: 0 0% 96%;
     --card: 240 5% 7%;
     --card-foreground: 0 0% 96%;
@@ -128,10 +128,10 @@
     --secondary-foreground: 0 0% 96%;
     --muted: 240 5% 10%;
     --muted-foreground: 240 4% 46%;
-    --accent: 186 60% 49%;
+    --accent: oklch(0.229 0 0);
     --accent-foreground: 0 0% 100%;
     --destructive: 358 100% 67%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: oklch(0.985 0 0);
     --border: 0 0% 100% / 0.08;
     --input: 0 0% 100% / 0.08;
     --ring: 186 60% 49%;
