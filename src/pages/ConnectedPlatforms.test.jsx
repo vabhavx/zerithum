@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import ConnectedPlatforms from './ConnectedPlatforms';
 import { PLATFORMS } from '@/lib/platforms';
 import * as matchers from '@testing-library/jest-dom/matchers';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { base44 } from '@/api/supabaseClient';
 
 // Extend Vitest's expect with jest-dom matchers
 expect.extend(matchers);
@@ -14,43 +16,36 @@ vi.mock('framer-motion', async () => {
         AnimatePresence: ({ children }) => <>{children}</>,
         motion: {
             div: ({ children, ...props }) => <div {...props}>{children}</div>,
+            section: ({ children, ...props }) => <section {...props}>{children}</section>,
+            header: ({ children, ...props }) => <header {...props}>{children}</header>,
         },
     };
 });
 
-// Mock react-query
-vi.mock('@tanstack/react-query', () => ({
-    useQuery: ({ queryKey }) => {
-        if (queryKey[0] === 'connectedPlatforms') {
-            return { data: [], isLoading: false };
-        }
-        if (queryKey[0] === 'syncHistory') {
-            return { data: [] };
-        }
-        return { data: undefined };
-    },
-    useMutation: () => ({
-        mutate: vi.fn(),
-        isPending: false,
-    }),
-    useQueryClient: () => ({
-        invalidateQueries: vi.fn(),
-    }),
-}));
-
-// Mock recharts
-vi.mock('recharts', () => ({
-    ResponsiveContainer: ({ children }) => <div data-testid="recharts-responsive">{children}</div>,
-    PieChart: ({ children }) => <div data-testid="recharts-piechart">{children}</div>,
-    Pie: () => <div data-testid="recharts-pie" />,
-    Cell: () => <div data-testid="recharts-cell" />,
-    BarChart: ({ children }) => <div data-testid="recharts-barchart">{children}</div>,
-    Bar: () => <div data-testid="recharts-bar" />,
-    XAxis: () => <div data-testid="recharts-xaxis" />,
-    YAxis: () => <div data-testid="recharts-yaxis" />,
-    Tooltip: () => <div data-testid="recharts-tooltip" />,
-    Legend: () => <div data-testid="recharts-legend" />,
-}));
+// Mock Lucide icons
+vi.mock('lucide-react', () => {
+    const Icon = (props) => <div data-testid="icon" {...props} />;
+    return {
+        AlertTriangle: Icon,
+        CheckCircle2: Icon,
+        Loader2: Icon,
+        Plug: Icon,
+        RefreshCw: Icon,
+        Search: Icon,
+        ShieldCheck: Icon,
+        Unplug: Icon,
+        // Add others if needed
+        Youtube: Icon,
+        Users: Icon,
+        ShoppingBag: Icon,
+        CircleDollarSign: Icon,
+        Music: Icon,
+        Store: Icon,
+        Tv: Icon,
+        FileText: Icon,
+        X: Icon,
+    };
+});
 
 // Mock base44
 vi.mock('@/api/supabaseClient', () => ({
@@ -61,65 +56,79 @@ vi.mock('@/api/supabaseClient', () => ({
         entities: {
             ConnectedPlatform: {
                 filter: vi.fn().mockResolvedValue([]),
-                delete: vi.fn(),
-                create: vi.fn(),
-                update: vi.fn(),
+                delete: vi.fn().mockResolvedValue({}),
+                create: vi.fn().mockResolvedValue({}),
             },
             SyncHistory: {
                 filter: vi.fn().mockResolvedValue([]),
             },
         },
         functions: {
-            invoke: vi.fn(),
+            invoke: vi.fn().mockResolvedValue({ data: { success: true } }),
         },
     },
 }));
 
-// Mock components that might cause issues
-vi.mock('../components/platform/PlatformSyncHistory', () => ({ default: () => <div data-testid="sync-history-dialog" /> }));
-vi.mock('../components/platform/ConnectedPlatformRow', () => ({ default: () => <div data-testid="connected-platform-row" /> }));
-vi.mock('../components/platform/SyncHistoryRow', () => ({ default: () => <div data-testid="sync-history-row" /> }));
-vi.mock('../components/shared/MotivationalQuote', () => ({ default: () => <div data-testid="motivational-quote" /> }));
-vi.mock('../components/shared/SuccessConfetti', () => ({ default: () => <div data-testid="success-confetti" /> }));
+// Mock Sonner toast
+vi.mock('sonner', () => ({
+    toast: {
+        success: vi.fn(),
+        error: vi.fn(),
+    },
+}));
+
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            retry: false,
+        },
+    },
+});
+
+const renderWithProviders = (ui) => {
+    return render(
+        <QueryClientProvider client={queryClient}>
+            {ui}
+        </QueryClientProvider>
+    );
+};
 
 describe('ConnectedPlatforms Page', () => {
-    it('renders the page title', () => {
-        render(<ConnectedPlatforms />);
-        expect(screen.getByText('Connected Platforms')).toBeInTheDocument();
+    beforeEach(() => {
+        vi.clearAllMocks();
+        queryClient.clear();
+        base44.entities.ConnectedPlatform.filter.mockResolvedValue([]);
+        base44.entities.SyncHistory.filter.mockResolvedValue([]);
     });
 
-    it('renders the "No platforms connected" state initially', () => {
-        render(<ConnectedPlatforms />);
-        // Use getAllByText in case of duplicates, though we expect one specific heading ideally.
-        const headings = screen.getAllByText('No platforms connected');
-        expect(headings[0]).toBeInTheDocument();
-
-        // There are multiple "Connect Platform" buttons (one in header, one in empty state)
-        const buttons = screen.getAllByText('Connect Platform');
-        expect(buttons.length).toBeGreaterThan(0);
+    it('renders the page title', async () => {
+        renderWithProviders(<ConnectedPlatforms />);
+        expect(screen.getByText('Connected platforms')).toBeInTheDocument();
     });
 
-    it('opens the connect dialog when clicking Connect Platform', async () => {
-        render(<ConnectedPlatforms />);
-        // Click the one in the empty state or header
-        const connectBtns = screen.getAllByText('Connect Platform');
-        connectBtns[0].click();
+    it('renders available platforms', async () => {
+        renderWithProviders(<ConnectedPlatforms />);
+        const youtube = screen.getAllByText('YouTube');
+        expect(youtube.length).toBeGreaterThan(0);
+    });
+
+    it('renders connected platforms when data exists', async () => {
+        const mockConnected = [
+            {
+                id: 'conn-1',
+                platform: 'youtube',
+                sync_status: 'active',
+                connected_at: new Date().toISOString(),
+                last_synced_at: new Date().toISOString(),
+                user_id: 'user-123',
+            }
+        ];
+        base44.entities.ConnectedPlatform.filter.mockResolvedValue(mockConnected);
+
+        renderWithProviders(<ConnectedPlatforms />);
 
         await waitFor(() => {
-             // The dialog title is "Connect Platform"
-             // Use role 'heading' to be specific, or getAllByText if multiple
-             // DialogTitle usually renders an h2 or similar
-             const titles = screen.getAllByText('Connect Platform');
-             // We expect one of them to be visible and inside the dialog
-             // Just checking if any exists is enough for this smoke test
-             expect(titles.length).toBeGreaterThan(0);
-        });
-
-        // Verify some platforms from the constant are rendered in the dialog
-        PLATFORMS.forEach(platform => {
-            if (!platform.requiresApiKey && !platform.requiresShopName) {
-                expect(screen.getByText(platform.name)).toBeInTheDocument();
-            }
+            expect(screen.getAllByText('Synced').length).toBeGreaterThan(0);
         });
     });
 });
