@@ -143,6 +143,105 @@ function createEntityHelper(tableName) {
             return data;
         },
 
+        // Select specific columns
+        async select(columns = '*', filters = {}, limit = 100, orderBy = '-created_at') {
+            const isDesc = orderBy.startsWith('-');
+            const column = orderBy.replace('-', '');
+
+            let query = supabase
+                .from(tableName)
+                .select(columns);
+
+            // Apply filters
+            query = applyFilters(query, filters);
+
+            query = query.order(column, { ascending: !isDesc });
+
+            if (limit) {
+                query = query.limit(limit);
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+            return data;
+        },
+
+        // Get count of records
+        async count(filters = {}) {
+            let query = supabase
+                .from(tableName)
+                .select('*', { count: 'exact', head: true });
+
+            // Apply filters
+            query = applyFilters(query, filters);
+
+            const { count, error } = await query;
+            if (error) throw error;
+            return count;
+        },
+
+        // Paginate records
+        async paginate(page = 1, pageSize = 20, filters = {}, orderBy = '-created_at') {
+            const isDesc = orderBy.startsWith('-');
+            const column = orderBy.replace('-', '');
+            const from = (page - 1) * pageSize;
+            const to = from + pageSize - 1;
+
+            let query = supabase
+                .from(tableName)
+                .select('*', { count: 'exact' });
+
+            // Apply filters
+            query = applyFilters(query, filters);
+
+            query = query
+                .order(column, { ascending: !isDesc })
+                .range(from, to);
+
+            const { data, count, error } = await query;
+            if (error) throw error;
+            return { data, count };
+        },
+
+        // Fetch all IDs (optimized for large datasets)
+        async fetchAllIds(filters = {}, orderBy = 'id', selectColumn = 'id') {
+            const isDesc = orderBy.startsWith('-');
+            const column = orderBy.replace('-', '');
+            let allIds = [];
+            let page = 0;
+            const batchSize = 1000;
+            let hasMore = true;
+
+            while (hasMore) {
+                let query = supabase
+                    .from(tableName)
+                    .select(selectColumn);
+
+                // Apply filters
+                query = applyFilters(query, filters);
+
+                query = query
+                    .order(column, { ascending: !isDesc })
+                    .range(page * batchSize, (page + 1) * batchSize - 1);
+
+                const { data, error } = await query;
+
+                if (error) throw error;
+
+                if (data.length > 0) {
+                    allIds = [...allIds, ...data.map(r => r[selectColumn])];
+                    page++;
+                    if (data.length < batchSize) {
+                        hasMore = false;
+                    }
+                } else {
+                    hasMore = false;
+                }
+            }
+
+            return allIds;
+        },
+
         // Filter records
         async filter(filters, orderBy = '-created_at', limit = 100) {
             const isDesc = orderBy.startsWith('-');
