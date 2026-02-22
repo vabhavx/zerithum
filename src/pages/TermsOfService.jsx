@@ -1,7 +1,19 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowUp } from 'lucide-react';
-import { termsSections, IntroContent, lastUpdated, effectiveDate } from './TermsOfServiceContent';
+import ReactMarkdown from 'react-markdown';
+import { termsSections, introContent, lastUpdated, effectiveDate } from './TermsOfServiceData';
+
+// Style constants
+const legalWarningClass = "text-sm md:text-[15px] font-semibold text-[#d32f2f] leading-relaxed bg-[#fef5f5] p-5 border-l-4 border-[#d32f2f] my-6 uppercase print:border print:border-black print:text-black print:bg-transparent not-prose";
+const contactSectionClass = "contact-section bg-[#f8f9fa] p-8 rounded-lg mt-12 print:bg-transparent print:border print:border-black not-prose";
+const acknowledgmentSectionClass = "acknowledgment-section bg-[#f0f7f8] p-8 rounded-lg border-2 border-[#208D9E] my-12 print:bg-transparent print:border print:border-black not-prose";
+const contactLinkClass = "contact-link text-[#208D9E] no-underline border-b border-transparent hover:border-[#208D9E] transition-colors print:text-black print:no-underline";
+
+const sectionClassMap = {
+    'contactSectionClass': contactSectionClass,
+    'acknowledgmentSectionClass': acknowledgmentSectionClass
+};
 
 const TermsOfService = () => {
     const [activeSection, setActiveSection] = useState('section-1');
@@ -59,6 +71,30 @@ const TermsOfService = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const markdownComponents = {
+        blockquote: ({ node, children, ...props }) => (
+            <blockquote className={legalWarningClass} {...props}>
+                {children}
+            </blockquote>
+        ),
+        a: ({ node, children, ...props }) => (
+            <a className={contactLinkClass} {...props}>
+                {children}
+            </a>
+        ),
+        // Ensure lists rendering is standard or matches prose expectations
+        ul: ({ node, children, ...props }) => (
+            <ul className="list-disc pl-5 mb-4" {...props}>
+                {children}
+            </ul>
+        ),
+        li: ({ node, children, ...props }) => (
+            <li className="mb-2" {...props}>
+                {children}
+            </li>
+        )
+    };
+
     return (
         <div className="min-h-screen bg-white text-[#3a3a3a] font-sans selection:bg-[#e5f9fb] print:bg-white print:text-black">
 
@@ -107,13 +143,20 @@ const TermsOfService = () => {
                                 <p className="mb-1 sm:mb-0"><strong>Last Updated:</strong> {lastUpdated}</p>
                                 <p className="mb-0"><strong>Effective Date:</strong> {effectiveDate}</p>
                             </div>
-                            <IntroContent />
+                            {/* IntroContent rendering */}
+                            <ReactMarkdown components={markdownComponents}>{introContent}</ReactMarkdown>
                         </header>
 
                         {termsSections.map((section) => (
-                            <section key={section.id} id={section.id} className={section.className || ''}>
+                            <section
+                                key={section.id}
+                                id={section.id}
+                                className={sectionClassMap[section.className] || section.className || ''}
+                            >
                                 <h2>{section.title}</h2>
-                                {section.content}
+                                <ReactMarkdown components={markdownComponents}>
+                                    {section.content}
+                                </ReactMarkdown>
                             </section>
                         ))}
                     </article>
