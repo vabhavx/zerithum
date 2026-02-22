@@ -70,16 +70,16 @@ export default function AuthCallback() {
           platform: platform || "youtube"
         });
 
-        if (response.data.success) {
+        if (response.success) {
           setStatus("success");
-          
+
           // Redirect after a brief delay
           setTimeout(() => {
             toast.success(`${state || "YouTube"} connected successfully!`);
             navigate(createPageUrl("ConnectedPlatforms"));
           }, 1500);
         } else {
-          throw new Error(response.data.error || "Failed to connect");
+          throw new Error(response.error || "Failed to connect");
         }
       } catch (err) {
         setStatus("error");

@@ -76,8 +76,8 @@ function MetricCard({ label, value, helper, tone = "neutral", icon: Icon }) {
     <GlassCard hoverEffect glowEffect={tone === 'teal'} className="group p-5">
       <div className="flex items-start justify-between">
         <div>
-           <p className="text-xs uppercase tracking-wide text-white/50 group-hover:text-white/70 transition-colors">{label}</p>
-           <p className={`mt-2 font-mono-financial text-3xl font-bold tracking-tight ${toneClass}`}>{value}</p>
+          <p className="text-xs uppercase tracking-wide text-white/50 group-hover:text-white/70 transition-colors">{label}</p>
+          <p className={`mt-2 font-mono-financial text-3xl font-bold tracking-tight ${toneClass}`}>{value}</p>
         </div>
         {Icon && (
           <div className={`rounded-lg p-2 transition-colors ${tone === 'teal' ? 'bg-[#56C5D0]/10 text-[#56C5D0]' : 'bg-white/5 text-white/40 group-hover:bg-white/10'}`}>
@@ -217,11 +217,11 @@ export default function ConnectedPlatforms() {
         forceFullSync,
       });
 
-      if (response?.data?.success) {
+      if (response?.success) {
         toast.success(
           forceFullSync
-            ? `Full sync complete (${response.data.transactionCount || 0} transactions)`
-            : response.data.message || "Sync completed"
+            ? `Full sync complete (${response.transactionCount || 0} transactions)`
+            : response.message || "Sync completed"
         );
       } else {
         toast.success("Sync request submitted");
@@ -402,11 +402,10 @@ export default function ConnectedPlatforms() {
                 key={item.value}
                 type="button"
                 onClick={() => setStatusFilter(item.value)}
-                className={`relative overflow-hidden rounded-md px-4 py-1.5 text-xs font-medium uppercase tracking-wide transition-all ${
-                  statusFilter === item.value
+                className={`relative overflow-hidden rounded-md px-4 py-1.5 text-xs font-medium uppercase tracking-wide transition-all ${statusFilter === item.value
                     ? "text-[#0A0A0A]"
                     : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
+                  }`}
               >
                 {statusFilter === item.value && (
                   <motion.div
@@ -478,25 +477,24 @@ export default function ConnectedPlatforms() {
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div className="flex items-start gap-3">
                         <div className="relative mt-0.5 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-[#101014] transition-colors group-hover:border-white/20">
-                           {/* Status Indicator Dot */}
-                           <div className={`absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-[#15151A] ${
-                              connection.sync_status === 'active' ? 'bg-green-500' :
+                          {/* Status Indicator Dot */}
+                          <div className={`absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-[#15151A] ${connection.sync_status === 'active' ? 'bg-green-500' :
                               connection.sync_status === 'error' ? 'bg-red-500' :
-                              connection.sync_status === 'syncing' ? 'bg-blue-500 animate-pulse' : 'bg-gray-500'
-                           }`} />
+                                connection.sync_status === 'syncing' ? 'bg-blue-500 animate-pulse' : 'bg-gray-500'
+                            }`} />
                           {Icon ? <Icon className="h-5 w-5 text-white/70" /> : <Plug className="h-5 w-5 text-white/70" />}
                         </div>
 
                         <div>
                           <p className="text-sm font-medium text-[#F5F5F5]">{platform?.name || connection.platform}</p>
                           <div className="mt-1 flex items-center gap-2 text-xs text-white/50">
-                             <span>Connected {connection.connected_at ? format(new Date(connection.connected_at), "MMM d") : "-"}</span>
-                             {connection.last_synced_at && (
-                                <>
-                                  <span className="h-1 w-1 rounded-full bg-white/20" />
-                                  <span>Synced {format(new Date(connection.last_synced_at), "h:mm a")}</span>
-                                </>
-                             )}
+                            <span>Connected {connection.connected_at ? format(new Date(connection.connected_at), "MMM d") : "-"}</span>
+                            {connection.last_synced_at && (
+                              <>
+                                <span className="h-1 w-1 rounded-full bg-white/20" />
+                                <span>Synced {format(new Date(connection.last_synced_at), "h:mm a")}</span>
+                              </>
+                            )}
                           </div>
                           {connection.error_message && (
                             <p className="mt-1 text-xs text-[#F06C6C]">{connection.error_message}</p>
@@ -561,8 +559,8 @@ export default function ConnectedPlatforms() {
           </div>
 
           <motion.div
-             variants={containerVariants}
-             className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3"
+            variants={containerVariants}
+            className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3"
           >
             {availablePlatforms.map((platform) => {
               const Icon = platform.icon;
@@ -757,9 +755,9 @@ export default function ConnectedPlatforms() {
 
         {stats.errors === 0 && stats.total > 0 && (
           <motion.section
-             initial={{ opacity: 0, y: 10 }}
-             animate={{ opacity: 1, y: 0 }}
-             className="mt-6 rounded-lg border border-[#56C5D0]/35 bg-[#56C5D0]/10 p-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 rounded-lg border border-[#56C5D0]/35 bg-[#56C5D0]/10 p-4"
           >
             <div className="flex items-start gap-2">
               <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#56C5D0]" />
