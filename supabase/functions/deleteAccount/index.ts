@@ -11,6 +11,7 @@ import {
 } from '../_shared/logic/security.ts';
 import { revokeToken } from '../_shared/logic/revokeToken.ts';
 import { getCorsHeaders } from '../_shared/utils/cors.ts';
+import { decrypt } from '../_shared/utils/encryption.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -291,7 +292,23 @@ Deno.serve(async (req) => {
                     if (!p.oauth_token) return;
                     try {
                         console.log(`Revoking token for ${p.platform}`);
-                        await revokeToken(revokeCtx, p.platform, p.oauth_token, p.refresh_token, p.shop_name);
+                        let token = p.oauth_token;
+                        let refreshToken = p.refresh_token;
+
+                        try {
+                            // Tokens are encrypted in the database
+                            token = await decrypt(p.oauth_token);
+                            if (p.refresh_token) {
+                                refreshToken = await decrypt(p.refresh_token);
+                            }
+                        } catch (decryptError) {
+                            console.error(`Error decrypting token for ${p.platform}:`, decryptError);
+                            // Attempt to use as-is if decryption fails (fallback/legacy)
+                            // But usually if it fails, it's either corrupted or key is wrong.
+                            // We proceed with best effort.
+                        }
+
+                        await revokeToken(revokeCtx, p.platform, token, refreshToken, p.shop_name);
                     } catch (e) {
                         console.error(`Error revoking token for ${p.platform}:`, e);
                     }
