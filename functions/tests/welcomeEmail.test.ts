@@ -47,4 +47,24 @@ describe('sendWelcomeEmailLogic', () => {
         const [to, subject, body] = mockSendEmail.mock.calls[0];
         expect(body).toContain('Hi there,');
     });
+
+    it('should throw error if userId is missing', async () => {
+        const mockSendEmail = vi.fn();
+        const ctx: WelcomeEmailContext = { sendEmail: mockSendEmail };
+
+        await expect(sendWelcomeEmailLogic(ctx, {
+            userId: '',
+            userEmail: 'test@example.com'
+        } as any)).rejects.toThrow('Invalid userId');
+    });
+
+    it('should throw error if userEmail is missing', async () => {
+        const mockSendEmail = vi.fn();
+        const ctx: WelcomeEmailContext = { sendEmail: mockSendEmail };
+
+        await expect(sendWelcomeEmailLogic(ctx, {
+            userId: 'user123',
+            userEmail: ''
+        } as any)).rejects.toThrow('Invalid userEmail');
+    });
 });
