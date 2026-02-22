@@ -1,16 +1,26 @@
+#!/usr/bin/env python3
+"""
+Finds potentially unused source files in the project.
+Usage: python3 scripts/find_dead_code.py
+"""
+
 import os
 import re
 import sys
-import json
 
 # Configuration
-ROOT_DIR = "."
-SRC_DIR = "src"
-FUNCTIONS_DIR = "functions"
+# Determine root directory relative to this script
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+
+SRC_DIR = os.path.join(ROOT_DIR, "src")
+FUNCTIONS_DIR = os.path.join(ROOT_DIR, "functions")
+
 EXTENSIONS = {'.js', '.jsx', '.ts', '.tsx', '.css', '.scss'}
 
 # Entry points (Files we KNOW are used)
-ENTRY_POINTS = [
+# These are relative to ROOT_DIR
+ENTRY_POINT_PATHS = [
     "src/main.jsx",
     "index.html",
     "src/pages.config.js",
@@ -21,17 +31,24 @@ ENTRY_POINTS = [
     "package.json",
 ]
 
-# Add all top-level functions as entry points
-if os.path.exists(FUNCTIONS_DIR):
-    for f in os.listdir(FUNCTIONS_DIR):
-        if f.endswith(".ts") and os.path.isfile(os.path.join(FUNCTIONS_DIR, f)):
-            ENTRY_POINTS.append(os.path.join(FUNCTIONS_DIR, f))
+def get_entry_points():
+    entry_points = []
+    for p in ENTRY_POINT_PATHS:
+        entry_points.append(os.path.join(ROOT_DIR, p))
+
+    # Add all top-level functions as entry points
+    if os.path.exists(FUNCTIONS_DIR):
+        for f in os.listdir(FUNCTIONS_DIR):
+            if f.endswith(".ts") and os.path.isfile(os.path.join(FUNCTIONS_DIR, f)):
+                entry_points.append(os.path.join(FUNCTIONS_DIR, f))
+
+    return entry_points
 
 # Resolve Alias
 def resolve_path(current_file, import_path):
     # Handle @ alias
     if import_path.startswith("@/"):
-        return os.path.join(ROOT_DIR, "src", import_path[2:])
+        return os.path.normpath(os.path.join(ROOT_DIR, "src", import_path[2:]))
 
     # Handle relative paths
     if import_path.startswith("."):
@@ -39,7 +56,7 @@ def resolve_path(current_file, import_path):
 
     # Handle absolute paths (rare in this setup but possible)
     if import_path.startswith("/"):
-        return os.path.join(ROOT_DIR, import_path[1:])
+        return os.path.normpath(os.path.join(ROOT_DIR, import_path[1:]))
 
     return None # Likely a node module or external dependency
 
@@ -73,7 +90,6 @@ def scan_imports(filepath):
 
             for match in matches:
                 # Filter out node_modules (simple heuristic: no ./, ../, / at start, and doesn't start with @/)
-                # Actually @/ is our alias. @radix... is a package.
                 if not match.startswith(".") and not match.startswith("/") and not match.startswith("@/"):
                     continue
 
@@ -83,16 +99,33 @@ def scan_imports(filepath):
                     if found:
                         imports.add(found)
                     else:
-                        pass # Could not resolve file, maybe CSS or non-standard
+                        pass # Could not resolve file
 
     except Exception as e:
         print(f"Error reading {filepath}: {e}", file=sys.stderr)
     return imports
 
+def is_test_file(filename):
+    return (
+        filename.endswith(".test.js") or
+        filename.endswith(".test.jsx") or
+        filename.endswith(".test.ts") or
+        filename.endswith(".test.tsx") or
+        filename.endswith(".spec.js") or
+        filename.endswith(".spec.jsx") or
+        filename.endswith(".spec.ts") or
+        filename.endswith(".spec.tsx")
+    )
+
 def get_all_files(directory):
     files = set()
     for root, _, filenames in os.walk(directory):
+        if 'node_modules' in root:
+            continue
         for filename in filenames:
+            if is_test_file(filename):
+                continue
+
             if any(filename.endswith(ext) for ext in EXTENSIONS):
                 files.add(os.path.normpath(os.path.join(root, filename)))
     return files
@@ -108,28 +141,37 @@ def main():
     queue = []
 
     # Initialize queue with entry points
-    for entry in ENTRY_POINTS:
+    for entry in get_entry_points():
         resolved = find_file(entry)
         if resolved:
-            queue.append(resolved)
-            visited.add(resolved)
+            # We add normalized path
+            norm_resolved = os.path.normpath(resolved)
+            if norm_resolved not in visited:
+                queue.append(norm_resolved)
+                visited.add(norm_resolved)
 
     while queue:
         current = queue.pop(0)
         imports = scan_imports(current)
 
         for imp in imports:
-            if imp not in visited:
-                visited.add(imp)
-                queue.append(imp)
+            # imports contain full paths found by find_file
+            norm_imp = os.path.normpath(imp)
+            if norm_imp not in visited:
+                visited.add(norm_imp)
+                queue.append(norm_imp)
 
     # 3. Determine dead code
     dead_code = all_files - visited
 
     # 4. Output results
     print("=== DEAD CODE CANDIDATES ===")
-    for f in sorted(list(dead_code)):
-        print(f)
+    if not dead_code:
+        print("No dead code found!")
+    else:
+        for f in sorted(list(dead_code)):
+            # Print path relative to root for readability
+            print(os.path.relpath(f, ROOT_DIR))
 
 if __name__ == "__main__":
     main()
