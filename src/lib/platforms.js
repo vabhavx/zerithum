@@ -106,3 +106,4 @@ export const PLATFORMS = [
     validationUrl: "https://substack.com/api/v1/user"
   }
 ];
+
