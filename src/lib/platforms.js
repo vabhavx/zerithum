@@ -44,7 +44,7 @@ export const PLATFORMS = [
     scope: "view_sales",
     redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
-    clientId: import.meta.env.VITE_GUMROAD_CLIENT_ID || "REPLACE_WITH_YOUR_GUMROAD_CLIENT_ID"
+    clientId: "CFsL3oJtRheXNoxJgMNoJQnh1XZ9FLU7802HoBRwbpU"
   },
   {
     id: "stripe",
