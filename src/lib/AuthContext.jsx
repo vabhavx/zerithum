@@ -44,8 +44,18 @@ export const AuthProvider = ({ children }) => {
           if (storedData) {
             try {
               const parsed = JSON.parse(storedData);
-              if (parsed.access_token && parsed.user) {
-                session = parsed;
+              if (parsed.access_token) {
+                // Use Supabase SDK to set session, ensuring token validation
+                const { data, error } = await supabase.auth.setSession({
+                  access_token: parsed.access_token,
+                  refresh_token: parsed.refresh_token || '',
+                });
+
+                if (error) {
+                  console.warn('[Auth] Failed to restore session from storage:', error);
+                } else if (data?.session) {
+                  session = data.session;
+                }
               }
             } catch (parseError) {
               console.warn('[Auth] Failed to parse stored session');

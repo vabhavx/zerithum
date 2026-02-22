@@ -19,7 +19,7 @@ vi.mock('@/api/supabaseClient', () => {
       from: vi.fn(() => ({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
-            single: vi.fn(),
+            single: vi.fn(() => Promise.resolve({ data: {}, error: null })),
           })),
         })),
       })),
@@ -119,5 +119,45 @@ describe('AuthContext Security Vulnerability', () => {
     const storageCalls = window.localStorage.setItem.mock.calls;
     const authCall = storageCalls.find(call => call[0].includes('auth-token'));
     expect(authCall).toBeUndefined();
+  });
+
+  it('should call supabase.auth.setSession when recovering from localStorage manually', async () => {
+    // 1. Mock getSession to fail
+    supabase.auth.getSession.mockRejectedValue(new Error('Network error'));
+
+    // 2. Mock localStorage with valid data
+    const projectId = 'test-project';
+    const storageKey = `sb-${projectId}-auth-token`;
+    const fakeSession = {
+        access_token: 'fake-token',
+        refresh_token: 'fake-refresh',
+        user: { id: '123' }
+    };
+
+    window.localStorage.getItem.mockImplementation((key) => {
+        if (key === storageKey) return JSON.stringify(fakeSession);
+        return null;
+    });
+
+    // Mock setSession to succeed
+    supabase.auth.setSession.mockResolvedValue({
+        data: { session: fakeSession },
+        error: null
+    });
+
+    // Render
+    render(
+      <AuthProvider>
+        <div>Test Child</div>
+      </AuthProvider>
+    );
+
+    // Wait and check if setSession is called
+    await waitFor(() => {
+        expect(supabase.auth.setSession).toHaveBeenCalledWith({
+            access_token: fakeSession.access_token,
+            refresh_token: fakeSession.refresh_token
+        });
+    });
   });
 });
