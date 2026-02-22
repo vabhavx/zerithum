@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/supabaseClient";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { 
   Scale, 
@@ -10,7 +10,9 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,34 +25,27 @@ import {
 } from "@/components/ui/select";
 import ReconciliationRow from "@/components/ReconciliationRow";
 import { useToast } from "@/components/ui/use-toast";
+import { useReconciliationStats, useUnreconciledTransactions, useReconciliations } from "@/hooks/use-reconciliation";
 
 export default function Reconciliation() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: revenueTransactions = [] } = useQuery({
-    queryKey: ["revenueTransactions"],
-    queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date"),
-  });
+  // Use new optimized hooks
+  const { data: statsData } = useReconciliationStats();
+  const stats = statsData || { total: 0, matched: 0, unmatched: 0, matchRate: 0 };
 
-  const { data: bankTransactions = [] } = useQuery({
-    queryKey: ["bankTransactions"],
-    queryFn: () => base44.entities.BankTransaction.list("-transaction_date"),
-  });
+  const { data: unreconciledRevenue = [] } = useUnreconciledTransactions();
 
-  const { data: reconciliations = [] } = useQuery({
-    queryKey: ["reconciliations"],
-    queryFn: () => base44.entities.Reconciliation.list("-reconciled_at"),
-  });
-
-  const createReconciliationMutation = useMutation({
-    mutationFn: (data) => base44.entities.Reconciliation.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
-    },
-  });
+  const { data: reconciliationsData, isLoading: isLoadingReconciliations } = useReconciliations(page, pageSize, filterStatus);
+  const reconciliations = reconciliationsData?.data || [];
+  const totalReconciliations = reconciliationsData?.count || 0;
+  const totalPages = Math.ceil(totalReconciliations / pageSize);
 
   const autoReconcileMutation = useMutation({
     mutationFn: () => base44.functions.invoke('reconcileRevenue', {}),
@@ -61,6 +56,8 @@ export default function Reconciliation() {
           description: response.data.message,
         });
         queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
+        queryClient.invalidateQueries({ queryKey: ["reconciliationStats"] });
+        queryClient.invalidateQueries({ queryKey: ["unreconciledTransactions"] });
       } else {
         toast({
           title: "Auto-Match Failed",
@@ -77,45 +74,6 @@ export default function Reconciliation() {
       });
     }
   });
-
-  // Calculate stats
-  const stats = useMemo(() => {
-    const matched = reconciliations.filter(r => r.match_category !== "unmatched").length;
-    const unmatched = revenueTransactions.length - matched;
-    const autoMatched = reconciliations.filter(r => r.reconciled_by === "auto").length;
-    
-    return {
-      total: revenueTransactions.length,
-      matched,
-      unmatched,
-      autoMatched,
-      matchRate: revenueTransactions.length > 0 
-        ? ((matched / revenueTransactions.length) * 100).toFixed(1) 
-        : 0
-    };
-  }, [revenueTransactions, reconciliations]);
-
-  // Get unreconciled transactions
-  // Memoize to prevent expensive O(N+M) filtering on every render (e.g. when searching)
-  const unreconciledRevenue = useMemo(() => {
-    const reconciledRevenueIds = new Set(reconciliations.map(r => r.revenue_transaction_id));
-    return revenueTransactions.filter(t => !reconciledRevenueIds.has(t.id));
-  }, [revenueTransactions, reconciliations]);
-
-  // Filter and search
-  const filteredReconciliations = useMemo(() => {
-    let filtered = [...reconciliations];
-    
-    if (filterStatus !== "all") {
-      filtered = filtered.filter(r => r.match_category === filterStatus);
-    }
-    
-    if (searchTerm) {
-      // Would need to join with transactions for full search
-    }
-    
-    return filtered;
-  }, [reconciliations, filterStatus, searchTerm]);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -180,9 +138,17 @@ export default function Reconciliation() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 bg-white/50 border-slate-200 rounded-xl"
+            disabled={true} // Search disabled as it only works on loaded page
+            title="Search is currently disabled during performance optimization"
           />
         </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <Select
+            value={filterStatus}
+            onValueChange={(val) => {
+                setFilterStatus(val);
+                setPage(1); // Reset page on filter change
+            }}
+        >
           <SelectTrigger className="w-full sm:w-48 bg-white/50 border-slate-200 rounded-xl">
             <Filter className="w-4 h-4 mr-2 text-slate-400" />
             <SelectValue placeholder="Filter by status" />
@@ -205,7 +171,7 @@ export default function Reconciliation() {
             Pending Reconciliation ({unreconciledRevenue.length})
           </h2>
           <div className="space-y-3">
-            {unreconciledRevenue.slice(0, 5).map((transaction) => (
+            {unreconciledRevenue.map((transaction) => (
               <div key={transaction.id} className="clay-sm rounded-2xl p-4 flex items-center gap-4">
                 <div className="flex-1">
                   <p className="font-medium text-slate-800">
@@ -230,7 +196,11 @@ export default function Reconciliation() {
       {/* Reconciliation History */}
       <div>
         <h2 className="text-lg font-semibold text-slate-800 mb-4">Reconciliation History</h2>
-        {filteredReconciliations.length === 0 ? (
+        {isLoadingReconciliations ? (
+            <div className="text-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-slate-400 mx-auto" />
+            </div>
+        ) : reconciliations.length === 0 ? (
           <div className="clay rounded-3xl p-12 text-center">
             <Scale className="w-12 h-12 text-slate-300 mx-auto mb-4" />
             <h3 className="font-semibold text-slate-800 mb-2">No reconciliations yet</h3>
@@ -238,10 +208,37 @@ export default function Reconciliation() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredReconciliations.map((rec) => (
+            {reconciliations.map((rec) => (
               <ReconciliationRow key={rec.id} rec={rec} />
             ))}
           </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+            <p className="text-sm text-slate-500">
+                Page {page} of {totalPages}
+            </p>
+            <div className="flex gap-2">
+                <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                >
+                <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                >
+                <ChevronRight className="w-4 h-4" />
+                </Button>
+            </div>
+            </div>
         )}
       </div>
     </div>
