@@ -11,6 +11,7 @@ import {
 } from '../_shared/logic/security.ts';
 import { revokeToken, RevokeContext } from './logic/revokeToken.ts';
 import { getCorsHeaders } from '../_shared/utils/cors.ts';
+import { decrypt } from './utils/encryption.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -246,7 +247,7 @@ Deno.serve(async (req) => {
                     emit('progress', { step: 'revoke_tokens', message: 'Revoking connected platform tokens...' });
                     const { data: platforms } = await adminClient
                         .from('connected_platforms')
-                        .select('platform, oauth_token, refresh_token')
+                        .select('platform, oauth_token, refresh_token, shop_name')
                         .eq('user_id', user.id);
 
                     if (platforms && platforms.length > 0) {
@@ -262,7 +263,20 @@ Deno.serve(async (req) => {
                                 message: `Revoking ${p.platform}...`,
                                 platform: p.platform
                             });
-                            return revokeToken(revokeCtx, p.platform, p.oauth_token, p.refresh_token);
+
+                            let token = p.oauth_token;
+                            let refreshToken = p.refresh_token;
+
+                            try {
+                                token = await decrypt(p.oauth_token);
+                                if (p.refresh_token) {
+                                    refreshToken = await decrypt(p.refresh_token);
+                                }
+                            } catch (e) {
+                                console.error(`Error decrypting token for ${p.platform}:`, e);
+                            }
+
+                            return revokeToken(revokeCtx, p.platform, token, refreshToken, p.shop_name);
                         });
                         await Promise.all(revokePromises);
                         stepsCompleted.push('oauth_tokens_revoked');
