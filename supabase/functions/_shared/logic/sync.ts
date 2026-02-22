@@ -28,8 +28,8 @@ const RETRY_CONFIG = {
 function isTemporaryError(error: any): boolean {
   const errorMessage = error.message?.toLowerCase() || '';
   const errorCode = error.code?.toLowerCase() || '';
-  
-  return RETRY_CONFIG.temporaryErrors.some(pattern => 
+
+  return RETRY_CONFIG.temporaryErrors.some(pattern =>
     errorMessage.includes(pattern.toLowerCase()) || errorCode.includes(pattern.toLowerCase())
   );
 }
@@ -51,9 +51,9 @@ async function retryWithBackoff<T>(
       RETRY_CONFIG.baseDelay * Math.pow(2, retryCount) + Math.random() * 1000,
       RETRY_CONFIG.maxDelay
     );
-    
+
     await new Promise(resolve => setTimeout(resolve, delay));
-    
+
     return retryWithBackoff(fn, retryCount + 1);
   }
 }
@@ -61,37 +61,37 @@ async function retryWithBackoff<T>(
 // Enhanced error message generation
 function generateDetailedErrorMessage(error: any, platform: string, context: string): string {
   const baseMessage = error.message || 'Unknown error';
-  
+
   // Rate limit errors
   if (baseMessage.includes('429') || baseMessage.includes('rate_limit')) {
     return `Rate limit exceeded for ${platform}. Please wait a few minutes before trying again. The platform API has temporary usage restrictions.`;
   }
-  
+
   // Network errors
   if (baseMessage.includes('ECONNRESET') || baseMessage.includes('ETIMEDOUT')) {
     return `Network connection issue with ${platform}. The platform's servers may be temporarily unavailable. Please try again later.`;
   }
-  
+
   // Authentication errors
   if (baseMessage.includes('401') || baseMessage.includes('Unauthorized') || baseMessage.includes('invalid_token')) {
     return `Authentication failed for ${platform}. Your access token may have expired. Please disconnect and reconnect the platform.`;
   }
-  
+
   // Permission errors
   if (baseMessage.includes('403') || baseMessage.includes('Forbidden') || baseMessage.includes('insufficient_scope')) {
     return `Insufficient permissions for ${platform}. Please reconnect with the required permissions.`;
   }
-  
+
   // Not found errors
   if (baseMessage.includes('404')) {
     return `Resource not found on ${platform}. This may indicate the platform API has changed or your account setup is incomplete.`;
   }
-  
+
   // Server errors
   if (baseMessage.includes('500') || baseMessage.includes('503') || baseMessage.includes('504')) {
     return `${platform} servers are experiencing issues. This is temporary - please try again in a few minutes.`;
   }
-  
+
   // Generic fallback
   return `Sync failed for ${platform} during ${context}: ${baseMessage}`;
 }
@@ -126,7 +126,7 @@ export async function syncPlatform(
         const endDate = new Date().toISOString().split('T')[0];
 
         const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=${startDate}&endDate=${endDate}&metrics=estimatedRevenue&dimensions=day`;
-        
+
         const analyticsResponse = await retryWithBackoff(async () => {
           retryAttempts++;
           return await ctx.fetchPlatformData(url, {
@@ -153,7 +153,7 @@ export async function syncPlatform(
 
       case 'patreon': {
         const campaignsUrl = 'https://www.patreon.com/api/oauth2/v2/campaigns?include=benefits,tiers&fields[campaign]=creation_name,patron_count,published_at&fields[tier]=amount_cents,title,patron_count&fields[benefit]=title';
-        
+
         const campaignsData = await retryWithBackoff(async () => {
           retryAttempts++;
           return await ctx.fetchPlatformData(campaignsUrl, {
@@ -166,7 +166,7 @@ export async function syncPlatform(
 
         const campaignsTransactions = await Promise.all(campaigns.map(async (campaign: any) => {
           const membersUrl = `https://www.patreon.com/api/oauth2/v2/campaigns/${campaign.id}/members?include=currently_entitled_tiers,user&fields[member]=full_name,patron_status,currently_entitled_amount_cents,pledge_relationship_start,last_charge_date,last_charge_status&fields[tier]=title,amount_cents`;
-          
+
           const membersData = await retryWithBackoff(async () => {
             retryAttempts++;
             return await ctx.fetchPlatformData(membersUrl, {
@@ -204,7 +204,7 @@ export async function syncPlatform(
       case 'stripe': {
         const limit = forceFullSync ? 500 : 100;
         const url = `https://api.stripe.com/v1/charges?limit=${limit}`;
-        
+
         const data = await retryWithBackoff(async () => {
           retryAttempts++;
           return await ctx.fetchPlatformData(url, {
@@ -228,12 +228,36 @@ export async function syncPlatform(
         break;
       }
 
+      case 'gumroad': {
+        const url = 'https://api.gumroad.com/v2/sales';
+        const data = await retryWithBackoff(async () => {
+          retryAttempts++;
+          return await ctx.fetchPlatformData(url, {
+            'Authorization': `Bearer ${oauthToken}`,
+            'Accept': 'application/json'
+          });
+        });
+
+        transactions = (data.sales || []).map((sale: any) => ({
+          user_id: user.id,
+          platform_transaction_id: `gumroad_${sale.id}`,
+          platform: 'gumroad',
+          amount: sale.price / 100,
+          currency: (sale.currency || 'USD').toUpperCase(),
+          transaction_date: sale.created_at.split('T')[0],
+          category: 'product_sale',
+          description: sale.product_name || 'Gumroad Sale',
+          synced_at: new Date().toISOString()
+        }));
+        break;
+      }
+
       default:
         // Other platforms might return empty or throw
         if (['instagram', 'tiktok'].includes(platform)) {
-             transactions = [];
+          transactions = [];
         } else {
-             throw new Error('Unsupported platform');
+          throw new Error('Unsupported platform');
         }
     }
 

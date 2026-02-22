@@ -6,8 +6,11 @@ export function getCorsHeaders(req: Request) {
     const allowedOrigins = [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
+        'http://localhost:5173',
         'https://app.base44.com',
-        'https://base44.com'
+        'https://base44.com',
+        'https://zerithum.com',
+        'https://www.zerithum.com'
     ];
 
     // Check environment variable for base URL
@@ -18,7 +21,7 @@ export function getCorsHeaders(req: Request) {
 
     let allowOrigin = 'null';
 
-    if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.base44.app'))) {
+    if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.base44.app') || origin.endsWith('.vercel.app'))) {
         allowOrigin = origin;
     }
 
