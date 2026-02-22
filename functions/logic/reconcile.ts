@@ -25,10 +25,12 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
     }
 
     // Pre-process revenue transactions: parse date and sort
-    // Using a map to include timestamp for faster access and sorting
+    // Using a map to include timestamp for faster access and sorting.
+    // Optimization: Wrapping original object instead of spreading prevents redundant allocations.
+    // Optimization: Date.parse() is faster than new Date().getTime() for ISO strings.
     const sortedRevenue = revenueTxns.map(r => ({
-        ...r,
-        timestamp: new Date(r.transaction_date).getTime()
+        original: r,
+        timestamp: Date.parse(r.transaction_date)
     })).sort((a, b) => a.timestamp - b.timestamp);
 
     // Find earliest revenue date to limit bank query
@@ -38,8 +40,8 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
 
     // Pre-process bank transactions: parse date and sort
     const sortedBanks = bankTxns.map(b => ({
-        ...b,
-        timestamp: new Date(b.transaction_date).getTime()
+        original: b,
+        timestamp: Date.parse(b.transaction_date)
     })).sort((a, b) => a.timestamp - b.timestamp);
 
     // 2. Identify Potential Matches
@@ -53,7 +55,7 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
 
     for (const rev of sortedRevenue) {
       const revTime = rev.timestamp;
-      const revAmount = rev.amount;
+      const revAmount = rev.original.amount;
 
       // Sliding Window: Advance bankStartIndex to the first bank txn >= revTime
       // Since sortedBanks is sorted, we don't need to reset bankStartIndex for the next revenue txn
@@ -75,7 +77,7 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
         // diffDays < 0 is handled by bankStartIndex (bank.timestamp >= revTime)
         // diffDays > 14 is handled by the break above
 
-        const bankAmount = bank.amount;
+        const bankAmount = bank.original.amount;
         let matchType: MatchCandidate['matchType'] | null = null;
         let confidence = 0;
         let baseScore = 0;
@@ -105,8 +107,8 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
             const score = baseScore - diffDays;
 
             candidates.push({
-                revenue: rev,
-                bank: bank,
+                revenue: rev.original,
+                bank: bank.original,
                 score,
                 matchType,
                 confidence
