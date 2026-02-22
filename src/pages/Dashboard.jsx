@@ -325,22 +325,36 @@ export default function Dashboard() {
   }, [period, transactions, expenses]);
 
   const dataCompleteness = useMemo(() => {
-    const allDates = transactions
-      .map((tx) => new Date(tx.transaction_date))
-      .filter((date) => !Number.isNaN(date.getTime()))
-      .sort((left, right) => left.getTime() - right.getTime());
+    let firstDate = null;
+    let minTime = Infinity;
 
-    const firstDate = allDates[0] || null;
+    for (const tx of transactions) {
+      if (!tx.transaction_date) continue;
+      const date = new Date(tx.transaction_date);
+      const time = date.getTime();
+      if (!Number.isNaN(time) && time < minTime) {
+        minTime = time;
+        firstDate = date;
+      }
+    }
+
     const daysHistory = firstDate
       ? Math.max(0, differenceInCalendarDays(new Date(), firstDate) + 1)
       : 0;
 
-    const lastSyncDates = connectedPlatforms
-      .map((platform) => platform.last_synced_at || platform.updated_at)
-      .filter(Boolean)
-      .map((dateString) => new Date(dateString))
-      .filter((date) => !Number.isNaN(date.getTime()))
-      .sort((left, right) => right.getTime() - left.getTime());
+    let lastSync = null;
+    let maxTime = -Infinity;
+
+    for (const platform of connectedPlatforms) {
+      const dateString = platform.last_synced_at || platform.updated_at;
+      if (!dateString) continue;
+      const date = new Date(dateString);
+      const time = date.getTime();
+      if (!Number.isNaN(time) && time > maxTime) {
+        maxTime = time;
+        lastSync = date;
+      }
+    }
 
     const errorPlatforms = connectedPlatforms.filter(
       (platform) => platform.sync_status === "error"
@@ -349,7 +363,7 @@ export default function Dashboard() {
     return {
       daysHistory,
       platformCount: connectedPlatforms.length,
-      lastSync: lastSyncDates[0] || null,
+      lastSync,
       errorPlatforms,
     };
   }, [transactions, connectedPlatforms]);
