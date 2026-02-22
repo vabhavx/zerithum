@@ -28,7 +28,7 @@ const USER_DATA_TABLES = [
     'transactions',
     'revenue_transactions',
     'tax_profiles',
-    'platform_connections',   // Legacy table
+    'platform_connections',   // Legacy table (failure to delete is not critical)
     'connected_platforms',    // MUST be after sync_history
     'verification_codes',
     'audit_log',
@@ -291,7 +291,7 @@ Deno.serve(async (req) => {
 
                                 if (error) {
                                     console.error(`Error deleting ${table}:`, error);
-                                    if (table === 'platform_connections' || table === 'connected_platforms') {
+                                    if (table === 'connected_platforms') {
                                         throw new Error(`Critical failure: Could not delete from ${table}: ${error.message}`);
                                     }
                                     stepsCompleted.push(`${table}_failed`);
@@ -301,7 +301,7 @@ Deno.serve(async (req) => {
                             }
                         } catch (tableError: any) {
                             console.error(`Error processing table ${table}:`, tableError);
-                            if (table === 'platform_connections' || table === 'connected_platforms') {
+                            if (table === 'connected_platforms') {
                                 throw tableError;
                             }
                         }
