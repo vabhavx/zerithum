@@ -28,11 +28,19 @@ describe('detectAnomalies Logic', () => {
   });
 
   it('should not detect revenue anomalies if changes are small', async () => {
+    // Prevent crash if LLM is unexpectedly called
+    mockCtx.invokeLLM.mockResolvedValue({});
+
     const transactions = [];
-    // Generate stable data
-    for (let i = 0; i < 20; i++) {
+    // Generate stable data aligned with Thu-Wed week buckets
+    // 2024-01-04 is a Thursday. 14 days = exactly 2 weeks.
+    const startDate = new Date('2024-01-04T00:00:00Z');
+
+    for (let i = 0; i < 14; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
       transactions.push({
-        transaction_date: `2024-01-${String(i + 1).padStart(2, '0')}`,
+        transaction_date: date.toISOString().split('T')[0],
         amount: 1000, // No change
         platform: 'TestPlatform'
       });
