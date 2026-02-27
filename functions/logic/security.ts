@@ -92,8 +92,18 @@ export async function validatePassword(password: string): Promise<PasswordValida
  */
 export function generateOTPCode(): string {
     const randomBytes = new Uint32Array(1);
-    crypto.getRandomValues(randomBytes);
-    const code = (randomBytes[0] % 900000) + 100000; // 100000-999999
+    // Rejection sampling to avoid modulo bias
+    // 2^32 % 900000 = 167296
+    // Limit = 2^32 - 167296 = 4294800000
+    // If random value >= limit, it falls into the incomplete range at the end
+    const limit = 4294967296 - (4294967296 % 900000);
+    let randomValue;
+    do {
+        crypto.getRandomValues(randomBytes);
+        randomValue = randomBytes[0];
+    } while (randomValue >= limit);
+
+    const code = (randomValue % 900000) + 100000; // 100000-999999
     return code.toString();
 }
 
