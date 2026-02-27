@@ -191,21 +191,29 @@ export default function ConnectedPlatforms() {
     };
   }, [connectedPlatforms]);
 
-  const filteredConnections = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return connectedPlatforms.filter((connection) => {
-      if (statusFilter !== "all" && connection.sync_status !== statusFilter) return false;
-      if (!query) return true;
+  const platformMap = useMemo(() => {
+    return new Map(PLATFORMS.map((platform) => [platform.id, platform]));
+  }, []);
 
-      const platform = PLATFORMS.find((item) => item.id === connection.platform);
-      const text = [platform?.name, connection.platform, connection.error_message]
+  const preparedSearchStrings = useMemo(() => {
+    return connectedPlatforms.map((connection) => {
+      const platform = platformMap.get(connection.platform);
+      return [platform?.name, connection.platform, connection.error_message]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
-
-      return text.includes(query);
     });
-  }, [connectedPlatforms, statusFilter, search]);
+  }, [connectedPlatforms, platformMap]);
+
+  const filteredConnections = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return connectedPlatforms.filter((connection, index) => {
+      if (statusFilter !== "all" && connection.sync_status !== statusFilter) return false;
+      if (!query) return true;
+
+      return preparedSearchStrings[index].includes(query);
+    });
+  }, [connectedPlatforms, statusFilter, search, preparedSearchStrings]);
 
   const syncConnection = async (connection, forceFullSync = false) => {
     setSyncingId(connection.id);
@@ -460,7 +468,7 @@ export default function ConnectedPlatforms() {
 
             <AnimatePresence mode="popLayout">
               {filteredConnections.map((connection) => {
-                const platform = PLATFORMS.find((item) => item.id === connection.platform);
+                const platform = platformMap.get(connection.platform);
                 const Icon = platform?.icon;
                 const syncing = syncingId === connection.id || connection.sync_status === "syncing";
 
