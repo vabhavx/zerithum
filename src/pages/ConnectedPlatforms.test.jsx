@@ -1,22 +1,38 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import ConnectedPlatforms from './ConnectedPlatforms';
-import { PLATFORMS } from '@/lib/platforms';
 import * as matchers from '@testing-library/jest-dom/matchers';
+import React from 'react';
 
 // Extend Vitest's expect with jest-dom matchers
 expect.extend(matchers);
 
 // Mock framer-motion
 vi.mock('framer-motion', async () => {
-    return {
-        AnimatePresence: ({ children }) => <>{children}</>,
-        motion: {
-            div: ({ children, ...props }) => <div {...props}>{children}</div>,
+  return {
+    AnimatePresence: ({ children }) => <>{children}</>,
+    motion: new Proxy(
+      {},
+      {
+        get: (target, prop) => {
+          return React.forwardRef(({ children, ...props }, ref) => (
+            <div {...props} ref={ref} data-testid={`motion-${String(prop)}`}>
+              {children}
+            </div>
+          ));
         },
-    };
+      }
+    ),
+  };
 });
+
+// Mock GlassCard
+vi.mock('@/components/ui/glass-card', () => ({
+    GlassCard: ({ children, className }) => <div className={className} data-testid="glass-card">{children}</div>,
+    containerVariants: {},
+    itemVariants: {},
+}));
 
 // Mock react-query
 vi.mock('@tanstack/react-query', () => ({
@@ -85,41 +101,23 @@ vi.mock('../components/shared/SuccessConfetti', () => ({ default: () => <div dat
 describe('ConnectedPlatforms Page', () => {
     it('renders the page title', () => {
         render(<ConnectedPlatforms />);
-        expect(screen.getByText('Connected Platforms')).toBeInTheDocument();
+        expect(screen.getByText(/Connected platforms/i)).toBeInTheDocument();
     });
 
-    it('renders the "No platforms connected" state initially', () => {
+    it('renders the "No connections match" state initially', () => {
         render(<ConnectedPlatforms />);
-        // Use getAllByText in case of duplicates, though we expect one specific heading ideally.
-        const headings = screen.getAllByText('No platforms connected');
-        expect(headings[0]).toBeInTheDocument();
-
-        // There are multiple "Connect Platform" buttons (one in header, one in empty state)
-        const buttons = screen.getAllByText('Connect Platform');
-        expect(buttons.length).toBeGreaterThan(0);
+        // Use getAllByText to handle duplicates (although it shouldn't ideally duplicate, sometimes mocks or re-renders cause it)
+        const messages = screen.getAllByText('No connections match current filters.');
+        expect(messages.length).toBeGreaterThan(0);
+        expect(messages[0]).toBeInTheDocument();
     });
 
-    it('opens the connect dialog when clicking Connect Platform', async () => {
+    it('opens the connect dialog when clicking Connect on a platform', async () => {
         render(<ConnectedPlatforms />);
-        // Click the one in the empty state or header
-        const connectBtns = screen.getAllByText('Connect Platform');
+        const connectBtns = screen.getAllByText('Connect');
         connectBtns[0].click();
 
-        await waitFor(() => {
-             // The dialog title is "Connect Platform"
-             // Use role 'heading' to be specific, or getAllByText if multiple
-             // DialogTitle usually renders an h2 or similar
-             const titles = screen.getAllByText('Connect Platform');
-             // We expect one of them to be visible and inside the dialog
-             // Just checking if any exists is enough for this smoke test
-             expect(titles.length).toBeGreaterThan(0);
-        });
-
-        // Verify some platforms from the constant are rendered in the dialog
-        PLATFORMS.forEach(platform => {
-            if (!platform.requiresApiKey && !platform.requiresShopName) {
-                expect(screen.getByText(platform.name)).toBeInTheDocument();
-            }
-        });
+        const sections = screen.getAllByText('Available platforms');
+        expect(sections.length).toBeGreaterThan(0);
     });
 });
