@@ -80,6 +80,10 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Invalid JSON body' }, { status: 400, headers: corsHeaders });
         }
 
+        if (!body || typeof body !== 'object' || Array.isArray(body)) {
+            return Response.json({ error: 'Request body must be a JSON object' }, { status: 400, headers: corsHeaders });
+        }
+
         const { confirmationText, currentPassword, verificationCode } = body;
 
         if (confirmationText !== 'DELETE') {
