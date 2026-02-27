@@ -1,19 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { differenceInCalendarDays, format, startOfYear, endOfYear } from "date-fns";
-import { jsPDF } from "jspdf";
 import {
   CheckCircle2,
   FileText,
   ShieldCheck,
-  Calculator,
   Info,
-  ChevronDown,
-  ChevronUp,
   Download
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,410 +30,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { PageTransition, AnimatedItem } from "@/components/ui/PageTransition";
 import { GlassCard } from "@/components/ui/glass-card";
 
-const INPUT_STORAGE_KEY = "zerithum-tax-estimator-inputs-v1";
-const PAYMENT_STORAGE_KEY = "zerithum-tax-estimator-payment-status-v1";
-
-const DEFAULT_INPUTS = {
-  filingStatus: "single",
-  state: "CA",
-  expectedAnnualRevenue: 0,
-  expenseRate: 25,
-  includeOtherIncome: false,
-  otherIncome: 0,
-};
-
-const DEFAULT_PAYMENT_STATUS = {
-  q1: { paid: false, paidAt: null },
-  q2: { paid: false, paidAt: null },
-  q3: { paid: false, paidAt: null },
-  q4: { paid: false, paidAt: null },
-};
-
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const percentFormatter = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const FILING_STATUS_OPTIONS = [
-  { value: "single", label: "Single" },
-  { value: "married_joint", label: "Married Filing Jointly" },
-  { value: "married_separate", label: "Married Filing Separately" },
-  { value: "head_of_household", label: "Head of Household" },
-];
-
-const STATE_OPTIONS = [
-  { value: "AL", label: "Alabama" },
-  { value: "AK", label: "Alaska" },
-  { value: "AZ", label: "Arizona" },
-  { value: "AR", label: "Arkansas" },
-  { value: "CA", label: "California" },
-  { value: "CO", label: "Colorado" },
-  { value: "CT", label: "Connecticut" },
-  { value: "DE", label: "Delaware" },
-  { value: "FL", label: "Florida" },
-  { value: "GA", label: "Georgia" },
-  { value: "HI", label: "Hawaii" },
-  { value: "ID", label: "Idaho" },
-  { value: "IL", label: "Illinois" },
-  { value: "IN", label: "Indiana" },
-  { value: "IA", label: "Iowa" },
-  { value: "KS", label: "Kansas" },
-  { value: "KY", label: "Kentucky" },
-  { value: "LA", label: "Louisiana" },
-  { value: "ME", label: "Maine" },
-  { value: "MD", label: "Maryland" },
-  { value: "MA", label: "Massachusetts" },
-  { value: "MI", label: "Michigan" },
-  { value: "MN", label: "Minnesota" },
-  { value: "MS", label: "Mississippi" },
-  { value: "MO", label: "Missouri" },
-  { value: "MT", label: "Montana" },
-  { value: "NE", label: "Nebraska" },
-  { value: "NV", label: "Nevada" },
-  { value: "NH", label: "New Hampshire" },
-  { value: "NJ", label: "New Jersey" },
-  { value: "NM", label: "New Mexico" },
-  { value: "NY", label: "New York" },
-  { value: "NC", label: "North Carolina" },
-  { value: "ND", label: "North Dakota" },
-  { value: "OH", label: "Ohio" },
-  { value: "OK", label: "Oklahoma" },
-  { value: "OR", label: "Oregon" },
-  { value: "PA", label: "Pennsylvania" },
-  { value: "RI", label: "Rhode Island" },
-  { value: "SC", label: "South Carolina" },
-  { value: "SD", label: "South Dakota" },
-  { value: "TN", label: "Tennessee" },
-  { value: "TX", label: "Texas" },
-  { value: "UT", label: "Utah" },
-  { value: "VT", label: "Vermont" },
-  { value: "VA", label: "Virginia" },
-  { value: "WA", label: "Washington" },
-  { value: "WV", label: "West Virginia" },
-  { value: "WI", label: "Wisconsin" },
-  { value: "WY", label: "Wyoming" },
-  { value: "DC", label: "District of Columbia" },
-];
-
-const STATE_EFFECTIVE_RATE = {
-  AL: 0.04,
-  AK: 0,
-  AZ: 0.025,
-  AR: 0.043,
-  CA: 0.067,
-  CO: 0.044,
-  CT: 0.05,
-  DE: 0.05,
-  FL: 0,
-  GA: 0.046,
-  HI: 0.063,
-  ID: 0.058,
-  IL: 0.0495,
-  IN: 0.0315,
-  IA: 0.045,
-  KS: 0.048,
-  KY: 0.045,
-  LA: 0.04,
-  ME: 0.058,
-  MD: 0.055,
-  MA: 0.05,
-  MI: 0.0425,
-  MN: 0.06,
-  MS: 0.04,
-  MO: 0.047,
-  MT: 0.053,
-  NE: 0.052,
-  NV: 0,
-  NH: 0,
-  NJ: 0.057,
-  NM: 0.047,
-  NY: 0.062,
-  NC: 0.045,
-  ND: 0.026,
-  OH: 0.035,
-  OK: 0.04,
-  OR: 0.075,
-  PA: 0.0307,
-  RI: 0.05,
-  SC: 0.045,
-  SD: 0,
-  TN: 0,
-  TX: 0,
-  UT: 0.0485,
-  VT: 0.053,
-  VA: 0.048,
-  WA: 0,
-  WV: 0.045,
-  WI: 0.053,
-  WY: 0,
-  DC: 0.06,
-};
-
-const FEDERAL_BRACKETS = {
-  single: [
-    { upTo: 11600, rate: 0.1 },
-    { upTo: 47150, rate: 0.12 },
-    { upTo: 100525, rate: 0.22 },
-    { upTo: 191950, rate: 0.24 },
-    { upTo: 243725, rate: 0.32 },
-    { upTo: 609350, rate: 0.35 },
-    { upTo: Infinity, rate: 0.37 },
-  ],
-  married_joint: [
-    { upTo: 23200, rate: 0.1 },
-    { upTo: 94300, rate: 0.12 },
-    { upTo: 201050, rate: 0.22 },
-    { upTo: 383900, rate: 0.24 },
-    { upTo: 487450, rate: 0.32 },
-    { upTo: 731200, rate: 0.35 },
-    { upTo: Infinity, rate: 0.37 },
-  ],
-  married_separate: [
-    { upTo: 11600, rate: 0.1 },
-    { upTo: 47150, rate: 0.12 },
-    { upTo: 100525, rate: 0.22 },
-    { upTo: 191950, rate: 0.24 },
-    { upTo: 243725, rate: 0.32 },
-    { upTo: 365600, rate: 0.35 },
-    { upTo: Infinity, rate: 0.37 },
-  ],
-  head_of_household: [
-    { upTo: 16550, rate: 0.1 },
-    { upTo: 63100, rate: 0.12 },
-    { upTo: 100500, rate: 0.22 },
-    { upTo: 191950, rate: 0.24 },
-    { upTo: 243700, rate: 0.32 },
-    { upTo: 609350, rate: 0.35 },
-    { upTo: Infinity, rate: 0.37 },
-  ],
-};
-
-const BANK_PLATFORM_HINTS = new Set([
-  "stripe",
-  "wise",
-  "bank",
-  "plaid",
-  "quickbooks",
-  "xero",
-  "bank_account",
-  "banking",
-  "paypal",
-]);
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function toNonNegativeNumber(value) {
-  const parsed = Number.parseFloat(value);
-  if (Number.isNaN(parsed) || parsed < 0) return 0;
-  return parsed;
-}
-
-function formatCurrency(value) {
-  return currencyFormatter.format(value || 0);
-}
-
-function formatPercent(decimalValue) {
-  return `${percentFormatter.format((decimalValue || 0) * 100)}%`;
-}
-
-function calculateProgressiveTax(income, brackets) {
-  if (!income || income <= 0) return 0;
-
-  let remaining = income;
-  let priorCap = 0;
-  let tax = 0;
-
-  for (const bracket of brackets) {
-    if (remaining <= 0) break;
-    const currentCap = bracket.upTo;
-    const taxableAtThisRate = Math.min(remaining, currentCap - priorCap);
-    tax += taxableAtThisRate * bracket.rate;
-    remaining -= taxableAtThisRate;
-    priorCap = currentCap;
-  }
-
-  return tax;
-}
-
-function getQuarterSchedule(year) {
-  return [
-    {
-      id: "q1",
-      label: "Q1",
-      period: `Jan 1 - Mar 31, ${year}`,
-      dueDate: new Date(year, 3, 15),
-    },
-    {
-      id: "q2",
-      label: "Q2",
-      period: `Apr 1 - May 31, ${year}`,
-      dueDate: new Date(year, 5, 15),
-    },
-    {
-      id: "q3",
-      label: "Q3",
-      period: `Jun 1 - Aug 31, ${year}`,
-      dueDate: new Date(year, 8, 15),
-    },
-    {
-      id: "q4",
-      label: "Q4",
-      period: `Sep 1 - Dec 31, ${year}`,
-      dueDate: new Date(year + 1, 0, 15),
-    },
-  ];
-}
-
-function getConfidenceLabel(confidenceScore) {
-  if (confidenceScore >= 80) return "High";
-  if (confidenceScore >= 55) return "Medium";
-  return "Low";
-}
-
-function getConfidenceTone(confidenceScore) {
-  if (confidenceScore >= 80) return "text-[#56C5D0]";
-  if (confidenceScore >= 55) return "text-[#F0A562]";
-  return "text-[#F06C6C]";
-}
-
-function getUncertaintyBand({
-  confidenceScore,
-  daysHistory,
-  platformsConnected,
-  includeOtherIncome,
-}) {
-  const confidenceAdjustment = (100 - confidenceScore) * 0.0006;
-  const historyPenalty = daysHistory < 90 ? 0.015 : 0;
-  const platformPenalty = platformsConnected === 0 ? 0.01 : 0;
-  const otherIncomePenalty = includeOtherIncome ? 0.006 : 0;
-  return clamp(0.02 + confidenceAdjustment + historyPenalty + platformPenalty + otherIncomePenalty, 0.02, 0.12);
-}
-
-export function AssumptionsDrawer({ open, onOpenChange, assumptions }) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="w-full max-w-[560px] border-l border-white/10 bg-[#0F0F12]/95 p-0 text-[#F5F5F5] backdrop-blur-xl"
-        style={{
-          left: "auto",
-          top: "0",
-          right: "0",
-          transform: "none",
-          height: "100vh",
-          maxWidth: "560px",
-        }}
-      >
-        <div className="h-full overflow-y-auto p-6">
-          <DialogHeader className="mb-6 space-y-2 text-left">
-            <DialogTitle className="text-xl font-semibold text-[#F5F5F5]">
-              Tax Estimator Assumptions
-            </DialogTitle>
-            <DialogDescription className="text-sm text-white/70">
-              This model is conservative and transparent. It is not a tax filing engine.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 text-sm text-white/85">
-            <div className="rounded-lg border border-white/10 bg-[#141418] p-4">
-              <p className="mb-2 font-medium text-[#F5F5F5]">Federal tax method</p>
-              <p>
-                Progressive federal tax brackets are applied to estimated taxable income by filing status.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-white/10 bg-[#141418] p-4">
-              <p className="mb-2 font-medium text-[#F5F5F5]">Self-employment tax</p>
-              <p>
-                Self-employment tax is estimated at {formatPercent(0.153)}, then half of that amount is deducted before federal/state estimation.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-white/10 bg-[#141418] p-4">
-              <p className="mb-2 font-medium text-[#F5F5F5]">State estimate</p>
-              <p>
-                State taxes use effective-rate assumptions by selected state. For {assumptions.stateLabel}, the rate applied is{" "}
-                {formatPercent(assumptions.stateRate)}.
-              </p>
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export function CalculationBreakdown({ rows }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <GlassCard className="mt-6">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 hover:bg-white/[0.03] transition-colors"
-      >
-        <div className="flex items-center gap-2">
-           <Calculator className="h-4 w-4 text-[#56C5D0]" />
-           <span className="font-semibold text-[#F5F5F5]">Detailed Calculation Breakdown</span>
-        </div>
-        {isOpen ? <ChevronUp className="h-4 w-4 text-white/50" /> : <ChevronDown className="h-4 w-4 text-white/50" />}
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-           <motion.div
-             initial={{ height: 0, opacity: 0 }}
-             animate={{ height: "auto", opacity: 1 }}
-             exit={{ height: 0, opacity: 0 }}
-             className="overflow-hidden"
-           >
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="text-[#D8D8D8]">Step</TableHead>
-                    <TableHead className="text-[#D8D8D8]">Formula</TableHead>
-                    <TableHead className="text-right text-[#D8D8D8]">Result</TableHead>
-                    <TableHead className="text-right text-[#D8D8D8]">Source</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map((row) => (
-                    <TableRow key={row.step} className="border-white/10 hover:bg-white/[0.02]">
-                      <TableCell className="font-medium text-[#F5F5F5]">{row.step}</TableCell>
-                      <TableCell className="text-sm text-white/70">{row.formula}</TableCell>
-                      <TableCell className="text-right font-mono-financial text-[#F5F5F5]">
-                        {row.result}
-                      </TableCell>
-                      <TableCell className="text-right text-sm text-white/60">{row.source}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-           </motion.div>
-        )}
-      </AnimatePresence>
-    </GlassCard>
-  );
-}
+import {
+  INPUT_STORAGE_KEY,
+  PAYMENT_STORAGE_KEY,
+  DEFAULT_INPUTS,
+  DEFAULT_PAYMENT_STATUS,
+  FILING_STATUS_OPTIONS,
+  STATE_OPTIONS,
+  STATE_EFFECTIVE_RATE,
+  FEDERAL_BRACKETS,
+  BANK_PLATFORM_HINTS,
+} from "@/lib/taxConstants";
+import {
+  clamp,
+  toNonNegativeNumber,
+  formatCurrency,
+  formatPercent,
+  calculateProgressiveTax,
+  getQuarterSchedule,
+  getConfidenceLabel,
+  getConfidenceTone,
+  getUncertaintyBand,
+} from "@/lib/taxUtils";
+import { generateTaxReportPdf } from "@/lib/taxPdf";
+import { AssumptionsDrawer } from "@/components/tax/AssumptionsDrawer";
+import { CalculationBreakdown } from "@/components/tax/CalculationBreakdown";
 
 export default function TaxEstimatorPage() {
   const currentYear = new Date().getFullYear();
@@ -659,7 +279,7 @@ export default function TaxEstimatorPage() {
       },
       {
         step: "2. Estimated expenses",
-        formula: `${formatCurrency(inputs.expectedAnnualRevenue)} × ${percentFormatter.format(inputs.expenseRate)}%`,
+        formula: `${formatCurrency(inputs.expectedAnnualRevenue)} × ${formatPercent(inputs.expenseRate / 100)}`,
         result: formatCurrency(calculations.estimatedExpenses),
         source: "Expense rate input",
       },
@@ -706,80 +326,15 @@ export default function TaxEstimatorPage() {
     });
   };
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     try {
-      const doc = new jsPDF({ unit: "pt", format: "a4" });
-      const left = 40;
-      let y = 48;
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.text("Zerithum Tax Estimator Calculation Report", left, y);
-
-      y += 22;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text(`Generated: ${format(new Date(), "MMM d, yyyy h:mm a")}`, left, y);
-      y += 14;
-      doc.text(`Tax Year: ${currentYear}`, left, y);
-      y += 14;
-      doc.text("Disclaimer: Estimates only, not tax advice.", left, y);
-
-      y += 24;
-      doc.setFont("helvetica", "bold");
-      doc.text("Inputs", left, y);
-      y += 14;
-      doc.setFont("helvetica", "normal");
-      const inputLines = [
-        `Filing status: ${FILING_STATUS_OPTIONS.find((status) => status.value === inputs.filingStatus)?.label || "Single"}`,
-        `State: ${STATE_OPTIONS.find((state) => state.value === inputs.state)?.label || inputs.state}`,
-        `Expected annual revenue: ${formatCurrency(inputs.expectedAnnualRevenue)}`,
-        `Expense rate: ${percentFormatter.format(inputs.expenseRate)}%`,
-        `Other income included: ${inputs.includeOtherIncome ? "Yes" : "No"}`,
-        `Other income amount: ${formatCurrency(calculations.otherIncome)}`,
-      ];
-      inputLines.forEach((line) => {
-        doc.text(line, left, y);
-        y += 13;
+      await generateTaxReportPdf({
+        currentYear,
+        inputs,
+        calculations,
+        dataCompleteness,
+        calculationRows,
       });
-
-      y += 12;
-      doc.setFont("helvetica", "bold");
-      doc.text("Outputs", left, y);
-      y += 14;
-      doc.setFont("helvetica", "normal");
-      const outputLines = [
-        `Quarterly set-aside range: ${formatCurrency(calculations.quarterlySetAsideLower)} to ${formatCurrency(calculations.quarterlySetAsideUpper)}`,
-        `Quarterly point estimate: ${formatCurrency(calculations.quarterlySetAsidePoint)}`,
-        `Effective tax rate range: ${formatPercent(calculations.effectiveRateLower)} to ${formatPercent(calculations.effectiveRateUpper)}`,
-        `Confidence score: ${dataCompleteness.confidenceScore}/100 (${dataCompleteness.confidenceLabel})`,
-        `Last synced: ${dataCompleteness.lastSyncedAt ? format(dataCompleteness.lastSyncedAt, "MMM d, yyyy h:mm a") : "No sync timestamp available"}`,
-      ];
-      outputLines.forEach((line) => {
-        doc.text(line, left, y);
-        y += 13;
-      });
-
-      y += 12;
-      doc.setFont("helvetica", "bold");
-      doc.text("Calculation Breakdown", left, y);
-      y += 14;
-      doc.setFont("helvetica", "normal");
-
-      calculationRows.forEach((row) => {
-        const line = `${row.step} | ${row.result} | ${row.formula} | ${row.source}`;
-        const wrapped = doc.splitTextToSize(line, 520);
-        wrapped.forEach((entry) => {
-          if (y > 760) {
-            doc.addPage();
-            y = 48;
-          }
-          doc.text(entry, left, y);
-          y += 12;
-        });
-      });
-
-      doc.save(`zerithum-tax-calculation-report-${currentYear}.pdf`);
       toast.success("Calculation report downloaded");
     } catch {
       toast.error("Could not generate PDF report");
