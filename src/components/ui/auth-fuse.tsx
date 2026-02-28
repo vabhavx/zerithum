@@ -11,6 +11,7 @@ import { twMerge } from "tailwind-merge";
 import { supabase } from "@/api/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { AuthFeatureAnimation } from "./AuthFeatureAnimation";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -366,46 +367,11 @@ function AuthFormContainer({ isSignIn, onToggle }: { isSignIn: boolean; onToggle
     )
 }
 
-interface AuthContentProps {
-    image?: {
-        src: string;
-        alt: string;
-    };
-    quote?: {
-        text: string;
-        author: string;
-    }
-}
-
 interface AuthUIProps {
-    signInContent?: AuthContentProps;
-    signUpContent?: AuthContentProps;
     defaultIsSignIn?: boolean;
 }
 
-const defaultSignInContent = {
-    image: {
-        src: "https://i.ibb.co/XrkdGrrv/original-ccdd6d6195fff2386a31b684b7abdd2e-removebg-preview.png",
-        alt: "A beautiful interior design for sign-in"
-    },
-    quote: {
-        text: "Welcome Back! The journey continues.",
-        author: "EaseMize UI"
-    }
-};
-
-const defaultSignUpContent = {
-    image: {
-        src: "https://i.ibb.co/HTZ6DPsS/original-33b8479c324a5448d6145b3cad7c51e7-removebg-preview.png",
-        alt: "A vibrant, modern space for new beginnings"
-    },
-    quote: {
-        text: "Create an account. A new chapter awaits.",
-        author: "EaseMize UI"
-    }
-};
-
-export function AuthUI({ signInContent = {}, signUpContent = {}, defaultIsSignIn = true }: AuthUIProps) {
+export function AuthUI({ defaultIsSignIn = true }: AuthUIProps) {
   const [isSignIn, setIsSignIn] = useState(defaultIsSignIn);
   const toggleForm = () => setIsSignIn((prev) => !prev);
 
@@ -414,51 +380,25 @@ export function AuthUI({ signInContent = {}, signUpContent = {}, defaultIsSignIn
     setIsSignIn(defaultIsSignIn);
   }, [defaultIsSignIn]);
 
-
-  const finalSignInContent = {
-      image: { ...defaultSignInContent.image, ...signInContent.image },
-      quote: { ...defaultSignInContent.quote, ...signInContent.quote },
-  };
-  const finalSignUpContent = {
-      image: { ...defaultSignUpContent.image, ...signUpContent.image },
-      quote: { ...defaultSignUpContent.quote, ...signUpContent.quote },
-  };
-
-  const currentContent = isSignIn ? finalSignInContent : finalSignUpContent;
-
   return (
-    <div className="w-full min-h-screen md:grid md:grid-cols-2">
+    <div className="w-full min-h-screen md:grid md:grid-cols-2 bg-background">
       <style>{`
         input[type="password"]::-ms-reveal,
         input[type="password"]::-ms-clear {
           display: none;
         }
       `}</style>
-      <div className="flex h-screen items-center justify-center p-6 md:h-auto md:p-0 md:py-12">
+      <div className="flex h-screen items-center justify-center p-6 md:h-auto md:p-0 md:py-12 border-r border-border/50">
         <AuthFormContainer isSignIn={isSignIn} onToggle={toggleForm} />
       </div>
 
-      <div
-        className="hidden md:block relative bg-cover bg-center transition-all duration-500 ease-in-out"
-        style={{ backgroundImage: `url(${currentContent.image.src})` }}
-        key={currentContent.image.src}
-      >
+      <div className="hidden md:flex relative flex-col items-center justify-center bg-[#030712] overflow-hidden">
+        {/* Subtle radial gradient background */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,229,255,0.05)_0%,transparent_70%)] pointer-events-none" />
 
-        <div className="absolute inset-x-0 bottom-0 h-[100px] bg-gradient-to-t from-background to-transparent" />
-
-        <div className="relative z-10 flex h-full flex-col items-center justify-end p-2 pb-6">
-            <blockquote className="space-y-2 text-center text-foreground">
-              <p className="text-lg font-medium">
-                “<Typewriter
-                    key={currentContent.quote.text}
-                    text={currentContent.quote.text}
-                    speed={60}
-                  />”
-              </p>
-              <cite className="block text-sm font-light text-muted-foreground not-italic">
-                  — {currentContent.quote.author}
-              </cite>
-            </blockquote>
+        {/* Professional animation component */}
+        <div className="relative z-10 w-full h-full flex items-center justify-center p-8">
+            <AuthFeatureAnimation />
         </div>
       </div>
     </div>
