@@ -113,7 +113,7 @@ export default function ConnectedPlatforms() {
     queryKey: ["connectedPlatforms"],
     queryFn: async () => {
       const user = await base44.auth.me();
-      return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
+      return base44.entities.ConnectedPlatform.filter({ user_id: user.id }, '-connected_at');
     },
     staleTime: 1000 * 60 * 2,
   });
