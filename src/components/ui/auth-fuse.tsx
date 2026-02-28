@@ -11,7 +11,7 @@ import { twMerge } from "tailwind-merge";
 import { supabase } from "@/api/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { AuthAnimation } from "./AuthAnimation";
+import AuthAnimation from "./AuthAnimation";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
