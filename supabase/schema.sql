@@ -28,7 +28,7 @@ CREATE TABLE public.profiles (
 CREATE TABLE public.connected_platforms (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  platform TEXT NOT NULL CHECK (platform IN ('stripe', 'gumroad', 'shopify', 'paypal', 'lemonsqueezy', 'paddle', 'razorpay', 'youtube', 'patreon', 'instagram', 'tiktok')),
+  platform TEXT NOT NULL CHECK (platform IN ('stripe', 'gumroad', 'shopify', 'paypal', 'lemonsqueezy', 'paddle', 'razorpay', 'youtube', 'patreon', 'instagram', 'tiktok', 'twitch')),
   oauth_token TEXT,
   refresh_token TEXT,
   api_key TEXT,
