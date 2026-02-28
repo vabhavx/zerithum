@@ -5,11 +5,14 @@ import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "../utils";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { PLATFORMS } from "@/lib/platforms";
 
 export default function AuthCallback() {
   const [status, setStatus] = useState("processing"); // processing, success, error
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -73,9 +76,15 @@ export default function AuthCallback() {
         if (response.success) {
           setStatus("success");
 
+          // Invalidate platform queries so ConnectedPlatforms shows the new connection
+          queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
+
+          // Resolve platform display name
+          const platformName = PLATFORMS.find(p => p.id === platform)?.name || platform;
+
           // Redirect after a brief delay
           setTimeout(() => {
-            toast.success(`${state || "YouTube"} connected successfully!`);
+            toast.success(`${platformName} connected successfully!`);
             navigate(createPageUrl("ConnectedPlatforms"));
           }, 1500);
         } else {

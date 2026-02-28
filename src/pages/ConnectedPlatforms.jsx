@@ -245,6 +245,12 @@ export default function ConnectedPlatforms() {
   };
 
   const beginConnect = (platform) => {
+    // Guard: prevent duplicate connections
+    if (connectedById.has(platform.id)) {
+      toast.error(`${platform.name} is already connected.`);
+      return;
+    }
+
     if (platform.requiresApiKey || platform.requiresShopName) {
       setSelectedPlatform(platform);
       setCredentialsOpen(true);
@@ -411,8 +417,8 @@ export default function ConnectedPlatforms() {
                 type="button"
                 onClick={() => setStatusFilter(item.value)}
                 className={`relative overflow-hidden rounded-md px-4 py-1.5 text-xs font-medium uppercase tracking-wide transition-all ${statusFilter === item.value
-                    ? "text-[#0A0A0A]"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
+                  ? "text-[#0A0A0A]"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
                   }`}
               >
                 {statusFilter === item.value && (
@@ -487,8 +493,8 @@ export default function ConnectedPlatforms() {
                         <div className="relative mt-0.5 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-[#101014] transition-colors group-hover:border-white/20">
                           {/* Status Indicator Dot */}
                           <div className={`absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-[#15151A] ${connection.sync_status === 'active' ? 'bg-green-500' :
-                              connection.sync_status === 'error' ? 'bg-red-500' :
-                                connection.sync_status === 'syncing' ? 'bg-blue-500 animate-pulse' : 'bg-gray-500'
+                            connection.sync_status === 'error' ? 'bg-red-500' :
+                              connection.sync_status === 'syncing' ? 'bg-blue-500 animate-pulse' : 'bg-gray-500'
                             }`} />
                           {Icon ? <Icon className="h-5 w-5 text-white/70" /> : <Plug className="h-5 w-5 text-white/70" />}
                         </div>
@@ -740,6 +746,43 @@ export default function ConnectedPlatforms() {
                   </>
                 ) : (
                   "Continue"
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Disconnect Confirmation Dialog */}
+        <Dialog open={!!disconnectTarget} onOpenChange={(open) => !open && setDisconnectTarget(null)}>
+          <DialogContent className="max-w-sm rounded-xl border border-white/10 bg-[#111114] text-[#F5F5F5]">
+            <DialogHeader>
+              <DialogTitle>Disconnect {PLATFORMS.find(p => p.id === disconnectTarget?.platform)?.name || "platform"}?</DialogTitle>
+              <DialogDescription className="text-white/65">
+                Your earnings history stays safe. You can reconnect anytime.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDisconnectTarget(null)}
+                className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => disconnectMutation.mutate(disconnectTarget?.id)}
+                disabled={disconnectMutation.isPending}
+                className="h-9 bg-[#F06C6C] text-white hover:bg-[#D85555]"
+              >
+                {disconnectMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Disconnecting
+                  </>
+                ) : (
+                  "Disconnect"
                 )}
               </Button>
             </div>
