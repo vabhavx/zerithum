@@ -28,14 +28,16 @@ CREATE TABLE public.profiles (
 CREATE TABLE public.connected_platforms (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  platform TEXT NOT NULL CHECK (platform IN ('stripe', 'gumroad', 'shopify', 'paypal', 'lemonsqueezy', 'paddle', 'razorpay')),
+  platform TEXT NOT NULL CHECK (platform IN ('stripe', 'gumroad', 'shopify', 'paypal', 'lemonsqueezy', 'paddle', 'razorpay', 'youtube', 'patreon', 'instagram', 'tiktok')),
   oauth_token TEXT,
   refresh_token TEXT,
   api_key TEXT,
   shop_name TEXT, -- for Shopify
-  sync_status TEXT DEFAULT 'pending' CHECK (sync_status IN ('pending', 'syncing', 'synced', 'error')),
+  sync_status TEXT DEFAULT 'pending' CHECK (sync_status IN ('pending', 'syncing', 'synced', 'active', 'error')),
   last_synced_at TIMESTAMPTZ,
   connected_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ,
+  error_message TEXT,
   metadata JSONB DEFAULT '{}',
   UNIQUE(user_id, platform)
 );
@@ -50,7 +52,9 @@ CREATE TABLE public.platform_connections (
   oauth_token TEXT,
   sync_status TEXT DEFAULT 'pending',
   connected_at TIMESTAMPTZ DEFAULT NOW(),
-  last_synced_at TIMESTAMPTZ
+  last_synced_at TIMESTAMPTZ,
+  disconnected_at TIMESTAMPTZ,
+  error_message TEXT
 );
 
 -- ============================================================================
