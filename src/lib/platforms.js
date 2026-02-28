@@ -77,8 +77,9 @@ export const PLATFORMS = [
     icon: Store,
     color: "bg-green-500/10 border-green-500/20 text-green-400",
     description: "Sync store sales, orders, and product revenue",
-    oauthUrl: "https://YOUR_SHOP.myshopify.com/admin/oauth/authorize",
-    scope: "read_orders,read_products,read_customers",
+    // oauthUrl is built dynamically from the shop name entered by the user
+    oauthUrl: "https://SHOP.myshopify.com/admin/oauth/authorize",
+    scope: "read_analytics,read_app_proxy,read_assigned_fulfillment_orders,read_audit_events,read_validations,read_cash_tracking,read_channels,read_checkout_branding_settings,read_checkouts,read_custom_fulfillment_services,read_custom_pixels,read_customers,read_customer_data_erasure,read_customer_merge,read_delivery_customizations,read_price_rules,read_discounts,read_discounts_allocator_functions,read_discovery,read_draft_orders,read_files,read_fulfillment_constraint_rules,read_fulfillments,read_gift_card_transactions,read_gift_cards,read_inventory,read_inventory_shipments,read_inventory_shipments_received_items,read_inventory_transfers,read_legal_policies,read_delivery_option_generators,read_locales,read_locations,read_marketing_integrated_campaigns,read_marketing_events,read_markets,read_markets_home,read_merchant_managed_fulfillment_orders,read_metaobject_definitions,read_metaobjects,read_online_store_navigation,read_online_store_pages,read_payment_terms,read_payment_customizations,read_product_feeds,read_product_listings,read_products,read_publications,read_purchase_options,read_reports,read_resource_feedbacks,read_returns,read_script_tags,read_shopify_payments_provider_accounts_sensitive,read_shipping,read_shopify_payments_accounts,read_shopify_payments_payouts,read_shopify_payments_bank_accounts,read_shopify_payments_disputes,read_content,read_store_credit_account_transactions,read_store_credit_accounts,read_third_party_fulfillment_orders,read_translations,customer_read_companies,customer_read_customers,customer_read_draft_orders,customer_read_markets,customer_read_metaobjects,customer_read_orders,customer_read_quick_sale,customer_read_store_credit_account_transactions,customer_read_store_credit_accounts,unauthenticated_read_bulk_operations,unauthenticated_read_bundles,unauthenticated_read_checkouts,unauthenticated_read_customers,unauthenticated_read_customer_tags,unauthenticated_read_metaobjects,unauthenticated_read_product_pickup_locations,unauthenticated_read_product_inventory,unauthenticated_read_product_listings,unauthenticated_read_product_tags,unauthenticated_read_selling_plans",
     redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
     clientId: import.meta.env.VITE_SHOPIFY_CLIENT_ID || "YOUR_SHOPIFY_API_KEY",
@@ -94,7 +95,7 @@ export const PLATFORMS = [
     scope: "channel:read:subscriptions bits:read analytics:read:extensions",
     redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
-    clientId: "si8cip89mvmuhf02qpwrtcy47673pp"
+    clientId: import.meta.env.VITE_TWITCH_CLIENT_ID || "si8cip89mvmuhf02qpwrtcy47673pp"
   },
   {
     id: "substack",

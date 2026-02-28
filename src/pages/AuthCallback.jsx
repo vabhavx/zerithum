@@ -39,6 +39,7 @@ export default function AuthCallback() {
       // 🛡️ Sentinel: Validate CSRF Token
       const storedToken = sessionStorage.getItem('oauth_state');
       let platform = state;
+      let shop = null;
 
       // Require a stored token to ensure this browser initiated the flow
       if (!storedToken) {
@@ -48,14 +49,36 @@ export default function AuthCallback() {
       }
 
       if (state && state.includes(':')) {
-        const [platformId, token] = state.split(':');
-        if (token !== storedToken) {
+        const parts = state.split(':');
+
+        if (parts[0] === 'shopify' && parts.length === 3) {
+          // Shopify 3-part format: shopify:{shop}:{csrfToken}
+          const [platformId, shopName, token] = parts;
+          if (token !== storedToken) {
+            setStatus("error");
+            setError("Security validation failed (CSRF mismatch).");
+            sessionStorage.removeItem('oauth_state');
+            sessionStorage.removeItem('shopify_shop_name');
+            return;
+          }
+          platform = platformId;
+          shop = shopName || sessionStorage.getItem('shopify_shop_name');
+        } else if (parts.length === 2) {
+          // Standard 2-part format: {platform}:{csrfToken}
+          const [platformId, token] = parts;
+          if (token !== storedToken) {
+            setStatus("error");
+            setError("Security validation failed (CSRF mismatch).");
+            sessionStorage.removeItem('oauth_state');
+            return;
+          }
+          platform = platformId;
+        } else {
           setStatus("error");
-          setError("Security validation failed (CSRF mismatch).");
+          setError("Security error: Invalid state format.");
           sessionStorage.removeItem('oauth_state');
           return;
         }
-        platform = platformId;
       } else {
         // If state doesn't have the token but we expect one, fail secure.
         setStatus("error");
@@ -65,13 +88,14 @@ export default function AuthCallback() {
       }
 
       sessionStorage.removeItem('oauth_state'); // Consume token
+      sessionStorage.removeItem('shopify_shop_name'); // Clean up
 
       try {
         // Exchange code for tokens
-        const response = await base44.functions.invoke("exchangeOAuthTokens", {
-          code,
-          platform: platform || "youtube"
-        });
+        const invokePayload = { code, platform: platform || "youtube" };
+        if (shop) invokePayload.shop = shop;
+
+        const response = await base44.functions.invoke("exchangeOAuthTokens", invokePayload);
 
         if (response.success) {
           setStatus("success");

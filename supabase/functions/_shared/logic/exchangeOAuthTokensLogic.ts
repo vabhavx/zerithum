@@ -4,6 +4,7 @@ export interface ExchangeTokensContext {
   logError: (msg: string, ...args: any[]) => void;
   encrypt: (data: string) => Promise<string>;
   base44: any;
+  shop?: string; // Shopify-specific: the merchant's myshopify.com subdomain
 }
 
 export interface ServiceResponse {
@@ -58,6 +59,13 @@ const PLATFORM_DEFS: Record<string, {
     tokenUrl: 'https://id.twitch.tv/oauth2/token',
     clientIdEnv: 'TWITCH_CLIENT_ID',
     clientSecretEnv: 'TWITCH_CLIENT_SECRET',
+    redirectUriEnv: 'OAUTH_REDIRECT_URI'
+  },
+  shopify: {
+    // tokenUrl is overridden at runtime: https://{shop}.myshopify.com/admin/oauth/access_token
+    tokenUrl: 'https://SHOP.myshopify.com/admin/oauth/access_token',
+    clientIdEnv: 'SHOPIFY_CLIENT_ID',
+    clientSecretEnv: 'SHOPIFY_CLIENT_SECRET',
     redirectUriEnv: 'OAUTH_REDIRECT_URI'
   }
 };
@@ -115,6 +123,66 @@ export async function exchangeOAuthTokens(
     grant_type: 'authorization_code',
     redirect_uri: redirectUri
   };
+
+  if (platform === 'shopify') {
+    // Shopify token exchange requires only client_id, client_secret, code
+    // No redirect_uri or grant_type in the body
+    if (!ctx.shop) {
+      ctx.logError('Missing shop name for Shopify OAuth');
+      return { status: 400, body: { error: 'Shopify store name is required' } };
+    }
+    const shopifyTokenUrl = `https://${ctx.shop}.myshopify.com/admin/oauth/access_token`;
+    const shopifyParams: Record<string, string> = {
+      client_id: clientId!,
+      client_secret: clientSecret,
+      code
+    };
+    const shopifyResponse = await ctx.fetch(shopifyTokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(shopifyParams)
+    });
+
+    if (!shopifyResponse.ok) {
+      let errorSummary = `Status: ${shopifyResponse.status} ${shopifyResponse.statusText}`;
+      try {
+        const errorData = await shopifyResponse.json();
+        if (errorData && typeof errorData === 'object') {
+          errorSummary += `, Body: ${JSON.stringify({ error: errorData.error })}`;
+        }
+      } catch (e) { /* ignore */ }
+      ctx.logError('Shopify token exchange failed:', errorSummary);
+      return { status: 400, body: { error: 'Failed to exchange code for tokens' } };
+    }
+
+    const shopifyTokens = await shopifyResponse.json();
+    // Shopify access tokens do not expire
+    const shopifyConnectionData = {
+      user_id: user.id,
+      platform: 'shopify',
+      oauth_token: await ctx.encrypt(shopifyTokens.access_token),
+      refresh_token: null,
+      expires_at: null,
+      sync_status: 'active',
+      connected_at: new Date().toISOString(),
+      last_synced_at: new Date().toISOString(),
+      error_message: null
+    };
+    const existingShopify = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
+      user_id: user.id,
+      platform: 'shopify'
+    });
+    if (existingShopify.length > 0) {
+      shopifyConnectionData.connected_at = existingShopify[0].connected_at;
+      await ctx.base44.asServiceRole.entities.ConnectedPlatform.update(
+        existingShopify[0].id,
+        shopifyConnectionData
+      );
+    } else {
+      await ctx.base44.asServiceRole.entities.ConnectedPlatform.create(shopifyConnectionData);
+    }
+    return { status: 200, body: { success: true, message: 'Platform connected successfully' } };
+  }
 
   if (platform === 'tiktok') {
     tokenParams.client_key = clientKey!;

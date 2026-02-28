@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
         } catch (e) {
             body = {};
         }
-        const { code, platform } = body;
+        const { code, platform, shop } = body;
 
         const result = await exchangeOAuthTokens(
             {
@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
                 fetch: fetch,
                 logError: console.error,
                 encrypt: encrypt,
+                shop: shop || undefined,
                 base44: {
                     asServiceRole: {
                         entities: {

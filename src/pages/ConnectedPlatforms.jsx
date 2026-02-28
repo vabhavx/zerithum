@@ -320,8 +320,10 @@ export default function ConnectedPlatforms() {
       if (selectedPlatform.id === "shopify") {
         const csrfToken = crypto.randomUUID();
         sessionStorage.setItem("oauth_state", csrfToken);
+        sessionStorage.setItem("shopify_shop_name", shopName.trim());
         document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`;
-        const stateValue = `shopify:${csrfToken}`;
+        // State format: shopify:{shop}:{csrfToken} — 3-part so AuthCallback can extract shop name
+        const stateValue = `shopify:${shopName.trim()}:${csrfToken}`;
 
         const params = new URLSearchParams({
           client_id: selectedPlatform.clientId,
@@ -330,7 +332,7 @@ export default function ConnectedPlatforms() {
           state: stateValue,
         });
 
-        window.location.href = `https://${shopName}.myshopify.com/admin/oauth/authorize?${params.toString()}`;
+        window.location.href = `https://${shopName.trim()}.myshopify.com/admin/oauth/authorize?${params.toString()}`;
         return;
       }
 
