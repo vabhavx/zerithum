@@ -11,6 +11,7 @@ import { twMerge } from "tailwind-merge";
 import { supabase } from "@/api/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { NetworkAnimation } from "./network-animation";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -384,24 +385,16 @@ interface AuthUIProps {
 }
 
 const defaultSignInContent = {
-    image: {
-        src: "https://i.ibb.co/XrkdGrrv/original-ccdd6d6195fff2386a31b684b7abdd2e-removebg-preview.png",
-        alt: "A beautiful interior design for sign-in"
-    },
     quote: {
         text: "Welcome Back! The journey continues.",
-        author: "EaseMize UI"
+        author: "Zerithum OS"
     }
 };
 
 const defaultSignUpContent = {
-    image: {
-        src: "https://i.ibb.co/HTZ6DPsS/original-33b8479c324a5448d6145b3cad7c51e7-removebg-preview.png",
-        alt: "A vibrant, modern space for new beginnings"
-    },
     quote: {
         text: "Create an account. A new chapter awaits.",
-        author: "EaseMize UI"
+        author: "Zerithum OS"
     }
 };
 
@@ -416,11 +409,9 @@ export function AuthUI({ signInContent = {}, signUpContent = {}, defaultIsSignIn
 
 
   const finalSignInContent = {
-      image: { ...defaultSignInContent.image, ...signInContent.image },
       quote: { ...defaultSignInContent.quote, ...signInContent.quote },
   };
   const finalSignUpContent = {
-      image: { ...defaultSignUpContent.image, ...signUpContent.image },
       quote: { ...defaultSignUpContent.quote, ...signUpContent.quote },
   };
 
@@ -434,28 +425,26 @@ export function AuthUI({ signInContent = {}, signUpContent = {}, defaultIsSignIn
           display: none;
         }
       `}</style>
-      <div className="flex h-screen items-center justify-center p-6 md:h-auto md:p-0 md:py-12">
+      <div className="flex h-screen items-center justify-center p-6 md:h-auto md:p-0 md:py-12 relative z-10 bg-background">
         <AuthFormContainer isSignIn={isSignIn} onToggle={toggleForm} />
       </div>
 
-      <div
-        className="hidden md:block relative bg-cover bg-center transition-all duration-500 ease-in-out"
-        style={{ backgroundImage: `url(${currentContent.image.src})` }}
-        key={currentContent.image.src}
-      >
+      <div className="hidden md:block relative w-full h-full">
+        {/* Our highly advanced, military-grade network animation */}
+        <NetworkAnimation />
 
-        <div className="absolute inset-x-0 bottom-0 h-[100px] bg-gradient-to-t from-background to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-[100px] bg-gradient-to-t from-[#0a0e17] to-transparent pointer-events-none z-10" />
 
-        <div className="relative z-10 flex h-full flex-col items-center justify-end p-2 pb-6">
-            <blockquote className="space-y-2 text-center text-foreground">
-              <p className="text-lg font-medium">
+        <div className="absolute z-20 inset-0 flex h-full flex-col items-center justify-end p-2 pb-6 pointer-events-none">
+            <blockquote className="space-y-2 text-center text-[#00e5ff] opacity-90 backdrop-blur-sm bg-[#0a0e17]/30 p-4 rounded-lg border border-[#00e5ff]/20">
+              <p className="text-lg font-mono font-medium drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]">
                 “<Typewriter
                     key={currentContent.quote.text}
                     text={currentContent.quote.text}
                     speed={60}
                   />”
               </p>
-              <cite className="block text-sm font-light text-muted-foreground not-italic">
+              <cite className="block text-sm font-mono font-light text-[#00e5ff]/70 not-italic">
                   — {currentContent.quote.author}
               </cite>
             </blockquote>
