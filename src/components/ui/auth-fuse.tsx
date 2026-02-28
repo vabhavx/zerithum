@@ -11,6 +11,7 @@ import { twMerge } from "tailwind-merge";
 import { supabase } from "@/api/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { AuthDataAnimation } from "@/components/ui/AuthDataAnimation";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -439,15 +440,14 @@ export function AuthUI({ signInContent = {}, signUpContent = {}, defaultIsSignIn
       </div>
 
       <div
-        className="hidden md:block relative bg-cover bg-center transition-all duration-500 ease-in-out"
-        style={{ backgroundImage: `url(${currentContent.image.src})` }}
-        key={currentContent.image.src}
+        className="hidden md:block relative transition-all duration-500 ease-in-out bg-[#030712] overflow-hidden"
       >
+        <AuthDataAnimation />
 
-        <div className="absolute inset-x-0 bottom-0 h-[100px] bg-gradient-to-t from-background to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-[100px] bg-gradient-to-t from-background to-transparent pointer-events-none" />
 
-        <div className="relative z-10 flex h-full flex-col items-center justify-end p-2 pb-6">
-            <blockquote className="space-y-2 text-center text-foreground">
+        <div className="relative z-10 flex h-full flex-col items-center justify-end p-2 pb-6 pointer-events-none">
+            <blockquote className="space-y-2 text-center text-foreground pointer-events-auto">
               <p className="text-lg font-medium">
                 “<Typewriter
                     key={currentContent.quote.text}
