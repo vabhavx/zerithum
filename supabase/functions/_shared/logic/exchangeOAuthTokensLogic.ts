@@ -53,6 +53,12 @@ const PLATFORM_DEFS: Record<string, {
     clientKeyEnv: 'TIKTOK_CLIENT_KEY',
     clientSecretEnv: 'TIKTOK_CLIENT_SECRET',
     redirectUriEnv: 'OAUTH_REDIRECT_URI'
+  },
+  twitch: {
+    tokenUrl: 'https://id.twitch.tv/oauth2/token',
+    clientIdEnv: 'TWITCH_CLIENT_ID',
+    clientSecretEnv: 'TWITCH_CLIENT_SECRET',
+    redirectUriEnv: 'OAUTH_REDIRECT_URI'
   }
 };
 

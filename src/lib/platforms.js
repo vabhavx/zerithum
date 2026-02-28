@@ -94,7 +94,7 @@ export const PLATFORMS = [
     scope: "channel:read:subscriptions bits:read analytics:read:extensions",
     redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
-    clientId: import.meta.env.VITE_TWITCH_CLIENT_ID || "YOUR_TWITCH_CLIENT_ID"
+    clientId: "si8cip89mvmuhf02qpwrtcy47673pp"
   },
   {
     id: "substack",
