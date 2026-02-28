@@ -621,7 +621,7 @@ export default function ConnectedPlatforms() {
           </motion.div>
         </GlassCard>
 
-        <GlassCard>
+        <GlassCard className="">
           <div className="flex flex-col gap-2 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent sync evidence</h2>
@@ -644,8 +644,8 @@ export default function ConnectedPlatforms() {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <Table>
-                  <TableHeader>
+                <Table className="w-full">
+                  <TableHeader className="">
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-[#D8D8D8]">Date</TableHead>
                       <TableHead className="text-[#D8D8D8]">Platform</TableHead>
@@ -654,7 +654,7 @@ export default function ConnectedPlatforms() {
                       <TableHead className="text-right text-[#D8D8D8]">Status</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className="">
                     {syncHistory.length === 0 && (
                       <TableRow className="border-white/10 hover:bg-transparent">
                         <TableCell colSpan={5} className="py-8 text-center text-sm text-white/60">
