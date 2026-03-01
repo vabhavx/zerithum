@@ -3,7 +3,6 @@ import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { base44 } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/ui/glass-card";
 import { motion, AnimatePresence } from "framer-motion";
 
 const PLANS = {

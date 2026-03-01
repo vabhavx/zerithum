@@ -32,7 +32,6 @@ export const useUnreconciledTransactions = () => {
       // Fetch all reconciled revenue transaction IDs
       // This is an optimization over fetching full objects, but still scales linearly with dataset size.
       // Ideal solution would be a backend view or 'not in' query support.
-      // fetchAllIds(filters, orderBy, selectColumn)
       const reconciledIds = await base44.entities.Reconciliation.fetchAllIds({}, 'id', 'revenue_transaction_id');
       const reconciledSet = new Set(reconciledIds);
 
