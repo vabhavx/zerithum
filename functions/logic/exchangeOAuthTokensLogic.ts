@@ -154,7 +154,11 @@ export async function exchangeOAuthTokens(
       try {
         const errorData = await shopifyResponse.json();
         if (errorData && typeof errorData === 'object') {
-          errorSummary += `, Body: ${JSON.stringify({ error: errorData.error })}`;
+          // 🛡️ SECURITY FIX: Only log the 'error' code, avoiding sensitive fields.
+          const safeError = {
+            error: errorData.error,
+          };
+          errorSummary += `, Body: ${JSON.stringify(safeError)}`;
         }
       } catch (e) { /* ignore */ }
       ctx.logError('Shopify token exchange failed:', errorSummary);
