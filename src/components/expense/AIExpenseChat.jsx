@@ -29,13 +29,13 @@ export default function AIExpenseChat({ open, onOpenChange, expenses = [], metri
         await base44.agents.addMessage(conv, { role: "system", content: `Current Financial Context:\n- Total Spend: $${metrics.total?.toFixed(2) || "0.00"}\n- Tax Deductible: $${metrics.deductible?.toFixed(2) || "0.00"}\n- Transactions: ${expenses.length}\n- Top Merchant: ${topMerchant ? `${topMerchant[0]} ($${topMerchant[1].toFixed(2)})` : "None"}\n- Recent 5:\n${expenses.slice(0, 5).map(e => `  - ${e.expense_date}: ${e.merchant} ($${e.amount}) - ${e.category}`).join("\n")}\n\nPlease use this context to answer user questions accurately.` });
       }
       setInitializing(false);
-    } catch (error) { console.error("Failed to init conversation:", error); setInitializing(false); }
+    } catch (error) { setInitializing(false); }
   };
 
   const handleSend = async (text = input) => {
     if (!text.trim() || !currentConv || sending) return;
     setInput(""); setSending(true);
-    try { await base44.agents.addMessage(currentConv, { role: "user", content: text.trim() }); } catch (error) { console.error("Failed to send message:", error); } finally { setSending(false); }
+    try { await base44.agents.addMessage(currentConv, { role: "user", content: text.trim() }); } catch (error) { } finally { setSending(false); }
   };
 
   const quickActions = [
