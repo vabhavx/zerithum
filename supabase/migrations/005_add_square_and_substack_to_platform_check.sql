@@ -11,7 +11,7 @@ CHECK (platform IN (
     'stripe', 
     'gumroad', 
     'shopify', 
-    'payPal', 
+    'paypal', 
     'lemonsqueezy', 
     'paddle', 
     'razorpay', 
