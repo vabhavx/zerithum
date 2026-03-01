@@ -13,7 +13,7 @@ const ProofWidget = () => {
     // Autoplay State
     const [isAutoplaying, setIsAutoplaying] = useState(true);
     const sequenceIndex = useRef(0);
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Filter Logic
     const filteredEvents = filterMismatches
@@ -164,12 +164,12 @@ const ProofWidget = () => {
 
             {/* Footer Status Bar */}
             <div className="bg-zinc-950 border-t border-zinc-900 p-2 flex justify-between items-center text-[10px] text-zinc-600 font-mono">
-                 <div>Connected: 3 Nodes</div>
-                 <div>Latency: 42ms</div>
-                 <div className="flex items-center gap-1">
+                <div>Connected: 3 Nodes</div>
+                <div>Latency: 42ms</div>
+                <div className="flex items-center gap-1">
                     <div className="w-1.5 h-1.5 bg-emerald-900 rounded-full"></div>
                     Encrypted (AES-256)
-                 </div>
+                </div>
             </div>
         </div>
     );

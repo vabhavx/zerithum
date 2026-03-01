@@ -67,6 +67,12 @@ const PLATFORM_DEFS: Record<string, {
     clientIdEnv: 'SHOPIFY_CLIENT_ID',
     clientSecretEnv: 'SHOPIFY_CLIENT_SECRET',
     redirectUriEnv: 'OAUTH_REDIRECT_URI'
+  },
+  square: {
+    tokenUrl: 'https://connect.squareup.com/oauth2/token',
+    clientIdEnv: 'SQUARE_CLIENT_ID',
+    clientSecretEnv: 'SQUARE_CLIENT_SECRET',
+    redirectUriEnv: 'OAUTH_REDIRECT_URI'
   }
 };
 
