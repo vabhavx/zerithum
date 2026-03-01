@@ -65,7 +65,7 @@ export const PLATFORMS = [
     color: "bg-white/10 border-white/20 text-white",
     description: "For Physical & Online Retailers: Sync point-of-sale transactions and eCommerce orders.",
     oauthUrl: "https://connect.squareup.com/oauth2/authorize",
-    scope: "MERCHANT_READ PAYMENTS_READ SETTLEMENTS_READ",
+    scope: "MERCHANT_PROFILE_READ PAYMENTS_READ SETTLEMENTS_READ ORDERS_READ ITEMS_READ",
     redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
     clientId: import.meta.env.VITE_SQUARE_CLIENT_ID || "sq0idp-ljKdMSZ4tWf2fEDVu19owQ"
