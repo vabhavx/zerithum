@@ -12,7 +12,8 @@ export async function revokeToken(
     ctx: RevokeContext,
     platform: string,
     token: string,
-    refreshToken?: string
+    refreshToken?: string,
+    shopName?: string
 ): Promise<boolean> {
     try {
         switch (platform) {
@@ -92,6 +93,30 @@ export async function revokeToken(
                 return deauthRes.ok;
             }
 
+            case 'shopify': {
+                if (!shopName) {
+                    ctx.logger.error('Missing shop_name for Shopify revocation');
+                    return false;
+                }
+
+                // https://shopify.dev/docs/api/admin-rest/2023-04/resources/access_scope#delete-admin-api-permissions-current
+                const shopifyUrl = `https://${shopName}.myshopify.com/admin/api_permissions/current.json`;
+
+                const res = await ctx.fetch(shopifyUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Shopify-Access-Token': token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    ctx.logger.error(`Shopify revocation failed: ${res.status} ${errorText}`);
+                }
+                return res.ok;
+            }
+
             case 'instagram': {
                  // 1. Get User ID using Graph API (v20.0 per oauthCallback)
                  const meRes = await ctx.fetch('https://graph.facebook.com/v20.0/me', {
@@ -135,7 +160,7 @@ export async function revokeToken(
             }
 
             default:
-                ctx.logger.info(`Unknown platform for revocation: ${platform}`);
+                ctx.logger.info(`Revocation not implemented for platform: ${platform}`);
                 // Return true so we don't consider it a "failure" of the process
                 return true;
         }
