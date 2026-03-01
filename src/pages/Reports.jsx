@@ -11,6 +11,20 @@ import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 const PLATFORM_COLORS = { youtube: "#DC2626", patreon: "#F87171", stripe: "#6366F1", gumroad: "#EC4899", instagram: "#E11D48", tiktok: "#000000" };
 const CATEGORY_COLORS = { ad_revenue: "#3B82F6", sponsorship: "#8B5CF6", affiliate: "#EC4899", product_sale: "#10B981", membership: "#F59E0B" };
 
+const escapeHTML = (str) => {
+  if (typeof str !== 'string') return str;
+  return str.replace(/[&<>"']/g, function(match) {
+    switch (match) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+      default: return match;
+    }
+  });
+};
+
 export default function Reports() {
   const [dateRange, setDateRange] = useState("this_month");
   const [platformFilter, setPlatformFilter] = useState("all");
@@ -56,7 +70,7 @@ export default function Reports() {
 
   const exportPDF = async () => {
     const pw = window.open("", "_blank");
-    pw.document.write(`<html><head><title>Revenue Report - ${format(startDate, "MMM dd, yyyy")} to ${format(endDate, "MMM dd, yyyy")}</title><style>body{font-family:Inter,Arial,sans-serif;padding:20px;color:#111827}h1{color:#111827}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #E5E7EB;padding:8px;text-align:left}th{background:#F9FAFB;font-size:12px;text-transform:uppercase;color:#6B7280}</style></head><body><h1>Revenue Report</h1><p>${format(startDate, "MMM dd, yyyy")} to ${format(endDate, "MMM dd, yyyy")}</p><div><h2>Summary</h2><div>Total Revenue: $${metrics.totalRevenue.toFixed(2)}</div><div>Total Fees: $${metrics.totalFees.toFixed(2)}</div><div>Net Revenue: $${metrics.netRevenue.toFixed(2)}</div><div>Transactions: ${metrics.transactionCount}</div></div><h2>Transactions</h2><table><thead><tr><th>Date</th><th>Platform</th><th>Category</th><th>Description</th><th>Amount</th><th>Fees</th><th>Net</th></tr></thead><tbody>${filteredTransactions.map(t => `<tr><td>${t.transaction_date}</td><td>${t.platform}</td><td>${t.category}</td><td>${t.description || ""}</td><td>$${t.amount.toFixed(2)}</td><td>$${(t.platform_fee || 0).toFixed(2)}</td><td>$${(t.amount - (t.platform_fee || 0)).toFixed(2)}</td></tr>`).join("")}</tbody></table></body></html>`);
+    pw.document.write(`<html><head><title>Revenue Report - ${escapeHTML(format(startDate, "MMM dd, yyyy"))} to ${escapeHTML(format(endDate, "MMM dd, yyyy"))}</title><style>body{font-family:Inter,Arial,sans-serif;padding:20px;color:#111827}h1{color:#111827}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #E5E7EB;padding:8px;text-align:left}th{background:#F9FAFB;font-size:12px;text-transform:uppercase;color:#6B7280}</style></head><body><h1>Revenue Report</h1><p>${escapeHTML(format(startDate, "MMM dd, yyyy"))} to ${escapeHTML(format(endDate, "MMM dd, yyyy"))}</p><div><h2>Summary</h2><div>Total Revenue: $${metrics.totalRevenue.toFixed(2)}</div><div>Total Fees: $${metrics.totalFees.toFixed(2)}</div><div>Net Revenue: $${metrics.netRevenue.toFixed(2)}</div><div>Transactions: ${metrics.transactionCount}</div></div><h2>Transactions</h2><table><thead><tr><th>Date</th><th>Platform</th><th>Category</th><th>Description</th><th>Amount</th><th>Fees</th><th>Net</th></tr></thead><tbody>${filteredTransactions.map(t => `<tr><td>${escapeHTML(t.transaction_date)}</td><td>${escapeHTML(t.platform)}</td><td>${escapeHTML(t.category)}</td><td>${escapeHTML(t.description || "")}</td><td>$${t.amount.toFixed(2)}</td><td>$${(t.platform_fee || 0).toFixed(2)}</td><td>$${(t.amount - (t.platform_fee || 0)).toFixed(2)}</td></tr>`).join("")}</tbody></table></body></html>`);
     pw.document.close(); setTimeout(() => { pw.print(); }, 250);
   };
 
