@@ -254,7 +254,7 @@ export async function syncPlatform(
 
       default:
         // Other platforms might return empty or throw
-        if (['instagram', 'tiktok'].includes(platform)) {
+        if (['instagram', 'tiktok', 'square', 'shopify', 'twitch', 'substack'].includes(platform)) {
           transactions = [];
         } else {
           throw new Error('Unsupported platform');
