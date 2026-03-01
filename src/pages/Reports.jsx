@@ -80,7 +80,7 @@ export default function Reports() {
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-xl border border-gray-100 bg-white p-5 mb-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.15 }} className="rounded-xl border border-gray-100 bg-white p-5 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-xs text-gray-400 mb-2 block uppercase tracking-wider font-medium">Date Range</label>
@@ -98,22 +98,22 @@ export default function Reports() {
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }} className="rounded-xl border border-gray-100 bg-white p-5">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.08, type: "spring", stiffness: 600, damping: 40 }} className="rounded-xl border border-gray-100 bg-white p-5">
           <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Revenue</p><DollarSign className="w-4 h-4 text-emerald-500" /></div>
           <p className="text-2xl font-bold text-gray-900 mb-1">${metrics.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           <div className="flex items-center gap-1 text-xs">{metrics.revenueChange >= 0 ? (<><TrendingUp className="w-3 h-3 text-emerald-500" /><span className="text-emerald-600">+{metrics.revenueChange.toFixed(1)}%</span></>) : (<><TrendingDown className="w-3 h-3 text-red-500" /><span className="text-red-600">{metrics.revenueChange.toFixed(1)}%</span></>)}<span className="text-gray-300 ml-1">vs previous</span></div>
         </motion.div>
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="rounded-xl border border-gray-100 bg-white p-5">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 600, damping: 40 }} className="rounded-xl border border-gray-100 bg-white p-5">
           <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Fees</p><DollarSign className="w-4 h-4 text-red-500" /></div>
           <p className="text-2xl font-bold text-gray-900 mb-1">${metrics.totalFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           <p className="text-xs text-gray-400">Platform fees deducted</p>
         </motion.div>
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.25 }} className="rounded-xl border border-gray-100 bg-white p-5">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.12, type: "spring", stiffness: 600, damping: 40 }} className="rounded-xl border border-gray-100 bg-white p-5">
           <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Net Revenue</p><DollarSign className="w-4 h-4 text-gray-900" /></div>
           <p className="text-2xl font-bold text-gray-900 mb-1">${metrics.netRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           <p className="text-xs text-gray-400">After platform fees</p>
         </motion.div>
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="rounded-xl border border-gray-100 bg-white p-5">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.14, type: "spring", stiffness: 600, damping: 40 }} className="rounded-xl border border-gray-100 bg-white p-5">
           <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Transactions</p><BarChart3 className="w-4 h-4 text-gray-500" /></div>
           <p className="text-2xl font-bold text-gray-900 mb-1">{metrics.transactionCount}</p>
           <p className="text-xs text-gray-400">Total transactions</p>
@@ -121,7 +121,7 @@ export default function Reports() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="rounded-xl border border-gray-100 bg-white p-6">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16, duration: 0.2 }} className="rounded-xl border border-gray-100 bg-white p-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">Revenue Over Time</h3>
           <p className="text-xs text-gray-400 mb-6">Daily revenue breakdown</p>
           <div className="h-64">
@@ -138,7 +138,7 @@ export default function Reports() {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="rounded-xl border border-gray-100 bg-white p-6">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.2 }} className="rounded-xl border border-gray-100 bg-white p-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">Platform Breakdown</h3>
           <p className="text-xs text-gray-400 mb-6">Revenue by platform</p>
           <div className="h-64">
@@ -154,7 +154,7 @@ export default function Reports() {
         </motion.div>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="rounded-xl border border-gray-100 bg-white p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.2 }} className="rounded-xl border border-gray-100 bg-white p-6">
         <h3 className="text-sm font-semibold text-gray-900 mb-1">Revenue by Category</h3>
         <p className="text-xs text-gray-400 mb-6">Transaction type breakdown</p>
         <div className="h-80">

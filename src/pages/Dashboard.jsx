@@ -585,7 +585,7 @@ export default function Dashboard() {
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min(100, (dataCompleteness.daysHistory / 365) * 100)}%` }}
-                              transition={{ duration: 1, delay: 0.2 }}
+                              transition={{ duration: 0.4, ease: "easeOut" }}
                               className="h-full rounded-full bg-indigo-500"
                             />
                           </div>

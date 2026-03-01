@@ -187,15 +187,15 @@ export default function TransactionAnalysis() {
                 const net = calcNet(t);
                 const status = t.status || "completed";
                 return (
-                  <motion.tr key={t.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.02 }} className="border-b border-gray-100 transition-colors hover:bg-gray-50/50">
+                  <motion.tr key={t.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.01, type: "spring", stiffness: 600, damping: 40 }} className="border-b border-gray-100 transition-colors hover:bg-gray-50/50">
                     <TableCell className={`${density === "compact" ? "py-2" : "py-3"} text-sm text-gray-500`}>{t.transaction_date ? format(new Date(t.transaction_date), "MMM d, yyyy") : "-"}</TableCell>
                     <TableCell className={`${density === "compact" ? "py-2" : "py-3"} text-sm text-gray-900`}>{PLATFORM_NAMES[t.platform] || t.platform || "Unknown"}</TableCell>
                     <TableCell className={`${density === "compact" ? "py-2" : "py-3"} text-sm text-gray-500`}>{CATEGORY_NAMES[t.category] || t.category || "-"}</TableCell>
                     <TableCell className={density === "compact" ? "py-2" : "py-3"}>
                       <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium border ${status === "completed" ? "border-emerald-200 bg-emerald-50 text-emerald-700" :
-                          status === "pending" ? "border-amber-200 bg-amber-50 text-amber-700" :
-                            status === "failed" ? "border-red-200 bg-red-50 text-red-700" :
-                              "border-gray-200 bg-gray-50 text-gray-600"
+                        status === "pending" ? "border-amber-200 bg-amber-50 text-amber-700" :
+                          status === "failed" ? "border-red-200 bg-red-50 text-red-700" :
+                            "border-gray-200 bg-gray-50 text-gray-600"
                         }`}>{STATUS_NAMES[status] || status}</span>
                     </TableCell>
                     <TableCell className={`${density === "compact" ? "py-2" : "py-3"} max-w-[250px] truncate text-sm text-gray-500`}>{t.description || "-"}</TableCell>

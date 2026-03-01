@@ -445,7 +445,7 @@ export default function Expenses() {
                         key={expense.id}
                         initial={{ opacity: 0, x: -5 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.03 }}
+                        transition={{ delay: index * 0.015, type: "spring", stiffness: 600, damping: 40 }}
                         className="border-b border-gray-100 transition-colors hover:bg-gray-50/50 group"
                       >
                         <TableCell className="text-sm text-gray-500">
