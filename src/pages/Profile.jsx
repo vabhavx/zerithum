@@ -8,10 +8,14 @@ import {
   Link2,
   LogOut,
   Mail,
+  Palette,
   Save,
   Search,
   ShieldCheck,
   User,
+  Monitor,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/supabaseClient";
@@ -25,6 +29,7 @@ import UpdatePasswordModal from "@/components/security/UpdatePasswordModal";
 import SignOutAllDevicesModal from "@/components/security/SignOutAllDevicesModal";
 import DeleteAccountModal from "@/components/security/DeleteAccountModal";
 import DisconnectPlatformModal from "@/components/security/DisconnectPlatformModal";
+import { useTheme } from "@/components/theme-provider";
 
 const PLATFORM_NAMES = {
   youtube: "YouTube",
@@ -38,6 +43,7 @@ const PLATFORM_NAMES = {
 
 const SECTION_TABS = [
   { value: "identity", label: "Personal Info", icon: User },
+  { value: "appearance", label: "Appearance", icon: Palette },
   { value: "security", label: "Security", icon: ShieldCheck },
   { value: "connections", label: "Connected Platforms", icon: Link2 },
 ];
@@ -53,6 +59,7 @@ function statusLabel(status) {
 export default function Profile() {
   const queryClient = useQueryClient();
   const { user, checkAppState } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const [form, setForm] = useState({ full_name: "", email: "" });
   const [disconnectPlatform, setDisconnectPlatform] = useState(null);
@@ -230,7 +237,7 @@ export default function Profile() {
                       layoutId="activeTab"
                       className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
                       initial={false}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      transition={{ type: "spring", stiffness: 600, damping: 30 }}
                     />
                   )}
                   <Icon className="h-4 w-4 relative z-10" />
@@ -312,13 +319,79 @@ export default function Profile() {
             </motion.div>
           )}
 
+          {activeSection === "appearance" && (
+            <motion.div
+              key="appearance"
+              initial={{ opacity: 0, x: 5 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -5 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+            >
+              <GlassCard variant="panel" className="p-6 md:p-8">
+                <div className="mb-6 border-b border-gray-100 pb-4">
+                  <h2 className="text-base font-semibold text-gray-900">Appearance</h2>
+                  <p className="text-xs text-gray-500 mt-1">Customize your workspace theme and visual density.</p>
+                </div>
+
+                <div className="space-y-6 lg:max-w-4xl">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-900 mb-3 block">Theme Preference</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setTheme("light")}
+                        className={`group relative flex flex-col items-center gap-3 rounded-xl border p-4 transition-all ${theme === "light"
+                          ? "border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600"
+                          : "border-gray-200 bg-white hover:border-indigo-200 hover:bg-gray-50"
+                          }`}
+                      >
+                        <div className={`p-2.5 rounded-lg ${theme === "light" ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-500 group-hover:bg-indigo-50 group-hover:text-indigo-500"}`}>
+                          <Sun className="h-5 w-5" />
+                        </div>
+                        <span className={`text-sm font-medium ${theme === "light" ? "text-indigo-900" : "text-gray-700"}`}>Light</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setTheme("dark")}
+                        className={`group relative flex flex-col items-center gap-3 rounded-xl border p-4 transition-all ${theme === "dark"
+                          ? "border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600"
+                          : "border-gray-200 bg-white hover:border-indigo-200 hover:bg-gray-50"
+                          }`}
+                      >
+                        <div className={`p-2.5 rounded-lg ${theme === "dark" ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-500 group-hover:bg-indigo-50 group-hover:text-indigo-500"}`}>
+                          <Moon className="h-5 w-5" />
+                        </div>
+                        <span className={`text-sm font-medium ${theme === "dark" ? "text-indigo-900" : "text-gray-700"}`}>Dark</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setTheme("system")}
+                        className={`group relative flex flex-col items-center gap-3 rounded-xl border p-4 transition-all ${theme === "system"
+                          ? "border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600"
+                          : "border-gray-200 bg-white hover:border-indigo-200 hover:bg-gray-50"
+                          }`}
+                      >
+                        <div className={`p-2.5 rounded-lg ${theme === "system" ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-500 group-hover:bg-indigo-50 group-hover:text-indigo-500"}`}>
+                          <Monitor className="h-5 w-5" />
+                        </div>
+                        <span className={`text-sm font-medium ${theme === "system" ? "text-indigo-900" : "text-gray-700"}`}>System</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+            </motion.div>
+          )}
+
           {activeSection === "security" && (
             <motion.div
               key="security"
-              initial={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: 5 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, x: -5 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
             >
               <GlassCard variant="panel" className="p-6 md:p-8">
                 <div className="mb-6 border-b border-gray-100 pb-4">
@@ -376,10 +449,10 @@ export default function Profile() {
           {activeSection === "connections" && (
             <motion.div
               key="connections"
-              initial={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: 5 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, x: -5 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
             >
               <GlassCard variant="panel" className="p-6 md:p-8">
                 <div className="mb-6 flex flex-col gap-4 border-b border-gray-100 pb-4 md:flex-row md:items-center md:justify-between">
@@ -414,8 +487,8 @@ export default function Profile() {
                     >
                       <div className="flex items-center gap-3">
                         <div className={`h-2 w-2 rounded-full ${platform.sync_status === 'active' ? 'bg-emerald-500' :
-                            platform.sync_status === 'error' ? 'bg-red-500' :
-                              'bg-amber-500'
+                          platform.sync_status === 'error' ? 'bg-red-500' :
+                            'bg-amber-500'
                           }`} />
                         <div>
                           <p className="text-sm font-medium text-gray-900">
