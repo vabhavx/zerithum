@@ -390,7 +390,7 @@ export default function Dashboard() {
                   <motion.div
                     layoutId="period-highlight"
                     className="absolute inset-0 rounded-md bg-white shadow-sm ring-1 ring-indigo-100"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    transition={{ type: "spring", stiffness: 600, damping: 30 }}
                   />
                 )}
                 <span className="relative z-10">{item.label}</span>
@@ -500,7 +500,7 @@ export default function Dashboard() {
                         strokeWidth={2}
                         fillOpacity={1}
                         fill="url(#colorRevenue)"
-                        animationDuration={1200}
+                        animationDuration={400}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -544,7 +544,7 @@ export default function Dashboard() {
                     <motion.div
                       layoutId="panel-tab"
                       className="absolute inset-0 rounded-md bg-white shadow-sm"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      transition={{ type: "spring", stiffness: 600, damping: 30 }}
                     />
                   )}
                   <span className="relative z-10">System Health</span>
@@ -558,7 +558,7 @@ export default function Dashboard() {
                     <motion.div
                       layoutId="panel-tab"
                       className="absolute inset-0 rounded-md bg-white shadow-sm"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      transition={{ type: "spring", stiffness: 600, damping: 30 }}
                     />
                   )}
                   <span className="relative z-10">Operations</span>
@@ -570,10 +570,10 @@ export default function Dashboard() {
                   {panelView === "overview" ? (
                     <motion.div
                       key="overview"
-                      initial={{ opacity: 0, x: -10 }}
+                      initial={{ opacity: 0, x: -5 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 10 }}
-                      transition={{ duration: 0.2 }}
+                      exit={{ opacity: 0, x: 5 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
                     >
                       <div className="space-y-6">
                         <div className="relative overflow-hidden rounded-lg bg-gray-50 p-4">
@@ -612,10 +612,10 @@ export default function Dashboard() {
                   ) : (
                     <motion.div
                       key="operations"
-                      initial={{ opacity: 0, x: 10 }}
+                      initial={{ opacity: 0, x: 5 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2 }}
+                      exit={{ opacity: 0, x: -5 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
                       className="space-y-3"
                     >
                       {[
@@ -675,7 +675,7 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: 5 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: i * 0.03 }}
+                    transition={{ delay: i * 0.015, type: "spring", stiffness: 600, damping: 40 }}
                     className="group border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                   >
                     <TableCell className="text-sm text-gray-500">

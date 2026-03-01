@@ -5,12 +5,12 @@ import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.04 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.02 } },
 };
 
 export const itemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 5 },
+  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 600, damping: 40 } },
 };
 
 export function GlassCard({ children, className, ...props }) {
