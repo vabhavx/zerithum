@@ -17,7 +17,7 @@ export default function SettingsSubscription() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
     } catch (error) {
-      console.error("User not authenticated");
+      // Ignore error if user is not authenticated
     }
   };
 
