@@ -64,18 +64,18 @@ module.exports = {
 					border: 'var(--sidebar-border)',
 					ring: 'var(--sidebar-ring)'
 				},
-				// Zerithum Neutral Enterprise Palette
+				// Zerithum brand palette
 				zteal: {
-					50: '#F9FAFB',
-					100: '#F3F4F6',
-					200: '#E5E7EB',
-					300: '#D1D5DB',
-					400: '#111827',  // Primary accent (dark)
-					500: '#374151',
-					600: '#1F2937',  // Hover/active
-					700: '#111827',
-					800: '#0F172A',
-					900: '#030712',
+					50: '#EEF2FF',
+					100: '#E0E7FF',
+					200: '#C7D2FE',
+					300: '#A5B4FC',
+					400: '#818CF8',
+					500: '#6366F1',
+					600: '#4F46E5',
+					700: '#4338CA',
+					800: '#3730A3',
+					900: '#312E81',
 				},
 				zwarn: {
 					400: '#FBBF24',
@@ -83,22 +83,18 @@ module.exports = {
 					600: '#B45309',
 				}
 			},
+			boxShadow: {
+				'card': '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
+				'card-hover': '0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04)',
+			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
 				}
 			},
 			animation: {
