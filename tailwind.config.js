@@ -64,23 +64,23 @@ module.exports = {
 					border: 'var(--sidebar-border)',
 					ring: 'var(--sidebar-ring)'
 				},
-				// Zerithum Teal Accent Palette
+				// Zerithum Neutral Enterprise Palette
 				zteal: {
-					50: '#E6F5F7',
-					100: '#CCE9EE',
-					200: '#99D4DD',
-					300: '#66BECC',
-					400: '#4BA3B8',  // Primary accent
-					500: '#3A8A9E',
-					600: '#2C6B7A',  // Hover/active
-					700: '#1E4D58',
-					800: '#0F2F36',
-					900: '#071A1E',
+					50: '#F9FAFB',
+					100: '#F3F4F6',
+					200: '#E5E7EB',
+					300: '#D1D5DB',
+					400: '#111827',  // Primary accent (dark)
+					500: '#374151',
+					600: '#1F2937',  // Hover/active
+					700: '#111827',
+					800: '#0F172A',
+					900: '#030712',
 				},
 				zwarn: {
 					400: '#FBBF24',
-					500: '#F59E0B',  // Warning accent
-					600: '#D97706',
+					500: '#D97706',
+					600: '#B45309',
 				}
 			},
 			keyframes: {

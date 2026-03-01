@@ -111,7 +111,6 @@ export default function TaxEstimatorPage() {
     };
   }, [transactions, expenses, currentYear]);
 
-  // Load/Save Effects (Keep existing logic)
   useEffect(() => {
     try {
       const storedInputs = window.localStorage.getItem(INPUT_STORAGE_KEY);
@@ -399,24 +398,24 @@ export default function TaxEstimatorPage() {
   ];
 
   return (
-    <PageTransition className="mx-auto w-full max-w-[1400px] p-6 lg:p-8">
-      <header className="mb-8 flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-start lg:justify-between">
+    <PageTransition className="mx-auto w-full max-w-[1400px]">
+      <header className="mb-8 flex flex-col gap-4 border-b border-gray-200 pb-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#F5F5F5]">Tax Command Center</h1>
-          <p className="mt-2 text-base text-white/70">
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Tax Estimator</h1>
+          <p className="mt-1.5 text-sm text-gray-500">
             Real-time tax liability estimation and payment tracking.
           </p>
         </div>
         <div className="flex gap-2">
-           <Button variant="outline" className="border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10" onClick={handleDownloadPdf}>
-             <FileText className="mr-2 h-4 w-4" /> PDF Report
-           </Button>
-           <Button variant="outline" className="border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10" onClick={handleExportInputsJson}>
-             <Download className="mr-2 h-4 w-4" /> Export JSON
-           </Button>
-           <Button variant="outline" className="border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10" onClick={() => setAssumptionsOpen(true)}>
-             <Info className="mr-2 h-4 w-4" /> Assumptions
-           </Button>
+          <Button variant="outline" className="h-9 border-gray-200 text-gray-600 hover:bg-gray-50" onClick={handleDownloadPdf}>
+            <FileText className="mr-2 h-4 w-4" /> PDF Report
+          </Button>
+          <Button variant="outline" className="h-9 border-gray-200 text-gray-600 hover:bg-gray-50" onClick={handleExportInputsJson}>
+            <Download className="mr-2 h-4 w-4" /> Export JSON
+          </Button>
+          <Button variant="outline" className="h-9 border-gray-200 text-gray-600 hover:bg-gray-50" onClick={() => setAssumptionsOpen(true)}>
+            <Info className="mr-2 h-4 w-4" /> Assumptions
+          </Button>
         </div>
       </header>
 
@@ -425,72 +424,72 @@ export default function TaxEstimatorPage() {
         <div className="lg:col-span-4 space-y-6">
           <AnimatedItem delay={0.1}>
             <GlassCard variant="panel" className="p-6">
-              <h2 className="mb-6 text-sm font-semibold uppercase tracking-wider text-[#56C5D0]">
+              <h2 className="mb-6 text-xs font-semibold uppercase tracking-wider text-gray-400">
                 Input Parameters
               </h2>
 
               <div className="space-y-5">
                 <div>
-                  <Label className="text-white/80 text-xs mb-1.5 block">Expected Annual Revenue</Label>
+                  <Label className="text-gray-600 text-xs mb-1.5 block">Expected Annual Revenue</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                     <Input
                       type="number"
                       value={inputs.expectedAnnualRevenue}
-                      onChange={(e) => setInputs(prev => ({...prev, expectedAnnualRevenue: toNonNegativeNumber(e.target.value)}))}
-                      className="pl-7 bg-[#0A0A0A] border-white/10 focus-visible:ring-[#56C5D0]"
+                      onChange={(e) => setInputs(prev => ({ ...prev, expectedAnnualRevenue: toNonNegativeNumber(e.target.value) }))}
+                      className="pl-7 bg-white border-gray-200 text-gray-900 focus-visible:border-gray-400 focus-visible:ring-0"
                     />
                   </div>
                 </div>
 
                 <div>
-                   <Label className="text-white/80 text-xs mb-1.5 block">Expense Rate (%)</Label>
-                   <Input
-                      type="number"
-                      value={inputs.expenseRate}
-                      onChange={(e) => setInputs(prev => ({...prev, expenseRate: clamp(toNonNegativeNumber(e.target.value), 0, 100)}))}
-                      className="bg-[#0A0A0A] border-white/10 focus-visible:ring-[#56C5D0]"
-                    />
+                  <Label className="text-gray-600 text-xs mb-1.5 block">Expense Rate (%)</Label>
+                  <Input
+                    type="number"
+                    value={inputs.expenseRate}
+                    onChange={(e) => setInputs(prev => ({ ...prev, expenseRate: clamp(toNonNegativeNumber(e.target.value), 0, 100) }))}
+                    className="bg-white border-gray-200 text-gray-900 focus-visible:border-gray-400 focus-visible:ring-0"
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                   <div>
-                     <Label className="text-white/80 text-xs mb-1.5 block">Filing Status</Label>
-                     <Select value={inputs.filingStatus} onValueChange={(v) => setInputs(prev => ({...prev, filingStatus: v}))}>
-                       <SelectTrigger className="bg-[#0A0A0A] border-white/10"><SelectValue /></SelectTrigger>
-                       <SelectContent className="bg-[#18181B] border-white/10">
-                         {FILING_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                       </SelectContent>
-                     </Select>
-                   </div>
-                   <div>
-                     <Label className="text-white/80 text-xs mb-1.5 block">State</Label>
-                     <Select value={inputs.state} onValueChange={(v) => setInputs(prev => ({...prev, state: v}))}>
-                       <SelectTrigger className="bg-[#0A0A0A] border-white/10"><SelectValue /></SelectTrigger>
-                       <SelectContent className="bg-[#18181B] border-white/10 h-60">
-                         {STATE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.value}</SelectItem>)}
-                       </SelectContent>
-                     </Select>
-                   </div>
+                  <div>
+                    <Label className="text-gray-600 text-xs mb-1.5 block">Filing Status</Label>
+                    <Select value={inputs.filingStatus} onValueChange={(v) => setInputs(prev => ({ ...prev, filingStatus: v }))}>
+                      <SelectTrigger className="bg-white border-gray-200 text-gray-700"><SelectValue /></SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 text-gray-900">
+                        {FILING_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600 text-xs mb-1.5 block">State</Label>
+                    <Select value={inputs.state} onValueChange={(v) => setInputs(prev => ({ ...prev, state: v }))}>
+                      <SelectTrigger className="bg-white border-gray-200 text-gray-700"><SelectValue /></SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 text-gray-900 h-60">
+                        {STATE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.value}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div className="pt-4 border-t border-white/5">
+                <div className="pt-4 border-t border-gray-100">
                   <div className="flex items-center justify-between mb-3">
-                    <Label className="text-white/80 text-xs">Include Other Income</Label>
+                    <Label className="text-gray-600 text-xs">Include Other Income</Label>
                     <Switch
                       checked={inputs.includeOtherIncome}
-                      onCheckedChange={(c) => setInputs(prev => ({...prev, includeOtherIncome: c}))}
-                      className="data-[state=checked]:bg-[#56C5D0]"
+                      onCheckedChange={(c) => setInputs(prev => ({ ...prev, includeOtherIncome: c }))}
+                      className="data-[state=checked]:bg-gray-900"
                     />
                   </div>
                   {inputs.includeOtherIncome && (
-                     <Input
-                       type="number"
-                       placeholder="Amount"
-                       value={inputs.otherIncome}
-                       onChange={(e) => setInputs(prev => ({...prev, otherIncome: toNonNegativeNumber(e.target.value)}))}
-                       className="bg-[#0A0A0A] border-white/10 focus-visible:ring-[#56C5D0]"
-                     />
+                    <Input
+                      type="number"
+                      placeholder="Amount"
+                      value={inputs.otherIncome}
+                      onChange={(e) => setInputs(prev => ({ ...prev, otherIncome: toNonNegativeNumber(e.target.value) }))}
+                      className="bg-white border-gray-200 text-gray-900 focus-visible:border-gray-400 focus-visible:ring-0"
+                    />
                   )}
                 </div>
               </div>
@@ -498,148 +497,148 @@ export default function TaxEstimatorPage() {
           </AnimatedItem>
 
           <AnimatedItem delay={0.2}>
-            <GlassCard variant="panel" className="p-6 bg-gradient-to-br from-[#121214]/60 to-[#56C5D0]/5">
-               <div className="flex items-center justify-between mb-2">
-                 <span className="text-sm font-medium text-white/80">Data Confidence</span>
-                 <span className={cn("text-xs font-bold uppercase", getConfidenceTone(dataCompleteness.confidenceScore))}>
-                   {dataCompleteness.confidenceLabel}
-                 </span>
-               </div>
-               <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden mb-4">
-                  <div
-                    className={cn("h-full transition-all duration-1000",
-                      dataCompleteness.confidenceScore > 80 ? "bg-[#56C5D0]" : "bg-[#F0A562]"
-                    )}
-                    style={{ width: `${dataCompleteness.confidenceScore}%` }}
-                  />
-               </div>
-               <div className="text-xs text-white/50 space-y-1">
-                 <div className="flex justify-between">
-                   <span>History</span>
-                   <span>{dataCompleteness.daysHistory} days</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span>Platforms</span>
-                   <span>{dataCompleteness.platformsConnected} connected</span>
-                 </div>
-               </div>
+            <GlassCard variant="panel" className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">Data Confidence</span>
+                <span className={cn("text-xs font-semibold uppercase", getConfidenceTone(dataCompleteness.confidenceScore))}>
+                  {dataCompleteness.confidenceLabel}
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden mb-4">
+                <div
+                  className={cn("h-full transition-all duration-1000 rounded-full",
+                    dataCompleteness.confidenceScore > 80 ? "bg-gray-900" : "bg-amber-500"
+                  )}
+                  style={{ width: `${dataCompleteness.confidenceScore}%` }}
+                />
+              </div>
+              <div className="text-xs text-gray-500 space-y-1">
+                <div className="flex justify-between">
+                  <span>History</span>
+                  <span>{dataCompleteness.daysHistory} days</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Platforms</span>
+                  <span>{dataCompleteness.platformsConnected} connected</span>
+                </div>
+              </div>
             </GlassCard>
           </AnimatedItem>
         </div>
 
-        {/* RIGHT COLUMN: HUD OUTPUT */}
+        {/* RIGHT COLUMN: OUTPUT */}
         <div className="lg:col-span-8 space-y-6">
 
-           {/* Top HUD Row */}
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <AnimatedItem delay={0.3}>
-                 <GlassCard variant="hud" className="p-6 h-full flex flex-col justify-between relative overflow-hidden group">
-                    <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                       <ShieldCheck className="h-24 w-24 text-[#56C5D0]" />
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-widest text-[#56C5D0] mb-2">Estimated Quarterly Set Aside</p>
-                      <div className="text-4xl lg:text-5xl font-mono-financial font-bold text-white tracking-tighter shadow-glow">
-                        {formatCurrency(calculations.quarterlySetAsidePoint)}
-                      </div>
-                      <p className="text-sm text-white/50 mt-2">
-                         Range: {formatCurrency(calculations.quarterlySetAsideLower)} - {formatCurrency(calculations.quarterlySetAsideUpper)}
-                      </p>
-                    </div>
-                    <div className="mt-6 flex items-center gap-2 text-xs text-white/40">
-                       <div className="h-1.5 w-1.5 rounded-full bg-[#56C5D0] animate-pulse" />
-                       Live Calculation
-                    </div>
-                 </GlassCard>
-              </AnimatedItem>
-
-              <AnimatedItem delay={0.4}>
-                 <GlassCard variant="hud" className="p-6 h-full flex items-center justify-between">
-                    <div>
-                       <p className="text-xs uppercase tracking-widest text-white/60 mb-2">Effective Tax Rate</p>
-                       <div className="text-3xl font-mono-financial font-bold text-[#F5F5F5]">
-                          {formatPercent(calculations.effectiveRatePointEstimate)}
-                       </div>
-                       <p className="text-xs text-white/40 mt-1 max-w-[140px]">
-                         Combined Federal, State, and Self-Employment
-                       </p>
-                    </div>
-                    <div className="h-[100px] w-[100px]">
-                       <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                             <Pie
-                               data={rateData}
-                               innerRadius={35}
-                               outerRadius={45}
-                               startAngle={90}
-                               endAngle={-270}
-                               dataKey="value"
-                               stroke="none"
-                             >
-                                <Cell fill="#56C5D0" />
-                                <Cell fill="rgba(255,255,255,0.1)" />
-                             </Pie>
-                          </PieChart>
-                       </ResponsiveContainer>
-                    </div>
-                 </GlassCard>
-              </AnimatedItem>
-           </div>
-
-           {/* Payment Schedule */}
-           <AnimatedItem delay={0.5}>
-              <GlassCard className="p-0 overflow-hidden">
-                 <div className="p-4 border-b border-white/5 bg-white/[0.02]">
-                    <h3 className="font-semibold text-[#F5F5F5]">Payment Schedule</h3>
-                 </div>
-                 <div className="overflow-x-auto">
-                 <Table>
-                   <TableHeader>
-                     <TableRow className="border-white/5 hover:bg-transparent">
-                       <TableHead className="text-xs font-medium uppercase text-white/50">Quarter</TableHead>
-                       <TableHead className="text-xs font-medium uppercase text-white/50">Due Date</TableHead>
-                       <TableHead className="text-right text-xs font-medium uppercase text-white/50">Status</TableHead>
-                       <TableHead className="text-right w-[100px]"></TableHead>
-                     </TableRow>
-                   </TableHeader>
-                   <TableBody>
-                      {paymentSchedule.map((q) => {
-                         const status = paymentStatus[q.id] || DEFAULT_PAYMENT_STATUS[q.id];
-                         return (
-                           <TableRow key={q.id} className="border-white/5 hover:bg-white/[0.02]">
-                             <TableCell className="font-medium text-[#F5F5F5]">{q.label}</TableCell>
-                             <TableCell className="text-white/70 text-sm">{format(q.dueDate, "MMM d, yyyy")}</TableCell>
-                             <TableCell className="text-right">
-                                {status.paid ? (
-                                   <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium bg-[#56C5D0]/10 text-[#56C5D0] border border-[#56C5D0]/20">
-                                      <CheckCircle2 className="h-3 w-3" /> Paid
-                                   </span>
-                                ) : (
-                                   <span className="text-xs text-white/40">Unpaid</span>
-                                )}
-                             </TableCell>
-                             <TableCell className="text-right">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handlePaymentToggle(q.id)}
-                                  className="h-7 text-xs hover:bg-white/10 text-white/70"
-                                >
-                                  {status.paid ? "Undo" : "Mark Paid"}
-                                </Button>
-                             </TableCell>
-                           </TableRow>
-                         );
-                      })}
-                   </TableBody>
-                 </Table>
-                 </div>
+          {/* Top Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <AnimatedItem delay={0.3}>
+              <GlassCard className="p-6 h-full flex flex-col justify-between relative overflow-hidden group">
+                <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <ShieldCheck className="h-24 w-24 text-gray-900" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-2">Estimated Quarterly Set Aside</p>
+                  <div className="text-4xl lg:text-5xl font-mono-financial font-bold text-gray-900 tracking-tighter">
+                    {formatCurrency(calculations.quarterlySetAsidePoint)}
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Range: {formatCurrency(calculations.quarterlySetAsideLower)} – {formatCurrency(calculations.quarterlySetAsideUpper)}
+                  </p>
+                </div>
+                <div className="mt-6 flex items-center gap-2 text-xs text-gray-400">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Live calculation
+                </div>
               </GlassCard>
-           </AnimatedItem>
+            </AnimatedItem>
 
-           <AnimatedItem delay={0.6}>
-              <CalculationBreakdown rows={calculationRows} />
-           </AnimatedItem>
+            <AnimatedItem delay={0.4}>
+              <GlassCard className="p-6 h-full flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-2">Effective Tax Rate</p>
+                  <div className="text-3xl font-mono-financial font-bold text-gray-900">
+                    {formatPercent(calculations.effectiveRatePointEstimate)}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1 max-w-[140px]">
+                    Combined Federal, State, and Self-Employment
+                  </p>
+                </div>
+                <div className="h-[100px] w-[100px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={rateData}
+                        innerRadius={35}
+                        outerRadius={45}
+                        startAngle={90}
+                        endAngle={-270}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        <Cell fill="#111827" />
+                        <Cell fill="#F3F4F6" />
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </GlassCard>
+            </AnimatedItem>
+          </div>
+
+          {/* Payment Schedule */}
+          <AnimatedItem delay={0.5}>
+            <GlassCard className="p-0 overflow-hidden">
+              <div className="p-4 border-b border-gray-100 bg-gray-50">
+                <h3 className="text-sm font-semibold text-gray-900">Payment Schedule</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-gray-100 hover:bg-transparent">
+                      <TableHead className="text-xs font-medium text-gray-500">Quarter</TableHead>
+                      <TableHead className="text-xs font-medium text-gray-500">Due Date</TableHead>
+                      <TableHead className="text-right text-xs font-medium text-gray-500">Status</TableHead>
+                      <TableHead className="text-right w-[100px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paymentSchedule.map((q) => {
+                      const status = paymentStatus[q.id] || DEFAULT_PAYMENT_STATUS[q.id];
+                      return (
+                        <TableRow key={q.id} className="border-gray-100 hover:bg-gray-50/50">
+                          <TableCell className="font-medium text-gray-900">{q.label}</TableCell>
+                          <TableCell className="text-gray-500 text-sm">{format(q.dueDate, "MMM d, yyyy")}</TableCell>
+                          <TableCell className="text-right">
+                            {status.paid ? (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <CheckCircle2 className="h-3 w-3" /> Paid
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400">Unpaid</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handlePaymentToggle(q.id)}
+                              className="h-7 text-xs hover:bg-gray-100 text-gray-500"
+                            >
+                              {status.paid ? "Undo" : "Mark Paid"}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </GlassCard>
+          </AnimatedItem>
+
+          <AnimatedItem delay={0.6}>
+            <CalculationBreakdown rows={calculationRows} />
+          </AnimatedItem>
 
         </div>
       </div>

@@ -22,7 +22,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
 // Simple loading component for Suspense fallback
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
-    <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
   </div>
 );
 
@@ -45,16 +45,16 @@ const AuthenticatedApp = () => {
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-950 z-50">
-        <Loader2 className="w-10 h-10 animate-spin text-zteal-400 mb-4" />
-        <p className="text-white/50 text-sm animate-pulse mb-4">
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-4" />
+        <p className="text-gray-500 text-sm mb-4">
           {isLoadingAuth ? 'Verifying authentication...' : 'Loading settings...'}
         </p>
 
         {showSlowLoadingMessage && (
           <button
             onClick={() => window.location.href = '/Login'}
-            className="text-xs text-zteal-400 hover:text-white underline transition-colors cursor-pointer"
+            className="text-xs text-gray-900 hover:text-gray-600 underline transition-colors cursor-pointer"
           >
             Taking too long? Click here to Login
           </button>

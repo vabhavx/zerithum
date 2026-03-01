@@ -48,15 +48,15 @@ const PLATFORM_LABELS = {
 };
 
 const PLATFORM_COLORS = {
-  youtube: "#FF0000",
-  patreon: "#F96854",
+  youtube: "#DC2626",
+  patreon: "#E65C46",
   stripe: "#635BFF",
-  gumroad: "#ff90e8",
+  gumroad: "#D946EF",
   instagram: "#E1306C",
-  tiktok: "#00f2ea",
-  shopify: "#96bf48",
+  tiktok: "#111827",
+  shopify: "#5E8E3E",
   substack: "#FF6719",
-  default: "#56C5D0",
+  default: "#111827",
 };
 
 const PLATFORM_FEE_RATES = {
@@ -120,33 +120,29 @@ function getRange(period) {
 function DashboardMetric({ label, value, subtext, tone = "neutral", icon: Icon }) {
   const toneClass =
     tone === "teal"
-      ? "text-[#56C5D0]"
+      ? "text-gray-900"
       : tone === "orange"
-      ? "text-[#F0A562]"
-      : tone === "red"
-      ? "text-[#F06C6C]"
-      : "text-[#F5F5F5]";
+        ? "text-amber-600"
+        : tone === "red"
+          ? "text-red-600"
+          : "text-gray-900";
 
   return (
     <GlassCard hoverEffect className="group p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-white/50 transition-colors group-hover:text-white/70">{label}</p>
-          <p className={`mt-2 font-mono-financial text-3xl font-bold tracking-tight ${toneClass}`}>
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-500">{label}</p>
+          <p className={`mt-2 font-mono-financial text-2xl font-semibold tracking-tight ${toneClass}`}>
             {value}
           </p>
         </div>
         {Icon && (
-          <div className={`relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
-            tone === 'teal'
-              ? 'bg-[#56C5D0]/10 text-[#56C5D0] group-hover:bg-[#56C5D0]/20'
-              : 'bg-white/5 text-white/40 group-hover:bg-white/10 group-hover:text-white/60'
-          }`}>
-            <Icon className="h-5 w-5" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600 transition-colors">
+            <Icon className="h-4 w-4" />
           </div>
         )}
       </div>
-      <p className="mt-2 text-xs font-medium text-white/50">{subtext}</p>
+      <p className="mt-2 text-xs text-gray-500">{subtext}</p>
     </GlassCard>
   );
 }
@@ -154,9 +150,9 @@ function DashboardMetric({ label, value, subtext, tone = "neutral", icon: Icon }
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border border-white/10 bg-black/90 p-3 shadow-xl backdrop-blur-xl">
-        <p className="mb-1 text-xs text-white/50">{format(new Date(label), "MMM d, yyyy")}</p>
-        <p className="font-mono-financial text-sm font-semibold text-[#56C5D0]">
+      <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+        <p className="mb-1 text-xs text-gray-500">{format(new Date(label), "MMM d, yyyy")}</p>
+        <p className="font-mono-financial text-sm font-semibold text-gray-900">
           {formatMoney(payload[0].value)}
         </p>
       </div>
@@ -244,26 +240,24 @@ export default function Dashboard() {
 
     const operatingMargin = netRevenue - periodExpenses;
 
-    // Daily Trend Data for AreaChart
     const trendMap = new Map();
-    // Initialize empty days for smooth chart
     let currentDate = new Date(range.start);
     while (currentDate <= range.end) {
-       const key = format(currentDate, "yyyy-MM-dd");
-       trendMap.set(key, 0);
-       currentDate.setDate(currentDate.getDate() + 1);
+      const key = format(currentDate, "yyyy-MM-dd");
+      trendMap.set(key, 0);
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
     inRange.forEach(tx => {
-       const key = format(new Date(tx.transaction_date), "yyyy-MM-dd");
-       if (trendMap.has(key)) {
-          trendMap.set(key, trendMap.get(key) + (tx.amount || 0));
-       }
+      const key = format(new Date(tx.transaction_date), "yyyy-MM-dd");
+      if (trendMap.has(key)) {
+        trendMap.set(key, trendMap.get(key) + (tx.amount || 0));
+      }
     });
 
     const trendData = Array.from(trendMap.entries())
-       .map(([date, amount]) => ({ date, amount }))
-       .sort((a, b) => new Date(a.date) - new Date(b.date));
+      .map(([date, amount]) => ({ date, amount }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const byPlatformMap = new Map();
     for (const tx of inRange) {
@@ -371,29 +365,25 @@ export default function Dashboard() {
   const isLoading = txLoading || platformsLoading;
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background Gradient for Depth */}
-      <div className="fixed inset-x-0 top-0 h-[500px] bg-gradient-to-b from-[#56C5D0]/5 via-transparent to-transparent blur-[120px] pointer-events-none" />
-
+    <div className="relative">
       <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="relative mx-auto w-full max-w-[1400px] p-6 lg:p-8"
+        className="relative mx-auto w-full max-w-[1400px]"
       >
         <motion.header
           variants={itemVariants}
-          className="mb-8 flex flex-col gap-6 border-b border-white/5 pb-6 xl:flex-row xl:items-start xl:justify-between"
+          className="mb-8 flex flex-col gap-6 border-b border-gray-200 pb-6 xl:flex-row xl:items-start xl:justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-[#F5F5F5] sm:text-4xl">Dashboard</h1>
-            <p className="mt-2 text-base text-white/60">
-              Real-time financial intelligence and operational command.
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Dashboard</h1>
+            <p className="mt-1.5 text-sm text-gray-500">
+              Financial overview and operational summary
             </p>
-            <div className="mt-3 flex items-center gap-2 text-xs font-medium text-white/40">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#56C5D0] opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#56C5D0]"></span>
+            <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
               </span>
               Last sync:{" "}
               {dataCompleteness.lastSync
@@ -402,29 +392,28 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 rounded-lg bg-white/5 p-1 backdrop-blur-sm">
+          <div className="flex flex-wrap items-center gap-1 rounded-lg bg-gray-100 p-1">
             {PERIODS.map((item) => (
               <button
                 key={item.value}
                 type="button"
                 onClick={() => setPeriod(item.value)}
-                className={`relative rounded-md px-4 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56C5D0] ${
-                  period === item.value
-                    ? "text-[#0A0A0A] shadow-sm"
-                    : "text-white/60 hover:text-white"
-                }`}
+                className={`relative rounded-md px-3 py-1.5 text-xs font-medium transition-all ${period === item.value
+                    ? "text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                  }`}
               >
                 {period === item.value && (
                   <motion.div
                     layoutId="period-highlight"
-                    className="absolute inset-0 rounded-md bg-[#56C5D0]"
+                    className="absolute inset-0 rounded-md bg-white shadow-sm"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
                 <span className="relative z-10">{item.label}</span>
               </button>
             ))}
-            <div className="mx-1 h-6 w-px bg-white/10" />
+            <div className="mx-1 h-5 w-px bg-gray-200" />
             <Button
               type="button"
               variant="ghost"
@@ -433,9 +422,9 @@ export default function Dashboard() {
                 refetchPlatforms();
               }}
               disabled={isFetching}
-              className="h-8 w-8 rounded-full p-0 text-white/60 hover:bg-white/10 hover:text-white"
+              className="h-7 w-7 rounded-full p-0 text-gray-400 hover:bg-gray-200 hover:text-gray-600"
             >
-              <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
             </Button>
           </div>
         </motion.header>
@@ -481,259 +470,254 @@ export default function Dashboard() {
         >
           {/* Left Column: Revenue Breakdown */}
           <GlassCard className="xl:col-span-8 overflow-visible">
-            <div className="flex items-center justify-between border-b border-white/10 p-5">
+            <div className="flex items-center justify-between border-b border-gray-100 p-5">
               <div>
-                <h2 className="text-lg font-semibold text-[#F5F5F5]">Revenue Trend</h2>
-                <p className="mt-1 text-sm text-white/60">
-                  Daily revenue performance over selected period.
+                <h2 className="text-sm font-semibold text-gray-900">Revenue Trend</h2>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Daily revenue performance over selected period
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col gap-8 p-6">
-               {/* Area Chart Section */}
               <div className="h-[300px] w-full">
                 {computed.trendData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={computed.trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#56C5D0" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#56C5D0" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#111827" stopOpacity={0.08} />
+                          <stop offset="95%" stopColor="#111827" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
                       <XAxis
                         dataKey="date"
                         tickFormatter={(str) => format(new Date(str), "MMM d")}
-                        stroke="rgba(255,255,255,0.3)"
-                        tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
+                        stroke="#D1D5DB"
+                        tick={{ fill: '#9CA3AF', fontSize: 11 }}
                         axisLine={false}
                         tickLine={false}
                         minTickGap={30}
                       />
                       <YAxis
-                        stroke="rgba(255,255,255,0.3)"
-                        tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
-                        tickFormatter={(val) => `$${val/1000}k`}
+                        stroke="#D1D5DB"
+                        tick={{ fill: '#9CA3AF', fontSize: 11 }}
+                        tickFormatter={(val) => `$${val / 1000}k`}
                         axisLine={false}
                         tickLine={false}
                       />
-                      <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                      <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#E5E7EB', strokeWidth: 1, strokeDasharray: '4 4' }} />
                       <Area
                         type="monotone"
                         dataKey="amount"
-                        stroke="#56C5D0"
-                        strokeWidth={2}
+                        stroke="#111827"
+                        strokeWidth={1.5}
                         fillOpacity={1}
                         fill="url(#colorRevenue)"
-                        animationDuration={1500}
+                        animationDuration={1200}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center text-white/30">
-                     <div className="mb-2 rounded-full bg-white/5 p-4">
-                        <Database className="h-6 w-6" />
-                     </div>
-                     <p className="text-sm">No transaction data available for chart</p>
+                  <div className="flex h-full w-full flex-col items-center justify-center text-gray-400">
+                    <div className="mb-2 rounded-full bg-gray-50 p-4">
+                      <Database className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm">No transaction data available</p>
                   </div>
                 )}
               </div>
 
-              {/* Minimal Platform Breakdown */}
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                 {computed.platformRows.slice(0, 4).map((row) => (
-                    <div key={row.key} className="rounded-lg border border-white/5 bg-white/[0.02] p-3">
-                       <div className="mb-1 flex items-center gap-2">
-                          <div
-                             className="h-1.5 w-1.5 rounded-full"
-                             style={{ backgroundColor: PLATFORM_COLORS[row.key] || PLATFORM_COLORS.default }}
-                          />
-                          <span className="text-xs font-medium text-white/70">{row.label}</span>
-                       </div>
-                       <p className="font-mono-financial text-lg font-semibold text-[#F5F5F5]">{formatMoney(row.gross)}</p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {computed.platformRows.slice(0, 4).map((row) => (
+                  <div key={row.key} className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
+                    <div className="mb-1 flex items-center gap-2">
+                      <div
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ backgroundColor: PLATFORM_COLORS[row.key] || PLATFORM_COLORS.default }}
+                      />
+                      <span className="text-xs font-medium text-gray-500">{row.label}</span>
                     </div>
-                 ))}
+                    <p className="font-mono-financial text-lg font-semibold text-gray-900">{formatMoney(row.gross)}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </GlassCard>
 
           {/* Right Column: Insights & Actions */}
           <div className="space-y-6 xl:col-span-4">
-              <GlassCard className="h-full p-1">
-                <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-black/40 mb-4 mx-3 mt-3">
-                  <button
-                    onClick={() => setPanelView("overview")}
-                    className={`relative z-10 rounded-md py-1.5 text-xs font-medium transition-colors ${
-                      panelView === "overview" ? "text-white" : "text-white/40 hover:text-white/70"
+            <GlassCard className="h-full p-1">
+              <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-gray-100 mb-4 mx-3 mt-3">
+                <button
+                  onClick={() => setPanelView("overview")}
+                  className={`relative z-10 rounded-md py-1.5 text-xs font-medium transition-colors ${panelView === "overview" ? "text-gray-900" : "text-gray-400 hover:text-gray-600"
                     }`}
-                  >
-                    {panelView === "overview" && (
-                      <motion.div
-                        layoutId="panel-tab"
-                        className="absolute inset-0 rounded-md bg-white/10 shadow-sm"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                      />
-                    )}
-                    <span className="relative z-10">System Health</span>
-                  </button>
-                  <button
-                    onClick={() => setPanelView("operations")}
-                    className={`relative z-10 rounded-md py-1.5 text-xs font-medium transition-colors ${
-                      panelView === "operations" ? "text-white" : "text-white/40 hover:text-white/70"
+                >
+                  {panelView === "overview" && (
+                    <motion.div
+                      layoutId="panel-tab"
+                      className="absolute inset-0 rounded-md bg-white shadow-sm"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10">System Health</span>
+                </button>
+                <button
+                  onClick={() => setPanelView("operations")}
+                  className={`relative z-10 rounded-md py-1.5 text-xs font-medium transition-colors ${panelView === "operations" ? "text-gray-900" : "text-gray-400 hover:text-gray-600"
                     }`}
-                  >
-                    {panelView === "operations" && (
-                       <motion.div
-                         layoutId="panel-tab"
-                         className="absolute inset-0 rounded-md bg-white/10 shadow-sm"
-                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                       />
-                    )}
-                    <span className="relative z-10">Operations</span>
-                  </button>
-                </div>
+                >
+                  {panelView === "operations" && (
+                    <motion.div
+                      layoutId="panel-tab"
+                      className="absolute inset-0 rounded-md bg-white shadow-sm"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10">Operations</span>
+                </button>
+              </div>
 
-                <div className="px-4 pb-4">
-                   <AnimatePresence mode="wait">
-                      {panelView === "overview" ? (
-                         <motion.div
-                            key="overview"
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 10 }}
-                            transition={{ duration: 0.2 }}
-                         >
-                            <div className="space-y-6">
-                               <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[#56C5D0]/20 to-transparent p-4">
-                                  <div className="mb-2 flex items-center justify-between">
-                                     <span className="text-xs font-medium uppercase tracking-wider text-[#56C5D0]">Completeness</span>
-                                     <span className="font-mono-financial text-lg font-bold text-white">{dataCompleteness.daysHistory} days</span>
-                                  </div>
-                                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                                     <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${Math.min(100, (dataCompleteness.daysHistory / 365) * 100)}%` }}
-                                        transition={{ duration: 1, delay: 0.2 }}
-                                        className="h-full rounded-full bg-[#56C5D0]"
-                                     />
-                                  </div>
-                               </div>
+              <div className="px-4 pb-4">
+                <AnimatePresence mode="wait">
+                  {panelView === "overview" ? (
+                    <motion.div
+                      key="overview"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="space-y-6">
+                        <div className="relative overflow-hidden rounded-lg bg-gray-50 p-4">
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Data Coverage</span>
+                            <span className="font-mono-financial text-lg font-semibold text-gray-900">{dataCompleteness.daysHistory} days</span>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.min(100, (dataCompleteness.daysHistory / 365) * 100)}%` }}
+                              transition={{ duration: 1, delay: 0.2 }}
+                              className="h-full rounded-full bg-gray-900"
+                            />
+                          </div>
+                        </div>
 
-                               <div className="space-y-3">
-                                  <h3 className="text-xs font-medium text-white/40 uppercase">Status Checks</h3>
-                                  <div className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-3 transition-colors hover:bg-white/[0.04]">
-                                     <div className={`flex h-8 w-8 items-center justify-center rounded-full ${dataCompleteness.errorPlatforms.length > 0 ? 'bg-red-500/10 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'bg-green-500/10 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.2)]'}`}>
-                                        {dataCompleteness.errorPlatforms.length > 0 ? <AlertTriangle className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                                     </div>
-                                     <div>
-                                        <p className="text-sm font-medium text-[#F5F5F5]">
-                                           {dataCompleteness.errorPlatforms.length > 0 ? "Sync Issues Detected" : "Systems Operational"}
-                                        </p>
-                                        <p className="text-xs text-white/50">
-                                           {dataCompleteness.errorPlatforms.length} platform(s) need attention
-                                        </p>
-                                     </div>
-                                  </div>
-                               </div>
+                        <div className="space-y-3">
+                          <h3 className="text-xs font-medium text-gray-400 uppercase">Status</h3>
+                          <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white p-3 transition-colors hover:bg-gray-50">
+                            <div className={`flex h-8 w-8 items-center justify-center rounded-full ${dataCompleteness.errorPlatforms.length > 0 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                              {dataCompleteness.errorPlatforms.length > 0 ? <AlertTriangle className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
                             </div>
-                         </motion.div>
-                      ) : (
-                         <motion.div
-                            key="operations"
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
-                            transition={{ duration: 0.2 }}
-                            className="space-y-3"
-                         >
-                            {[
-                               { label: "Review anomalies", count: pendingAutopsyEvents.length, path: "/RevenueAutopsy", urgent: pendingAutopsyEvents.length > 0 },
-                               { label: "Resolve sync errors", count: dataCompleteness.errorPlatforms.length, path: "/ConnectedPlatforms", urgent: dataCompleteness.errorPlatforms.length > 0 },
-                               { label: "Recalculate tax set-aside", count: null, path: "/TaxEstimator", urgent: false }
-                            ].map((action, i) => (
-                               <motion.button
-                                  key={action.label}
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  onClick={() => navigate(action.path)}
-                                  className={`group flex w-full items-center justify-between rounded-lg border p-4 text-left transition-all ${
-                                     action.urgent
-                                       ? "border-[#F0A562]/40 bg-[#F0A562]/10 shadow-[0_0_15px_rgba(240,165,98,0.1)] hover:bg-[#F0A562]/20"
-                                       : "border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10"
-                                  }`}
-                               >
-                                  <div>
-                                     <p className="text-sm font-medium text-[#F5F5F5] group-hover:text-white">{action.label}</p>
-                                     {action.count !== null && (
-                                        <p className={`mt-0.5 text-xs ${action.urgent ? "text-[#F0A562]" : "text-white/50"}`}>
-                                           {action.count} items pending
-                                        </p>
-                                     )}
-                                  </div>
-                                  <ArrowRight className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${action.urgent ? "text-[#F0A562]" : "text-white/30"}`} />
-                               </motion.button>
-                            ))}
-                         </motion.div>
-                      )}
-                   </AnimatePresence>
-                </div>
-              </GlassCard>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                {dataCompleteness.errorPlatforms.length > 0 ? "Sync Issues Detected" : "All Systems Operational"}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {dataCompleteness.errorPlatforms.length} platform(s) need attention
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="operations"
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-3"
+                    >
+                      {[
+                        { label: "Review anomalies", count: pendingAutopsyEvents.length, path: "/RevenueAutopsy", urgent: pendingAutopsyEvents.length > 0 },
+                        { label: "Resolve sync errors", count: dataCompleteness.errorPlatforms.length, path: "/ConnectedPlatforms", urgent: dataCompleteness.errorPlatforms.length > 0 },
+                        { label: "Recalculate tax set-aside", count: null, path: "/TaxEstimator", urgent: false }
+                      ].map((action) => (
+                        <motion.button
+                          key={action.label}
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                          onClick={() => navigate(action.path)}
+                          className={`group flex w-full items-center justify-between rounded-lg border p-4 text-left transition-all ${action.urgent
+                              ? "border-amber-200 bg-amber-50"
+                              : "border-gray-100 bg-white hover:bg-gray-50 hover:border-gray-200"
+                            }`}
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{action.label}</p>
+                            {action.count !== null && (
+                              <p className={`mt-0.5 text-xs ${action.urgent ? "text-amber-600" : "text-gray-500"}`}>
+                                {action.count} items pending
+                              </p>
+                            )}
+                          </div>
+                          <ArrowRight className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${action.urgent ? "text-amber-500" : "text-gray-300"}`} />
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </GlassCard>
           </div>
         </motion.div>
 
         {/* Recent Transactions Section */}
         <GlassCard className="mt-6">
-          <div className="border-b border-white/10 p-5">
-            <h2 className="text-lg font-semibold text-[#F5F5F5]">Recent Activity</h2>
+          <div className="border-b border-gray-100 p-5">
+            <h2 className="text-sm font-semibold text-gray-900">Recent Activity</h2>
           </div>
           <Table>
             <TableHeader>
-              <TableRow className="border-white/5 hover:bg-transparent">
-                <TableHead className="text-[#888]">Date</TableHead>
-                <TableHead className="text-[#888]">Description</TableHead>
-                <TableHead className="text-[#888]">Platform</TableHead>
-                <TableHead className="text-right text-[#888]">Gross</TableHead>
-                <TableHead className="text-right text-[#888]">Net</TableHead>
+              <TableRow className="border-gray-100 hover:bg-transparent">
+                <TableHead className="text-gray-500 text-xs">Date</TableHead>
+                <TableHead className="text-gray-500 text-xs">Description</TableHead>
+                <TableHead className="text-gray-500 text-xs">Platform</TableHead>
+                <TableHead className="text-right text-gray-500 text-xs">Gross</TableHead>
+                <TableHead className="text-right text-gray-500 text-xs">Net</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {computed.latestTransactions.map((tx, i) => (
                 <motion.tr
                   key={tx.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 5 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="group border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                  transition={{ delay: i * 0.03 }}
+                  className="group border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                 >
-                  <TableCell className="text-sm text-white/60 group-hover:text-white/80 transition-colors">
+                  <TableCell className="text-sm text-gray-500">
                     {format(new Date(tx.date), "MMM d, yyyy")}
                   </TableCell>
-                  <TableCell className="max-w-[300px] truncate text-sm text-[#F5F5F5]">
+                  <TableCell className="max-w-[300px] truncate text-sm text-gray-900">
                     {tx.description}
                   </TableCell>
-                  <TableCell className="text-sm text-white/60">
-                     <span className="inline-flex items-center rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-white/80 transition-colors group-hover:bg-white/10">
-                        {tx.platform}
-                     </span>
+                  <TableCell className="text-sm text-gray-500">
+                    <span className="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-600">
+                      {tx.platform}
+                    </span>
                   </TableCell>
-                  <TableCell className="text-right font-mono-financial text-white/80">
+                  <TableCell className="text-right font-mono-financial text-gray-900">
                     {formatMoney(tx.gross)}
                   </TableCell>
-                  <TableCell className="text-right font-mono-financial text-[#56C5D0]">
+                  <TableCell className="text-right font-mono-financial text-gray-900 font-medium">
                     {formatMoney(tx.gross - tx.fee)}
                   </TableCell>
                 </motion.tr>
               ))}
-               {computed.latestTransactions.length === 0 && (
-                  <TableRow>
-                     <TableCell colSpan={5} className="py-12 text-center text-sm text-white/40">
-                        No recent activity found.
-                     </TableCell>
-                  </TableRow>
-               )}
+              {computed.latestTransactions.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-12 text-center text-sm text-gray-400">
+                    No recent activity found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </GlassCard>

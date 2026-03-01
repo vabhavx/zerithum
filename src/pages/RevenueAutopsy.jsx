@@ -52,7 +52,7 @@ const LENSES = [
 ];
 
 const SEVERITY_FILTERS = [
-  { value: "all", label: "All severities" },
+  { value: "all", label: "All" },
   { value: "critical", label: "Critical" },
   { value: "high", label: "High" },
   { value: "medium", label: "Medium" },
@@ -80,9 +80,9 @@ function feeFor(tx) {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border border-white/10 bg-[#09090b]/90 p-3 backdrop-blur-md">
-        <p className="mb-1 text-xs text-white/60">{label}</p>
-        <p className="font-mono-financial text-sm font-semibold text-[#56C5D0]">
+      <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+        <p className="mb-1 text-xs text-gray-500">{label}</p>
+        <p className="font-mono-financial text-sm font-semibold text-gray-900">
           {formatMoney(payload[0].value)}
         </p>
       </div>
@@ -203,7 +203,6 @@ export default function RevenueAutopsy() {
     const topPlatform = platformRows[0] || null;
     const concentrationShare = topPlatform ? topPlatform.share : 0;
 
-    // Trend Chart Data
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: now });
     const trendData = daysInMonth.map(day => {
       const dayTotal = monthRows
@@ -287,14 +286,14 @@ export default function RevenueAutopsy() {
   const loading = txLoading || eventsLoading;
 
   return (
-    <PageTransition className="mx-auto w-full max-w-[1400px] p-6 lg:p-8">
-      <header className="mb-8 flex flex-col gap-4 border-b border-white/10 pb-6 xl:flex-row xl:items-start xl:justify-between">
+    <PageTransition className="mx-auto w-full max-w-[1400px]">
+      <header className="mb-8 flex flex-col gap-4 border-b border-gray-200 pb-6 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#F5F5F5]">Revenue Autopsy</h1>
-          <p className="mt-2 text-base text-white/70">
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Revenue Autopsy</h1>
+          <p className="mt-1.5 text-sm text-gray-500">
             Interactive risk analysis and anomaly detection.
           </p>
-          <div className="mt-2 flex items-center gap-2 text-xs text-white/50">
+          <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
             <Activity className="h-3 w-3" />
             Last sync: {lastSync ? format(lastSync, "MMM d, yyyy h:mm a") : "No sync data"}
           </div>
@@ -308,7 +307,7 @@ export default function RevenueAutopsy() {
             refetchPlatforms();
           }}
           disabled={isRefreshing}
-          className="h-10 border-white/20 bg-white/5 text-[#F5F5F5] hover:bg-white/10 hover:text-white"
+          className="h-9 border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
         >
           <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           Refresh analysis
@@ -317,22 +316,21 @@ export default function RevenueAutopsy() {
 
       {/* Lens Selector */}
       <AnimatedItem delay={0.1} className="mb-8">
-        <GlassCard className="flex flex-wrap items-center gap-2 p-1.5" variant="panel">
+        <div className="flex flex-wrap items-center gap-1 rounded-lg bg-gray-100 p-1 w-fit">
           {LENSES.map((item) => (
             <button
               key={item.value}
               type="button"
               onClick={() => setLens(item.value)}
-              className={`h-9 rounded-lg px-4 text-sm font-medium transition-all ${
-                lens === item.value
-                  ? "bg-[#56C5D0]/10 text-[#56C5D0] shadow-[0_0_10px_-2px_rgba(86,197,208,0.2)]"
-                  : "text-white/60 hover:bg-white/5 hover:text-white/90"
-              }`}
+              className={`h-8 rounded-md px-4 text-sm font-medium transition-all ${lens === item.value
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+                }`}
             >
               {item.label}
             </button>
           ))}
-        </GlassCard>
+        </div>
       </AnimatedItem>
 
       {/* Key Metrics Grid */}
@@ -342,7 +340,6 @@ export default function RevenueAutopsy() {
             title="Gross Revenue (MTD)"
             value={formatMoney(analysis.monthGross)}
             sub="Before fees"
-            glowEffect
           />
         </AnimatedItem>
         <AnimatedItem delay={0.3}>
@@ -372,17 +369,17 @@ export default function RevenueAutopsy() {
         </AnimatedItem>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Main Content Area */}
-        <div className="xl:col-span-2 space-y-8">
+        <div className="xl:col-span-2 space-y-6">
 
           {/* Revenue Trend Chart */}
           {(lens === "overview" || lens === "risk") && (
             <AnimatedItem delay={0.6}>
               <GlassCard variant="panel" className="p-6">
                 <div className="mb-6 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-[#F5F5F5]">
-                    <TrendingUp className="h-5 w-5 text-[#56C5D0]" />
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                    <TrendingUp className="h-4 w-4 text-gray-400" />
                     Revenue Momentum
                   </h3>
                 </div>
@@ -390,31 +387,33 @@ export default function RevenueAutopsy() {
                   <AreaChart data={analysis.trendData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#56C5D0" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#56C5D0" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#111827" stopOpacity={0.08} />
+                        <stop offset="95%" stopColor="#111827" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
                     <XAxis
                       dataKey="date"
-                      stroke="rgba(255,255,255,0.3)"
-                      fontSize={12}
+                      stroke="#D1D5DB"
+                      fontSize={11}
                       tickLine={false}
                       axisLine={false}
+                      tick={{ fill: '#9CA3AF' }}
                     />
                     <YAxis
-                      stroke="rgba(255,255,255,0.3)"
-                      fontSize={12}
+                      stroke="#D1D5DB"
+                      fontSize={11}
                       tickFormatter={(val) => `$${val}`}
                       tickLine={false}
                       axisLine={false}
+                      tick={{ fill: '#9CA3AF' }}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#E5E7EB', strokeWidth: 1, strokeDasharray: '4 4' }} />
                     <Area
                       type="monotone"
                       dataKey="value"
-                      stroke="#56C5D0"
-                      strokeWidth={2}
+                      stroke="#111827"
+                      strokeWidth={1.5}
                       fillOpacity={1}
                       fill="url(#colorRevenue)"
                     />
@@ -429,67 +428,67 @@ export default function RevenueAutopsy() {
             <AnimatedItem delay={0.7}>
               <GlassCard variant="panel" className="p-6">
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-[#F5F5F5]">Platform Concentration</h3>
-                  <p className="text-sm text-white/60">Revenue distribution across connected sources</p>
+                  <h3 className="text-sm font-semibold text-gray-900">Platform Concentration</h3>
+                  <p className="text-xs text-gray-500 mt-1">Revenue distribution across connected sources</p>
                 </div>
 
-                {/* Visual Bar Chart for Concentration */}
                 <ChartContainer height={200} className="mb-6 border-0 bg-transparent p-0">
                   <BarChart data={analysis.platformRows} layout="vertical" margin={{ left: 40 }}>
-                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={true} vertical={false} />
-                     <XAxis type="number" hide />
-                     <YAxis
-                       dataKey="label"
-                       type="category"
-                       stroke="rgba(255,255,255,0.7)"
-                       fontSize={12}
-                       tickLine={false}
-                       axisLine={false}
-                       width={80}
-                     />
-                     <Tooltip
-                       cursor={{fill: 'rgba(255,255,255,0.05)'}}
-                       content={({ active, payload }) => {
-                         if (active && payload && payload.length) {
-                           return (
-                             <div className="rounded-lg border border-white/10 bg-[#09090b]/90 p-2 backdrop-blur-md">
-                               <p className="text-xs text-white/60">{payload[0].payload.label}</p>
-                               <p className="font-mono-financial text-sm font-semibold text-[#56C5D0]">
-                                 {formatMoney(payload[0].value)} ({payload[0].payload.share.toFixed(1)}%)
-                               </p>
-                             </div>
-                           );
-                         }
-                         return null;
-                       }}
-                     />
-                     <Bar dataKey="gross" radius={[0, 4, 4, 0]}>
-                        {analysis.platformRows.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index === 0 && entry.share > 60 ? "#F06C6C" : "#56C5D0"} fillOpacity={0.8} />
-                        ))}
-                     </Bar>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="label"
+                      type="category"
+                      stroke="#9CA3AF"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      width={80}
+                      tick={{ fill: '#6B7280' }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+                              <p className="text-xs text-gray-500">{payload[0].payload.label}</p>
+                              <p className="font-mono-financial text-sm font-semibold text-gray-900">
+                                {formatMoney(payload[0].value)} ({payload[0].payload.share.toFixed(1)}%)
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="gross" radius={[0, 4, 4, 0]}>
+                      {analysis.platformRows.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={index === 0 && entry.share > 60 ? "#DC2626" : "#111827"} fillOpacity={index === 0 ? 0.9 : 0.6 - index * 0.08} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ChartContainer>
 
-                <div className="overflow-hidden rounded-lg border border-white/5">
+                <div className="overflow-hidden rounded-lg border border-gray-200">
                   <Table>
-                    <TableHeader className="bg-white/[0.02]">
-                      <TableRow className="border-white/5 hover:bg-transparent">
-                        <TableHead className="text-xs font-medium uppercase text-white/50">Platform</TableHead>
-                        <TableHead className="text-right text-xs font-medium uppercase text-white/50">Gross</TableHead>
-                        <TableHead className="text-right text-xs font-medium uppercase text-white/50">Fee</TableHead>
-                        <TableHead className="text-right text-xs font-medium uppercase text-white/50">Net</TableHead>
-                        <TableHead className="text-right text-xs font-medium uppercase text-white/50">Share</TableHead>
+                    <TableHeader className="bg-gray-50">
+                      <TableRow className="border-gray-100 hover:bg-transparent">
+                        <TableHead className="text-xs font-medium text-gray-500">Platform</TableHead>
+                        <TableHead className="text-right text-xs font-medium text-gray-500">Gross</TableHead>
+                        <TableHead className="text-right text-xs font-medium text-gray-500">Fee</TableHead>
+                        <TableHead className="text-right text-xs font-medium text-gray-500">Net</TableHead>
+                        <TableHead className="text-right text-xs font-medium text-gray-500">Share</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {analysis.platformRows.map((row) => (
-                        <TableRow key={row.key} className="border-white/5 hover:bg-white/[0.02]">
-                          <TableCell className="font-medium text-[#F5F5F5]">{row.label}</TableCell>
-                          <TableCell className="text-right font-mono-financial text-[#F5F5F5]">{formatMoney(row.gross)}</TableCell>
-                          <TableCell className="text-right font-mono-financial text-[#F0A562]">{formatMoney(row.fee)}</TableCell>
-                          <TableCell className="text-right font-mono-financial text-[#56C5D0]">{formatMoney(row.net)}</TableCell>
-                          <TableCell className="text-right text-white/70">{row.share.toFixed(1)}%</TableCell>
+                        <TableRow key={row.key} className="border-gray-100 hover:bg-gray-50/50">
+                          <TableCell className="text-sm font-medium text-gray-900">{row.label}</TableCell>
+                          <TableCell className="text-right font-mono-financial text-gray-900">{formatMoney(row.gross)}</TableCell>
+                          <TableCell className="text-right font-mono-financial text-amber-600">{formatMoney(row.fee)}</TableCell>
+                          <TableCell className="text-right font-mono-financial text-gray-900 font-medium">{formatMoney(row.net)}</TableCell>
+                          <TableCell className="text-right text-gray-500">{row.share.toFixed(1)}%</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -501,108 +500,104 @@ export default function RevenueAutopsy() {
 
           {/* Event Queue Lens */}
           {(lens === "events" || lens === "risk") && (
-             <AnimatedItem delay={0.6}>
-               <GlassCard variant="panel" className="overflow-hidden">
-                 <div className="flex flex-col gap-3 border-b border-white/5 bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between">
-                   <div>
-                     <h3 className="font-semibold text-[#F5F5F5]">Anomaly Detection Queue</h3>
-                     <p className="text-xs text-white/60">AI-flagged transactions requiring review</p>
-                   </div>
-                   <div className="flex gap-1 bg-[#0A0A0A] p-1 rounded-lg border border-white/10">
-                     {SEVERITY_FILTERS.map((item) => (
-                       <button
-                         key={item.value}
-                         onClick={() => setSeverityFilter(item.value)}
-                         className={`px-3 py-1 text-[10px] uppercase font-medium rounded transition-colors ${
-                           severityFilter === item.value
-                             ? "bg-[#56C5D0] text-[#0A0A0A]"
-                             : "text-white/50 hover:text-white"
-                         }`}
-                       >
-                         {item.label}
-                       </button>
-                     ))}
-                   </div>
-                 </div>
+            <AnimatedItem delay={0.6}>
+              <GlassCard variant="panel" className="overflow-hidden">
+                <div className="flex flex-col gap-3 border-b border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">Anomaly Detection Queue</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">AI-flagged transactions requiring review</p>
+                  </div>
+                  <div className="flex gap-1 bg-white p-1 rounded-lg border border-gray-200">
+                    {SEVERITY_FILTERS.map((item) => (
+                      <button
+                        key={item.value}
+                        onClick={() => setSeverityFilter(item.value)}
+                        className={`px-3 py-1 text-xs font-medium rounded transition-colors ${severityFilter === item.value
+                            ? "bg-gray-900 text-white"
+                            : "text-gray-500 hover:text-gray-700"
+                          }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-                 <Table>
-                   <TableHeader className="bg-white/[0.02]">
-                     <TableRow className="border-white/5 hover:bg-transparent">
-                       <TableHead className="text-xs font-medium uppercase text-white/50">Detected</TableHead>
-                       <TableHead className="text-xs font-medium uppercase text-white/50">Event Type</TableHead>
-                       <TableHead className="text-xs font-medium uppercase text-white/50">Severity</TableHead>
-                       <TableHead className="text-right text-xs font-medium uppercase text-white/50">Impact</TableHead>
-                       <TableHead className="w-[50px]"></TableHead>
-                     </TableRow>
-                   </TableHeader>
-                   <TableBody>
-                     {filteredEvents.length === 0 && (
-                       <TableRow className="border-white/5 hover:bg-transparent">
-                         <TableCell colSpan={5} className="py-12 text-center text-sm text-white/40">
-                           No pending anomalies found for this filter.
-                         </TableCell>
-                       </TableRow>
-                     )}
-                     {filteredEvents.slice(0, 10).map((event) => (
-                       <TableRow key={event.id} className="border-white/5 hover:bg-white/[0.02] group cursor-pointer">
-                         <TableCell className="text-sm text-white/70">
-                           {event.detected_at ? format(new Date(event.detected_at), "MMM d") : "-"}
-                         </TableCell>
-                         <TableCell className="text-sm font-medium text-[#F5F5F5]">
-                           {(event.event_type || "Unknown").replaceAll("_", " ")}
-                         </TableCell>
-                         <TableCell>
-                           <span
-                             className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
-                               event.severity === "critical" || event.severity === "high"
-                                 ? "bg-[#F06C6C]/20 text-[#F06C6C]"
-                                 : event.severity === "medium"
-                                   ? "bg-[#F0A562]/20 text-[#F0A562]"
-                                   : "bg-[#56C5D0]/20 text-[#56C5D0]"
-                             }`}
-                           >
-                             {event.severity || "low"}
-                           </span>
-                         </TableCell>
-                         <TableCell className="text-right font-mono-financial text-white/90">
-                           {typeof event.impact_amount === "number" ? formatMoney(event.impact_amount) : "-"}
-                         </TableCell>
-                         <TableCell>
-                           <ArrowRight className="h-4 w-4 text-white/20 transition-colors group-hover:text-[#56C5D0]" />
-                         </TableCell>
-                       </TableRow>
-                     ))}
-                   </TableBody>
-                 </Table>
-               </GlassCard>
-             </AnimatedItem>
+                <Table>
+                  <TableHeader className="bg-gray-50">
+                    <TableRow className="border-gray-100 hover:bg-transparent">
+                      <TableHead className="text-xs font-medium text-gray-500">Detected</TableHead>
+                      <TableHead className="text-xs font-medium text-gray-500">Event Type</TableHead>
+                      <TableHead className="text-xs font-medium text-gray-500">Severity</TableHead>
+                      <TableHead className="text-right text-xs font-medium text-gray-500">Impact</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredEvents.length === 0 && (
+                      <TableRow className="border-gray-100 hover:bg-transparent">
+                        <TableCell colSpan={5} className="py-12 text-center text-sm text-gray-400">
+                          No pending anomalies found for this filter.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {filteredEvents.slice(0, 10).map((event) => (
+                      <TableRow key={event.id} className="border-gray-100 hover:bg-gray-50/50 group cursor-pointer">
+                        <TableCell className="text-sm text-gray-500">
+                          {event.detected_at ? format(new Date(event.detected_at), "MMM d") : "-"}
+                        </TableCell>
+                        <TableCell className="text-sm font-medium text-gray-900">
+                          {(event.event_type || "Unknown").replaceAll("_", " ")}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${event.severity === "critical" || event.severity === "high"
+                                ? "border-red-200 bg-red-50 text-red-700"
+                                : event.severity === "medium"
+                                  ? "border-amber-200 bg-amber-50 text-amber-700"
+                                  : "border-gray-200 bg-gray-50 text-gray-600"
+                              }`}
+                          >
+                            {event.severity || "low"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right font-mono-financial text-gray-900">
+                          {typeof event.impact_amount === "number" ? formatMoney(event.impact_amount) : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <ArrowRight className="h-4 w-4 text-gray-300 transition-colors group-hover:text-gray-600" />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </GlassCard>
+            </AnimatedItem>
           )}
         </div>
 
         {/* Sidebar Insights */}
         <div className="space-y-6">
           <AnimatedItem delay={0.8}>
-            <GlassCard variant="hud" className="p-5">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/50">
-                System Diagnostics
+            <GlassCard className="p-5">
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                Diagnostics
               </h3>
               <div className="space-y-3">
                 {analysis.plainInsights.map((item) => (
                   <div
                     key={item.id}
-                    className={`relative overflow-hidden rounded-md border p-4 transition-all hover:scale-[1.02] ${
-                      item.tone === "red"
-                        ? "border-[#F06C6C]/30 bg-[#F06C6C]/10"
+                    className={`relative overflow-hidden rounded-lg border p-4 ${item.tone === "red"
+                        ? "border-red-200 bg-red-50"
                         : item.tone === "orange"
-                          ? "border-[#F0A562]/30 bg-[#F0A562]/10"
-                          : "border-[#56C5D0]/30 bg-[#56C5D0]/10"
-                    }`}
+                          ? "border-amber-200 bg-amber-50"
+                          : "border-gray-200 bg-gray-50"
+                      }`}
                   >
-                    <div className={`absolute left-0 top-0 h-full w-1 ${
-                       item.tone === "red" ? "bg-[#F06C6C]" : item.tone === "orange" ? "bg-[#F0A562]" : "bg-[#56C5D0]"
-                    }`} />
-                    <p className="text-sm font-semibold text-[#F5F5F5]">{item.title}</p>
-                    <p className="mt-1 text-xs text-white/70 leading-relaxed">{item.text}</p>
+                    <div className={`absolute left-0 top-0 h-full w-0.5 ${item.tone === "red" ? "bg-red-500" : item.tone === "orange" ? "bg-amber-500" : "bg-gray-300"
+                      }`} />
+                    <p className="text-sm font-medium text-gray-900 ml-2">{item.title}</p>
+                    <p className="mt-1 text-xs text-gray-500 leading-relaxed ml-2">{item.text}</p>
                   </div>
                 ))}
               </div>
@@ -611,14 +606,14 @@ export default function RevenueAutopsy() {
 
           {analysis.concentrationShare >= 65 && (
             <AnimatedItem delay={0.9}>
-              <div className="rounded-lg border border-[#F06C6C]/50 bg-[#F06C6C]/10 p-4 shadow-[0_0_20px_-5px_rgba(240,108,108,0.3)]">
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                 <div className="flex items-start gap-3">
-                  <div className="rounded-full bg-[#F06C6C]/20 p-2">
-                    <AlertTriangle className="h-5 w-5 text-[#F06C6C]" />
+                  <div className="rounded-full bg-red-100 p-2">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-[#F06C6C]">Critical Concentration</h4>
-                    <p className="mt-1 text-xs text-white/80">
+                    <h4 className="text-sm font-medium text-red-700">Critical Concentration</h4>
+                    <p className="mt-1 text-xs text-red-600/80">
                       Dependence on {analysis.platformRows[0]?.label} exceeds safe thresholds ({analysis.concentrationShare.toFixed(1)}%).
                       Diversification recommended.
                     </p>

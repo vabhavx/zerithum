@@ -42,7 +42,7 @@ const SORT_OPTIONS = [
   { value: "amount_asc", label: "Amount low to high" },
 ];
 
-const COLORS = ["#56C5D0", "#F0A562", "#F06C6C", "#A78BFA", "#60A5FA", "#34D399", "#F472B6"];
+const COLORS = ["#111827", "#6B7280", "#9CA3AF", "#7C3AED", "#3B82F6", "#10B981", "#EC4899"];
 
 const money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -149,13 +149,12 @@ export default function Expenses() {
     };
   }, [filteredExpenses]);
 
-  // Chart Data: Group by category
   const categoryData = useMemo(() => {
     const map = new Map();
     filteredExpenses.forEach(tx => {
-       const cat = tx.category || "Uncategorized";
-       const val = map.get(cat) || 0;
-       map.set(cat, val + (tx.amount || 0));
+      const cat = tx.category || "Uncategorized";
+      const val = map.get(cat) || 0;
+      map.set(cat, val + (tx.amount || 0));
     });
 
     return Array.from(map.entries())
@@ -163,7 +162,7 @@ export default function Expenses() {
         name: CATEGORIES[key]?.label || key,
         value
       }))
-      .sort((a,b) => b.value - a.value);
+      .sort((a, b) => b.value - a.value);
   }, [filteredExpenses]);
 
 
@@ -241,30 +240,30 @@ export default function Expenses() {
   };
 
   return (
-    <PageTransition className="mx-auto w-full max-w-[1400px] p-6 lg:p-8">
-      <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 xl:flex-row xl:items-start xl:justify-between">
+    <PageTransition className="mx-auto w-full max-w-[1400px]">
+      <header className="mb-6 flex flex-col gap-4 border-b border-gray-200 pb-6 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#F5F5F5]">Expenses</h1>
-          <p className="mt-2 text-base text-white/70">
-            Interactive expense operations with receipt readiness and deduction proof.
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Expenses</h1>
+          <p className="mt-1.5 text-sm text-gray-500">
+            Track deductions, receipts, and spending patterns.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <Button
-             type="button"
-             variant="outline"
-             onClick={() => setShowChart(!showChart)}
-             className={`h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 ${showChart ? "bg-white/10" : ""}`}
-           >
-             <PieChartIcon className="mr-2 h-4 w-4" />
-             {showChart ? "Hide Breakdown" : "Show Breakdown"}
-           </Button>
+            type="button"
+            variant="outline"
+            onClick={() => setShowChart(!showChart)}
+            className={`h-9 border-gray-200 text-gray-600 hover:bg-gray-50 ${showChart ? "bg-gray-50" : ""}`}
+          >
+            <PieChartIcon className="mr-2 h-4 w-4" />
+            {showChart ? "Hide Breakdown" : "Show Breakdown"}
+          </Button>
           <Button
             type="button"
             variant="outline"
             onClick={exportCsv}
-            className="h-9 border-white/20 bg-transparent text-[#F5F5F5] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+            className="h-9 border-gray-200 text-gray-600 hover:bg-gray-50"
           >
             <Download className="mr-2 h-4 w-4" />
             Export CSV
@@ -272,7 +271,7 @@ export default function Expenses() {
           <Button
             type="button"
             onClick={openCreate}
-            className="h-9 bg-[#56C5D0] px-4 text-[#0A0A0A] hover:bg-[#48AAB5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
+            className="h-9 bg-gray-900 px-4 text-white hover:bg-gray-800"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add expense
@@ -301,18 +300,22 @@ export default function Expenses() {
           <InteractiveMetricCard
             title="Receipt Coverage"
             value={`${totals.receiptCoverage.toFixed(0)}%`}
-            sub={`${totals.count - totals.missingReceipts} / ${totals.count} Verified`}
+            sub={`${totals.count - totals.missingReceipts} / ${totals.count} verified`}
             tone={totals.receiptCoverage > 90 ? "teal" : "orange"}
           />
         </AnimatedItem>
         <AnimatedItem delay={0.4}>
-          <div className="relative h-full overflow-hidden rounded-xl border border-[#F0A562]/30 bg-[#F0A562]/10 p-4 transition-colors hover:border-[#F0A562]/50">
+          <div className={`relative h-full overflow-hidden rounded-lg border p-4 transition-colors ${totals.missingReceipts > 0
+              ? "border-amber-200 bg-amber-50"
+              : "border-gray-200 bg-gray-50"
+            }`}>
             {totals.missingReceipts > 0 && (
-              <div className="absolute right-2 top-2 h-2 w-2 animate-pulse rounded-full bg-[#F0A562]" />
+              <div className="absolute right-2 top-2 h-2 w-2 animate-pulse rounded-full bg-amber-500" />
             )}
-            <p className="text-xs uppercase tracking-wide text-white/60">Action Required</p>
-            <p className="mt-2 font-mono-financial text-2xl font-semibold text-[#F0A562]">{totals.missingReceipts}</p>
-            <p className="mt-1 text-xs text-white/60">Missing Receipts</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Action Required</p>
+            <p className={`mt-2 font-mono-financial text-2xl font-semibold ${totals.missingReceipts > 0 ? "text-amber-600" : "text-gray-900"
+              }`}>{totals.missingReceipts}</p>
+            <p className="mt-1 text-xs text-gray-500">Missing receipts</p>
           </div>
         </AnimatedItem>
       </div>
@@ -322,113 +325,112 @@ export default function Expenses() {
         <div className={`space-y-6 ${showChart ? "lg:col-span-2" : "lg:col-span-3"}`}>
           <AnimatedItem delay={0.2}>
             <GlassCard variant="panel" className="p-4">
-               {/* Quick Views */}
-               <div className="mb-4 flex flex-wrap gap-2">
-                 {QUICK_VIEWS.map((view) => (
-                   <button
-                     key={view.value}
-                     type="button"
-                     onClick={() => setQuickView(view.value)}
-                     className={`h-8 rounded-md border px-3 text-sm transition-all ${
-                       quickView === view.value
-                         ? "border-[#56C5D0]/45 bg-[#56C5D0]/10 text-[#56C5D0]"
-                         : "border-white/20 bg-transparent text-white/70 hover:bg-white/10"
-                     }`}
-                   >
-                     {view.label}
-                   </button>
-                 ))}
-               </div>
-
-               {/* Filter Inputs */}
-               <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-                 <div className="relative md:col-span-2">
-                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
-                   <Input
-                     value={search}
-                     onChange={(event) => setSearch(event.target.value)}
-                     placeholder="Search merchant, description..."
-                     className="h-9 border-white/15 bg-[#0A0A0A] pl-9 text-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#56C5D0]"
-                   />
-                 </div>
-
-                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                   <SelectTrigger className="h-9 border-white/15 bg-[#0A0A0A] text-[#F5F5F5] focus:ring-2 focus:ring-[#56C5D0]">
-                     <SelectValue placeholder="Category" />
-                   </SelectTrigger>
-                   <SelectContent className="border-white/10 bg-[#0F0F12] text-[#F5F5F5]">
-                     <SelectItem value="all">All categories</SelectItem>
-                     {Object.entries(CATEGORIES).map(([value, category]) => (
-                       <SelectItem key={value} value={value}>
-                         {category.label}
-                       </SelectItem>
-                     ))}
-                   </SelectContent>
-                 </Select>
-
-                 <Select value={receiptFilter} onValueChange={setReceiptFilter}>
-                   <SelectTrigger className="h-9 border-white/15 bg-[#0A0A0A] text-[#F5F5F5] focus:ring-2 focus:ring-[#56C5D0]">
-                     <SelectValue placeholder="Receipt" />
-                   </SelectTrigger>
-                   <SelectContent className="border-white/10 bg-[#0F0F12] text-[#F5F5F5]">
-                     <SelectItem value="all">All receipt states</SelectItem>
-                     <SelectItem value="with_receipt">With receipt</SelectItem>
-                     <SelectItem value="missing">Missing receipt</SelectItem>
-                   </SelectContent>
-                 </Select>
-               </div>
-
-               <div className="mt-4 flex items-center justify-between">
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="h-8 w-[160px] border-white/20 bg-transparent text-xs text-[#F5F5F5]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="border-white/10 bg-[#0F0F12] text-[#F5F5F5]">
-                      {SORT_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Button
+              {/* Quick Views */}
+              <div className="mb-4 flex flex-wrap gap-1">
+                {QUICK_VIEWS.map((view) => (
+                  <button
+                    key={view.value}
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSearch("");
-                      setCategoryFilter("all");
-                      setReceiptFilter("all");
-                      setQuickView("all");
-                    }}
-                    className="h-8 text-xs text-white/50 hover:bg-white/10 hover:text-white"
+                    onClick={() => setQuickView(view.value)}
+                    className={`h-8 rounded-md px-3 text-sm font-medium transition-all ${quickView === view.value
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                      }`}
                   >
-                    Reset
-                  </Button>
-               </div>
+                    {view.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Filter Inputs */}
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                <div className="relative md:col-span-2">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" />
+                  <Input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search merchant, description..."
+                    className="h-9 border-gray-200 bg-white pl-9 text-gray-900 focus-visible:border-gray-400 focus-visible:ring-0"
+                  />
+                </div>
+
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="h-9 border-gray-200 bg-white text-gray-700">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent className="border-gray-200 bg-white text-gray-900">
+                    <SelectItem value="all">All categories</SelectItem>
+                    {Object.entries(CATEGORIES).map(([value, category]) => (
+                      <SelectItem key={value} value={value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={receiptFilter} onValueChange={setReceiptFilter}>
+                  <SelectTrigger className="h-9 border-gray-200 bg-white text-gray-700">
+                    <SelectValue placeholder="Receipt" />
+                  </SelectTrigger>
+                  <SelectContent className="border-gray-200 bg-white text-gray-900">
+                    <SelectItem value="all">All receipt states</SelectItem>
+                    <SelectItem value="with_receipt">With receipt</SelectItem>
+                    <SelectItem value="missing">Missing receipt</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="h-8 w-[160px] border-gray-200 bg-white text-xs text-gray-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="border-gray-200 bg-white text-gray-900">
+                    {SORT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearch("");
+                    setCategoryFilter("all");
+                    setReceiptFilter("all");
+                    setQuickView("all");
+                  }}
+                  className="h-8 text-xs text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                >
+                  Reset
+                </Button>
+              </div>
             </GlassCard>
           </AnimatedItem>
 
           <AnimatedItem delay={0.3}>
             <GlassCard className="overflow-hidden">
               <Table>
-                <TableHeader className="bg-white/[0.02]">
-                  <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="text-xs font-medium uppercase text-white/50">Date</TableHead>
-                    <TableHead className="text-xs font-medium uppercase text-white/50">Merchant</TableHead>
-                    <TableHead className="text-xs font-medium uppercase text-white/50">Category</TableHead>
-                    <TableHead className="text-right text-xs font-medium uppercase text-white/50">Amount</TableHead>
-                    <TableHead className="text-right text-xs font-medium uppercase text-white/50">Deductible</TableHead>
-                    <TableHead className="text-xs font-medium uppercase text-white/50">Receipt</TableHead>
-                    <TableHead className="text-xs font-medium uppercase text-white/50">Payment</TableHead>
+                <TableHeader className="bg-gray-50">
+                  <TableRow className="border-gray-100 hover:bg-transparent">
+                    <TableHead className="text-xs font-medium text-gray-500">Date</TableHead>
+                    <TableHead className="text-xs font-medium text-gray-500">Merchant</TableHead>
+                    <TableHead className="text-xs font-medium text-gray-500">Category</TableHead>
+                    <TableHead className="text-right text-xs font-medium text-gray-500">Amount</TableHead>
+                    <TableHead className="text-right text-xs font-medium text-gray-500">Deductible</TableHead>
+                    <TableHead className="text-xs font-medium text-gray-500">Receipt</TableHead>
+                    <TableHead className="text-xs font-medium text-gray-500">Payment</TableHead>
                     <TableHead className="text-right w-[80px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredExpenses.length === 0 && (
-                    <TableRow className="border-white/10 hover:bg-transparent">
-                      <TableCell colSpan={8} className="py-10 text-center text-sm text-white/60">
+                    <TableRow className="border-gray-100 hover:bg-transparent">
+                      <TableCell colSpan={8} className="py-10 text-center text-sm text-gray-400">
                         {isLoading ? "Loading expenses..." : "No expenses match selected filters."}
                       </TableCell>
                     </TableRow>
@@ -444,34 +446,33 @@ export default function Expenses() {
                         initial={{ opacity: 0, x: -5 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        className="border-b border-white/5 transition-colors hover:bg-white/[0.03] group"
+                        className="border-b border-gray-100 transition-colors hover:bg-gray-50/50 group"
                       >
-                        <TableCell className="text-sm text-white/75 font-mono">
+                        <TableCell className="text-sm text-gray-500">
                           {expense.expense_date
                             ? format(new Date(expense.expense_date), "MMM d, yyyy")
                             : "-"}
                         </TableCell>
-                        <TableCell className="text-sm text-[#F5F5F5] font-medium">{expense.merchant || "-"}</TableCell>
-                        <TableCell className="text-sm text-white/60">
+                        <TableCell className="text-sm text-gray-900 font-medium">{expense.merchant || "-"}</TableCell>
+                        <TableCell className="text-sm text-gray-500">
                           {CATEGORIES[expense.category]?.label || expense.category || "-"}
                         </TableCell>
-                        <TableCell className="text-right font-mono-financial text-[#F5F5F5]">
+                        <TableCell className="text-right font-mono-financial text-gray-900">
                           {formatMoney(expense.amount || 0)}
                         </TableCell>
-                        <TableCell className="text-right text-sm text-[#56C5D0] font-mono">{deductiblePct}</TableCell>
+                        <TableCell className="text-right text-sm text-gray-900 font-mono">{deductiblePct}</TableCell>
                         <TableCell>
                           <span
-                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium border ${
-                              expense.receipt_url
-                                ? "border-[#56C5D0]/20 bg-[#56C5D0]/10 text-[#56C5D0]"
-                                : "border-[#F0A562]/20 bg-[#F0A562]/10 text-[#F0A562]"
-                            }`}
+                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium border ${expense.receipt_url
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                : "border-amber-200 bg-amber-50 text-amber-700"
+                              }`}
                           >
                             <Receipt className="h-3 w-3" />
                             {expense.receipt_url ? "Yes" : "No"}
                           </span>
                         </TableCell>
-                        <TableCell className="text-sm text-white/60">{expense.payment_method || "-"}</TableCell>
+                        <TableCell className="text-sm text-gray-500">{expense.payment_method || "-"}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button
@@ -479,7 +480,7 @@ export default function Expenses() {
                               size="sm"
                               variant="ghost"
                               onClick={() => openEdit(expense)}
-                              className="h-7 w-7 p-0 hover:bg-white/10 hover:text-[#56C5D0]"
+                              className="h-7 w-7 p-0 hover:bg-gray-100 text-gray-400 hover:text-gray-600"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
@@ -489,7 +490,7 @@ export default function Expenses() {
                               variant="ghost"
                               onClick={() => removeExpense(expense)}
                               disabled={deleteMutation.isPending}
-                              className="h-7 w-7 p-0 hover:bg-[#F06C6C]/10 hover:text-[#F06C6C]"
+                              className="h-7 w-7 p-0 hover:bg-red-50 text-gray-400 hover:text-red-600"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
@@ -508,13 +509,13 @@ export default function Expenses() {
         <AnimatePresence>
           {showChart && (
             <motion.div
-               initial={{ opacity: 0, x: 20 }}
-               animate={{ opacity: 1, x: 0 }}
-               exit={{ opacity: 0, x: 20 }}
-               className="lg:col-span-1"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="lg:col-span-1"
             >
-              <GlassCard variant="hud" className="p-5 sticky top-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-white/50 mb-6">
+              <GlassCard className="p-5 sticky top-20">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-6">
                   Spend by Category
                 </h3>
 
@@ -527,16 +528,16 @@ export default function Expenses() {
                         cy="50%"
                         innerRadius={60}
                         outerRadius={80}
-                        paddingAngle={5}
+                        paddingAngle={3}
                         dataKey="value"
                       >
                         {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0)" />
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="transparent" />
                         ))}
                       </Pie>
                       <RechartsTooltip
-                        contentStyle={{ backgroundColor: '#09090b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                        itemStyle={{ color: '#fff' }}
+                        contentStyle={{ backgroundColor: '#fff', borderColor: '#E5E7EB', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        itemStyle={{ color: '#111827' }}
                         formatter={(value) => formatMoney(value)}
                       />
                     </PieChart>
@@ -547,14 +548,14 @@ export default function Expenses() {
                   {categoryData.slice(0, 6).map((item, index) => (
                     <div key={item.name} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                        <span className="text-white/70 truncate max-w-[120px]">{item.name}</span>
+                        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                        <span className="text-gray-600 truncate max-w-[120px]">{item.name}</span>
                       </div>
-                      <span className="font-mono-financial text-[#F5F5F5]">{formatMoney(item.value)}</span>
+                      <span className="font-mono-financial text-gray-900">{formatMoney(item.value)}</span>
                     </div>
                   ))}
                   {categoryData.length > 6 && (
-                    <p className="text-xs text-center text-white/40 pt-2 italic">
+                    <p className="text-xs text-center text-gray-400 pt-2">
                       + {categoryData.length - 6} more categories
                     </p>
                   )}
@@ -570,7 +571,7 @@ export default function Expenses() {
         onOpenChange={setModalOpen}
         initialData={editingExpense}
         onSuccess={onModalSuccess}
-        onOpenHelpDrawer={() => {}}
+        onOpenHelpDrawer={() => { }}
       />
     </PageTransition>
   );

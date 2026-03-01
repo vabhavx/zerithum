@@ -19,23 +19,21 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { y: 20, opacity: 0, filter: "blur(4px)" },
+  hidden: { y: 12, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
-    filter: "blur(0px)",
     transition: {
       type: "spring",
-      stiffness: 100,
-      damping: 15,
+      stiffness: 120,
+      damping: 18,
     },
   },
   exit: {
-    y: -20,
+    y: -10,
     opacity: 0,
-    filter: "blur(4px)",
     transition: {
-      duration: 0.2,
+      duration: 0.15,
     },
   },
 };

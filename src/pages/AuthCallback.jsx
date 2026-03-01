@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { PLATFORMS } from "@/lib/platforms";
 
 export default function AuthCallback() {
-  const [status, setStatus] = useState("processing"); // processing, success, error
+  const [status, setStatus] = useState("processing");
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -22,141 +22,69 @@ export default function AuthCallback() {
       const error = urlParams.get("error");
       const errorDescription = urlParams.get("error_description");
 
-      // Check for errors
-      if (error) {
-        setStatus("error");
-        setError(errorDescription || error);
-        return;
-      }
+      if (error) { setStatus("error"); setError(errorDescription || error); return; }
+      if (!code) { setStatus("error"); setError("No authorization code received"); return; }
 
-      // Check if we have a code
-      if (!code) {
-        setStatus("error");
-        setError("No authorization code received");
-        return;
-      }
-
-      // 🛡️ Sentinel: Validate CSRF Token
       const storedToken = sessionStorage.getItem('oauth_state');
       let platform = state;
       let shop = null;
 
-      // Require a stored token to ensure this browser initiated the flow
-      if (!storedToken) {
-        setStatus("error");
-        setError("Security session expired or invalid source. Please try connecting again.");
-        return;
-      }
+      if (!storedToken) { setStatus("error"); setError("Security session expired or invalid source. Please try connecting again."); return; }
 
       if (state && state.includes(':')) {
         const parts = state.split(':');
-
         if (parts[0] === 'shopify' && parts.length === 3) {
-          // Shopify 3-part format: shopify:{shop}:{csrfToken}
           const [platformId, shopName, token] = parts;
-          if (token !== storedToken) {
-            setStatus("error");
-            setError("Security validation failed (CSRF mismatch).");
-            sessionStorage.removeItem('oauth_state');
-            sessionStorage.removeItem('shopify_shop_name');
-            return;
-          }
-          platform = platformId;
-          shop = shopName || sessionStorage.getItem('shopify_shop_name');
+          if (token !== storedToken) { setStatus("error"); setError("Security validation failed (CSRF mismatch)."); sessionStorage.removeItem('oauth_state'); sessionStorage.removeItem('shopify_shop_name'); return; }
+          platform = platformId; shop = shopName || sessionStorage.getItem('shopify_shop_name');
         } else if (parts.length === 2) {
-          // Standard 2-part format: {platform}:{csrfToken}
           const [platformId, token] = parts;
-          if (token !== storedToken) {
-            setStatus("error");
-            setError("Security validation failed (CSRF mismatch).");
-            sessionStorage.removeItem('oauth_state');
-            return;
-          }
+          if (token !== storedToken) { setStatus("error"); setError("Security validation failed (CSRF mismatch)."); sessionStorage.removeItem('oauth_state'); return; }
           platform = platformId;
-        } else {
-          setStatus("error");
-          setError("Security error: Invalid state format.");
-          sessionStorage.removeItem('oauth_state');
-          return;
-        }
-      } else {
-        // If state doesn't have the token but we expect one, fail secure.
-        setStatus("error");
-        setError("Security error: Invalid state format.");
-        sessionStorage.removeItem('oauth_state');
-        return;
-      }
+        } else { setStatus("error"); setError("Security error: Invalid state format."); sessionStorage.removeItem('oauth_state'); return; }
+      } else { setStatus("error"); setError("Security error: Invalid state format."); sessionStorage.removeItem('oauth_state'); return; }
 
-      sessionStorage.removeItem('oauth_state'); // Consume token
-      sessionStorage.removeItem('shopify_shop_name'); // Clean up
+      sessionStorage.removeItem('oauth_state');
+      sessionStorage.removeItem('shopify_shop_name');
 
       try {
-        // Exchange code for tokens
         const invokePayload = { code, platform: platform || "youtube" };
         if (shop) invokePayload.shop = shop;
-
         const response = await base44.functions.invoke("exchangeOAuthTokens", invokePayload);
-
         if (response.success) {
           setStatus("success");
-
-          // Invalidate platform queries so ConnectedPlatforms shows the new connection
           queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
-
-          // Resolve platform display name
           const platformName = PLATFORMS.find(p => p.id === platform)?.name || platform;
-
-          // Redirect after a brief delay
-          setTimeout(() => {
-            toast.success(`${platformName} connected successfully!`);
-            navigate(createPageUrl("ConnectedPlatforms"));
-          }, 1500);
-        } else {
-          throw new Error(response.error || "Failed to connect");
-        }
-      } catch (err) {
-        setStatus("error");
-        setError(err.response?.data?.error || err.message || "Failed to connect platform");
-      }
+          setTimeout(() => { toast.success(`${platformName} connected successfully!`); navigate(createPageUrl("ConnectedPlatforms")); }, 1500);
+        } else throw new Error(response.error || "Failed to connect");
+      } catch (err) { setStatus("error"); setError(err.response?.data?.error || err.message || "Failed to connect platform"); }
     };
-
     handleCallback();
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-white">
       <div className="max-w-md w-full">
         {status === "processing" && (
-          <div className="card-modern rounded-2xl p-12 text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-zteal-400 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Connecting Platform</h2>
-            <p className="text-white/40 text-sm">Please wait while we securely connect your account...</p>
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
+            <Loader2 className="w-12 h-12 animate-spin text-gray-300 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Connecting Platform</h2>
+            <p className="text-gray-400 text-sm">Please wait while we securely connect your account...</p>
           </div>
         )}
-
         {status === "success" && (
-          <div className="card-modern rounded-2xl p-12 text-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-emerald-400" />
-            </div>
-            <h2 className="text-xl font-bold text-white mb-2">Successfully Connected!</h2>
-            <p className="text-white/40 text-sm">Redirecting you back...</p>
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4"><CheckCircle className="w-8 h-8 text-emerald-500" /></div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Successfully Connected!</h2>
+            <p className="text-gray-400 text-sm">Redirecting you back...</p>
           </div>
         )}
-
         {status === "error" && (
-          <div className="card-modern rounded-2xl p-8">
-            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-400" />
-            </div>
-            <h2 className="text-xl font-bold text-white mb-2 text-center">Connection Failed</h2>
-            <p className="text-white/60 text-sm text-center mb-6">{error}</p>
-            <Button
-              onClick={() => navigate(createPageUrl("ConnectedPlatforms"))}
-              className="w-full rounded-xl bg-zteal-400 text-white"
-            >
-              Back to Connected Platforms
-            </Button>
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><AlertCircle className="w-8 h-8 text-red-500" /></div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">Connection Failed</h2>
+            <p className="text-gray-500 text-sm text-center mb-6">{error}</p>
+            <Button onClick={() => navigate(createPageUrl("ConnectedPlatforms"))} className="w-full bg-gray-900 text-white hover:bg-gray-800">Back to Connected Platforms</Button>
           </div>
         )}
       </div>
