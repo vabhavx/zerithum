@@ -21,7 +21,9 @@ export function getCorsHeaders(req: Request) {
 
     let allowOrigin = 'null';
 
-    if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.base44.app') || origin.endsWith('.vercel.app'))) {
+    const isAllowedBase44Subdomain = origin && /^https:\/\/([a-zA-Z0-9-]+\.)*base44\.app$/.test(origin);
+
+    if (origin && (allowedOrigins.includes(origin) || isAllowedBase44Subdomain)) {
         allowOrigin = origin;
     }
 
