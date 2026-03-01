@@ -49,7 +49,7 @@ function PlanCard({ plan, billingPeriod, processingPayment, onSelect, isRecommen
           <p className="mt-1 text-sm text-gray-500 leading-relaxed min-h-[40px]">{plan.bestFor}</p>
         </div>
         {isRecommended && (
-          <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white">Recommended</motion.span>
+          <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-medium text-white">Recommended</motion.span>
         )}
       </div>
       <div className="mb-6">
@@ -69,7 +69,7 @@ function PlanCard({ plan, billingPeriod, processingPayment, onSelect, isRecommen
           </li>
         ))}
       </ul>
-      <Button type="button" onClick={() => onSelect(plan)} disabled={processingPayment === plan.name} className={`h-11 w-full text-sm font-medium transition-all duration-200 ${isRecommended || plan.featured ? "bg-gray-900 text-white hover:bg-gray-800" : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"}`}>
+      <Button type="button" onClick={() => onSelect(plan)} disabled={processingPayment === plan.name} className={`h-11 w-full text-sm font-medium transition-all duration-200 ${isRecommended || plan.featured ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"}`}>
         {processingPayment === plan.name ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing</>) : plan.cta}
       </Button>
     </div>
@@ -110,7 +110,7 @@ export default function Pricing() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="mb-16 flex flex-col items-center gap-8">
           <div className="relative inline-flex h-12 items-center rounded-full bg-gray-100 p-1">
-            <div className={`absolute h-10 w-32 rounded-full bg-gray-900 transition-all duration-300 ease-spring ${billingPeriod === "monthly" ? "left-1" : "left-[132px]"}`} />
+            <div className={`absolute h-10 w-32 rounded-full bg-indigo-600 transition-all duration-300 ease-spring ${billingPeriod === "monthly" ? "left-1" : "left-[132px]"}`} />
             <button type="button" onClick={() => setBillingPeriod("monthly")} className={`relative z-10 w-32 h-full rounded-full text-sm font-medium transition-colors duration-200 ${billingPeriod === "monthly" ? "text-white" : "text-gray-500 hover:text-gray-700"}`}>Monthly</button>
             <button type="button" onClick={() => setBillingPeriod("annual")} className={`relative z-10 w-32 h-full rounded-full text-sm font-medium transition-colors duration-200 ${billingPeriod === "annual" ? "text-white" : "text-gray-500 hover:text-gray-700"}`}>Annual (save)</button>
           </div>

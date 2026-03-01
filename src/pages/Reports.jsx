@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-const PLATFORM_COLORS = { youtube: "#DC2626", patreon: "#F87171", stripe: "#6366F1", gumroad: "#EC4899", instagram: "#E11D48", tiktok: "#111827" };
+const PLATFORM_COLORS = { youtube: "#DC2626", patreon: "#F87171", stripe: "#6366F1", gumroad: "#EC4899", instagram: "#E11D48", tiktok: "#000000" };
 const CATEGORY_COLORS = { ad_revenue: "#3B82F6", sponsorship: "#8B5CF6", affiliate: "#EC4899", product_sale: "#10B981", membership: "#F59E0B" };
 
 export default function Reports() {
@@ -127,12 +127,12 @@ export default function Reports() {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={metrics.timeSeries}>
-                <defs><linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#111827" stopOpacity={0.1} /><stop offset="95%" stopColor="#111827" stopOpacity={0} /></linearGradient></defs>
+                <defs><linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#4F46E5" stopOpacity={0.1} /><stop offset="95%" stopColor="#4F46E5" stopOpacity={0} /></linearGradient></defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 11 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 11 }} tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}`} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="amount" stroke="#111827" strokeWidth={2} fill="url(#revenueGradient)" />
+                <Area type="monotone" dataKey="amount" stroke="#4F46E5" strokeWidth={2} fill="url(#revenueGradient)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

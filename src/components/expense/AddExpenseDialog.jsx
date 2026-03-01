@@ -118,7 +118,7 @@ export default function AddExpenseDialog({ open, onOpenChange, onSuccess }) {
                     </div>
                     <div className="flex gap-3 pt-4 border-t border-gray-100 mt-4">
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50">Cancel</Button>
-                        <Button type="submit" disabled={isSubmitting} className="flex-1 bg-gray-900 hover:bg-gray-800 text-white">{isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}Add Expense</Button>
+                        <Button type="submit" disabled={isSubmitting} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white">{isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}Add Expense</Button>
                     </div>
                 </form>
             </DialogContent>

@@ -115,8 +115,8 @@ export default function TransactionAnalysis() {
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <AnimatedItem delay={0.1}><InteractiveMetricCard title="Filtered Records" value={String(totals.count)} sub="Based on active controls" /></AnimatedItem>
         <AnimatedItem delay={0.2}><InteractiveMetricCard title="Gross Volume" value={formatMoney(totals.gross)} sub="Before fees" /></AnimatedItem>
-        <AnimatedItem delay={0.3}><InteractiveMetricCard title="Platform Fees" value={formatMoney(totals.fee)} sub="Reported fees" tone="orange" /></AnimatedItem>
-        <AnimatedItem delay={0.4}><InteractiveMetricCard title="Net Revenue" value={formatMoney(totals.net)} sub="Gross minus fees" tone="teal" /></AnimatedItem>
+        <AnimatedItem delay={0.3}><InteractiveMetricCard title="Platform Fees" value={formatMoney(totals.fee)} sub="Reported fees" tone="amber" /></AnimatedItem>
+        <AnimatedItem delay={0.4}><InteractiveMetricCard title="Net Revenue" value={formatMoney(totals.net)} sub="Gross minus fees" tone="green" /></AnimatedItem>
       </div>
 
       <AnimatePresence>
@@ -127,7 +127,7 @@ export default function TransactionAnalysis() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
                 <XAxis dataKey="date" stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} />
                 <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }} contentStyle={{ backgroundColor: '#fff', borderColor: '#E5E7EB', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} itemStyle={{ color: '#111827' }} labelStyle={{ color: '#6B7280' }} />
-                <Bar dataKey="value" fill="#111827" radius={[4, 4, 0, 0]} fillOpacity={0.85} />
+                <Bar dataKey="value" fill="#4F46E5" radius={[4, 4, 0, 0]} fillOpacity={0.85} />
               </BarChart>
             </ChartContainer>
           </motion.div>
@@ -139,7 +139,7 @@ export default function TransactionAnalysis() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap gap-1">
               {QUICK_VIEWS.map((view) => (
-                <button key={view.value} type="button" onClick={() => { setPage(1); setQuickView(view.value); }} className={`h-8 rounded-md px-3 text-sm font-medium transition-all ${quickView === view.value ? "bg-gray-900 text-white" : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"}`}>{view.label}</button>
+                <button key={view.value} type="button" onClick={() => { setPage(1); setQuickView(view.value); }} className={`h-8 rounded-md px-3 text-sm font-medium transition-all ${quickView === view.value ? "bg-indigo-600 text-white" : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"}`}>{view.label}</button>
               ))}
               <div className="h-8 w-px bg-gray-200 mx-2 hidden lg:block" />
               <button type="button" onClick={() => setDensity((p) => (p === "comfortable" ? "compact" : "comfortable"))} className="h-8 rounded-md border border-gray-200 px-3 text-sm text-gray-500 transition hover:bg-gray-50">{density === "comfortable" ? "Compact View" : "Comfortable View"}</button>

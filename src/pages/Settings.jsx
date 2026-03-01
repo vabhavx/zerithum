@@ -140,14 +140,14 @@ export default function Settings() {
             const isPro = tier.popular;
             return (
               <div key={key} className="relative">
-                {isPro && (<div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10"><div className="px-3 py-1 rounded-full bg-gray-900 text-white text-xs font-semibold">Popular</div></div>)}
+                {isPro && (<div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10"><div className="px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-semibold">Popular</div></div>)}
                 <button onClick={() => setFormData({ ...formData, subscription_tier: key })} className={cn("w-full rounded-xl p-5 text-left transition-all border", isActive ? "bg-gray-50 border-gray-900 ring-1 ring-gray-900" : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300", isPro && !isActive && "border-gray-300")}>
                   <div className="flex items-start justify-between mb-4">
                     <div><h4 className="font-semibold text-gray-900 text-base mb-1">{tier.name}</h4><div className="flex items-baseline gap-1"><span className="text-3xl font-bold text-gray-900">{tier.price}</span><span className="text-gray-400 text-sm">{tier.period}</span></div></div>
-                    {isActive && (<div className="w-6 h-6 rounded-full bg-gray-900 flex items-center justify-center"><Check className="w-3.5 h-3.5 text-white" /></div>)}
+                    {isActive && (<div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center"><Check className="w-3.5 h-3.5 text-white" /></div>)}
                   </div>
                   <ul className="space-y-2 mb-4">{tier.features.map((feature, i) => (<li key={i} className="text-xs text-gray-500 flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />{feature}</li>))}</ul>
-                  {!isActive && (<div className={cn("text-xs font-medium text-center py-2 rounded-lg border", isPro ? "bg-gray-900 text-white border-0" : "bg-gray-50 text-gray-600 border-gray-200")}>{key === 'free' ? 'Current Plan' : 'Upgrade'}</div>)}
+                  {!isActive && (<div className={cn("text-xs font-medium text-center py-2 rounded-lg border", isPro ? "bg-indigo-600 text-white border-0" : "bg-gray-50 text-gray-600 border-gray-200")}>{key === 'free' ? 'Current Plan' : 'Upgrade'}</div>)}
                 </button>
               </div>
             );
@@ -156,7 +156,7 @@ export default function Settings() {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving} className="bg-gray-900 text-white px-8 hover:bg-gray-800">
+        <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 text-white px-8 hover:bg-indigo-700">
           {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}Save Changes
         </Button>
       </div>

@@ -65,7 +65,7 @@ export default function AIExpenseChat({ open, onOpenChange, expenses = [], metri
               {messages.filter(m => m.role !== 'system').map((msg, idx) => (
                 <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'assistant' && (<div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-1"><Bot className="w-4 h-4 text-gray-500" /></div>)}
-                  <div className={`max-w-[85%] rounded-2xl p-3.5 shadow-sm ${msg.role === 'user' ? 'bg-gray-900 text-white rounded-tr-sm' : 'bg-white text-gray-700 rounded-tl-sm border border-gray-100'}`}>
+                  <div className={`max-w-[85%] rounded-2xl p-3.5 shadow-sm ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-white text-gray-700 rounded-tl-sm border border-gray-100'}`}>
                     {msg.role === 'user' ? (<p className="text-sm">{msg.content}</p>) : (<div className="text-sm prose prose-sm max-w-none [&>p]:m-0 [&>p+p]:mt-2"><ReactMarkdown>{msg.content}</ReactMarkdown></div>)}
                   </div>
                 </motion.div>
@@ -78,7 +78,7 @@ export default function AIExpenseChat({ open, onOpenChange, expenses = [], metri
         <div className="p-4 bg-white border-t border-gray-100">
           <div className="relative">
             <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="Ask for advice..." className="border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-300 pr-12 h-11" disabled={sending || initializing} autoFocus />
-            <Button onClick={() => handleSend()} disabled={sending || !input.trim() || initializing} size="icon" className="absolute right-1 top-1 h-9 w-9 bg-gray-900 hover:bg-gray-800 text-white"><Send className="w-4 h-4" /></Button>
+            <Button onClick={() => handleSend()} disabled={sending || !input.trim() || initializing} size="icon" className="absolute right-1 top-1 h-9 w-9 bg-indigo-600 hover:bg-indigo-700 text-white"><Send className="w-4 h-4" /></Button>
           </div>
           <p className="text-[10px] text-gray-300 text-center mt-2">AI can make mistakes. Verify important financial details.</p>
         </div>

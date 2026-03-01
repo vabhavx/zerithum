@@ -162,18 +162,18 @@ export default function ConnectedPlatforms() {
 
         <motion.section variants={containerVariants} className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Connected" value={String(stats.total)} helper="Active data sources" icon={Plug} />
-          <MetricCard label="Healthy" value={String(stats.active)} helper="Currently synced" tone="teal" icon={CheckCircle2} />
-          <MetricCard label="Syncing" value={String(stats.syncing)} helper="In progress" tone="orange" icon={RefreshCw} />
+          <MetricCard label="Healthy" value={String(stats.active)} helper="Currently synced" tone="green" icon={CheckCircle2} />
+          <MetricCard label="Syncing" value={String(stats.syncing)} helper="In progress" tone="amber" icon={RefreshCw} />
           <MetricCard label="Errors" value={String(stats.errors)} helper="Needs review" tone={stats.errors > 0 ? "red" : "teal"} icon={AlertTriangle} />
         </motion.section>
 
         <GlassCard className="mb-6 p-4">
           <div className="mb-3 flex flex-wrap gap-1">
-            {STATUS_FILTERS.map((item) => (<button key={item.value} type="button" onClick={() => setStatusFilter(item.value)} className={`rounded-md px-4 py-1.5 text-xs font-medium transition-all ${statusFilter === item.value ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"}`}><span>{item.label}</span></button>))}
+            {STATUS_FILTERS.map((item) => (<button key={item.value} type="button" onClick={() => setStatusFilter(item.value)} className={`rounded-md px-4 py-1.5 text-xs font-medium transition-all ${statusFilter === item.value ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"}`}><span>{item.label}</span></button>))}
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" /><Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search connected platforms" className="h-9 border-gray-200 bg-white pl-9 text-gray-900 placeholder:text-gray-300 focus-visible:border-gray-400 focus-visible:ring-0" /></div>
-            <div><p className="mb-1 text-xs text-gray-500">Connection health</p><div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100"><motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, Math.max(0, stats.healthScore))}%` }} transition={{ duration: 1 }} className="h-full rounded-full bg-gray-900" /></div><p className="mt-1 text-xs text-gray-400">{stats.healthScore.toFixed(0)}% stable</p></div>
+            <div><p className="mb-1 text-xs text-gray-500">Connection health</p><div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100"><motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, Math.max(0, stats.healthScore))}%` }} transition={{ duration: 1 }} className="h-full rounded-full bg-indigo-500" /></div><p className="mt-1 text-xs text-gray-400">{stats.healthScore.toFixed(0)}% stable</p></div>
           </div>
         </GlassCard>
 
@@ -224,7 +224,7 @@ export default function ConnectedPlatforms() {
                 <motion.div key={platform.id} variants={itemVariants} whileHover={{ scale: 1.01 }} className="rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm">
                   <div className="mb-3 flex items-center gap-2"><div className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-gray-50"><Icon className="h-4 w-4 text-gray-600" /></div><p className="text-sm font-medium text-gray-900">{platform.name}</p></div>
                   <p className="mb-4 text-xs text-gray-500 leading-relaxed min-h-[32px]">{platform.description}</p>
-                  <Button type="button" size="sm" onClick={() => beginConnect(platform)} disabled={connecting} className="h-8 w-full bg-gray-900 text-xs font-medium text-white hover:bg-gray-800">{connecting ? (<><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Connecting</>) : (<><Plug className="mr-1.5 h-3.5 w-3.5" />Connect</>)}</Button>
+                  <Button type="button" size="sm" onClick={() => beginConnect(platform)} disabled={connecting} className="h-8 w-full bg-indigo-600 text-xs font-medium text-white hover:bg-indigo-700">{connecting ? (<><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Connecting</>) : (<><Plug className="mr-1.5 h-3.5 w-3.5" />Connect</>)}</Button>
                 </motion.div>
               );
             })}
@@ -265,7 +265,7 @@ export default function ConnectedPlatforms() {
             <div className="space-y-4 pt-2">
               {selectedPlatform?.requiresShopName && (<div><Label htmlFor="shop-name" className="mb-2 block text-sm text-gray-600">Shopify store name</Label><Input id="shop-name" value={shopName} onChange={(e) => setShopName(e.target.value)} placeholder="your-store" className="h-9 border-gray-200 bg-white text-gray-900 focus-visible:border-gray-400 focus-visible:ring-0" /></div>)}
               {selectedPlatform?.requiresApiKey && (<div><Label htmlFor="api-key" className="mb-2 block text-sm text-gray-600">API key</Label><Input id="api-key" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Enter API key" className="h-9 border-gray-200 bg-white text-gray-900 focus-visible:border-gray-400 focus-visible:ring-0" /></div>)}
-              <Button type="button" onClick={handleCredentialConnect} disabled={connectMutation.isPending} className="h-9 w-full bg-gray-900 text-white hover:bg-gray-800">{connectMutation.isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Connecting</>) : "Continue"}</Button>
+              <Button type="button" onClick={handleCredentialConnect} disabled={connectMutation.isPending} className="h-9 w-full bg-indigo-600 text-white hover:bg-indigo-700">{connectMutation.isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Connecting</>) : "Continue"}</Button>
             </div>
           </DialogContent>
         </Dialog>

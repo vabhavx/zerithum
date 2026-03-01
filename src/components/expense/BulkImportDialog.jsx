@@ -83,7 +83,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }) {
                     ))}</TableBody>
                   </Table>
                 </div>
-                <div className="flex justify-end pt-4"><Button onClick={handleConfirmImport} className="bg-gray-900 hover:bg-gray-800 text-white min-w-[150px]" disabled={parsedExpenses.filter(e => e.isValid).length === 0}>Confirm Import</Button></div>
+                <div className="flex justify-end pt-4"><Button onClick={handleConfirmImport} className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[150px]" disabled={parsedExpenses.filter(e => e.isValid).length === 0}>Confirm Import</Button></div>
               </motion.div>
             )}
             {(step === "processing" || step === "success") && (

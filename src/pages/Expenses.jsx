@@ -42,7 +42,7 @@ const SORT_OPTIONS = [
   { value: "amount_asc", label: "Amount low to high" },
 ];
 
-const COLORS = ["#111827", "#6B7280", "#9CA3AF", "#7C3AED", "#3B82F6", "#10B981", "#EC4899"];
+const COLORS = ["#4F46E5", "#6366F1", "#8B5CF6", "#3B82F6", "#10B981", "#F59E0B", "#EC4899"];
 
 const money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -271,7 +271,7 @@ export default function Expenses() {
           <Button
             type="button"
             onClick={openCreate}
-            className="h-9 bg-gray-900 px-4 text-white hover:bg-gray-800"
+            className="h-9 bg-indigo-600 px-4 text-white hover:bg-indigo-700"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add expense
@@ -293,7 +293,7 @@ export default function Expenses() {
             title="Estimated Deductible"
             value={formatMoney(totals.deductibleAmount)}
             sub="Based on tax flags"
-            tone="teal"
+            tone="green"
           />
         </AnimatedItem>
         <AnimatedItem delay={0.3}>
@@ -306,8 +306,8 @@ export default function Expenses() {
         </AnimatedItem>
         <AnimatedItem delay={0.4}>
           <div className={`relative h-full overflow-hidden rounded-lg border p-4 transition-colors ${totals.missingReceipts > 0
-              ? "border-amber-200 bg-amber-50"
-              : "border-gray-200 bg-gray-50"
+            ? "border-amber-200 bg-amber-50"
+            : "border-gray-200 bg-gray-50"
             }`}>
             {totals.missingReceipts > 0 && (
               <div className="absolute right-2 top-2 h-2 w-2 animate-pulse rounded-full bg-amber-500" />
@@ -333,8 +333,8 @@ export default function Expenses() {
                     type="button"
                     onClick={() => setQuickView(view.value)}
                     className={`h-8 rounded-md px-3 text-sm font-medium transition-all ${quickView === view.value
-                        ? "bg-gray-900 text-white"
-                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                      ? "bg-indigo-600 text-white"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                       }`}
                   >
                     {view.label}
@@ -414,7 +414,7 @@ export default function Expenses() {
 
           <AnimatedItem delay={0.3}>
             <GlassCard className="overflow-hidden">
-              <Table>
+              <div className="z-table-wrap"><Table>
                 <TableHeader className="bg-gray-50">
                   <TableRow className="border-gray-100 hover:bg-transparent">
                     <TableHead className="text-xs font-medium text-gray-500">Date</TableHead>
@@ -464,8 +464,8 @@ export default function Expenses() {
                         <TableCell>
                           <span
                             className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium border ${expense.receipt_url
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                : "border-amber-200 bg-amber-50 text-amber-700"
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-amber-200 bg-amber-50 text-amber-700"
                               }`}
                           >
                             <Receipt className="h-3 w-3" />
@@ -500,7 +500,7 @@ export default function Expenses() {
                     );
                   })}
                 </TableBody>
-              </Table>
+              </Table></div>
             </GlassCard>
           </AnimatedItem>
         </div>

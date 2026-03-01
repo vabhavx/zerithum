@@ -84,7 +84,7 @@ export default function AuthCallback() {
             <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><AlertCircle className="w-8 h-8 text-red-500" /></div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">Connection Failed</h2>
             <p className="text-gray-500 text-sm text-center mb-6">{error}</p>
-            <Button onClick={() => navigate(createPageUrl("ConnectedPlatforms"))} className="w-full bg-gray-900 text-white hover:bg-gray-800">Back to Connected Platforms</Button>
+            <Button onClick={() => navigate(createPageUrl("ConnectedPlatforms"))} className="w-full bg-indigo-600 text-white hover:bg-indigo-700">Back to Connected Platforms</Button>
           </div>
         )}
       </div>

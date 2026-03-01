@@ -347,7 +347,7 @@ export default function RevenueAutopsy() {
             title="Estimated Net (MTD)"
             value={formatMoney(analysis.monthNet)}
             sub={`Fees: ${formatMoney(analysis.monthFee)}`}
-            tone="teal"
+            tone="green"
           />
         </AnimatedItem>
         <AnimatedItem delay={0.4}>
@@ -387,8 +387,8 @@ export default function RevenueAutopsy() {
                   <AreaChart data={analysis.trendData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#111827" stopOpacity={0.08} />
-                        <stop offset="95%" stopColor="#111827" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
@@ -412,7 +412,7 @@ export default function RevenueAutopsy() {
                     <Area
                       type="monotone"
                       dataKey="value"
-                      stroke="#111827"
+                      stroke="#4F46E5"
                       strokeWidth={1.5}
                       fillOpacity={1}
                       fill="url(#colorRevenue)"
@@ -464,7 +464,7 @@ export default function RevenueAutopsy() {
                     />
                     <Bar dataKey="gross" radius={[0, 4, 4, 0]}>
                       {analysis.platformRows.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={index === 0 && entry.share > 60 ? "#DC2626" : "#111827"} fillOpacity={index === 0 ? 0.9 : 0.6 - index * 0.08} />
+                        <Cell key={`cell-${index}`} fill={index === 0 && entry.share > 60 ? "#DC2626" : "#4F46E5"} fillOpacity={index === 0 ? 0.9 : 0.6 - index * 0.08} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -513,7 +513,7 @@ export default function RevenueAutopsy() {
                         key={item.value}
                         onClick={() => setSeverityFilter(item.value)}
                         className={`px-3 py-1 text-xs font-medium rounded transition-colors ${severityFilter === item.value
-                            ? "bg-gray-900 text-white"
+                            ? "bg-indigo-600 text-white"
                             : "text-gray-500 hover:text-gray-700"
                           }`}
                       >

@@ -24,6 +24,7 @@ import { base44 } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import {
   GlassCard,
+  InteractiveMetricCard,
   containerVariants,
   itemVariants,
 } from "@/components/ui/glass-card";
@@ -53,10 +54,10 @@ const PLATFORM_COLORS = {
   stripe: "#635BFF",
   gumroad: "#D946EF",
   instagram: "#E1306C",
-  tiktok: "#111827",
+  tiktok: "#000000",
   shopify: "#5E8E3E",
   substack: "#FF6719",
-  default: "#111827",
+  default: "#4F46E5",
 };
 
 const PLATFORM_FEE_RATES = {
@@ -118,32 +119,14 @@ function getRange(period) {
 }
 
 function DashboardMetric({ label, value, subtext, tone = "neutral", icon: Icon }) {
-  const toneClass =
-    tone === "teal"
-      ? "text-gray-900"
-      : tone === "orange"
-        ? "text-amber-600"
-        : tone === "red"
-          ? "text-red-600"
-          : "text-gray-900";
-
   return (
-    <GlassCard hoverEffect className="group p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500">{label}</p>
-          <p className={`mt-2 font-mono-financial text-2xl font-semibold tracking-tight ${toneClass}`}>
-            {value}
-          </p>
-        </div>
-        {Icon && (
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600 transition-colors">
-            <Icon className="h-4 w-4" />
-          </div>
-        )}
-      </div>
-      <p className="mt-2 text-xs text-gray-500">{subtext}</p>
-    </GlassCard>
+    <InteractiveMetricCard
+      title={label}
+      value={value}
+      subtitle={subtext}
+      icon={Icon}
+      tone={tone}
+    />
   );
 }
 
@@ -399,14 +382,14 @@ export default function Dashboard() {
                 type="button"
                 onClick={() => setPeriod(item.value)}
                 className={`relative rounded-md px-3 py-1.5 text-xs font-medium transition-all ${period === item.value
-                    ? "text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "text-indigo-700 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
                   }`}
               >
                 {period === item.value && (
                   <motion.div
                     layoutId="period-highlight"
-                    className="absolute inset-0 rounded-md bg-white shadow-sm"
+                    className="absolute inset-0 rounded-md bg-white shadow-sm ring-1 ring-indigo-100"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -439,26 +422,27 @@ export default function Dashboard() {
             value={formatMoney(computed.grossRevenue)}
             subtext={`${computed.transactionCount} transactions`}
             icon={Activity}
+            tone="indigo"
           />
           <DashboardMetric
             label="Net Revenue"
             value={formatMoney(computed.netRevenue)}
             subtext={`Est. fees: ${formatMoney(computed.estimatedFees)}`}
-            tone="teal"
+            tone="green"
             icon={TrendingUp}
           />
           <DashboardMetric
             label="Operating Margin"
             value={formatMoney(computed.operatingMargin)}
             subtext={`Expenses: ${formatMoney(computed.periodExpenses)}`}
-            tone={computed.operatingMargin < 0 ? "red" : "neutral"}
+            tone={computed.operatingMargin < 0 ? "red" : "blue"}
             icon={Database}
           />
           <DashboardMetric
             label="Period Change"
             value={`${computed.revenueDelta >= 0 ? "+" : ""}${computed.revenueDelta.toFixed(1)}%`}
             subtext="vs previous period"
-            tone={computed.revenueDelta >= 0 ? "teal" : "orange"}
+            tone={computed.revenueDelta >= 0 ? "green" : "amber"}
             icon={Zap}
           />
         </motion.section>
@@ -486,33 +470,34 @@ export default function Dashboard() {
                     <AreaChart data={computed.trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#111827" stopOpacity={0.08} />
-                          <stop offset="95%" stopColor="#111827" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.1} />
+                          <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
                       <XAxis
                         dataKey="date"
                         tickFormatter={(str) => format(new Date(str), "MMM d")}
-                        stroke="#D1D5DB"
+                        stroke="#E5E7EB"
                         tick={{ fill: '#9CA3AF', fontSize: 11 }}
                         axisLine={false}
                         tickLine={false}
                         minTickGap={30}
                       />
                       <YAxis
-                        stroke="#D1D5DB"
+                        stroke="#E5E7EB"
                         tick={{ fill: '#9CA3AF', fontSize: 11 }}
                         tickFormatter={(val) => `$${val / 1000}k`}
                         axisLine={false}
                         tickLine={false}
+                        width={50}
                       />
-                      <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#E5E7EB', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                      <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#C7D2FE', strokeWidth: 1, strokeDasharray: '4 4' }} />
                       <Area
                         type="monotone"
                         dataKey="amount"
-                        stroke="#111827"
-                        strokeWidth={1.5}
+                        stroke="#4F46E5"
+                        strokeWidth={2}
                         fillOpacity={1}
                         fill="url(#colorRevenue)"
                         animationDuration={1200}
@@ -596,12 +581,12 @@ export default function Dashboard() {
                             <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Data Coverage</span>
                             <span className="font-mono-financial text-lg font-semibold text-gray-900">{dataCompleteness.daysHistory} days</span>
                           </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-indigo-100">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min(100, (dataCompleteness.daysHistory / 365) * 100)}%` }}
                               transition={{ duration: 1, delay: 0.2 }}
-                              className="h-full rounded-full bg-gray-900"
+                              className="h-full rounded-full bg-indigo-500"
                             />
                           </div>
                         </div>
@@ -644,8 +629,8 @@ export default function Dashboard() {
                           whileTap={{ scale: 0.99 }}
                           onClick={() => navigate(action.path)}
                           className={`group flex w-full items-center justify-between rounded-lg border p-4 text-left transition-all ${action.urgent
-                              ? "border-amber-200 bg-amber-50"
-                              : "border-gray-100 bg-white hover:bg-gray-50 hover:border-gray-200"
+                            ? "border-amber-200 bg-amber-50"
+                            : "border-gray-100 bg-white hover:bg-gray-50 hover:border-gray-200"
                             }`}
                         >
                           <div>
@@ -672,54 +657,56 @@ export default function Dashboard() {
           <div className="border-b border-gray-100 p-5">
             <h2 className="text-sm font-semibold text-gray-900">Recent Activity</h2>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-gray-100 hover:bg-transparent">
-                <TableHead className="text-gray-500 text-xs">Date</TableHead>
-                <TableHead className="text-gray-500 text-xs">Description</TableHead>
-                <TableHead className="text-gray-500 text-xs">Platform</TableHead>
-                <TableHead className="text-right text-gray-500 text-xs">Gross</TableHead>
-                <TableHead className="text-right text-gray-500 text-xs">Net</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {computed.latestTransactions.map((tx, i) => (
-                <motion.tr
-                  key={tx.id}
-                  initial={{ opacity: 0, y: 5 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.03 }}
-                  className="group border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
-                >
-                  <TableCell className="text-sm text-gray-500">
-                    {format(new Date(tx.date), "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell className="max-w-[300px] truncate text-sm text-gray-900">
-                    {tx.description}
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-500">
-                    <span className="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-600">
-                      {tx.platform}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right font-mono-financial text-gray-900">
-                    {formatMoney(tx.gross)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono-financial text-gray-900 font-medium">
-                    {formatMoney(tx.gross - tx.fee)}
-                  </TableCell>
-                </motion.tr>
-              ))}
-              {computed.latestTransactions.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-12 text-center text-sm text-gray-400">
-                    No recent activity found.
-                  </TableCell>
+          <div className="z-table-wrap">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-gray-100 hover:bg-transparent">
+                  <TableHead className="text-gray-500 text-xs">Date</TableHead>
+                  <TableHead className="text-gray-500 text-xs">Description</TableHead>
+                  <TableHead className="text-gray-500 text-xs">Platform</TableHead>
+                  <TableHead className="text-right text-gray-500 text-xs">Gross</TableHead>
+                  <TableHead className="text-right text-gray-500 text-xs">Net</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {computed.latestTransactions.map((tx, i) => (
+                  <motion.tr
+                    key={tx.id}
+                    initial={{ opacity: 0, y: 5 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.03 }}
+                    className="group border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                  >
+                    <TableCell className="text-sm text-gray-500">
+                      {format(new Date(tx.date), "MMM d, yyyy")}
+                    </TableCell>
+                    <TableCell className="max-w-[300px] truncate text-sm text-gray-900">
+                      {tx.description}
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-500">
+                      <span className="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-600">
+                        {tx.platform}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right font-mono-financial text-gray-900">
+                      {formatMoney(tx.gross)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono-financial text-gray-900 font-medium">
+                      {formatMoney(tx.gross - tx.fee)}
+                    </TableCell>
+                  </motion.tr>
+                ))}
+                {computed.latestTransactions.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-12 text-center text-sm text-gray-400">
+                      No recent activity found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </GlassCard>
       </motion.div>
     </div>

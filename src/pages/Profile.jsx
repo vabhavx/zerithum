@@ -198,7 +198,7 @@ export default function Profile() {
             title="Active Platforms"
             value={connectedStats.active.toString()}
             sub={`${connectedStats.total} total connected`}
-            tone="teal"
+            tone="green"
           />
         </AnimatedItem>
 
@@ -228,7 +228,7 @@ export default function Profile() {
                   {activeSection === tab.value && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
                       initial={false}
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     />
@@ -302,7 +302,7 @@ export default function Profile() {
                     type="button"
                     onClick={saveProfile}
                     disabled={updateProfileMutation.isPending}
-                    className="h-9 bg-gray-900 px-5 text-white text-sm hover:bg-gray-800"
+                    className="h-9 bg-indigo-600 px-5 text-white text-sm hover:bg-indigo-700"
                   >
                     <Save className="mr-2 h-4 w-4" />
                     Save changes

@@ -479,7 +479,7 @@ export default function TaxEstimatorPage() {
                     <Switch
                       checked={inputs.includeOtherIncome}
                       onCheckedChange={(c) => setInputs(prev => ({ ...prev, includeOtherIncome: c }))}
-                      className="data-[state=checked]:bg-gray-900"
+                      className="data-[state=checked]:bg-indigo-600"
                     />
                   </div>
                   {inputs.includeOtherIncome && (
@@ -507,7 +507,7 @@ export default function TaxEstimatorPage() {
               <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden mb-4">
                 <div
                   className={cn("h-full transition-all duration-1000 rounded-full",
-                    dataCompleteness.confidenceScore > 80 ? "bg-gray-900" : "bg-amber-500"
+                    dataCompleteness.confidenceScore > 80 ? "bg-indigo-500" : "bg-amber-500"
                   )}
                   style={{ width: `${dataCompleteness.confidenceScore}%` }}
                 />
@@ -575,7 +575,7 @@ export default function TaxEstimatorPage() {
                         dataKey="value"
                         stroke="none"
                       >
-                        <Cell fill="#111827" />
+                        <Cell fill="#4F46E5" />
                         <Cell fill="#F3F4F6" />
                       </Pie>
                     </PieChart>
