@@ -68,7 +68,7 @@ export default function Subscription() {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
       } catch (error) {
-        console.error('Error fetching user:', error);
+        // Silently handle error if user is not authenticated
       }
     };
     fetchUser();
