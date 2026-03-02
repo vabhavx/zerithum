@@ -61,7 +61,8 @@ vi.mock('../logic/security.ts', () => ({
         PASSWORD_CHANGED: 'PASSWORD_CHANGED',
         PASSWORD_CHANGE_FAILED: 'PASSWORD_CHANGE_FAILED',
         RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED'
-    }
+    },
+    OAUTH_PROVIDERS: ['google', 'github', 'discord', 'twitch']
 }));
 
 vi.mock('npm:@supabase/supabase-js@2', () => ({

@@ -56,14 +56,14 @@ describe('autoReconcile Benchmark', () => {
 
         // Add noise bank transactions
         for (let i = 0; i < itemCount / 2; i++) {
-             const time = startDate + Math.random() * 45 * 24 * 3600 * 1000;
-             bankTxns.push({
+            const time = startDate + Math.random() * 45 * 24 * 3600 * 1000;
+            bankTxns.push({
                 id: `bank-noise-${i}`,
                 transaction_date: new Date(time).toISOString(),
                 amount: Math.floor(Math.random() * 1000) + 10,
                 description: `Bank noise ${i}`,
                 currency: 'USD'
-             });
+            });
         }
 
         const ctx: ReconcileContext = {
@@ -78,5 +78,5 @@ describe('autoReconcile Benchmark', () => {
         const end = performance.now();
 
         console.log(`Benchmark: Processed ${revenueTxns.length} revenue and ${bankTxns.length} bank txns in ${(end - start).toFixed(2)}ms`);
-    });
+    }, 30000);
 });

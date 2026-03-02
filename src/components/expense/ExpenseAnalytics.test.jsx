@@ -129,11 +129,11 @@ describe("ExpenseAnalytics", () => {
         ];
 
         const { rerender } = render(<ExpenseAnalytics expenses={mixedExpenses} />);
-        expect(screen.getByText("$100")).toBeInTheDocument(); // Avg
-        expect(screen.getByText("$100")).toBeInTheDocument(); // Highest
+        expect(screen.getAllByText("$100")[0]).toBeInTheDocument(); // Avg
+        expect(screen.getAllByText("$100")[1]).toBeInTheDocument(); // Highest
 
         // Check if it handles 0 percentage or missing fields gracefully (though they should be present)
         rerender(<ExpenseAnalytics expenses={[{ amount: 100, category: "X", expense_date: "2024-01-01", is_tax_deductible: true, deduction_percentage: 0 }]} />);
-        expect(screen.getByText("$100")).toBeInTheDocument();
+        expect(screen.getAllByText("$100")[0]).toBeInTheDocument();
     });
 });
