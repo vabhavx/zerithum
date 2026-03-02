@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/supabaseClient";
 import {
-  LayoutDashboard, Link2, Scale, FileText, Menu, X, LogOut, User,
+  LayoutDashboard, Link2, Scale, FileText, Menu, X, LogOut,
   AlertTriangle, DollarSign, ChevronDown, Settings, BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -98,8 +98,8 @@ export default function Layout({ children, currentPageName }) {
                           <p className="text-sm font-semibold text-gray-900 truncate">{user.full_name || "User"}</p>
                           <p className="text-xs text-gray-400 truncate mt-0.5">{user.email}</p>
                         </div>
-                        <Link to={createPageUrl("Profile")} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                          <User className="w-3.5 h-3.5" />Profile
+                        <Link to={createPageUrl("Settings")} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                          <Settings className="w-3.5 h-3.5" />Settings
                         </Link>
                         <Link to={createPageUrl("Pricing")} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
                           <DollarSign className="w-3.5 h-3.5" />Pricing
@@ -134,7 +134,6 @@ export default function Layout({ children, currentPageName }) {
                 <div className="h-px bg-gray-100 my-2" />
                 <p className="px-4 pt-2 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">More</p>
                 {secondaryNav.map((item) => <NavLink key={item.page} item={item} mobile />)}
-                <NavLink item={{ name: "Profile", icon: User, page: "Profile" }} mobile />
                 <NavLink item={{ name: "Pricing", icon: DollarSign, page: "Pricing" }} mobile />
               </nav>
               {user && (
