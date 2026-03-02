@@ -63,7 +63,6 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
             setStep("success");
         },
         onError: (error) => {
-            console.error('deleteAccount error:', error, 'requiresReauth:', error.requiresReauth, 'authMethod:', error.authMethod);
             if (error.requiresReauth && error.authMethod === 'otp') {
                 sendOTPMutation.mutate();
             } else {
