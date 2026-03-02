@@ -4,7 +4,6 @@ import { format } from "date-fns";
 import { base44 } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
 
 /**
  * ReceiptQueue
@@ -147,12 +146,11 @@ function ReceiptQueueRow({ expense, onUpdate }) {
                 <button
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}
-                    className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--z-accent)]",
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--z-accent)] ${
                         uploading
                             ? "bg-[var(--z-bg-3)] text-[var(--z-text-3)] cursor-wait"
                             : "bg-[var(--z-accent)]/10 text-[var(--z-accent)] hover:bg-[var(--z-accent)]/20"
-                    )}
+                    }`}
                 >
                     <Upload className="w-3 h-3" />
                     {uploading ? "Uploading…" : "Upload"}
