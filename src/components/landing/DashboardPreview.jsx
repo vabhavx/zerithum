@@ -248,7 +248,7 @@ const DashboardPreview = () => {
                                             className="space-y-1 opacity-80"
                                         >
                                             <div className="text-zinc-500">{`{`}</div>
-                                            <div className="pl-4 text-zinc-400"><span className="text-purple-400">"ref"</span>: <span className="text-amber-400">"ACH_{crypto.getRandomValues(new Uint32Array(1))[0] % 10000}"</span>,</div>
+                                            <div className="pl-4 text-zinc-400"><span className="text-purple-400">"ref"</span>: <span className="text-amber-400">{`"ACH_${crypto.getRandomValues(new Uint32Array(1))[0] % 10000}"`}</span>,</div>
                                             <div className="pl-4 text-zinc-400"><span className="text-purple-400">"status"</span>: <span className="text-amber-400">"CLEARED"</span>,</div>
 
                                             {/* Dynamic Amount Line */}
