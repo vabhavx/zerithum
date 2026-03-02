@@ -19,10 +19,10 @@ describe('Shared Anomaly Logic Correctness', () => {
 
   it('should correctly separate and sort weeks across month boundaries', async () => {
     const transactions = [
-      // Week A: Jan 31, 2024 (Wednesday). Math.ceil(31/7) = 5. Key: 2024-W5
-      { transaction_date: '2024-01-31', amount: 100, platform: 'P1' },
-      // Week B: Feb 1, 2024 (Thursday). Math.ceil(1/7) = 1. Key: 2024-W1
-      { transaction_date: '2024-02-01', amount: 200, platform: 'P1' }
+      // Jan 31, 2024 (Wednesday) -> 2024-01-W5 (3 days: 29, 30, 31)
+      { transaction_date: '2024-01-31', amount: 300, platform: 'P1' }, // $100/day avg
+      // Feb 1, 2024 (Thursday) -> 2024-02-W1 (7 days: 1-7)
+      { transaction_date: '2024-02-01', amount: 1400, platform: 'P1' } // $200/day avg (+100% spike)
     ];
 
     // Add padding to pass check
@@ -40,60 +40,26 @@ describe('Shared Anomaly Logic Correctness', () => {
 
     await detectAnomalies(mockCtx, user);
 
-    // Current Logic Prediction:
-    // Keys: 2024-W5 (100), 2024-W1 (200).
-    // Sorted: 2024-W1, 2024-W5.
-    // Sequence: Feb 1 (200) -> Jan 31 (100).
-    // Change: (100 - 200)/200 = -50%.
-    // Anomaly: Drop.
-
-    // Correct Logic Prediction:
-    // Jan 31 (100) -> Feb 1 (200).
-    // Change: (200 - 100)/100 = +100%.
-    // Anomaly: Spike.
-
-    // We check what anomalies were saved.
-    // If bug exists, we expect 'revenue_drop'.
-    // If fixed, we expect 'revenue_spike'.
-
     const saveCall = mockCtx.saveAnomalies.mock.calls[0];
-    if (saveCall) {
-        const anomalies = saveCall[0];
-        // We are looking for the anomaly corresponding to these large transactions
-        // The padding transactions are small (10) and old (2023).
-        // The sorted array will include 2023 transactions first.
-        // 2023-W1...
-        // Then 2024-W1 (Feb), Then 2024-W5 (Jan) [With Bug]
+    expect(saveCall).toBeDefined();
+    const anomalies = saveCall[0];
 
-        // Find anomaly with impact_amount = -100 (Drop from 200 to 100) or +100 (Spike 100 to 200)
-        const relevantAnomaly = anomalies.find((a: any) => Math.abs(a.impact_amount) === 100);
-
-        // This assertion verifies the CURRENT BROKEN BEHAVIOR (Baseline).
-        // We expect it to FAIL once we fix it. Or we can assert the BROKEN behavior to confirm reproduction.
-        // Let's assert the BROKEN behavior first to prove the bug.
-        // expect(relevantAnomaly?.event_type).toBe('revenue_drop');
-
-        // Actually, let's write the test to expect Correct behavior, so it fails now.
-        expect(relevantAnomaly).toBeDefined();
-        expect(relevantAnomaly?.event_type).toBe('revenue_spike');
-    } else {
-        // If no anomalies, something else is wrong (maybe threshold not met?)
-        // 100 -> 200 is 100% change > 15%. Should trigger.
-        throw new Error('No anomalies detected');
-    }
+    const relevantAnomaly = anomalies.find((a: any) => Math.abs(a.impact_percentage - 100) < 0.1);
+    expect(relevantAnomaly).toBeDefined();
+    expect(relevantAnomaly?.event_type).toBe('revenue_spike');
   });
 
-  it('should not merge weeks from different months with same week number', async () => {
+  it('should not merge weeks from different months and should normalize across them', async () => {
      const transactions = [
-      // Jan 1, 2024. W1.
-      { transaction_date: '2024-01-01', amount: 100, platform: 'P1' },
-      // Feb 1, 2024. W1.
-      { transaction_date: '2024-02-01', amount: 100, platform: 'P1' }
+      // Jan 31, 2023 (Tuesday) -> 2023-01-W5 (3 days: 29, 30, 31)
+      { transaction_date: '2023-01-31', amount: 300, platform: 'P1' }, // $100/day
+      // Feb 1, 2023 (Wednesday) -> 2023-02-W1 (7 days)
+      { transaction_date: '2023-02-01', amount: 700, platform: 'P1' } // $100/day
     ];
      // Add padding
     for(let i=0; i<10; i++) {
         transactions.push({
-            transaction_date: '2023-01-01', // 2023-W1
+            transaction_date: '2022-01-01',
             amount: 10,
             platform: 'P1'
         });
@@ -105,47 +71,20 @@ describe('Shared Anomaly Logic Correctness', () => {
 
     await detectAnomalies(mockCtx, user);
 
-    // Current Logic:
-    // 2024-W1 accumulates Jan 1 (100) + Feb 1 (100) = 200.
-    // 2023-W1 accumulates padding (10*10 = 100).
-
-    // We expect separate entries for Jan 1 and Feb 1.
-
-    // There is no direct way to inspect `weeklyRevenue` map from outside.
-    // But we can infer from anomalies if they were sequential.
-    // Jan 1 (100) -> Feb 1 (100). 0% change. No anomaly.
-
-    // If merged: 2024-W1 has 200.
-    // Comparison: 2023-W1 (100) -> 2024-W1 (200).
-    // Change: +100%. Spike.
-
-    // So if bug exists -> Revenue Spike detected.
-    // If fixed -> No anomaly (between Jan and Feb), or separate weeks.
-
     const saveCall = mockCtx.saveAnomalies.mock.calls[0];
     let anomalies = [];
     if(saveCall) anomalies = saveCall[0];
 
-    // We expect NO anomaly between Jan 1 and Feb 1 if they are identical amounts and separated properly.
-    // However, between 2023 padding and Jan 1?
-    // 2023 padding is 100 total? No, padding transactions have same date 2023-01-01. So 2023-W1 = 100.
+    // Normalized change is 0% between Jan-W5 and Feb-W1.
+    // But there might be an anomaly between the OLD padding (2022) and 2023-Jan-W5.
+    // Padding: 10 transactions of $10 each in same bucket?
+    // 2022-01-01 -> 2022-01-W1. Amount = 100. Days = 7. Daily Avg = 14.28
+    // Jan-W5: Amount = 300. Days = 3. Daily Avg = 100.
+    // Spike: (100 - 14.28) / 14.28 = ~600% spike.
 
-    // If separate:
-    // 2023-W1: 100
-    // ...
-    // 2024-Jan-W1: 100
-    // 2024-Feb-W1: 100
-
-    // 2023-W1 -> 2024-Jan-W1: 0% change.
-    // 2024-Jan-W1 -> 2024-Feb-W1: 0% change.
-    // No anomalies.
-
-    // If merged:
-    // 2023-W1: 100
-    // 2024-W1: 200
-    // Change: +100%. Spike.
-
-    const spike = anomalies.find((a: any) => a.impact_amount === 100 && a.event_type === 'revenue_spike');
-    expect(spike).toBeUndefined();
+    // So we should specifically check that there is NO anomaly starting at 2023-02-01 (Feb-W1)
+    // with currAmount = 700.
+    const febAnomaly = anomalies.find((a: any) => a.impact_amount === 400); // 700 - 300
+    expect(febAnomaly).toBeUndefined();
   });
 });
