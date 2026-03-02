@@ -68,12 +68,6 @@ describe('Shared Anomaly Logic Correctness', () => {
         // Find anomaly with impact_amount = -100 (Drop from 200 to 100) or +100 (Spike 100 to 200)
         const relevantAnomaly = anomalies.find((a: any) => Math.abs(a.impact_amount) === 100);
 
-        // This assertion verifies the CURRENT BROKEN BEHAVIOR (Baseline).
-        // We expect it to FAIL once we fix it. Or we can assert the BROKEN behavior to confirm reproduction.
-        // Let's assert the BROKEN behavior first to prove the bug.
-        // expect(relevantAnomaly?.event_type).toBe('revenue_drop');
-
-        // Actually, let's write the test to expect Correct behavior, so it fails now.
         expect(relevantAnomaly).toBeDefined();
         expect(relevantAnomaly?.event_type).toBe('revenue_spike');
     } else {
