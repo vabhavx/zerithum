@@ -131,11 +131,14 @@ describe('taxUtils', () => {
         includeOtherIncome: false,
       });
 
-      // (100 - 80) * 0.0006 = 20 * 0.0006 = 0.012
-      // historyPenalty = 0 (100 > 90)
-      // platformPenalty = 0 (2 > 0)
-      // otherIncomePenalty = 0
-      // 0.02 + 0.012 = 0.032
+      /*
+       * Expected Calculation:
+       * - Base confidence penalty: (100 - 80) * 0.0006 = 0.012
+       * - historyPenalty = 0 (since 100 > 90)
+       * - platformPenalty = 0 (since 2 > 0)
+       * - otherIncomePenalty = 0
+       * Total = 0.02 (base) + 0.012 = 0.032
+       */
       expect(result).toBeCloseTo(0.032);
     });
 
@@ -146,11 +149,15 @@ describe('taxUtils', () => {
         platformsConnected: 0,
         includeOtherIncome: true,
       });
-      // (100 - 40) * 0.0006 = 0.036
-      // historyPenalty = 0.015
-      // platformPenalty = 0.01
-      // otherIncomePenalty = 0.006
-      // 0.02 + 0.036 + 0.015 + 0.01 + 0.006 = 0.087
+
+      /*
+       * Expected Calculation:
+       * - Base confidence penalty: (100 - 40) * 0.0006 = 0.036
+       * - historyPenalty = 0.015
+       * - platformPenalty = 0.01
+       * - otherIncomePenalty = 0.006
+       * Total = 0.02 (base) + 0.036 + 0.015 + 0.01 + 0.006 = 0.087
+       */
       expect(result).toBeCloseTo(0.087);
     });
 
@@ -161,7 +168,11 @@ describe('taxUtils', () => {
             platformsConnected: 2,
             includeOtherIncome: false,
         });
-        // 0.02 + 0 = 0.02
+
+        /*
+         * Minimum clamp test:
+         * No penalties applied. Total = 0.02 (base) + 0 = 0.02
+         */
         expect(resultLow).toBe(0.02);
 
         // Hypothetical very bad score
@@ -171,15 +182,17 @@ describe('taxUtils', () => {
             platformsConnected: 0,
             includeOtherIncome: true,
         });
-        // 0.02 + 0.06 + 0.015 + 0.01 + 0.006 = 0.111
-        // Wait, max is 0.12. Let's make it go over.
-        // Actually 0.111 is < 0.12.
-        // Let's modify penalties manually to test clamp max if possible?
-        // Logic: clamp(0.02 + ..., 0.02, 0.12).
-        // Max possible: 0.02 + (100*0.0006 = 0.06) + 0.015 + 0.01 + 0.006 = 0.111.
-        // It seems 0.12 is unreachable with current constants?
-        // 0.02 + 0.06 = 0.08. + 0.031 = 0.111.
-        // It seems the max clamp is effectively unused but safe.
+
+        /*
+         * Maximum bound approach test:
+         * - Base confidence penalty: (100 - 0) * 0.0006 = 0.06
+         * - historyPenalty = 0.015
+         * - platformPenalty = 0.01
+         * - otherIncomePenalty = 0.006
+         * Total = 0.02 + 0.06 + 0.015 + 0.01 + 0.006 = 0.111
+         * Note: The theoretical max is clamped at 0.12, but with the
+         * current constants, the maximum possible value reached is 0.111.
+         */
         expect(resultHigh).toBeCloseTo(0.111);
     });
   });
