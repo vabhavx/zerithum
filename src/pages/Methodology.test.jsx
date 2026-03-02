@@ -10,13 +10,13 @@ expect.extend(matchers);
 
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', async () => {
-    return {
-        AnimatePresence: ({ children }) => <>{children}</>,
-        motion: {
-            div: ({ children, layout, layoutId, ...props }) => <div {...props}>{children}</div>,
-            span: ({ children, layout, layoutId, ...props }) => <span {...props}>{children}</span>,
-        },
-    };
+  return {
+    AnimatePresence: ({ children }) => <>{children}</>,
+    motion: {
+      div: ({ children, layout, layoutId, ...props }) => <div {...props}>{children}</div>,
+      span: ({ children, layout, layoutId, ...props }) => <span {...props}>{children}</span>,
+    },
+  };
 });
 
 // Mock animations because they use hooks/intervals that might be tricky in JSDOM or just noise
@@ -28,7 +28,9 @@ vi.mock('@/components/landing/Footer', () => ({ default: () => <div data-testid=
 
 describe('Methodology Page', () => {
   beforeEach(() => {
-    localStorage.clear();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.clear();
+    }
   });
 
   it('renders the main headline', () => {

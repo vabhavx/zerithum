@@ -54,15 +54,16 @@ export async function handleOAuthCallback(
 
     // Strict validation: Both must exist and match
     if (!csrfToken || !storedToken || csrfToken !== storedToken) {
-       ctx.logger.error('CSRF validation failed', {
-           stateHasToken: !!csrfToken,
-           cookieHasToken: !!storedToken,
-           match: csrfToken === storedToken
-       });
-       return { statusCode: 400, body: { error: 'Security validation failed (CSRF mismatch)' } };
+      ctx.logger.error('CSRF validation failed', {
+        stateHasToken: !!csrfToken,
+        cookieHasToken: !!storedToken,
+        match: csrfToken === storedToken
+      });
+      return { statusCode: 400, body: { error: 'Security validation failed (CSRF mismatch)' } };
     }
 
-    const redirectUri = `${urlObj.origin}/auth/callback`; // Note: This might need adjustment based on environment
+    const customRedirect = ctx.envGet('OAUTH_REDIRECT_URI');
+    const redirectUri = customRedirect || `${urlObj.origin}/auth/callback`;
 
     let tokenData;
 
@@ -243,9 +244,9 @@ export async function handleOAuthCallback(
 
 function parseCookies(cookieHeader: string): Record<string, string> {
   const list: Record<string, string> = {};
-  cookieHeader.split(';').forEach(function(cookie) {
-      const parts = cookie.split('=');
-      list[parts.shift()!.trim()] = decodeURI(parts.join('='));
+  cookieHeader.split(';').forEach(function (cookie) {
+    const parts = cookie.split('=');
+    list[parts.shift()!.trim()] = decodeURI(parts.join('='));
   });
   return list;
 }

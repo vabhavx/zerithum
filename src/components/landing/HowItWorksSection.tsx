@@ -16,10 +16,10 @@ import { cn } from '@/lib/utils';
 const MOCK_DATA = Array.from({ length: 8 }).map((_, i) => ({
     id: `tx_${2990 + i}`,
     source: i % 3 === 0 ? 'STRIPE' : i % 2 === 0 ? 'YOUTUBE' : 'PATREON',
-    amount: (Math.random() * 1000 + 50).toFixed(2),
+    amount: ((crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF) * 1000 + 50).toFixed(2),
     timestamp: `10:42:${(10 + i).toString().padStart(2, '0')}.442`,
     bankRef: `CH_WIRE_${8829 + i}`,
-    latency: `${Math.floor(Math.random() * 40) + 10}ms`,
+    latency: `${(crypto.getRandomValues(new Uint32Array(1))[0] % 40) + 10}ms`,
 }));
 
 // --- Steps Data ---

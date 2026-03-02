@@ -107,7 +107,7 @@ const AutopsyVisual = () => {
     return (
         <div className="w-full bg-zinc-900/50 rounded-xl border border-zinc-800 p-8 min-h-[500px] relative">
                  <div className="absolute top-4 right-4 text-xs font-mono text-zinc-600">
-                    TRANSACTION_ID: {Math.random().toString(36).substring(7).toUpperCase()}
+                    TRANSACTION_ID: {crypto.randomUUID().split('-')[0].toUpperCase()}
                  </div>
 
                  <AnimatePresence mode="wait">

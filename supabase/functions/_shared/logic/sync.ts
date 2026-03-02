@@ -299,8 +299,10 @@ export async function syncPlatform(
       }
     });
 
-    await ctx.updateConnectionStatus('active');
-    await ctx.updateSyncHistory('success', savedCount, duration);
+    await Promise.all([
+      ctx.updateConnectionStatus('active'),
+      ctx.updateSyncHistory('success', savedCount, duration)
+    ]);
 
     return {
       success: true,
@@ -330,8 +332,10 @@ export async function syncPlatform(
       }
     });
 
-    await ctx.updateConnectionStatus('error', detailedErrorMessage);
-    await ctx.updateSyncHistory('error', 0, duration, detailedErrorMessage);
+    await Promise.all([
+      ctx.updateConnectionStatus('error', detailedErrorMessage),
+      ctx.updateSyncHistory('error', 0, duration, detailedErrorMessage)
+    ]);
 
     // Return detailed error in response
     const enhancedError = new Error(detailedErrorMessage);

@@ -32,7 +32,7 @@ export const PLATFORMS = [
     scope: "identity identity[email] campaigns campaigns.members",
     redirectUri: "/AuthCallback",
     requiresApiKey: false,
-    clientId: "i1ircOfqA2eD5ChN4-d6uElxt4vjWzIEv4vCfj0K_92LqilSM5OA_dJS24uFjiTR"
+    clientId: import.meta.env.VITE_PATREON_CLIENT_ID || "YOUR_PATREON_CLIENT_ID"
   },
   {
     id: "gumroad",
@@ -44,7 +44,7 @@ export const PLATFORMS = [
     scope: "view_sales",
     redirectUri: "/AuthCallback",
     requiresApiKey: false,
-    clientId: "CFsL3oJtRheXNoxJgMNoJQnh1XZ9FLU7802HoBRwbpU"
+    clientId: import.meta.env.VITE_GUMROAD_CLIENT_ID || "YOUR_GUMROAD_CLIENT_ID"
   },
   {
     id: "stripe",

@@ -32,6 +32,7 @@ import DisconnectPlatformModal from "@/components/security/DisconnectPlatformMod
 import { cn } from "@/lib/utils";
 import { createPageUrl } from "@/utils";
 import { STATE_OPTIONS } from "@/lib/taxConstants";
+import { OAUTH_PROVIDERS } from "@/lib/auth";
 
 const CURRENT_TAX_YEAR = new Date().getFullYear();
 
@@ -116,6 +117,11 @@ export default function Settings() {
   });
 
   const userId = user?.id;
+  const userProvider = user?.app_metadata?.provider || '';
+  const userProviders = user?.app_metadata?.providers || [];
+
+  const hasPasswordAuth = (userProvider === 'email' || userProviders.includes('email')) &&
+    !OAUTH_PROVIDERS.includes(userProvider);
 
   const { data: connectedPlatforms = [], isFetching: isFetchingPlatforms } = useQuery({
     queryKey: ["settings", "connectedPlatforms", userId],
@@ -547,19 +553,31 @@ export default function Settings() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setPasswordOpen(true)}
-                className="group flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 text-left transition-colors hover:border-gray-300"
-              >
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-gray-500">
-                  <KeyRound className="h-4 w-4" />
+              {hasPasswordAuth ? (
+                <button
+                  type="button"
+                  onClick={() => setPasswordOpen(true)}
+                  className="group flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 text-left transition-colors hover:border-gray-300"
+                >
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-gray-500">
+                    <KeyRound className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Change password</p>
+                    <p className="text-xs text-gray-500">Update account credentials</p>
+                  </div>
+                </button>
+              ) : (
+                <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left">
+                  <div className="rounded-lg border border-gray-200 bg-white p-2.5 text-gray-400">
+                    <KeyRound className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Password</p>
+                    <p className="text-xs text-gray-500">Managed by Google</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Change password</p>
-                  <p className="text-xs text-gray-500">Update account credentials</p>
-                </div>
-              </button>
+              )}
 
               <button
                 type="button"

@@ -49,7 +49,7 @@ export default function Layout({ children, currentPageName }) {
         className={cn(
           "relative flex items-center gap-2 transition-colors font-medium",
           mobile
-            ? cn("px-4 py-3 rounded-lg text-sm", isActive ? "bg-indigo-50 text-indigo-700" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900")
+            ? cn("px-4 py-3.5 rounded-lg text-[15px]", isActive ? "bg-indigo-50 text-indigo-700" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900")
             : cn("px-3 py-2 text-[13px]", isActive ? "text-indigo-600" : "text-gray-500 hover:text-gray-900")
         )}
       >
@@ -129,10 +129,10 @@ export default function Layout({ children, currentPageName }) {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="lg:hidden fixed inset-0 top-14 bg-black/20 backdrop-blur-sm z-40" onClick={() => setMobileOpen(false)} />
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ type: "spring", stiffness: 500, damping: 35 }} className="lg:hidden fixed left-0 right-0 top-14 bg-white border-b border-gray-200 shadow-xl z-50 max-h-[80vh] overflow-y-auto">
               <nav className="p-3 space-y-0.5">
-                <p className="px-4 pt-2 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Navigation</p>
+                <p className="px-4 pt-2 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Navigation</p>
                 {navItems.map((item) => <NavLink key={item.page} item={item} mobile />)}
                 <div className="h-px bg-gray-100 my-2" />
-                <p className="px-4 pt-2 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">More</p>
+                <p className="px-4 pt-2 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">More</p>
                 {secondaryNav.map((item) => <NavLink key={item.page} item={item} mobile />)}
                 <NavLink item={{ name: "Pricing", icon: DollarSign, page: "Pricing" }} mobile />
               </nav>

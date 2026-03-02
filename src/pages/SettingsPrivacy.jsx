@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Shield, Download, Trash2 } from 'lucide-react';
+import DeleteAccountModal from "@/components/security/DeleteAccountModal";
 
 export default function SettingsPrivacy() {
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+
   return (
     <div className="max-w-[800px] mx-auto">
+      <DeleteAccountModal open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen} />
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[#5E5240] mb-2">Privacy & Data</h1>
         <p className="text-[#5E5240]/60">Manage your data and privacy settings</p>
@@ -29,7 +34,7 @@ export default function SettingsPrivacy() {
           <p className="text-sm text-[#5E5240]/60 mb-4">
             Download all your data in a portable format
           </p>
-          <Button className="btn-secondary">
+          <Button className="btn-secondary" onClick={() => alert("Data export is coming soon")}>
             <Download className="w-4 h-4 mr-2" />
             Export All Data
           </Button>
@@ -40,7 +45,7 @@ export default function SettingsPrivacy() {
           <p className="text-sm text-[#5E5240]/60 mb-4">
             Delete your account and all associated data. This action cannot be undone.
           </p>
-          <Button className="btn-danger">
+          <Button className="btn-danger" onClick={() => setDeleteAccountOpen(true)}>
             <Trash2 className="w-4 h-4 mr-2" />
             Delete Account
           </Button>

@@ -17,12 +17,12 @@ After project creation:
    - `Project URL` → This is your `VITE_SUPABASE_URL`
    - `anon public` key → This is your `VITE_SUPABASE_ANON_KEY`
 
-## Step 3: Run the Database Schema
+## Step 3: Run the Database Schema and Migrations
 
 1. Go to **SQL Editor** in Supabase dashboard
-2. Copy the contents of `supabase/schema.sql`
-3. Paste and click "Run"
-4. Verify all tables are created in **Table Editor**
+2. Run the `supabase/schema.sql` file first
+3. Run all migration files in `supabase/migrations/` in sequential order
+4. Verify all tables, functions, and security policies are created
 
 ## Step 4: Configure Authentication
 
