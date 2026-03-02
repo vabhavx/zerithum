@@ -1,6 +1,7 @@
 import AuthCallback from './pages/AuthCallback';
 import ConnectedApps from './pages/ConnectedApps';
 import Landing from './pages/Landing';
+import AIVideoModels from './pages/AIVideoModels';
 import SignIn from './pages/SignIn';
 import Signup from './pages/Signup';
 import ConnectedPlatforms from './pages/ConnectedPlatforms';
@@ -67,6 +68,7 @@ export const PAGES = {
     "TransactionAnalysis": TransactionAnalysis,
     "Transactions": Transactions,
     "TermsOfService": TermsOfService,
+    "AIVideoModels": AIVideoModels,
 }
 
 export const pagesConfig = {
