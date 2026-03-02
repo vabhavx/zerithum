@@ -18,6 +18,8 @@ export const PLATFORMS = [
     description: "For Video Creators & Livestreamers: Sync ad revenue, memberships, and Super Chat earnings.",
     oauthUrl: "https://accounts.google.com/o/oauth2/v2/auth",
     scope: "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly",
+    redirectUri: "/authcallback",
+    requiresApiKey: false,
     clientId: import.meta.env.VITE_YOUTUBE_CLIENT_ID || "985180453886-7a3vuq6g3945pe2itcostlo6k4s0aej7.apps.googleusercontent.com"
   },
   {
