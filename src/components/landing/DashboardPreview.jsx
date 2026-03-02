@@ -43,10 +43,10 @@ const DashboardPreview = () => {
       const interval = setInterval(() => {
           if (!mounted) return;
           const newDeposit = {
-              id: Math.random().toString(36).substr(2, 9),
-              amount: (Math.random() * 5000 + 100).toFixed(2),
+              id: crypto.randomUUID(),
+              amount: ((crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF) * 5000 + 100).toFixed(2),
               bank: "TRUE BANK DEPOSIT",
-              ref: `ACH_${Math.floor(Math.random() * 999999)}`
+              ref: `ACH_${crypto.getRandomValues(new Uint32Array(1))[0] % 1000000}`
           };
           setBankDeposits(prev => [newDeposit, ...prev].slice(0, 6));
       }, 1500);
@@ -65,8 +65,8 @@ const DashboardPreview = () => {
 
         setActiveAnalysis({
             ...platform,
-            amount: (Math.random() * 1000 + 50).toFixed(2),
-            id: `TX_${Math.floor(Math.random() * 99999)}`,
+            amount: ((crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF) * 1000 + 50).toFixed(2),
+            id: `TX_${crypto.getRandomValues(new Uint32Array(1))[0] % 100000}`,
             isAnomaly
         });
         setAnalyzingStage('scanning');
@@ -127,7 +127,7 @@ const DashboardPreview = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="text-zinc-300 font-medium truncate">{p.name}</div>
-                                <div className="text-[10px] text-zinc-600 font-mono">ID: {Math.floor(Math.random() * 10000)}</div>
+                                <div className="text-[10px] text-zinc-600 font-mono">ID: {crypto.getRandomValues(new Uint32Array(1))[0] % 10000}</div>
                             </div>
                             <div className="text-[10px] text-emerald-500/80">SYNC</div>
                         </div>
@@ -248,7 +248,7 @@ const DashboardPreview = () => {
                                             className="space-y-1 opacity-80"
                                         >
                                             <div className="text-zinc-500">{`{`}</div>
-                                            <div className="pl-4 text-zinc-400"><span className="text-purple-400">"ref"</span>: <span className="text-amber-400">"ACH_{Math.floor(Math.random()*9999)}"</span>,</div>
+                                            <div className="pl-4 text-zinc-400"><span className="text-purple-400">"ref"</span>: <span className="text-amber-400">{`"ACH_${crypto.getRandomValues(new Uint32Array(1))[0] % 10000}"`}</span>,</div>
                                             <div className="pl-4 text-zinc-400"><span className="text-purple-400">"status"</span>: <span className="text-amber-400">"CLEARED"</span>,</div>
 
                                             {/* Dynamic Amount Line */}

@@ -286,9 +286,9 @@ const AuditTrailAnimationV2 = () => {
             counter++;
             const newRow = {
                 id: counter,
-                hash: Math.random().toString(36).substring(2, 15),
+                hash: crypto.randomUUID().replace(/-/g, '').substring(0, 13),
                 platform: platforms[counter % platforms.length],
-                amount: (Math.random() * 1000).toFixed(2),
+                amount: ((crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF) * 1000).toFixed(2),
                 timestamp: new Date().toLocaleTimeString(),
                 status: 'pending' // pending -> sealed
             };
