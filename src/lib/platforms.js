@@ -20,7 +20,7 @@ export const PLATFORMS = [
     scope: "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly",
     redirectUri: "https://zerithum.com/authcallback",
     requiresApiKey: false,
-    clientId: "985180453886-jld5u3u1nethrpaqk6o1tbvqhf1nlueb.apps.googleusercontent.com"
+    clientId: import.meta.env.VITE_YOUTUBE_CLIENT_ID || "985180453886-9hssl79psc4o1cq838lah1rg1ngnjj2d.apps.googleusercontent.com"
   },
   {
     id: "patreon",
