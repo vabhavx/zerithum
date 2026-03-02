@@ -67,7 +67,7 @@ export default function Subscription() {
       try {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
-      } catch (error) {
+      } catch {
       }
     };
     fetchUser();
@@ -79,7 +79,7 @@ export default function Subscription() {
       await base44.auth.updateMe({ plan_tier: tier });
       setUser({ ...user, plan_tier: tier });
       toast.success(`Successfully upgraded to ${tier.charAt(0).toUpperCase() + tier.slice(1)}!`);
-    } catch (error) {
+    } catch {
       toast.error('Failed to upgrade. Please try again.');
     } finally {
       setLoading(false);
