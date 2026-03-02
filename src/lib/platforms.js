@@ -18,9 +18,7 @@ export const PLATFORMS = [
     description: "For Video Creators & Livestreamers: Sync ad revenue, memberships, and Super Chat earnings.",
     oauthUrl: "https://accounts.google.com/o/oauth2/v2/auth",
     scope: "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly",
-    redirectUri: "https://zerithum.com/authcallback",
-    requiresApiKey: false,
-    clientId: import.meta.env.VITE_YOUTUBE_CLIENT_ID || "985180453886-9hssl79psc4o1cq838lah1rg1ngnjj2d.apps.googleusercontent.com"
+    clientId: import.meta.env.VITE_YOUTUBE_CLIENT_ID || "985180453886-7a3vuq6g3945pe2itcostlo6k4s0aej7.apps.googleusercontent.com"
   },
   {
     id: "patreon",
@@ -30,7 +28,7 @@ export const PLATFORMS = [
     description: "For Community Builders: Sync recurring pledges, membership tiers, and patron relationship data.",
     oauthUrl: "https://www.patreon.com/oauth2/authorize",
     scope: "identity identity[email] campaigns campaigns.members",
-    redirectUri: "https://zerithum.com/authcallback",
+    redirectUri: "/authcallback",
     requiresApiKey: false,
     clientId: "i1ircOfqA2eD5ChN4-d6uElxt4vjWzIEv4vCfj0K_92LqilSM5OA_dJS24uFjiTR"
   },
@@ -42,7 +40,7 @@ export const PLATFORMS = [
     description: "For Digital Product Sellers: Import sales, subscription renewals, and license key data.",
     oauthUrl: "https://gumroad.com/oauth/authorize",
     scope: "view_sales",
-    redirectUri: "https://zerithum.com/authcallback",
+    redirectUri: "/authcallback",
     requiresApiKey: false,
     clientId: "CFsL3oJtRheXNoxJgMNoJQnh1XZ9FLU7802HoBRwbpU"
   },
@@ -54,7 +52,7 @@ export const PLATFORMS = [
     description: "For Global Businesses: Connect card payments, SaaS subscriptions, and payout schedules.",
     oauthUrl: "https://connect.stripe.com/oauth/authorize",
     scope: "read_write",
-    redirectUri: "https://zerithum.com/authcallback",
+    redirectUri: "/authcallback",
     requiresApiKey: false,
     clientId: import.meta.env.VITE_STRIPE_CLIENT_ID || "YOUR_STRIPE_CLIENT_ID"
   },
@@ -66,7 +64,7 @@ export const PLATFORMS = [
     description: "For Physical & Online Retailers: Sync point-of-sale transactions and eCommerce orders.",
     oauthUrl: "https://connect.squareup.com/oauth2/authorize",
     scope: "MERCHANT_PROFILE_READ PAYMENTS_READ SETTLEMENTS_READ ORDERS_READ ITEMS_READ",
-    redirectUri: "https://zerithum.com/authcallback",
+    redirectUri: "/authcallback",
     requiresApiKey: false,
     clientId: import.meta.env.VITE_SQUARE_CLIENT_ID || "sq0idp-ljKdMSZ4tWf2fEDVu19owQ"
   },
@@ -78,7 +76,7 @@ export const PLATFORMS = [
     description: "For Short-Form Creators: Track Creator Fund earnings and trending video performance.",
     oauthUrl: "https://www.tiktok.com/v2/auth/authorize/",
     scope: "video.list,user.info.basic,video.insights",
-    redirectUri: "https://zerithum.com/authcallback",
+    redirectUri: "/authcallback",
     requiresApiKey: false,
     clientKey: import.meta.env.VITE_TIKTOK_CLIENT_KEY || "YOUR_TIKTOK_CLIENT_KEY"
   },
@@ -91,7 +89,7 @@ export const PLATFORMS = [
     // oauthUrl is built dynamically from the shop name entered by the user
     oauthUrl: "https://SHOP.myshopify.com/admin/oauth/authorize",
     scope: "read_orders,read_products,read_customers,read_analytics,read_reports,read_shopify_payments_payouts,read_shopify_payments_disputes",
-    redirectUri: "https://zerithum.com/authcallback",
+    redirectUri: "/authcallback",
     requiresApiKey: false,
     clientId: import.meta.env.VITE_SHOPIFY_CLIENT_ID || "d8375e1adc7cab48d9e7bcece8913250",
     requiresShopName: true
@@ -104,7 +102,7 @@ export const PLATFORMS = [
     description: "For Professional Streamers: Track subscriptions, bits, and ad revenue performance.",
     oauthUrl: "https://id.twitch.tv/oauth2/authorize",
     scope: "channel:read:subscriptions bits:read analytics:read:extensions",
-    redirectUri: "https://zerithum.com/authcallback",
+    redirectUri: "/authcallback",
     requiresApiKey: false,
     clientId: import.meta.env.VITE_TWITCH_CLIENT_ID || "si8cip89mvmuhf02qpwrtcy47673pp"
   },
