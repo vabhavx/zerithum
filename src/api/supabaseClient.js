@@ -559,10 +559,6 @@ export const appLogs = {
     // Log a generic event
     async logEvent(eventName, data = {}) {
         // In the future, this would send data to an analytics backend
-        // For now, we just log to console in development
-        if (import.meta.env.DEV) {
-            console.log(`[Analytics] ${eventName}`, data);
-        }
         return Promise.resolve();
     },
 
