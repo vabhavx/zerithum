@@ -7,6 +7,7 @@ import {
     isValidOTPFormat,
     RATE_LIMITS,
     SECURITY_ACTIONS,
+    OAUTH_PROVIDERS,
     extractClientInfo,
     sanitizeErrorMessage
 } from './security.ts';
@@ -100,8 +101,10 @@ export async function handleUpdatePasswordRequest(req: Request): Promise<Respons
         });
 
         // Determine auth method and verify re-authentication
-        const hasPassword = user.app_metadata?.provider === 'email' ||
-            user.app_metadata?.providers?.includes('email');
+        const userProvider = user.app_metadata?.provider || '';
+        const userProviders = user.app_metadata?.providers || [];
+        const hasPassword = (userProvider === 'email' || userProviders.includes('email')) &&
+            !OAUTH_PROVIDERS.includes(userProvider);
 
         if (hasPassword && currentPassword) {
             // Verify via password

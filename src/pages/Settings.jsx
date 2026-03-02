@@ -715,6 +715,13 @@ export default function Settings() {
                 to={createPageUrl("TaxReports")}
                 className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
               >
+                <span>Tax Reports Dashboard</span>
+                <ExternalLink className="h-3.5 w-3.5 text-gray-400" />
+              </Link>
+              <Link
+                to={createPageUrl("TaxExport")}
+                className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+              >
                 <span>Tax Reports & Exports</span>
                 <ExternalLink className="h-3.5 w-3.5 text-gray-400" />
               </Link>

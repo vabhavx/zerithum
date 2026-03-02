@@ -6,6 +6,7 @@ import {
     isValidOTPFormat,
     RATE_LIMITS,
     SECURITY_ACTIONS,
+    OAUTH_PROVIDERS,
     extractClientInfo,
     sanitizeErrorMessage
 } from './logic/security.ts';
@@ -52,8 +53,10 @@ Deno.serve(async (req) => {
         const { currentPassword, verificationCode } = body;
 
         // Determine auth method and verify re-authentication
-        const hasPassword = user.app_metadata?.provider === 'email' ||
-            user.app_metadata?.providers?.includes('email');
+        const userProvider = user.app_metadata?.provider || '';
+        const userProviders = user.app_metadata?.providers || [];
+        const hasPassword = (userProvider === 'email' || userProviders.includes('email')) &&
+            !OAUTH_PROVIDERS.includes(userProvider);
 
         const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 

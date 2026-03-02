@@ -15,16 +15,20 @@ import {
 import { toast } from "sonner";
 import { base44 } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
+import { OAUTH_PROVIDERS } from "@/lib/auth";
 import OTPVerification from "./OTPVerification";
 
 export default function SignOutAllDevicesModal({ open, onOpenChange }) {
     const { user, logout } = useAuth();
     const [step, setStep] = useState("confirm"); // confirm, auth, otp, processing
     const [currentPassword, setCurrentPassword] = useState("");
+    const [lastAuthMode, setLastAuthMode] = useState(null); // password | otp | null
 
-    // Check if user has password auth
-    const hasPasswordAuth = user?.app_metadata?.provider === 'email' ||
-        user?.app_metadata?.providers?.includes('email');
+    // Password auth exists only for native email/password accounts.
+    const userProvider = user?.app_metadata?.provider || '';
+    const userProviders = user?.app_metadata?.providers || [];
+    const hasPasswordAuth = (userProvider === 'email' || userProviders.includes('email')) &&
+        !OAUTH_PROVIDERS.includes(userProvider);
 
     // Send OTP mutation
     const sendOTPMutation = useMutation({
@@ -53,7 +57,13 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
                 sendOTPMutation.mutate();
             } else {
                 toast.error(error.message || "Failed to revoke sessions");
-                setStep("confirm"); // Reset to allow retry
+                if (lastAuthMode === "password") {
+                    setStep("auth");
+                } else if (lastAuthMode === "otp") {
+                    setStep("otp");
+                } else {
+                    setStep("confirm");
+                }
             }
         }
     });
@@ -68,11 +78,13 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
 
     const handlePasswordSubmit = (e) => {
         e.preventDefault();
+        setLastAuthMode("password");
         setStep("processing");
         revokeSessionsMutation.mutate({ currentPassword });
     };
 
     const handleOTPComplete = (code) => {
+        setLastAuthMode("otp");
         setStep("processing");
         revokeSessionsMutation.mutate({ verificationCode: code });
     };
@@ -83,13 +95,19 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
 
         setStep("confirm");
         setCurrentPassword("");
+        setLastAuthMode(null);
         onOpenChange(false);
+    };
+
+    const handleOpenChange = (nextOpen) => {
+        if (nextOpen) return;
+        handleClose();
     };
 
     const isLoading = revokeSessionsMutation.isPending || sendOTPMutation.isPending || step === "processing";
 
     return (
-        <AlertDialog open={open} onOpenChange={handleClose}>
+        <AlertDialog open={open} onOpenChange={handleOpenChange}>
             <AlertDialogContent
                 className="bg-zinc-900 border-white/10 text-white max-w-md"
                 onPointerDownOutside={(e) => {

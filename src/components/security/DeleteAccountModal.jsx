@@ -41,6 +41,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
             purpose: 'delete_account'
         }),
         onSuccess: () => {
+            setErrorMsg("");
             setStep("otp");
             toast.success("Verification code sent to your email");
         },
@@ -75,6 +76,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
     const handleConfirmText = (e) => {
         e.preventDefault();
         if (confirmationText.trim() !== "DELETE") return;
+        setErrorMsg("");
 
         if (hasPasswordAuth) {
             setStep("auth");
@@ -108,7 +110,13 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
         setConfirmationText("");
         setCurrentPassword("");
         setErrorMsg("");
+        setProgressMessage("");
         onOpenChange(false);
+    };
+
+    const handleOpenChange = (nextOpen) => {
+        if (nextOpen) return;
+        handleClose();
     };
 
     const handleFinalExit = () => {
@@ -118,7 +126,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
     const isLoading = deleteAccountMutation.isPending || sendOTPMutation.isPending;
 
     return (
-        <AlertDialog open={open} onOpenChange={handleClose}>
+        <AlertDialog open={open} onOpenChange={handleOpenChange}>
             <AlertDialogContent
                 className="bg-zinc-900 border-red-500/20 text-white max-w-md"
                 onPointerDownOutside={(e) => {
@@ -326,7 +334,10 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
                                 Close
                             </Button>
                             <Button
-                                onClick={() => setStep("confirm_text")}
+                                onClick={() => {
+                                    setErrorMsg("");
+                                    setStep("confirm_text");
+                                }}
                                 className="flex-1 bg-red-500 hover:bg-red-600 text-white"
                             >
                                 Try Again

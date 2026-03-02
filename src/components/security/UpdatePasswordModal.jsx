@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { base44 } from "@/api/supabaseClient";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
+import { OAUTH_PROVIDERS } from "@/lib/auth";
 import OTPVerification from "./OTPVerification";
 import DopamineSuccess from "@/components/ui/DopamineSuccess";
 
@@ -33,9 +34,11 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
         verificationCode: ""
     });
 
-    // Check if user signed up with password (has email provider)
-    const hasPasswordAuth = user?.app_metadata?.provider === 'email' ||
-        user?.app_metadata?.providers?.includes('email');
+    // Password auth exists only for native email/password accounts.
+    const userProvider = user?.app_metadata?.provider || '';
+    const userProviders = user?.app_metadata?.providers || [];
+    const hasPasswordAuth = (userProvider === 'email' || userProviders.includes('email')) &&
+        !OAUTH_PROVIDERS.includes(userProvider);
 
     // Password strength calculation
     const getPasswordStrength = (password) => {
@@ -134,10 +137,15 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
         onOpenChange(false);
     };
 
+    const handleOpenChange = (nextOpen) => {
+        if (nextOpen) return;
+        handleClose();
+    };
+
     const isLoading = updatePasswordMutation.isPending || sendOTPMutation.isPending;
 
     return (
-        <Dialog open={open} onOpenChange={handleClose}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
                 className="bg-zinc-900 border-white/10 text-white max-w-md"
                 onPointerDownOutside={(e) => {
