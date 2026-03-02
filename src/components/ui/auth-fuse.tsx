@@ -11,6 +11,7 @@ import { twMerge } from "tailwind-merge";
 import { supabase } from "@/api/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { LogoFull } from "@/components/ui/logo";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -96,7 +97,7 @@ const labelVariants = cva(
 const Label = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
-    VariantProps<typeof labelVariants>
+  VariantProps<typeof labelVariants>
 >(({ className, ...props }, ref) => (
   <LabelPrimitive.Root
     ref={ref}
@@ -160,7 +161,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
 Input.displayName = "Input";
 
 export interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-    label?: string;
+  label?: string;
 }
 const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   ({ className, label, ...props }, ref) => {
@@ -202,43 +203,44 @@ function SignInForm() {
       toast.success('Logged in successfully!');
       navigate('/Dashboard');
     } catch (err: any) {
-        toast.error(err.message || "Failed to sign in");
+      toast.error(err.message || "Failed to sign in");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-8">
       <div className="flex flex-col items-center gap-2 text-center">
+        <LogoFull className="h-10 w-auto mb-2 text-foreground" />
         <h1 className="text-2xl font-bold">Sign in to your account</h1>
         <p className="text-balance text-sm text-muted-foreground">Enter your email below to sign in</p>
       </div>
       <div className="grid gap-4">
         <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="m@example.com"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <PasswordInput
-            name="password"
-            label="Password"
-            required
-            autoComplete="current-password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+          name="password"
+          label="Password"
+          required
+          autoComplete="current-password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
         <Button type="submit" variant="outline" className="mt-2" disabled={isLoading}>
-            {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : "Sign In"}
+          {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : "Sign In"}
         </Button>
       </div>
     </form>
@@ -256,75 +258,76 @@ function SignUpForm() {
     event.preventDefault();
     setIsLoading(true);
     try {
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    full_name: name,
-                },
-            },
-        });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        if (data?.session) {
-             toast.success("Account created successfully!");
-             navigate('/Dashboard');
-        } else if (data?.user) {
-             toast.success("Check your email for the confirmation link!");
-        }
+      if (data?.session) {
+        toast.success("Account created successfully!");
+        navigate('/Dashboard');
+      } else if (data?.user) {
+        toast.success("Check your email for the confirmation link!");
+      }
     } catch (err: any) {
-        toast.error(err.message || "Failed to sign up");
+      toast.error(err.message || "Failed to sign up");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-8">
       <div className="flex flex-col items-center gap-2 text-center">
+        <LogoFull className="h-10 w-auto mb-2 text-foreground" />
         <h1 className="text-2xl font-bold">Create an account</h1>
         <p className="text-balance text-sm text-muted-foreground">Enter your details below to sign up</p>
       </div>
       <div className="grid gap-4">
         <div className="grid gap-1">
-            <Label htmlFor="name">Full Name</Label>
-            <Input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="John Doe"
-                required
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-            />
+          <Label htmlFor="name">Full Name</Label>
+          <Input
+            id="name"
+            name="name"
+            type="text"
+            placeholder="John Doe"
+            required
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
         <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="m@example.com"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <PasswordInput
-            name="password"
-            label="Password"
-            required
-            autoComplete="new-password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+          name="password"
+          label="Password"
+          required
+          autoComplete="new-password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
         <Button type="submit" variant="outline" className="mt-2" disabled={isLoading}>
-            {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : "Sign Up"}
+          {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : "Sign Up"}
         </Button>
       </div>
     </form>
@@ -332,77 +335,77 @@ function SignUpForm() {
 }
 
 function AuthFormContainer({ isSignIn, onToggle }: { isSignIn: boolean; onToggle: () => void; }) {
-    const handleGoogleSignIn = async () => {
-        try {
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: `${window.location.origin}/Dashboard`,
-                },
-            });
-            if (error) throw error;
-        } catch (err: any) {
-            toast.error(err.message || "Google sign in failed");
-        }
-    };
+  const handleGoogleSignIn = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/Dashboard`,
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      toast.error(err.message || "Google sign in failed");
+    }
+  };
 
-    return (
-        <div className="mx-auto grid w-[350px] gap-2">
-            {isSignIn ? <SignInForm /> : <SignUpForm />}
-            <div className="text-center text-sm">
-                {isSignIn ? "Don't have an account?" : "Already have an account?"}{" "}
-                <Button variant="link" className="pl-1 text-foreground" onClick={onToggle}>
-                    {isSignIn ? "Sign up" : "Sign in"}
-                </Button>
-            </div>
-            <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-                <span className="relative z-10 bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-            <Button variant="outline" type="button" onClick={handleGoogleSignIn}>
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google icon" className="mr-2 h-4 w-4" />
-                Continue with Google
-            </Button>
-        </div>
-    )
+  return (
+    <div className="mx-auto grid w-[350px] gap-2">
+      {isSignIn ? <SignInForm /> : <SignUpForm />}
+      <div className="text-center text-sm">
+        {isSignIn ? "Don't have an account?" : "Already have an account?"}{" "}
+        <Button variant="link" className="pl-1 text-foreground" onClick={onToggle}>
+          {isSignIn ? "Sign up" : "Sign in"}
+        </Button>
+      </div>
+      <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+        <span className="relative z-10 bg-background px-2 text-muted-foreground">Or continue with</span>
+      </div>
+      <Button variant="outline" type="button" onClick={handleGoogleSignIn}>
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google icon" className="mr-2 h-4 w-4" />
+        Continue with Google
+      </Button>
+    </div>
+  )
 }
 
 interface AuthContentProps {
-    image?: {
-        src: string;
-        alt: string;
-    };
-    quote?: {
-        text: string;
-        author: string;
-    }
+  image?: {
+    src: string;
+    alt: string;
+  };
+  quote?: {
+    text: string;
+    author: string;
+  }
 }
 
 interface AuthUIProps {
-    signInContent?: AuthContentProps;
-    signUpContent?: AuthContentProps;
-    defaultIsSignIn?: boolean;
+  signInContent?: AuthContentProps;
+  signUpContent?: AuthContentProps;
+  defaultIsSignIn?: boolean;
 }
 
 const defaultSignInContent = {
-    image: {
-        src: "https://i.ibb.co/XrkdGrrv/original-ccdd6d6195fff2386a31b684b7abdd2e-removebg-preview.png",
-        alt: "A beautiful interior design for sign-in"
-    },
-    quote: {
-        text: "Welcome Back! The journey continues.",
-        author: "EaseMize UI"
-    }
+  image: {
+    src: "https://i.ibb.co/XrkdGrrv/original-ccdd6d6195fff2386a31b684b7abdd2e-removebg-preview.png",
+    alt: "A beautiful interior design for sign-in"
+  },
+  quote: {
+    text: "Welcome Back! The journey continues.",
+    author: "EaseMize UI"
+  }
 };
 
 const defaultSignUpContent = {
-    image: {
-        src: "https://i.ibb.co/HTZ6DPsS/original-33b8479c324a5448d6145b3cad7c51e7-removebg-preview.png",
-        alt: "A vibrant, modern space for new beginnings"
-    },
-    quote: {
-        text: "Create an account. A new chapter awaits.",
-        author: "EaseMize UI"
-    }
+  image: {
+    src: "https://i.ibb.co/HTZ6DPsS/original-33b8479c324a5448d6145b3cad7c51e7-removebg-preview.png",
+    alt: "A vibrant, modern space for new beginnings"
+  },
+  quote: {
+    text: "Create an account. A new chapter awaits.",
+    author: "EaseMize UI"
+  }
 };
 
 export function AuthUI({ signInContent = {}, signUpContent = {}, defaultIsSignIn = true }: AuthUIProps) {
@@ -416,12 +419,12 @@ export function AuthUI({ signInContent = {}, signUpContent = {}, defaultIsSignIn
 
 
   const finalSignInContent = {
-      image: { ...defaultSignInContent.image, ...signInContent.image },
-      quote: { ...defaultSignInContent.quote, ...signInContent.quote },
+    image: { ...defaultSignInContent.image, ...signInContent.image },
+    quote: { ...defaultSignInContent.quote, ...signInContent.quote },
   };
   const finalSignUpContent = {
-      image: { ...defaultSignUpContent.image, ...signUpContent.image },
-      quote: { ...defaultSignUpContent.quote, ...signUpContent.quote },
+    image: { ...defaultSignUpContent.image, ...signUpContent.image },
+    quote: { ...defaultSignUpContent.quote, ...signUpContent.quote },
   };
 
   const currentContent = isSignIn ? finalSignInContent : finalSignUpContent;
@@ -447,18 +450,18 @@ export function AuthUI({ signInContent = {}, signUpContent = {}, defaultIsSignIn
         <div className="absolute inset-x-0 bottom-0 h-[100px] bg-gradient-to-t from-background to-transparent" />
 
         <div className="relative z-10 flex h-full flex-col items-center justify-end p-2 pb-6">
-            <blockquote className="space-y-2 text-center text-foreground">
-              <p className="text-lg font-medium">
-                “<Typewriter
-                    key={currentContent.quote.text}
-                    text={currentContent.quote.text}
-                    speed={60}
-                  />”
-              </p>
-              <cite className="block text-sm font-light text-muted-foreground not-italic">
-                  — {currentContent.quote.author}
-              </cite>
-            </blockquote>
+          <blockquote className="space-y-2 text-center text-foreground">
+            <p className="text-lg font-medium">
+              “<Typewriter
+                key={currentContent.quote.text}
+                text={currentContent.quote.text}
+                speed={60}
+              />”
+            </p>
+            <cite className="block text-sm font-light text-muted-foreground not-italic">
+              — {currentContent.quote.author}
+            </cite>
+          </blockquote>
         </div>
       </div>
     </div>

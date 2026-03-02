@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
+import { LogoFull, LogoIcon } from "@/components/ui/logo";
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
@@ -70,7 +71,8 @@ export default function Layout({ children, currentPageName }) {
             {/* Left: logo + nav */}
             <div className="flex items-center gap-8">
               <Link to="/" className="flex items-center">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69589d721ccc18cb36d43903/c4bbf87fd_image.png" alt="Zerithum" className="h-6 w-auto" />
+                <LogoFull className="hidden md:block h-6 w-auto text-slate-900 dark:text-white" />
+                <LogoIcon className="md:hidden h-6 w-auto text-slate-900 dark:text-white" />
               </Link>
               <nav className="hidden lg:flex items-center gap-0.5 relative">
                 {navItems.map((item) => <NavLink key={item.page} item={item} />)}

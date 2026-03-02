@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { LogoFull } from "@/components/ui/logo";
 
 const Footer = () => {
     return (
         <footer className="bg-white text-zinc-900 py-24 relative z-10 border-t border-zinc-200">
-             <div className="max-w-6xl mx-auto px-4">
+            <div className="max-w-6xl mx-auto px-4">
                 <div className="flex flex-col md:flex-row justify-between items-start gap-12">
                     <div className="space-y-4">
-                        <div className="text-2xl font-serif font-bold tracking-tight">Zerithum.</div>
+                        <LogoFull className="h-8 w-auto text-zinc-900 dark:text-white" />
                         <p className="text-zinc-500 max-w-xs text-sm leading-relaxed">
                             The operating system for creator revenue operations.
                             San Francisco, CA.
@@ -46,7 +47,7 @@ const Footer = () => {
                         System Operational
                     </div>
                 </div>
-             </div>
+            </div>
         </footer>
     );
 };
