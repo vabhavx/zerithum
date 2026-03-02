@@ -119,6 +119,36 @@
     --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 0 0% 18%;
     --sidebar-ring: 243 75% 59%;
+
+    /* Zerithum design tokens — dark overrides */
+    --z-bg-0: #121212;
+    --z-bg-1: #0A0A0A;
+    --z-bg-2: #1A1A1A;
+    --z-bg-3: #2A2A2A;
+
+    --z-border-1: #2A2A2A;
+    --z-border-2: #3A3A3A;
+
+    --z-text-1: #F5F5F5;
+    --z-text-2: #A0A0A0;
+    --z-text-3: #666666;
+
+    --z-accent: #818CF8;
+    --z-accent-hover: #6366F1;
+    --z-accent-light: #1E1B4B;
+    --z-accent-muted: #312E81;
+
+    --z-success: #34D399;
+    --z-success-light: #064E3B;
+    --z-warn: #FBBF24;
+    --z-warn-light: #451A03;
+    --z-danger: #F87171;
+    --z-danger-light: #450A0A;
+
+    --z-shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --z-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+    --z-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --z-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.2);
   }
 }
 
