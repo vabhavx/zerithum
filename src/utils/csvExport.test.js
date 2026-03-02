@@ -70,6 +70,34 @@ describe('csvExport utility', () => {
 
             expect(lines[1]).toBe(',,"0"');
         });
+
+        it('should handle falsy boundary values (0, false, empty string) correctly', () => {
+            const data = [{ num: 0, bool: false, str: '' }];
+            const columns = [
+                { header: 'Number', key: 'num' },
+                { header: 'Boolean', key: 'bool' },
+                { header: 'String', key: 'str' }
+            ];
+            const result = generateCSV(data, columns);
+            const lines = result.substring(1).split('\n');
+
+            expect(lines[1]).toBe('"0","false",""');
+        });
+
+        it('should handle custom formatters returning empty or boundary values', () => {
+            const data = [{ id: 1 }];
+            const columns = [
+                { header: 'Empty', key: 'id', formatter: () => '' },
+                { header: 'Zero', key: 'id', formatter: () => 0 },
+                { header: 'False', key: 'id', formatter: () => false },
+                { header: 'Null', key: 'id', formatter: () => null },
+                { header: 'Undefined', key: 'id', formatter: () => undefined }
+            ];
+            const result = generateCSV(data, columns);
+            const lines = result.substring(1).split('\n');
+
+            expect(lines[1]).toBe('"","0","false",,');
+        });
     });
 
     describe('downloadCSV', () => {
