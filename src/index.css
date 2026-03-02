@@ -20,8 +20,8 @@
 
     /* Text hierarchy */
     --z-text-1: #111827;
-    --z-text-2: #4B5563;
-    --z-text-3: #9CA3AF;
+    --z-text-2: #374151;
+    --z-text-3: #6B7280;
 
     /* Brand accent — refined indigo */
     --z-accent: #4F46E5;
@@ -59,7 +59,7 @@
     --secondary: 220 14% 96%;
     --secondary-foreground: 220 13% 10%;
     --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted-foreground: 220 9% 38%;
     --accent: 220 14% 96%;
     --accent-foreground: 220 13% 10%;
     --destructive: 0 84% 60%;
@@ -98,7 +98,7 @@
     --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 96%;
     --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 55%;
+    --muted-foreground: 0 0% 62%;
     --accent: 0 0% 14%;
     --accent-foreground: 0 0% 96%;
     --destructive: 0 84% 60%;
@@ -130,8 +130,8 @@
     --z-border-2: #3A3A3A;
 
     --z-text-1: #F5F5F5;
-    --z-text-2: #A0A0A0;
-    --z-text-3: #666666;
+    --z-text-2: #B8B8B8;
+    --z-text-3: #808080;
 
     --z-accent: #818CF8;
     --z-accent-hover: #6366F1;
@@ -168,7 +168,7 @@
     background-color: var(--z-bg-1);
     color: var(--z-text-1);
     font-family: var(--z-font);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 400;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
@@ -354,5 +354,111 @@
     .z-table-wrap table {
       min-width: 600px;
     }
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MOBILE READABILITY OVERRIDES
+   Ensures all text is legible on mobile screens (≤ 768px)
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+
+  /* Bump up heading sizes on mobile for better readability */
+  h1 {
+    font-size: 1.375rem;
+  }
+
+  h2 {
+    font-size: 1.125rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  h4,
+  h5,
+  h6 {
+    font-size: 0.875rem;
+  }
+
+  small,
+  .text-muted {
+    font-size: 0.875rem;
+  }
+
+  /* Section labels — prevent unreadably tiny text */
+  .z-section-label {
+    font-size: 0.75rem;
+  }
+
+  /* Force minimum text sizes for Tailwind utility classes */
+  /* text-xs (12px) → 13px minimum on mobile */
+  .text-xs {
+    font-size: 0.8125rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Arbitrary tiny sizes → ensure minimum 12px on mobile */
+  .text-\[10px\],
+  .text-\[11px\] {
+    font-size: 0.75rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .text-\[13px\] {
+    font-size: 0.8125rem !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Ensure text-sm (14px) renders at at least 14px */
+  .text-sm {
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Strengthen faded text colors on mobile */
+  .text-gray-400 {
+    color: #6B7280 !important;
+  }
+
+  .text-gray-500 {
+    color: #4B5563 !important;
+  }
+
+  .dark .text-gray-400 {
+    color: #9CA3AF !important;
+  }
+
+  .dark .text-gray-500 {
+    color: #9CA3AF !important;
+  }
+
+  /* Better touch targets for interactive elements */
+  button,
+  a {
+    min-height: 36px;
+  }
+
+  /* Inputs should be 16px to prevent iOS zoom on focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Cards: slightly more padding on mobile */
+  .z-card,
+  .z-card-elevated,
+  .card-modern {
+    padding: 1rem;
+  }
+
+  /* Metric cards */
+  .z-metric {
+    padding: 1rem;
   }
 }
