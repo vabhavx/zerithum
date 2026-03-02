@@ -442,7 +442,6 @@ export const functions = {
                 // Mark as a structured function error so we know to rethrow it
                 err.isFunctionError = true;
 
-                console.error(`Edge Function ${functionName} returned error:`, errorMsg, errorData);
                 throw err;
             } catch (e) {
                 // If the error we just threw is valid (it came from our try block), rethrow it.
