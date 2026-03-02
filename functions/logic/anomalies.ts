@@ -33,15 +33,19 @@ export async function detectAnomalies(
 
     transactions.forEach((tx: any) => {
       const date = new Date(tx.transaction_date);
-      // Use monotonic week index to ensure correct sorting across month/year boundaries
-      const weekKey = Math.floor(date.getTime() / (7 * 24 * 60 * 60 * 1000)).toString();
+      // Use YYYY-MM-Wn compound key to ensure weeks are split at month boundaries
+      // and sort correctly across years/months.
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const weekNum = Math.ceil(date.getDate() / 7);
+      const weekKey = `${year}-${month}-W${weekNum}`;
 
       weeklyRevenue[weekKey] = (weeklyRevenue[weekKey] || 0) + tx.amount;
       platformRevenue[tx.platform] = (platformRevenue[tx.platform] || 0) + tx.amount;
     });
 
-    // Sort by week index numerically to ensure chronological order
-    const weeks = Object.entries(weeklyRevenue).sort((a, b) => Number(a[0]) - Number(b[0]));
+    // Sort by week key string (YYYY-MM-Wn) to ensure chronological order
+    const weeks = Object.entries(weeklyRevenue).sort((a, b) => a[0].localeCompare(b[0]));
 
     // Detect revenue drops/spikes
     const recentAutopsies = await ctx.fetchRecentAutopsies(user.id, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
@@ -52,18 +56,37 @@ export async function detectAnomalies(
       const pendingAnomaliesContext: any[] = [];
 
       for (let i = 1; i < weeks.length; i++) {
-        const [prevWeek, prevAmount] = weeks[i - 1];
-        const [currWeek, currAmount] = weeks[i];
+        const [prevKey, prevAmount] = weeks[i - 1];
+        const [currKey, currAmount] = weeks[i];
+
+        // Helper to calculate days in a specific YYYY-MM-Wn bucket
+        const getDaysInBucket = (key: string) => {
+          const [year, month, weekStr] = key.split('-');
+          const weekNum = parseInt(weekStr.substring(1));
+          if (weekNum < 5) return 7;
+
+          const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
+          return lastDayOfMonth - 28;
+        };
+
+        const prevDays = getDaysInBucket(prevKey);
+        const currDays = getDaysInBucket(currKey);
+
+        // Normalize to daily average
+        const prevDailyAvg = prevAmount / prevDays;
+        const currDailyAvg = currAmount / currDays;
 
         // Avoid division by zero
-        if (prevAmount === 0) continue;
+        if (prevDailyAvg === 0) continue;
 
-        const change = ((currAmount - prevAmount) / prevAmount) * 100;
+        const change = ((currDailyAvg - prevDailyAvg) / prevDailyAvg) * 100;
 
         if (Math.abs(change) > 15) {
           pendingAnomaliesContext.push({
             prevAmount,
             currAmount,
+            prevDailyAvg,
+            currDailyAvg,
             change,
             platformsAtRisk: Object.keys(platformRevenue)
           });
@@ -72,9 +95,9 @@ export async function detectAnomalies(
           llmPrompts.push(ctx.invokeLLM(
             `Analyze this revenue anomaly for a creator:
 
-Previous week revenue: $${prevAmount.toFixed(2)}
-Current week revenue: $${currAmount.toFixed(2)}
-Change: ${change.toFixed(1)}%
+Previous week revenue: $${prevAmount.toFixed(2)} ($${prevDailyAvg.toFixed(2)}/day)
+Current week revenue: $${currAmount.toFixed(2)} ($${currDailyAvg.toFixed(2)}/day)
+Normalized Change: ${change.toFixed(1)}%
 
 Recent transactions: ${JSON.stringify(transactions.slice(0, 20), null, 2)}
 

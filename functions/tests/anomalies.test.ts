@@ -32,9 +32,9 @@ describe('detectAnomalies Logic', () => {
     mockCtx.invokeLLM.mockResolvedValue({});
 
     const transactions = [];
-    // Generate stable data aligned with Thu-Wed week buckets
-    // 2024-01-04 is a Thursday. 14 days = exactly 2 weeks.
-    const startDate = new Date('2024-01-04T00:00:00Z');
+    // Generate stable data
+    // 2024-01-01 is a Monday.
+    const startDate = new Date('2024-01-01T00:00:00Z');
 
     for (let i = 0; i < 14; i++) {
       const date = new Date(startDate);
