@@ -1,3 +1,5 @@
+import { afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
 // @vitest-environment jsdom
 import React from 'react';
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -101,3 +103,4 @@ describe("ExpenseRow", () => {
         expect(screen.getByText(/Other/)).toBeInTheDocument();
     });
 });
+afterEach(() => { cleanup(); });

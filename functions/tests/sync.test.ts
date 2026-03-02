@@ -222,7 +222,8 @@ describe('syncPlatform', () => {
 
         const promise = syncPlatform(ctx, user, connectionId, 'youtube', oauthToken);
 
-        // Advance timers to exhaust all retries
+        // Advance timers to exhaust all retries. Need to catch the promise rejection during advance.
+        promise.catch(() => {});
         await vi.runAllTimersAsync();
 
         await expect(promise)
