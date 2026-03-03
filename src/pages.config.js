@@ -8,7 +8,6 @@ import ConnectedPlatforms from './pages/ConnectedPlatforms';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Help from './pages/Help';
-import Notifications from './pages/Notifications';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
 import Profile from './pages/Profile';
@@ -18,7 +17,6 @@ import RevenueAutopsy from './pages/RevenueAutopsy';
 import Settings from './pages/Settings';
 import SettingsAccount from './pages/SettingsAccount';
 import SettingsConnectedApps from './pages/SettingsConnectedApps';
-import SettingsNotifications from './pages/SettingsNotifications';
 import SettingsPrivacy from './pages/SettingsPrivacy';
 import SettingsSubscription from './pages/SettingsSubscription';
 import Subscription from './pages/Subscription';
@@ -46,7 +44,6 @@ export const PAGES = {
     "SignIn": SignIn,
     "Methodology": Methodology,
     "Security": Security,
-    "Notifications": Notifications,
     "Pricing": Pricing,
     "Privacy": Privacy,
     "Profile": Profile,
@@ -56,7 +53,6 @@ export const PAGES = {
     "Settings": Settings,
     "SettingsAccount": SettingsAccount,
     "SettingsConnectedApps": SettingsConnectedApps,
-    "SettingsNotifications": SettingsNotifications,
     "SettingsPrivacy": SettingsPrivacy,
     "SettingsSubscription": SettingsSubscription,
     "Signup": Signup,

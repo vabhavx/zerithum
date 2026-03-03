@@ -26,9 +26,11 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
+  Minus,
   MoreHorizontal,
   RefreshCw
 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/supabaseClient";
 
@@ -239,29 +241,40 @@ const Button = ({ variant = 'secondary', size = 'md', isLoading, children, onCli
 const Sparkline = ({ data, color = 'var(--accent-500)' }) => {
   if (data.length < 2) return null;
 
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-
-  const points = data.map((value, i) => {
-    const x = (i / (data.length - 1)) * 100;
-    const y = 100 - ((value - min) / range) * 100;
-    return `${x},${y}`;
-  }).join(' ');
-
-  const areaPoints = `0,100 ${points} 100,100`;
-
   return (
-    <svg viewBox="0 0 100 100" className="w-full h-10" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="sparkGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon fill="url(#sparkGradient)" points={areaPoints} />
-      <polyline fill="none" stroke={color} strokeWidth="2" points={points} />
-    </svg>
+    <div className="w-full h-16">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="sparkGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.2} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Tooltip
+            content={({ active, payload }) => {
+              if (active && payload && payload.length) {
+                return (
+                  <div className="bg-white border border-[var(--neutral-200)] shadow-sm rounded-md p-2 text-xs font-medium tabular-nums text-[var(--neutral-900)]">
+                    {formatCurrency(payload[0].value)}
+                  </div>
+                );
+              }
+              return null;
+            }}
+            cursor={{ stroke: 'var(--neutral-300)', strokeWidth: 1, strokeDasharray: '4 4' }}
+          />
+          <Area
+            type="monotone"
+            dataKey="amount"
+            stroke={color}
+            strokeWidth={2}
+            fill="url(#sparkGradient)"
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 
@@ -289,9 +302,6 @@ const Header = ({ user, onNavigate, searchQuery, onSearchChange }) => (
     </div>
 
     <div className="ml-auto flex items-center gap-4">
-      <button onClick={() => onNavigate('/notifications')} className="relative p-2 text-[var(--neutral-500)] hover:text-[var(--neutral-700)] hover:bg-[var(--neutral-100)] rounded-md transition-colors">
-        <Bell className="w-5 h-5" />
-      </button>
       <button onClick={() => onNavigate('/settings')} className="flex items-center gap-2 p-1.5 hover:bg-[var(--neutral-100)] rounded-md transition-colors">
         <div className="w-7 h-7 bg-[var(--accent-500)] rounded-full flex items-center justify-center text-white text-xs font-medium">
           {user ? (user.email ? user.email.substring(0, 2).toUpperCase() : 'U') : ''}
@@ -307,7 +317,7 @@ const CashHero = ({ position, onExport, onConnect }) => (
       <div>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xs font-medium text-[var(--neutral-500)] uppercase tracking-wider">
-            Available Cash
+            Net Income
           </span>
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--success)]/10 text-[var(--success)]">
             <span className="w-1.5 h-1.5 bg-[var(--success)] rounded-full mr-1.5 animate-pulse" />
@@ -320,18 +330,18 @@ const CashHero = ({ position, onExport, onConnect }) => (
         </h1>
 
         <p className="text-sm text-[var(--neutral-500)] mt-2 max-w-md">
-          After fees, refunds, and known payouts. Updated {formatRelativeTime(position.lastUpdated)}.
+          Actual Operating Profit. Updated {formatRelativeTime(position.lastUpdated)}.
         </p>
 
         <div className="flex gap-6 mt-4 text-sm">
           <div>
-            <span className="text-[var(--neutral-400)]">Pending payouts: </span>
+            <span className="text-[var(--neutral-400)]">Unpaid Invoices: </span>
             <span className="font-medium text-[var(--neutral-700)] tabular-nums">
               {formatCurrency(position.pendingPayouts)}
             </span>
           </div>
           <div>
-            <span className="text-[var(--neutral-400)]">Held for fees: </span>
+            <span className="text-[var(--neutral-400)]">Platform Liabilities: </span>
             <span className="font-medium text-[var(--neutral-700)] tabular-nums">
               {formatCurrency(position.heldForFees)}
             </span>
