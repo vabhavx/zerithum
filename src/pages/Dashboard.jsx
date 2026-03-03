@@ -13,11 +13,11 @@ import {
   startOfMonth,
   subDays,
 } from "date-fns";
-import { 
-  Search, 
-  Bell, 
-  CheckCircle, 
-  Clock, 
+import {
+  Search,
+  Bell,
+  CheckCircle,
+  Clock,
   AlertTriangle,
   ChevronRight,
   Filter,
@@ -33,12 +33,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/supabaseClient";
 
 // Performance utilities
-import { 
-  useDebounce, 
-  useThrottle, 
+import {
+  useDebounce,
+  useThrottle,
   useIsVisible,
   memoize,
-  LRUCache 
+  LRUCache
 } from "@/lib/performance.js";
 
 // ============================================================================
@@ -149,7 +149,7 @@ const DesignTokens = () => (
 // UTILITY FUNCTIONS
 // ============================================================================
 
-const formatCurrency = (amount, currency = "USD") => 
+const formatCurrency = (amount, currency = "USD") =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
@@ -160,7 +160,7 @@ const formatRelativeTime = (date) => {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const minutes = Math.floor(diff / 60000);
-  
+
   if (minutes < 1) return 'just now';
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
@@ -172,9 +172,9 @@ const formatRelativeTime = (date) => {
 // PRIMITIVE COMPONENTS
 // ============================================================================
 
-const Card = ({ 
-  children, 
-  className = '' 
+const Card = ({
+  children,
+  className = ''
 }) => (
   <div className={`bg-white border border-[var(--neutral-200)] rounded-md ${className}`}>
     {children}
@@ -189,7 +189,7 @@ const Badge = ({ variant, children }) => {
     error: 'bg-[var(--error)]/10 text-[var(--error)]',
     neutral: 'bg-[var(--neutral-100)] text-[var(--neutral-600)]',
   };
-  
+
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${variants[variant]}`}>
       {children}
@@ -203,13 +203,13 @@ const Button = ({ variant = 'secondary', size = 'md', isLoading, children, onCli
     secondary: 'bg-[var(--neutral-100)] text-[var(--neutral-700)] hover:bg-[var(--neutral-200)] border border-[var(--neutral-300)]',
     ghost: 'bg-transparent text-[var(--neutral-600)] hover:bg-[var(--neutral-100)]',
   };
-  
+
   const sizes = {
     sm: 'h-8 px-3 text-xs',
     md: 'h-10 px-4 text-sm',
     lg: 'h-12 px-6 text-base',
   };
-  
+
   return (
     <button
       onClick={onClick}
@@ -238,19 +238,19 @@ const Button = ({ variant = 'secondary', size = 'md', isLoading, children, onCli
 
 const Sparkline = ({ data, color = 'var(--accent-500)' }) => {
   if (data.length < 2) return null;
-  
+
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
-  
+
   const points = data.map((value, i) => {
     const x = (i / (data.length - 1)) * 100;
     const y = 100 - ((value - min) / range) * 100;
     return `${x},${y}`;
   }).join(' ');
-  
+
   const areaPoints = `0,100 ${points} 100,100`;
-  
+
   return (
     <svg viewBox="0 0 100 100" className="w-full h-10" preserveAspectRatio="none">
       <defs>
@@ -272,11 +272,11 @@ const Sparkline = ({ data, color = 'var(--accent-500)' }) => {
 const Header = () => (
   <header className="h-14 bg-white border-b border-[var(--neutral-200)] flex items-center px-6 sticky top-0 z-50">
     <div className="font-bold text-lg tracking-tight text-[var(--neutral-900)]">Zerithum</div>
-    
+
     <div className="ml-8 flex-1 max-w-md">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--neutral-400)]" />
-        <input 
+        <input
           type="search"
           placeholder="Search transactions, platforms..."
           className="w-full h-9 pl-9 pr-3 rounded-md border border-[var(--neutral-200)] 
@@ -285,7 +285,7 @@ const Header = () => (
         />
       </div>
     </div>
-    
+
     <div className="ml-auto flex items-center gap-4">
       <button className="relative p-2 text-[var(--neutral-500)] hover:text-[var(--neutral-700)] hover:bg-[var(--neutral-100)] rounded-md transition-colors">
         <Bell className="w-5 h-5" />
@@ -313,15 +313,15 @@ const CashHero = ({ position }) => (
             Live
           </span>
         </div>
-        
+
         <h1 className="text-4xl font-bold text-[var(--neutral-900)] tracking-tight tabular-nums">
           {formatCurrency(position.availableCash)}
         </h1>
-        
+
         <p className="text-sm text-[var(--neutral-500)] mt-2 max-w-md">
           After fees, refunds, and known payouts. Updated {formatRelativeTime(position.lastUpdated)}.
         </p>
-        
+
         <div className="flex gap-6 mt-4 text-sm">
           <div>
             <span className="text-[var(--neutral-400)]">Pending payouts: </span>
@@ -337,7 +337,7 @@ const CashHero = ({ position }) => (
           </div>
         </div>
       </div>
-      
+
       <div className="flex gap-3">
         <Button variant="secondary">
           <Download className="w-4 h-4 mr-2" />
@@ -353,17 +353,17 @@ const CashHero = ({ position }) => (
 );
 
 const KPICard = ({ metric }) => {
-  const TrendIcon = metric.trend === 'up' ? ArrowUpRight : 
-                   metric.trend === 'down' ? ArrowDownRight : Minus;
-  
-  const trendColor = metric.trend === 'up' ? 'text-[var(--success)]' : 
-                     metric.trend === 'down' ? 'text-[var(--error)]' : 
-                     'text-[var(--neutral-400)]';
-  
+  const TrendIcon = metric.trend === 'up' ? ArrowUpRight :
+    metric.trend === 'down' ? ArrowDownRight : Minus;
+
+  const trendColor = metric.trend === 'up' ? 'text-[var(--success)]' :
+    metric.trend === 'down' ? 'text-[var(--error)]' :
+      'text-[var(--neutral-400)]';
+
   const borderColor = metric.status === 'error' ? 'border-l-[var(--error)]' :
-                      metric.status === 'warning' ? 'border-l-[var(--warning)]' :
-                      'border-l-transparent';
-  
+    metric.status === 'warning' ? 'border-l-[var(--warning)]' :
+      'border-l-transparent';
+
   return (
     <Card className={`p-5 h-[120px] border-l-4 ${borderColor} cursor-pointer
                      hover:shadow-sm hover:border-[var(--neutral-300)] transition-all duration-[var(--duration-fast)]`}>
@@ -400,7 +400,7 @@ const KPICard = ({ metric }) => {
 const ReconciliationCard = ({ summary }) => {
   const total = summary.matched + summary.pending + summary.needsReview;
   const matchRate = total > 0 ? Math.round((summary.matched / total) * 100) : 0;
-  
+
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -410,18 +410,18 @@ const ReconciliationCard = ({ summary }) => {
         <div className="flex items-center gap-2 text-xs text-[var(--neutral-500)]">
           <span className={`
             w-2 h-2 rounded-full
-            ${summary.syncStatus === 'syncing' ? 'bg-[var(--warning)] animate-pulse' : 
-              summary.syncStatus === 'error' ? 'bg-[var(--error)]' : 
-              'bg-[var(--success)]'}
+            ${summary.syncStatus === 'syncing' ? 'bg-[var(--warning)] animate-pulse' :
+              summary.syncStatus === 'error' ? 'bg-[var(--error)]' :
+                'bg-[var(--success)]'}
           `} />
           Synced {formatRelativeTime(summary.lastSyncAt)}
         </div>
       </div>
-      
+
       <div className="mb-4">
         <Sparkline data={summary.trendData} />
       </div>
-      
+
       <div className="grid grid-cols-3 gap-3">
         <div className="text-center p-3 rounded-md bg-[var(--neutral-50)]">
           <div className="text-xl font-semibold text-[var(--success)] tabular-nums">
@@ -447,14 +447,14 @@ const ReconciliationCard = ({ summary }) => {
           <div className="text-[11px] text-[var(--neutral-500)] mt-1 uppercase tracking-wide">Needs Review</div>
         </div>
       </div>
-      
+
       <div className="mt-4 pt-4 border-t border-[var(--neutral-200)]">
         <div className="flex items-center justify-between text-sm mb-2">
           <span className="text-[var(--neutral-500)]">Match rate</span>
           <span className="font-semibold text-[var(--neutral-900)] tabular-nums">{matchRate}%</span>
         </div>
         <div className="w-full h-1.5 bg-[var(--neutral-200)] rounded-full overflow-hidden">
-          <div 
+          <div
             className="h-full bg-[var(--accent-500)] rounded-full transition-all duration-500"
             style={{ width: `${matchRate}%` }}
           />
@@ -481,29 +481,29 @@ const ActionQueue = ({ items }) => {
       </Card>
     );
   }
-  
+
   const typeConfig = {
     mismatch: { badge: 'error', label: 'Mismatch' },
     missing_receipt: { badge: 'warning', label: 'Receipt Missing' },
     anomaly: { badge: 'warning', label: 'Anomaly' },
     duplicate: { badge: 'neutral', label: 'Duplicate' },
   };
-  
+
   const priorityIcon = {
     high: <AlertTriangle className="w-4 h-4 text-[var(--error)]" />,
     medium: <Clock className="w-4 h-4 text-[var(--warning)]" />,
     low: <Minus className="w-4 h-4 text-[var(--neutral-400)]" />,
   };
-  
+
   return (
     <Card className="p-6">
       <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider mb-4">
         Action Queue ({items.length})
       </h3>
-      
+
       <div className="space-y-3">
         {items.slice(0, 3).map(item => (
-          <div 
+          <div
             key={item.id}
             className="p-4 rounded-md bg-[var(--neutral-50)] border border-[var(--neutral-200)]
                        hover:border-[var(--neutral-300)] transition-colors cursor-pointer group"
@@ -516,7 +516,7 @@ const ActionQueue = ({ items }) => {
                     <span className="text-sm font-medium text-[var(--neutral-900)] truncate">
                       {item.title}
                     </span>
-                    <Badge variant={typeConfig[item.type].badge }>
+                    <Badge variant={typeConfig[item.type].badge}>
                       {typeConfig[item.type].label}
                     </Badge>
                   </div>
@@ -541,7 +541,7 @@ const ActionQueue = ({ items }) => {
             </div>
           </div>
         ))}
-        
+
         {items.length > 3 && (
           <button className="w-full text-center text-sm text-[var(--accent-600)] hover:text-[var(--accent-700)] py-2 font-medium">
             +{items.length - 3} more items
@@ -558,20 +558,20 @@ const InsightsPanel = ({ insights }) => {
     negative: { border: 'border-l-[var(--error)]', icon: ArrowDownRight },
     neutral: { border: 'border-l-[var(--neutral-400)]', icon: Minus },
   };
-  
+
   return (
     <Card className="p-6">
       <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider mb-4">
         Insights
       </h3>
-      
+
       <div className="space-y-3">
         {insights.map(insight => {
           const config = impactConfig[insight.impact];
           const Icon = config.icon;
-          
+
           return (
-            <div 
+            <div
               key={insight.id}
               className={`p-4 rounded-md bg-[var(--neutral-50)] border-l-4 ${config.border}
                          hover:bg-[var(--neutral-100)] transition-colors cursor-pointer`}
@@ -580,7 +580,7 @@ const InsightsPanel = ({ insights }) => {
                 <Icon className={`w-4 h-4 mt-0.5 shrink-0
                   ${insight.impact === 'positive' ? 'text-[var(--success)]' :
                     insight.impact === 'negative' ? 'text-[var(--error)]' :
-                    'text-[var(--neutral-400)]'}
+                      'text-[var(--neutral-400)]'}
                 `} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[var(--neutral-900)]">
@@ -609,14 +609,14 @@ const InsightsPanel = ({ insights }) => {
 
 const ReviewTable = ({ items }) => {
   const [selectedId, setSelectedId] = useState(null);
-  
+
   const statusConfig = {
     matched: { badge: 'success', label: 'Matched' },
     pending: { badge: 'neutral', label: 'Pending' },
     mismatch: { badge: 'error', label: 'Mismatch' },
     duplicate: { badge: 'warning', label: 'Duplicate' },
   };
-  
+
   return (
     <Card className="overflow-hidden">
       <div className="p-4 border-b border-[var(--neutral-200)] flex items-center justify-between">
@@ -634,7 +634,7 @@ const ReviewTable = ({ items }) => {
           </Button>
         </div>
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -665,7 +665,7 @@ const ReviewTable = ({ items }) => {
           </thead>
           <tbody>
             {items.map((item, index) => (
-              <tr 
+              <tr
                 key={item.id}
                 onClick={() => setSelectedId(item.id)}
                 className={`
@@ -675,7 +675,7 @@ const ReviewTable = ({ items }) => {
                 `}
               >
                 <td className="py-3 px-4">
-                  <Badge variant={statusConfig[item.status].badge }>
+                  <Badge variant={statusConfig[item.status].badge}>
                     {statusConfig[item.status].label}
                   </Badge>
                 </td>
@@ -700,7 +700,7 @@ const ReviewTable = ({ items }) => {
                       text-sm font-medium tabular-nums
                       ${item.matchConfidence >= 90 ? 'text-[var(--success)]' :
                         item.matchConfidence >= 70 ? 'text-[var(--warning)]' :
-                        'text-[var(--error)]'}
+                          'text-[var(--error)]'}
                     `}>
                       {item.matchConfidence}%
                     </span>
@@ -733,7 +733,7 @@ const Dashboard = () => {
   const [period, setPeriod] = useState("mtd");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tableRef, isTableVisible] = useIsVisible({ threshold: 0.1 });
-  
+
   const { data: transactions = [], isLoading: txLoading, refetch: refetchTransactions } = useQuery({
     queryKey: ["revenueTransactions", period],
     queryFn: async () => base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
@@ -856,15 +856,15 @@ const Dashboard = () => {
 
 
   // Placeholder data
-  const cashPosition: CashPosition = {
+  const cashPosition = {
     availableCash: 24583.42,
     currency: 'USD',
     lastUpdated: new Date(),
     pendingPayouts: 8500.00,
     heldForFees: 1204.58,
   };
-  
-  const kpiMetrics: KPIMetric[] = [
+
+  const kpiMetrics = [
     {
       id: 'net-rev-mtd',
       label: 'Net Revenue MTD',
@@ -903,8 +903,8 @@ const Dashboard = () => {
       status: 'error',
     },
   ];
-  
-  const reconciliationSummary: ReconciliationSummary = {
+
+  const reconciliationSummary = {
     matched: 142,
     pending: 12,
     needsReview: 2,
@@ -912,8 +912,8 @@ const Dashboard = () => {
     syncStatus: 'idle',
     trendData: [85, 87, 86, 88, 89, 90, 91, 90, 92, 93, 92, 94, 95, 94, 96],
   };
-  
-  const actionItems: ActionItem[] = [
+
+  const actionItems = [
     {
       id: '1',
       priority: 'high',
@@ -945,8 +945,8 @@ const Dashboard = () => {
       currency: 'USD',
     },
   ];
-  
-  const insights: Insight[] = [
+
+  const insights = [
     {
       id: '1',
       type: 'trend',
@@ -964,8 +964,8 @@ const Dashboard = () => {
       citationCount: 12,
     },
   ];
-  
-  const reviewItems: ReviewItem[] = [
+
+  const reviewItems = [
     {
       id: '1',
       status: 'mismatch',
@@ -1004,30 +1004,30 @@ const Dashboard = () => {
       matchConfidence: 45,
     },
   ];
-  
+
   return (
     <>
       <DesignTokens />
       <div className="min-h-screen bg-[var(--neutral-50)]">
         <Header />
-        
+
         <main className="max-w-[1400px] mx-auto p-6">
           {/* Cash Hero */}
           <CashHero position={cashPosition} />
-          
+
           {/* KPI Row */}
           <div className="grid grid-cols-5 gap-4 mb-6">
             {kpiMetrics.map(metric => (
               <KPICard key={metric.id} metric={metric} />
             ))}
           </div>
-          
+
           {/* Two Column Layout */}
           <div className="grid grid-cols-12 gap-6 mb-6">
             {/* Left - 7 cols */}
             <div className="col-span-7 space-y-6">
               <ReconciliationCard summary={reconciliationSummary} />
-              
+
               {/* Cashflow Forecast Placeholder */}
               <Card className="p-6">
                 <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider mb-4">
@@ -1041,14 +1041,14 @@ const Dashboard = () => {
                 </div>
               </Card>
             </div>
-            
+
             {/* Right - 5 cols */}
             <div className="col-span-5 space-y-6">
               <ActionQueue items={actionItems} />
               <InsightsPanel insights={insights} />
             </div>
           </div>
-          
+
           {/* Review Table */}
           <ReviewTable items={reviewItems} />
         </main>
