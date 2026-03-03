@@ -998,7 +998,7 @@ const Dashboard = () => {
           <CashHero
             position={cashPosition}
             onExport={handleExportTransactions}
-            onConnect={() => navigate('/platforms')}
+            onConnect={() => navigate('/ConnectedPlatforms')}
           />
 
           {/* KPI Row */}
@@ -1019,7 +1019,7 @@ const Dashboard = () => {
             <div className="col-span-5 space-y-6">
               <ActionQueue
                 items={actionItems}
-                onReview={(item) => navigate('/revenue_autopsy')}
+                onReview={(item) => navigate('/RevenueAutopsy')}
               />
               {insights.length > 0 && <InsightsPanel insights={insights} />}
             </div>
