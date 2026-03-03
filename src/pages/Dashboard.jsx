@@ -63,6 +63,7 @@ import {
   memoize,
   LRUCache 
 } from "@/lib/performance";
+import { formatMoney as baseFormatMoney } from "@/lib/utils";
 
 // ============================================================================
 // PERFORMANCE CONSTANTS
@@ -124,19 +125,12 @@ const PERIODS = [
   { value: "90d", label: "Last 90 days" },
 ];
 
-const money = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
 // ============================================================================
 // MEMOIZED CALCULATIONS
 // ============================================================================
 
 const formatMoney = memoize((value) => {
-  return money.format(value || 0);
+  return baseFormatMoney(value);
 }, 1000);
 
 const calcFee = memoize((transaction) => {

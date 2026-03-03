@@ -22,6 +22,7 @@ import {
 import { PageTransition, AnimatedItem } from "@/components/ui/PageTransition";
 import { ChartContainer } from "@/components/ui/ChartContainer";
 import { GlassCard, InteractiveMetricCard } from "@/components/ui/glass-card";
+import { formatMoney } from "@/lib/utils";
 
 const PLATFORM_FEE_RATES = {
   youtube: 0.45,
@@ -59,17 +60,6 @@ const SEVERITY_FILTERS = [
   { value: "low", label: "Low" },
 ];
 
-const money = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
-
-function formatMoney(value) {
-  return money.format(value || 0);
-}
-
 function feeFor(tx) {
   const reported = Number(tx.platform_fee || 0);
   if (reported > 0) return reported;
@@ -83,7 +73,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
         <p className="mb-1 text-xs text-gray-500">{label}</p>
         <p className="font-mono-financial text-sm font-semibold text-gray-900">
-          {formatMoney(payload[0].value)}
+          {formatMoney(payload[0].value, 0)}
         </p>
       </div>
     );
@@ -338,15 +328,15 @@ export default function RevenueAutopsy() {
         <AnimatedItem delay={0.2}>
           <InteractiveMetricCard
             title="Gross Revenue (MTD)"
-            value={formatMoney(analysis.monthGross)}
+            value={formatMoney(analysis.monthGross, 0)}
             sub="Before fees"
           />
         </AnimatedItem>
         <AnimatedItem delay={0.3}>
           <InteractiveMetricCard
             title="Estimated Net (MTD)"
-            value={formatMoney(analysis.monthNet)}
-            sub={`Fees: ${formatMoney(analysis.monthFee)}`}
+            value={formatMoney(analysis.monthNet, 0)}
+            sub={`Fees: ${formatMoney(analysis.monthFee, 0)}`}
             tone="green"
           />
         </AnimatedItem>
@@ -454,7 +444,7 @@ export default function RevenueAutopsy() {
                             <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
                               <p className="text-xs text-gray-500">{payload[0].payload.label}</p>
                               <p className="font-mono-financial text-sm font-semibold text-gray-900">
-                                {formatMoney(payload[0].value)} ({payload[0].payload.share.toFixed(1)}%)
+                                {formatMoney(payload[0].value, 0)} ({payload[0].payload.share.toFixed(1)}%)
                               </p>
                             </div>
                           );
@@ -485,9 +475,9 @@ export default function RevenueAutopsy() {
                       {analysis.platformRows.map((row) => (
                         <TableRow key={row.key} className="border-gray-100 hover:bg-gray-50/50">
                           <TableCell className="text-sm font-medium text-gray-900">{row.label}</TableCell>
-                          <TableCell className="text-right font-mono-financial text-gray-900">{formatMoney(row.gross)}</TableCell>
-                          <TableCell className="text-right font-mono-financial text-amber-600">{formatMoney(row.fee)}</TableCell>
-                          <TableCell className="text-right font-mono-financial text-gray-900 font-medium">{formatMoney(row.net)}</TableCell>
+                          <TableCell className="text-right font-mono-financial text-gray-900">{formatMoney(row.gross, 0)}</TableCell>
+                          <TableCell className="text-right font-mono-financial text-amber-600">{formatMoney(row.fee, 0)}</TableCell>
+                          <TableCell className="text-right font-mono-financial text-gray-900 font-medium">{formatMoney(row.net, 0)}</TableCell>
                           <TableCell className="text-right text-gray-500">{row.share.toFixed(1)}%</TableCell>
                         </TableRow>
                       ))}
@@ -562,7 +552,7 @@ export default function RevenueAutopsy() {
                           </span>
                         </TableCell>
                         <TableCell className="text-right font-mono-financial text-gray-900">
-                          {typeof event.impact_amount === "number" ? formatMoney(event.impact_amount) : "-"}
+                          {typeof event.impact_amount === "number" ? formatMoney(event.impact_amount, 0) : "-"}
                         </TableCell>
                         <TableCell>
                           <ArrowRight className="h-4 w-4 text-gray-300 transition-colors group-hover:text-gray-600" />

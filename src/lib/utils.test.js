@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { cn } from './utils'
+import { cn, formatMoney } from './utils'
 
 describe('cn', () => {
   it('should merge class names correctly', () => {
@@ -56,3 +56,39 @@ describe('isIframe', () => {
     expect(isIframe).toBe(false)
   })
 })
+
+describe('formatMoney', () => {
+  it('should format money with default 2 decimal places', () => {
+    const result = formatMoney(1234.56).replace(/\u00A0/g, ' ');
+    expect(result).toBe('$1,234.56');
+  });
+
+  it('should format money with specified 0 decimal places', () => {
+    const result = formatMoney(1234.56, 0).replace(/\u00A0/g, ' ');
+    expect(result).toBe('$1,235'); // Rounds up
+  });
+
+  it('should format money with specified 3 decimal places', () => {
+    const result = formatMoney(1234.5678, 3).replace(/\u00A0/g, ' ');
+    expect(result).toBe('$1,234.568'); // Rounds up
+  });
+
+  it('should handle 0 correctly', () => {
+    const result = formatMoney(0).replace(/\u00A0/g, ' ');
+    expect(result).toBe('$0.00');
+  });
+
+  it('should handle null/undefined correctly', () => {
+    const resultNull = formatMoney(null).replace(/\u00A0/g, ' ');
+    const resultUndefined = formatMoney(undefined).replace(/\u00A0/g, ' ');
+    expect(resultNull).toBe('$0.00');
+    expect(resultUndefined).toBe('$0.00');
+  });
+
+  it('should handle negative numbers correctly', () => {
+    const result = formatMoney(-1234.56).replace(/\u00A0/g, ' ');
+    // Intl.NumberFormat might use a minus sign or parentheses
+    expect(result).toContain('1,234.56');
+    expect(result).toContain('-');
+  });
+});

@@ -27,6 +27,7 @@ import ExpenseModal from "@/components/expense/ExpenseModal";
 import { CATEGORIES } from "@/lib/expenseCategories";
 import { PageTransition, AnimatedItem } from "@/components/ui/PageTransition";
 import { GlassCard, InteractiveMetricCard } from "@/components/ui/glass-card";
+import { formatMoney } from "@/lib/utils";
 
 const QUICK_VIEWS = [
   { value: "all", label: "All" },
@@ -43,17 +44,6 @@ const SORT_OPTIONS = [
 ];
 
 const COLORS = ["#4F46E5", "#6366F1", "#8B5CF6", "#3B82F6", "#10B981", "#F59E0B", "#EC4899"];
-
-const money = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-function formatMoney(value) {
-  return money.format(value || 0);
-}
 
 export default function Expenses() {
   const queryClient = useQueryClient();
