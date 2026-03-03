@@ -72,7 +72,8 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
         if (hasPasswordAuth) {
             setStep("auth");
         } else {
-            sendOTPMutation.mutate();
+            setStep("processing");
+            revokeSessionsMutation.mutate({});
         }
     };
 

@@ -36,8 +36,9 @@ export async function handleUpdatePasswordRequest(req: Request): Promise<Respons
             global: { headers: { Authorization: authHeader } }
         });
 
-        // Get authenticated user
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        // Get authenticated user directly using the token from the request header
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !authUser) {
             return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
         }
@@ -198,7 +199,7 @@ export async function handleUpdatePasswordRequest(req: Request): Promise<Respons
 
         // Revoke all sessions after password change
         try {
-            await adminClient.auth.admin.signOut(user.id, 'global');
+            await supabase.auth.signOut({ scope: 'global' });
         } catch (signOutError) {
             console.error('Failed to revoke sessions after password change:', signOutError);
             // Don't fail the request, password was already changed
