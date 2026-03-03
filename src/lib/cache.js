@@ -158,61 +158,61 @@ class IndexedDBCache {
 // Memory Cache with LRU Eviction
 // ============================================================================
 
-class MemoryCache {
+export class MemoryCache {
   constructor(maxSize = 100) {
     this.maxSize = maxSize;
     this.cache = new Map();
-    this.accessOrder = [];
   }
 
   get(key) {
-    if (!this.cache.has(key)) return null;
+    const entry = this.cache.get(key);
+    if (!entry) return null;
 
-    // Update access order
-    this.accessOrder = this.accessOrder.filter(k => k !== key);
-    this.accessOrder.push(key);
+    // Check expiration
+    if (entry.expires && entry.expires < Date.now()) {
+      this.delete(key);
+      return null;
+    }
 
-    return this.cache.get(key).value;
+    // Update access order by re-inserting the key
+    this.cache.delete(key);
+    this.cache.set(key, entry);
+
+    return entry.value;
   }
 
   set(key, value, ttlMs = null) {
-    // Evict oldest if at capacity
-    if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
-      const oldestKey = this.accessOrder.shift();
-      this.cache.delete(oldestKey);
-    }
-
-    // Remove old entry if exists
     if (this.cache.has(key)) {
-      this.accessOrder = this.accessOrder.filter(k => k !== key);
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      // Evict oldest (first item in Map iteration order)
+      const oldestKey = this.cache.keys().next().value;
+      this.cache.delete(oldestKey);
     }
 
     this.cache.set(key, {
       value,
       expires: ttlMs ? Date.now() + ttlMs : null,
     });
-    this.accessOrder.push(key);
   }
 
   delete(key) {
     this.cache.delete(key);
-    this.accessOrder = this.accessOrder.filter(k => k !== key);
   }
 
   clear() {
     this.cache.clear();
-    this.accessOrder = [];
   }
 
   has(key) {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     if (entry.expires && entry.expires < Date.now()) {
       this.delete(key);
       return false;
     }
-    
+
     return true;
   }
 }
