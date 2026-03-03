@@ -6,37 +6,29 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
-  differenceInCalendarDays,
   format,
   startOfMonth,
   subDays,
 } from "date-fns";
 import {
   Search,
-  Bell,
   CheckCircle,
   Clock,
   AlertTriangle,
-  ChevronRight,
-  Filter,
   Download,
   Plus,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
-  Minus,
-  MoreHorizontal,
-  RefreshCw
+  MoreHorizontal
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { motion, AnimatePresence } from "framer-motion";
+import { AreaChart, Area, Tooltip, ResponsiveContainer } from 'recharts';
 import { base44 } from "@/api/supabaseClient";
 
 // Performance utilities
 import {
-  useDebounce,
   useThrottle,
   useIsVisible,
   memoize,
@@ -733,7 +725,6 @@ const ReviewTable = ({ items, onExport }) => {
 const Dashboard = () => {
 
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [period, setPeriod] = useState("mtd");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tableRef, isTableVisible] = useIsVisible({ threshold: 0.1 });
