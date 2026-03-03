@@ -9,18 +9,22 @@
  *   A) Cash & Runway   B) Reconciliation Status   C) Action Queue
  */
 
-import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfMonth, subDays } from "date-fns";
 import {
   Search, RefreshCw, Download, Plus, ChevronRight, AlertTriangle,
-  CheckCircle2, Clock, ArrowUpRight, ArrowDownRight, Minus,
-  X, HelpCircle, Zap, ExternalLink, TrendingUp, Eye, MoreHorizontal,
-  ShieldAlert, Link2, FileText,
+  CheckCircle2, ArrowUpRight, ArrowDownRight,
+  X, HelpCircle, Zap, ExternalLink, TrendingUp,
+  ShieldAlert, Link2,
 } from "lucide-react";
 import { base44 } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
+
+// Stable Intl formatters — allocated once, never re-created per render
+const FMT_S = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const FMT_F = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -43,8 +47,8 @@ const PERIODS = [
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
-const fmt = (v) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v || 0);
-const fmtFull = (v) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(v || 0);
+const fmt = (v) => FMT_S.format(v || 0);
+const fmtFull = (v) => FMT_F.format(v || 0);
 
 const relativeTime = (date) => {
   if (!date) return "Never synced";
@@ -136,35 +140,99 @@ function PlatformBadge({ platform }) {
   );
 }
 
-// ─── Sparkline ────────────────────────────────────────────────────────────────
+// ─── Sparkline (interactive) ─────────────────────────────────────────────────────────────────────
 
-function Sparkline({ data, color = "#2563EB", height = 32 }) {
+const Sparkline = memo(function Sparkline({ data, color = "#2563EB", height = 36, labels }) {
+  const [hov, setHov] = useState(null);
+  const svgRef = useRef(null);
+  const rafRef = useRef(null);
+
+  const onMove = useCallback((e) => {
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect || !data || data.length < 2) return;
+      const idx = Math.max(0, Math.min(data.length - 1,
+        Math.round(((e.clientX - rect.left) / rect.width) * (data.length - 1))));
+      setHov({ v: data[idx], i: idx, label: labels?.[idx] ?? `Day ${idx + 1}` });
+    });
+  }, [data, labels]);
+
+  const onLeave = useCallback(() => {
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    setHov(null);
+  }, []);
+
   if (!data || data.length < 2) return <div style={{ height }} />;
-  const max = Math.max(...data);
-  const min = Math.min(...data);
+  const max = Math.max(...data); const min = Math.min(...data, 0);
   const range = max - min || 1;
-  const w = 100, h = height;
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * (h - 4) - 2}`).join(" ");
+  const W = 100, H = height;
+  const px = (i) => (i / (data.length - 1)) * W;
+  const py = (v) => H - 2 - ((v - min) / range) * (H - 4);
+  const pts = data.map((v, i) => `${px(i)},${py(v)}`).join(" ");
+
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <linearGradient id={`sg-${color.slice(1)}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.15" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon fill={`url(#sg-${color.slice(1)})`} points={`0,${h} ${pts} ${w},${h}`} />
-      <polyline fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" points={pts} />
-    </svg>
+    <div className="relative">
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" height={H}
+        preserveAspectRatio="none" onMouseMove={onMove} onMouseLeave={onLeave}
+        className="cursor-crosshair" aria-label="Revenue trend">
+        <defs>
+          <linearGradient id={`sg-${color.slice(1)}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <polygon fill={`url(#sg-${color.slice(1)})`} points={`0,${H} ${pts} ${W},${H}`} />
+        <polyline fill="none" stroke={color} strokeWidth="1.5"
+          strokeLinecap="round" strokeLinejoin="round" points={pts} />
+        {hov && (
+          <>
+            <line x1={px(hov.i)} y1={0} x2={px(hov.i)} y2={H}
+              stroke={color} strokeWidth="0.8" strokeOpacity="0.4" strokeDasharray="2,2" />
+            <circle cx={px(hov.i)} cy={py(hov.v)} r={2.5} fill={color} stroke="white" strokeWidth="1.5" />
+          </>
+        )}
+      </svg>
+      {hov && (
+        <div className="absolute pointer-events-none z-10 bg-gray-900 text-white rounded px-2 py-1 text-[10px] shadow-lg"
+          style={{
+            left: `${(hov.i / (data.length - 1)) * 100}%`, top: 0,
+            transform: hov.i > data.length * 0.6 ? "translateX(-110%)" : "translateX(4px)"
+          }}>
+          <div className="font-semibold tabular-nums">{fmt(hov.v)}</div>
+          <div className="text-gray-400">{hov.label}</div>
+        </div>
+      )}
+    </div>
   );
-}
+});
 
-// ─── Cashflow Interactive Chart ──────────────────────────────────────────────
+// ─── Cashflow Interactive Chart ────────────────────────────────────────────────
 
-function CashflowChart({ data, hasData }) {
+const CashflowChart = memo(function CashflowChart({ data, hasData }) {
   const [hovered, setHovered] = useState(null);
   const svgRef = useRef(null);
+  const rafRef = useRef(null);
   const W = 600, H = 100;
+
+  // All hooks before any early return (Rules of Hooks)
+  const onMove = useCallback((e) => {
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const idx = Math.max(0, Math.min(data.length - 1,
+        Math.round(((e.clientX - rect.left) / rect.width) * (data.length - 1))));
+      setHovered({ ...data[idx], idx });
+    });
+  }, [data]);
+
+  const onLeave = useCallback(() => {
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    setHovered(null);
+  }, []);
 
   if (!hasData || !data || data.length < 2) {
     return (
@@ -174,79 +242,51 @@ function CashflowChart({ data, hasData }) {
     );
   }
 
-  const vals = data.map(d => d.amount);
-  const maxV = Math.max(...vals);
-  const minV = Math.min(...vals, 0);
+  const maxV = Math.max(...data.map(d => d.amount));
+  const minV = Math.min(...data.map(d => d.amount), 0);
   const rangeV = maxV - minV || 1;
   const px = (i) => (i / (data.length - 1)) * W;
   const py = (v) => H - 8 - ((v - minV) / rangeV) * (H - 16);
-
   const linePts = data.map((d, i) => `${px(i)},${py(d.amount)}`).join(" ");
   const fillPts = `0,${H} ${linePts} ${W},${H}`;
 
-  const handleMouseMove = (e) => {
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const xRel = (e.clientX - rect.left) / rect.width;
-    const idx = Math.round(xRel * (data.length - 1));
-    const clamped = Math.max(0, Math.min(data.length - 1, idx));
-    setHovered({ ...data[clamped], idx: clamped });
-  };
-
   return (
     <div className="relative">
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${W} ${H}`}
-        width="100%"
-        height={H}
-        preserveAspectRatio="none"
-        aria-label="Revenue cashflow chart"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHovered(null)}
-        className="cursor-crosshair"
-      >
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" height={H}
+        preserveAspectRatio="none" aria-label="Revenue cashflow chart"
+        onMouseMove={onMove} onMouseLeave={onLeave} className="cursor-crosshair">
         <defs>
           <linearGradient id="cf-fill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#2563EB" stopOpacity="0.12" />
             <stop offset="100%" stopColor="#2563EB" stopOpacity="0" />
           </linearGradient>
         </defs>
-        {/* Zero baseline */}
         <line x1={0} y1={py(0)} x2={W} y2={py(0)} stroke="#E5E7EB" strokeWidth="1" />
-        {/* Fill */}
         <polygon fill="url(#cf-fill)" points={fillPts} />
-        {/* Line */}
-        <polyline fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={linePts} />
-        {/* Hover indicator */}
+        <polyline fill="none" stroke="#2563EB" strokeWidth="2"
+          strokeLinecap="round" strokeLinejoin="round" points={linePts} />
         {hovered && (
           <>
-            <line
-              x1={px(hovered.idx)} y1={0}
-              x2={px(hovered.idx)} y2={H}
-              stroke="#2563EB" strokeWidth="1" strokeDasharray="3,3" strokeOpacity="0.5"
-            />
-            <circle cx={px(hovered.idx)} cy={py(hovered.amount)} r={4} fill="#2563EB" stroke="white" strokeWidth="2" />
+            <line x1={px(hovered.idx)} y1={0} x2={px(hovered.idx)} y2={H}
+              stroke="#2563EB" strokeWidth="1" strokeDasharray="3,3" strokeOpacity="0.5" />
+            <circle cx={px(hovered.idx)} cy={py(hovered.amount)} r={4}
+              fill="#2563EB" stroke="white" strokeWidth="2" />
           </>
         )}
       </svg>
-      {/* Hover tooltip */}
       {hovered && (
-        <div
-          className="absolute pointer-events-none z-10 bg-gray-900 text-white rounded px-2.5 py-1.5 text-[11px] leading-relaxed shadow-lg"
+        <div className="absolute pointer-events-none z-10 bg-gray-900 text-white rounded px-2.5 py-1.5 text-[11px] leading-relaxed shadow-lg"
           style={{
-            left: `calc(${(hovered.idx / (data.length - 1)) * 100}% + 8px)`,
-            top: 0,
-            transform: hovered.idx > data.length * 0.7 ? "translateX(-110%)" : undefined,
-          }}
-        >
+            left: `calc(${(hovered.idx / (data.length - 1)) * 100}% + 8px)`, top: 0,
+            transform: hovered.idx > data.length * 0.7 ? "translateX(-110%)" : undefined
+          }}>
           <div className="font-semibold tabular-nums">{fmtFull(hovered.amount)}</div>
           <div className="text-gray-400">{hovered.label}</div>
         </div>
       )}
     </div>
   );
-}
+});
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
