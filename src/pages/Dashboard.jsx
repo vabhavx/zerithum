@@ -855,155 +855,106 @@ const Dashboard = () => {
   }, 1000);
 
 
-  // Placeholder data
+  // Real data integrations
   const cashPosition = {
-    availableCash: 24583.42,
+    availableCash: computed.netRevenue - computed.periodExpenses,
     currency: 'USD',
     lastUpdated: new Date(),
-    pendingPayouts: 8500.00,
-    heldForFees: 1204.58,
+    pendingPayouts: 0,
+    heldForFees: computed.estimatedFees,
   };
 
   const kpiMetrics = [
     {
       id: 'net-rev-mtd',
       label: 'Net Revenue MTD',
-      value: '$42,391',
-      trend: 'up',
-      trendValue: '12%',
+      value: formatCurrency(computed.netRevenue),
+      trend: computed.revenueDelta >= 0 ? 'up' : 'down',
+      trendValue: Math.abs(computed.revenueDelta).toFixed(1) + '%',
       helperText: 'Revenue after platform fees and refunds',
       status: 'normal',
     },
     {
-      id: 'available-cash',
-      label: 'Available Cash',
-      value: '$24,583',
-      helperText: 'Money you can safely spend today',
+      id: 'gross-revenue',
+      label: 'Gross Revenue',
+      value: formatCurrency(computed.grossRevenue),
+      helperText: 'Total customer payments before fees',
       status: 'normal',
     },
     {
-      id: 'unreconciled',
-      label: 'Unreconciled',
-      value: '$3,291',
-      helperText: 'Money not matched to a bank deposit yet',
-      status: 'warning',
+      id: 'operating-margin',
+      label: 'Operating Margin',
+      value: formatCurrency(computed.operatingMargin),
+      helperText: `Net Revenue minus expenses (${formatCurrency(computed.periodExpenses)})`,
+      status: computed.operatingMargin >= 0 ? 'normal' : 'warning',
     },
     {
-      id: 'incoming',
-      label: 'Incoming 7 Days',
-      value: '$8,500',
-      helperText: 'Payouts expected in the next week',
+      id: 'transactions',
+      label: 'Transactions',
+      value: computed.transactionCount.toString(),
+      helperText: 'Successful payments this period',
       status: 'normal',
     },
     {
       id: 'anomalies',
       label: 'Anomalies',
-      value: '2 items',
+      value: pendingAutopsyEvents.length + ' items',
       helperText: 'Issues that need your review',
-      status: 'error',
+      status: pendingAutopsyEvents.length > 0 ? 'error' : 'normal',
     },
   ];
 
   const reconciliationSummary = {
-    matched: 142,
-    pending: 12,
-    needsReview: 2,
-    lastSyncAt: new Date(Date.now() - 2 * 60 * 1000),
-    syncStatus: 'idle',
-    trendData: [85, 87, 86, 88, 89, 90, 91, 90, 92, 93, 92, 94, 95, 94, 96],
+    matched: computed.transactionCount,
+    pending: 0,
+    needsReview: pendingAutopsyEvents.length,
+    lastSyncAt: dataCompleteness.lastSync || new Date(),
+    syncStatus: (dataCompleteness.errorPlatforms && dataCompleteness.errorPlatforms.length > 0) ? 'error' : (isLoading ? 'syncing' : 'idle'),
+    trendData: computed.trendData.map(d => d.amount),
   };
 
   const actionItems = [
-    {
-      id: '1',
+    ...pendingAutopsyEvents.map(event => ({
+      id: event.id,
+      priority: 'high',
+      type: 'anomaly',
+      platform: event.platform || 'System',
+      title: 'Review Anomaly',
+      description: event.reason || 'Anomalous transaction event detected.',
+      currency: 'USD',
+    })),
+    ...(dataCompleteness.errorPlatforms || []).map(p => ({
+      id: 'err-' + p.id,
       priority: 'high',
       type: 'mismatch',
-      platform: 'YouTube',
-      title: 'Payout mismatch: YouTube',
-      description: 'Expected $1,200, received $1,084. Platform fee higher than estimated.',
-      amount: 1084,
-      expectedAmount: 1200,
+      platform: p.provider || 'Platform',
+      title: 'Sync failed',
+      description: 'Connection failed during last sync. Please re-authenticate.',
       currency: 'USD',
-    },
-    {
-      id: '2',
-      priority: 'medium',
-      type: 'missing_receipt',
-      platform: 'Adobe',
-      title: 'Missing receipt: Adobe subscription',
-      description: 'Expense of $49.99 missing receipt for tax deduction.',
-      amount: 49.99,
-      currency: 'USD',
-    },
-    {
-      id: '3',
-      priority: 'medium',
-      type: 'anomaly',
-      platform: 'Stripe',
-      title: 'Unusual fee pattern detected',
-      description: 'Refund rate 23% higher than average. Review recent transactions.',
-      currency: 'USD',
-    },
+    }))
   ];
 
   const insights = [
     {
-      id: '1',
+      id: 'trend-1',
       type: 'trend',
-      title: 'Revenue down 12% vs last month',
-      description: 'YouTube ad revenue decreased significantly. Consider reviewing content strategy.',
-      impact: 'negative',
-      citationCount: 45,
-    },
-    {
-      id: '2',
-      type: 'anomaly',
-      title: 'Stripe fees 23% higher than average',
-      description: 'Refund rate increased this month, affecting net revenue.',
-      impact: 'negative',
-      citationCount: 12,
-    },
+      title: computed.revenueDelta >= 0 ? `Revenue up ${computed.revenueDelta.toFixed(1)}%` : `Revenue down ${Math.abs(computed.revenueDelta).toFixed(1)}%`,
+      description: 'Compared to previous typical period.',
+      impact: computed.revenueDelta >= 0 ? 'positive' : 'negative',
+      citationCount: computed.transactionCount,
+    }
   ];
 
-  const reviewItems = [
-    {
-      id: '1',
-      status: 'mismatch',
-      platform: 'YouTube',
-      description: 'Ad Revenue - March 2024',
-      date: '2024-03-15',
-      amount: 1084.00,
-      expectedAmount: 1200.00,
-      matchConfidence: 90,
-    },
-    {
-      id: '2',
-      status: 'mismatch',
-      platform: 'Patreon',
-      description: 'Monthly Membership Payout',
-      date: '2024-03-14',
-      amount: 892.50,
-      expectedAmount: 950.00,
-      matchConfidence: 94,
-    },
-    {
-      id: '3',
-      status: 'pending',
-      platform: 'Stripe',
-      description: 'Product Sale - Digital Download',
-      date: '2024-03-13',
-      amount: 47.00,
-    },
-    {
-      id: '4',
-      status: 'duplicate',
-      platform: 'Gumroad',
-      description: 'Course Sale - Duplicate Entry',
-      date: '2024-03-12',
-      amount: 99.00,
-      matchConfidence: 45,
-    },
-  ];
+  const reviewItems = computed.latestTransactions.map(tx => ({
+    id: tx.id,
+    status: 'matched',
+    platform: tx.platform,
+    description: tx.description,
+    date: tx.date,
+    amount: tx.gross,
+    expectedAmount: tx.net,
+    matchConfidence: 100
+  }));
 
   return (
     <>
