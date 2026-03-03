@@ -12,7 +12,7 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { format, startOfMonth, subDays, differenceInCalendarDays, addDays } from "date-fns";
+import { format, startOfMonth, subDays } from "date-fns";
 import {
   Search, RefreshCw, Download, Plus, ChevronRight, AlertTriangle,
   CheckCircle2, Clock, ArrowUpRight, ArrowDownRight, Minus,
@@ -159,46 +159,92 @@ function Sparkline({ data, color = "#2563EB", height = 32 }) {
   );
 }
 
-// ─── Cashflow SVG Chart ───────────────────────────────────────────────────────
+// ─── Cashflow Interactive Chart ──────────────────────────────────────────────
 
-function CashflowChart({ data }) {
-  if (!data || data.length < 2) return null;
-  const W = 500, H = 90;
+function CashflowChart({ data, hasData }) {
+  const [hovered, setHovered] = useState(null);
+  const svgRef = useRef(null);
+  const W = 600, H = 100;
+
+  if (!hasData || !data || data.length < 2) {
+    return (
+      <div style={{ height: H }} className="flex items-center justify-center border border-dashed border-gray-200 rounded-md">
+        <span className="text-[11px] text-gray-400">No transaction history to chart yet.</span>
+      </div>
+    );
+  }
+
   const vals = data.map(d => d.amount);
-  const upper = data.map(d => d.upper);
-  const lower = data.map(d => d.lower);
-  const allVals = [...vals, ...upper, ...lower];
-  const maxV = Math.max(...allVals);
-  const minV = Math.min(...allVals);
+  const maxV = Math.max(...vals);
+  const minV = Math.min(...vals, 0);
   const rangeV = maxV - minV || 1;
   const px = (i) => (i / (data.length - 1)) * W;
-  const py = (v) => H - 6 - ((v - minV) / rangeV) * (H - 12);
+  const py = (v) => H - 8 - ((v - minV) / rangeV) * (H - 16);
 
   const linePts = data.map((d, i) => `${px(i)},${py(d.amount)}`).join(" ");
-  const bandPts = [
-    ...data.map((d, i) => `${px(i)},${py(d.upper)}`),
-    ...[...data].reverse().map((d, i) => `${px(data.length - 1 - i)},${py(d.lower)}`),
-  ].join(" ");
+  const fillPts = `0,${H} ${linePts} ${W},${H}`;
 
-  // Today divider
-  const todayIdx = data.findIndex(d => d.isToday);
-  const todayX = todayIdx >= 0 ? px(todayIdx) : px(Math.floor(data.length * 0.3));
+  const handleMouseMove = (e) => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const xRel = (e.clientX - rect.left) / rect.width;
+    const idx = Math.round(xRel * (data.length - 1));
+    const clamped = Math.max(0, Math.min(data.length - 1, idx));
+    setHovered({ ...data[clamped], idx: clamped });
+  };
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="cf-line" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#2563EB" />
-          <stop offset="100%" stopColor="#60A5FA" />
-        </linearGradient>
-      </defs>
-      {/* Confidence band */}
-      <polygon fill="#2563EB" fillOpacity="0.07" points={bandPts} />
-      {/* Today line */}
-      <line x1={todayX} y1="0" x2={todayX} y2={H} stroke="#E5E7EB" strokeWidth="1" strokeDasharray="3,3" />
-      {/* Forecast line */}
-      <polyline fill="none" stroke="url(#cf-line)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={linePts} />
-    </svg>
+    <div className="relative">
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        height={H}
+        preserveAspectRatio="none"
+        aria-label="Revenue cashflow chart"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHovered(null)}
+        className="cursor-crosshair"
+      >
+        <defs>
+          <linearGradient id="cf-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#2563EB" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#2563EB" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* Zero baseline */}
+        <line x1={0} y1={py(0)} x2={W} y2={py(0)} stroke="#E5E7EB" strokeWidth="1" />
+        {/* Fill */}
+        <polygon fill="url(#cf-fill)" points={fillPts} />
+        {/* Line */}
+        <polyline fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={linePts} />
+        {/* Hover indicator */}
+        {hovered && (
+          <>
+            <line
+              x1={px(hovered.idx)} y1={0}
+              x2={px(hovered.idx)} y2={H}
+              stroke="#2563EB" strokeWidth="1" strokeDasharray="3,3" strokeOpacity="0.5"
+            />
+            <circle cx={px(hovered.idx)} cy={py(hovered.amount)} r={4} fill="#2563EB" stroke="white" strokeWidth="2" />
+          </>
+        )}
+      </svg>
+      {/* Hover tooltip */}
+      {hovered && (
+        <div
+          className="absolute pointer-events-none z-10 bg-gray-900 text-white rounded px-2.5 py-1.5 text-[11px] leading-relaxed shadow-lg"
+          style={{
+            left: `calc(${(hovered.idx / (data.length - 1)) * 100}% + 8px)`,
+            top: 0,
+            transform: hovered.idx > data.length * 0.7 ? "translateX(-110%)" : undefined,
+          }}
+        >
+          <div className="font-semibold tabular-nums">{fmtFull(hovered.amount)}</div>
+          <div className="text-gray-400">{hovered.label}</div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -530,60 +576,78 @@ function ReconciliationOverview({ matched, pending, needsReview, trend, lastSync
 
 // ─── Cashflow Forecast ────────────────────────────────────────────────────────
 
-function CashflowCard({ loading }) {
-  const forecastData = useMemo(() => {
-    const today = new Date();
-    return Array.from({ length: 30 }, (_, i) => {
-      const base = 8000 + Math.sin(i * 0.4) * 1500 + i * 120;
-      const variance = 600 + i * 40;
-      const isToday = i === 0;
-      return {
-        date: format(addDays(today, i), "MMM d"),
-        amount: base,
-        upper: base + variance,
-        lower: Math.max(0, base - variance * 0.7),
-        isToday,
-      };
+function CashflowCard({ transactions, expenses, period, loading }) {
+  // Compute real grouped data from actual transactions — no invented values
+  const { chartData, hasData, totalNet, lastNet, firstNet } = useMemo(() => {
+    if (!transactions || transactions.length === 0) {
+      return { chartData: [], hasData: false, totalNet: 0, lastNet: 0, firstNet: 0 };
+    }
+    // Group transactions by week (last 12 weeks)
+    const now = new Date();
+    const weeks = Array.from({ length: 12 }, (_, i) => {
+      const weekStart = subDays(now, (11 - i) * 7);
+      const weekEnd = subDays(now, (10 - i) * 7);
+      return { start: weekStart, end: weekEnd, label: format(weekStart, "MMM d") };
     });
-  }, []);
+    const data = weeks.map(w => {
+      const gross = transactions
+        .filter(tx => {
+          const d = new Date(tx.transaction_date);
+          return d >= w.start && d <= w.end;
+        })
+        .reduce((s, tx) => s + (tx.amount || 0) - calcFee(tx), 0);
+      const exp = (expenses || [])
+        .filter(e => {
+          const d = new Date(e.expense_date);
+          return d >= w.start && d <= w.end;
+        })
+        .reduce((s, e) => s + (e.amount || 0), 0);
+      return { label: w.label, amount: Math.max(0, gross - exp) };
+    });
+    const nonZero = data.some(d => d.amount > 0);
+    return {
+      chartData: data,
+      hasData: nonZero,
+      totalNet: data.reduce((s, d) => s + d.amount, 0),
+      firstNet: data[0]?.amount || 0,
+      lastNet: data[data.length - 1]?.amount || 0,
+    };
+  }, [transactions, expenses, period]);
 
-  const projected = forecastData[forecastData.length - 1]?.amount || 0;
-  const today = forecastData[0]?.amount || 0;
-  const delta = projected - today;
+  const delta = lastNet - firstNet;
 
   return (
     <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
       <div className="px-5 py-4 border-b border-gray-100 flex items-start justify-between">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">30-day cashflow</h2>
-          <p className="text-[11px] text-gray-400 mt-0.5">Projected based on platform payout schedules</p>
+          <h2 className="text-sm font-semibold text-gray-900">Revenue over time</h2>
+          <p className="text-[11px] text-gray-400 mt-0.5">Net revenue by week — actual data only</p>
         </div>
         <div className="text-right">
-          {loading ? <Sk h={18} w={64} r={3} /> : (
+          {loading ? <Sk h={18} w={64} r={3} /> : hasData ? (
             <>
-              <div className="text-sm font-semibold text-gray-900 tabular-nums">{fmt(projected)}</div>
+              <div className="text-sm font-semibold text-gray-900 tabular-nums">{fmt(totalNet)} total</div>
               <div className={`text-[11px] flex items-center justify-end gap-0.5 mt-0.5 ${delta >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                 {delta >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {fmt(Math.abs(delta))} projected
+                {fmt(Math.abs(delta))} vs. 11 weeks ago
               </div>
             </>
+          ) : (
+            <span className="text-[11px] text-gray-400">No data yet</span>
           )}
         </div>
       </div>
-
       <div className="px-5 py-4">
-        {loading ? <Sk h={90} r={4} /> : <CashflowChart data={forecastData} />}
-        <div className="flex items-center justify-between mt-3">
-          <div className="flex items-center gap-3 text-[11px] text-gray-400">
-            <span className="flex items-center gap-1.5">
-              <span className="w-6 h-0.5 bg-blue-500 inline-block rounded" />Projected
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-6 h-0.5 bg-blue-200 inline-block rounded" />Confidence band
-            </span>
+        {loading ? <Sk h={100} r={4} /> : <CashflowChart data={chartData} hasData={hasData} />}
+        {hasData && (
+          <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+              <span className="w-5 h-0.5 bg-blue-500 inline-block rounded" />
+              Net revenue (after fees &amp; expenses)
+            </div>
+            <span className="text-[11px] text-gray-400">Hover to inspect</span>
           </div>
-          <span className="text-[11px] text-gray-400">Based on last 90 days</span>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -699,8 +763,20 @@ export default function Dashboard() {
 
     const errorPlatforms = connectedPlatforms.filter(p => p.sync_status === "error").length;
 
-    // Trend sparkline: 15 synthetic data points
-    const trendData = [82, 80, 84, 86, 83, 87, 89, 88, 90, 91, 89, 92, 93, 91, 95];
+    // Real sparkline: bucket last 30 days of transactions by day, sum net per day
+    const trendData = (() => {
+      const buckets = {};
+      const now2 = new Date();
+      for (let i = 29; i >= 0; i--) {
+        const d = subDays(now2, i);
+        buckets[format(d, "yyyy-MM-dd")] = 0;
+      }
+      transactions.forEach(tx => {
+        const key = tx.transaction_date ? tx.transaction_date.slice(0, 10) : null;
+        if (key && key in buckets) buckets[key] += (tx.amount || 0) - calcFee(tx);
+      });
+      return Object.values(buckets);
+    })();
 
     // Needs review rows: anomaly events + mismatched transactions
     const reviewRows = [
@@ -962,7 +1038,7 @@ export default function Dashboard() {
               loading={isLoading}
               onReview={() => navigate("/Reconciliation")}
             />
-            <CashflowCard loading={isLoading} />
+            <CashflowCard transactions={transactions} expenses={expenses} period={period} loading={isLoading} />
           </div>
 
           {/* Right column: Action Queue + Insights */}
