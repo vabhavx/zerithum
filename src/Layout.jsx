@@ -49,14 +49,14 @@ export default function Layout({ children, currentPageName }) {
         className={cn(
           "relative flex items-center gap-2 transition-colors font-medium",
           mobile
-            ? cn("px-4 py-3.5 rounded-lg text-[15px]", isActive ? "bg-indigo-50 text-indigo-700" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900")
-            : cn("px-3 py-2 text-[13px]", isActive ? "text-indigo-600" : "text-gray-500 hover:text-gray-900")
+            ? cn("px-4 py-3.5 rounded-lg text-[15px]", isActive ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900")
+            : cn("px-3 py-2 text-[13px]", isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-900")
         )}
       >
-        {mobile && <Icon className={cn("w-[18px] h-[18px]", isActive ? "text-indigo-600" : "text-gray-400")} />}
+        {mobile && <Icon className={cn("w-[18px] h-[18px]", isActive ? "text-blue-600" : "text-gray-400")} />}
         {item.name}
         {!mobile && isActive && (
-          <motion.div layoutId="nav-indicator" className="absolute bottom-0 left-3 right-3 h-[2px] bg-indigo-600 rounded-full" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+          <motion.div layoutId="nav-indicator" className="absolute bottom-0 left-3 right-3 h-[2px] bg-blue-600 rounded-full" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
         )}
       </Link>
     );
@@ -85,8 +85,8 @@ export default function Layout({ children, currentPageName }) {
               {user && (
                 <div className="hidden lg:block relative" ref={userMenuRef}>
                   <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                    <div className="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center">
-                      <span className="text-xs font-semibold text-indigo-600">{user.full_name?.[0] || user.email?.[0] || "U"}</span>
+                    <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center">
+                      <span className="text-xs font-semibold text-blue-600">{user.full_name?.[0] || user.email?.[0] || "U"}</span>
                     </div>
                     <span className="text-[13px] font-medium text-gray-700 max-w-[100px] truncate">{user.full_name || "Account"}</span>
                     <ChevronDown className={cn("w-3.5 h-3.5 text-gray-400 transition-transform", userMenuOpen && "rotate-180")} />
@@ -139,8 +139,8 @@ export default function Layout({ children, currentPageName }) {
               {user && (
                 <div className="p-3 border-t border-gray-100">
                   <div className="flex items-center gap-3 px-4 py-2 mb-2">
-                    <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center">
-                      <span className="text-sm font-semibold text-indigo-600">{user.full_name?.[0] || "U"}</span>
+                    <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-blue-600">{user.full_name?.[0] || "U"}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{user.full_name || "User"}</p>

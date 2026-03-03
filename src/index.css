@@ -23,11 +23,11 @@
     --z-text-2: #374151;
     --z-text-3: #6B7280;
 
-    /* Brand accent — refined indigo */
-    --z-accent: #4F46E5;
-    --z-accent-hover: #4338CA;
-    --z-accent-light: #EEF2FF;
-    --z-accent-muted: #C7D2FE;
+    /* Brand accent — precise blue (trust signal) */
+    --z-accent: #2563EB;
+    --z-accent-hover: #1D4ED8;
+    --z-accent-light: #EFF6FF;
+    --z-accent-muted: #BFDBFE;
 
     /* Semantic */
     --z-success: #059669;
@@ -54,36 +54,36 @@
     --card-foreground: 220 13% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 220 13% 10%;
-    --primary: 243 75% 59%;
+    --primary: 220 90% 56%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 14% 96%;
     --secondary-foreground: 220 13% 10%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 38%;
+    --muted: 220 14% 97%;
+    --muted-foreground: 220 9% 46%;
     --accent: 220 14% 96%;
     --accent-foreground: 220 13% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 243 75% 59%;
+    --ring: 220 90% 56%;
 
-    --chart-1: 243 75% 59%;
+    --chart-1: 220 90% 56%;
     --chart-2: 220 9% 46%;
     --chart-3: 0 84% 60%;
     --chart-4: 262 52% 60%;
     --chart-5: 160 60% 40%;
 
-    --radius: 0.625rem;
+    --radius: 0.5rem;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 13% 10%;
-    --sidebar-primary: 243 75% 59%;
+    --sidebar-primary: 220 90% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 14% 96%;
     --sidebar-accent-foreground: 220 13% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 243 75% 59%;
+    --sidebar-ring: 220 90% 56%;
   }
 
   .dark {
@@ -93,7 +93,7 @@
     --card-foreground: 0 0% 96%;
     --popover: 0 0% 8%;
     --popover-foreground: 0 0% 96%;
-    --primary: 243 75% 59%;
+    --primary: 220 90% 56%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 96%;
@@ -105,20 +105,20 @@
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 18%;
     --input: 0 0% 18%;
-    --ring: 243 75% 59%;
-    --chart-1: 0 0% 96%;
+    --ring: 220 90% 56%;
+    --chart-1: 220 90% 56%;
     --chart-2: 0 0% 55%;
     --chart-3: 0 84% 60%;
     --chart-4: 262 52% 60%;
     --chart-5: 160 60% 50%;
     --sidebar-background: 0 0% 7%;
     --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 243 75% 59%;
+    --sidebar-primary: 220 90% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 12%;
     --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 243 75% 59%;
+    --sidebar-ring: 220 90% 56%;
 
     /* Zerithum design tokens — dark overrides */
     --z-bg-0: #121212;
@@ -133,10 +133,10 @@
     --z-text-2: #B8B8B8;
     --z-text-3: #808080;
 
-    --z-accent: #818CF8;
-    --z-accent-hover: #6366F1;
-    --z-accent-light: #1E1B4B;
-    --z-accent-muted: #312E81;
+    --z-accent: #60A5FA;
+    --z-accent-hover: #3B82F6;
+    --z-accent-light: #1E3A5F;
+    --z-accent-muted: #1D4ED8;
 
     --z-success: #34D399;
     --z-success-light: #064E3B;
