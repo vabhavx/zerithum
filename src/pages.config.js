@@ -30,6 +30,7 @@ import Transactions from './pages/Transactions';
 import Methodology from './pages/Methodology';
 import Security from './pages/Security';
 import TermsOfService from './pages/TermsOfService';
+import DataDeletion from './pages/DataDeletion';
 import __Layout from './Layout.jsx';
 
 
@@ -67,6 +68,7 @@ export const PAGES = {
     "Transactions": Transactions,
     "TermsOfService": TermsOfService,
     "AIVideoModels": AIVideoModels,
+    "data-deletion": DataDeletion,
 }
 
 export const pagesConfig = {

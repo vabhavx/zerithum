@@ -74,10 +74,10 @@ const OfflineIndicator = memo(() => {
   if (!isVisible) return null;
 
   return (
-    <div 
+    <div
       className={cn(
         "fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-sm font-medium shadow-lg transition-all duration-300",
-        isOnline 
+        isOnline
           ? "bg-green-100 text-green-800 opacity-0 translate-y-[-10px]"
           : "bg-amber-100 text-amber-800 opacity-100 translate-y-0"
       )}
@@ -103,12 +103,13 @@ const AuthenticatedApp = memo(() => {
 
   // Public routes configuration
   const publicRoutes = [
-    'Login', 'Signup', 'AuthCallback', 'SignIn', 'Landing', 
-    'Methodology', 'Privacy', 'Security', 'TermsOfService', 'Pricing'
+    'Login', 'Signup', 'AuthCallback', 'SignIn', 'Landing',
+    'Methodology', 'Privacy', 'Security', 'TermsOfService', 'Pricing',
+    'data-deletion'
   ];
-  
+
   const currentPath = window.location.pathname.substring(1);
-  const isPublicRoute = publicRoutes.some(route => 
+  const isPublicRoute = publicRoutes.some(route =>
     route.toLowerCase() === currentPath.toLowerCase()
   );
   const isRoot = currentPath === '';
@@ -125,7 +126,7 @@ const AuthenticatedApp = memo(() => {
   useEffect(() => {
     analytics.init();
     analytics.trackFeatureSupport();
-    
+
     // Register service worker for PWA
     registerServiceWorker();
   }, []);
@@ -145,11 +146,11 @@ const AuthenticatedApp = memo(() => {
           <Loader2 className="w-12 h-12 animate-spin text-indigo-600" />
           <div className="absolute inset-0 w-12 h-12 rounded-full border-4 border-indigo-100" />
         </div>
-        
+
         <p className="text-gray-600 font-medium mb-2">
           {isLoadingAuth ? 'Verifying authentication...' : 'Loading settings...'}
         </p>
-        
+
         {!isOnline && (
           <p className="text-amber-600 text-sm mb-4">
             You appear to be offline. Some features may be limited.
@@ -191,12 +192,12 @@ const AuthenticatedApp = memo(() => {
     <>
       <SkipLink targetId="main-content" />
       <OfflineIndicator />
-      
+
       <Suspense fallback={<PageLoader />}>
         <main id="main-content" className="outline-none" tabIndex={-1}>
           <Routes>
-            <Route 
-              path="/" 
+            <Route
+              path="/"
               element={
                 isAuthenticated ? (
                   <LayoutWrapper currentPageName={mainPageKey}>
@@ -205,12 +206,12 @@ const AuthenticatedApp = memo(() => {
                 ) : (
                   <LandingPage />
                 )
-              } 
+              }
             />
-            
+
             {Object.entries(Pages).map(([path, Page]) => {
               const noLayoutRoutes = ['Login', 'Signup', 'SignIn', 'AuthCallback', 'Landing'];
-              const shouldShowLayout = !publicRoutes.includes(path) || 
+              const shouldShowLayout = !publicRoutes.includes(path) ||
                 (isAuthenticated && !noLayoutRoutes.includes(path));
 
               return (
@@ -229,7 +230,7 @@ const AuthenticatedApp = memo(() => {
                 />
               );
             })}
-            
+
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </main>
