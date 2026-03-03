@@ -9,7 +9,6 @@ import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Help from './pages/Help';
 import Notifications from './pages/Notifications';
-import Platforms from './pages/Platforms';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
 import Profile from './pages/Profile';
@@ -47,7 +46,6 @@ export const PAGES = {
     "Methodology": Methodology,
     "Security": Security,
     "Notifications": Notifications,
-    "Platforms": Platforms,
     "Pricing": Pricing,
     "Privacy": Privacy,
     "Profile": Profile,

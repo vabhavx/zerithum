@@ -780,7 +780,7 @@ export default function Dashboard() {
               <h2 className="text-sm font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-2">
                 <button 
-                  onClick={() => handleNavigate("/Platforms")}
+                  onClick={() => handleNavigate("/ConnectedPlatforms")}
                   className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all group text-left"
                 >
                   <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
