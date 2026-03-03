@@ -269,7 +269,7 @@ const Sparkline = ({ data, color = 'var(--accent-500)' }) => {
 // SECTION COMPONENTS
 // ============================================================================
 
-const Header = () => (
+const Header = ({ user, onNavigate, searchQuery, onSearchChange }) => (
   <header className="h-14 bg-white border-b border-[var(--neutral-200)] flex items-center px-6 sticky top-0 z-50">
     <div className="font-bold text-lg tracking-tight text-[var(--neutral-900)]">Zerithum</div>
 
@@ -278,6 +278,8 @@ const Header = () => (
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--neutral-400)]" />
         <input
           type="search"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search transactions, platforms..."
           className="w-full h-9 pl-9 pr-3 rounded-md border border-[var(--neutral-200)] 
                      text-sm focus:outline-none focus:border-[var(--accent-500)]
@@ -287,20 +289,19 @@ const Header = () => (
     </div>
 
     <div className="ml-auto flex items-center gap-4">
-      <button className="relative p-2 text-[var(--neutral-500)] hover:text-[var(--neutral-700)] hover:bg-[var(--neutral-100)] rounded-md transition-colors">
+      <button onClick={() => onNavigate('/notifications')} className="relative p-2 text-[var(--neutral-500)] hover:text-[var(--neutral-700)] hover:bg-[var(--neutral-100)] rounded-md transition-colors">
         <Bell className="w-5 h-5" />
-        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--error)] rounded-full" />
       </button>
-      <button className="flex items-center gap-2 p-1.5 hover:bg-[var(--neutral-100)] rounded-md transition-colors">
+      <button onClick={() => onNavigate('/settings')} className="flex items-center gap-2 p-1.5 hover:bg-[var(--neutral-100)] rounded-md transition-colors">
         <div className="w-7 h-7 bg-[var(--accent-500)] rounded-full flex items-center justify-center text-white text-xs font-medium">
-          JD
+          {user ? (user.email ? user.email.substring(0, 2).toUpperCase() : 'U') : ''}
         </div>
       </button>
     </div>
   </header>
 );
 
-const CashHero = ({ position }) => (
+const CashHero = ({ position, onExport, onConnect }) => (
   <Card className="p-8 mb-6 bg-gradient-to-br from-white to-[var(--neutral-50)]">
     <div className="flex items-start justify-between">
       <div>
@@ -339,11 +340,11 @@ const CashHero = ({ position }) => (
       </div>
 
       <div className="flex gap-3">
-        <Button variant="secondary">
+        <Button variant="secondary" onClick={onExport}>
           <Download className="w-4 h-4 mr-2" />
           Export
         </Button>
-        <Button variant="primary">
+        <Button variant="primary" onClick={onConnect}>
           <Plus className="w-4 h-4 mr-2" />
           Connect Platform
         </Button>
@@ -464,7 +465,7 @@ const ReconciliationCard = ({ summary }) => {
   );
 };
 
-const ActionQueue = ({ items }) => {
+const ActionQueue = ({ items, onReview }) => {
   if (items.length === 0) {
     return (
       <Card className="p-6">
@@ -510,14 +511,14 @@ const ActionQueue = ({ items }) => {
           >
             <div className="flex items-start justify-between">
               <div className="flex gap-3">
-                {priorityIcon[item.priority]}
+                {priorityIcon[item.priority] || <AlertTriangle className="w-4 h-4 text-[var(--neutral-400)]" />}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium text-[var(--neutral-900)] truncate">
                       {item.title}
                     </span>
-                    <Badge variant={typeConfig[item.type].badge}>
-                      {typeConfig[item.type].label}
+                    <Badge variant={(typeConfig[item.type] || { badge: 'neutral' }).badge}>
+                      {(typeConfig[item.type] || { label: 'Item' }).label}
                     </Badge>
                   </div>
                   <p className="text-xs text-[var(--neutral-500)] mt-1 line-clamp-2">
@@ -535,7 +536,7 @@ const ActionQueue = ({ items }) => {
                   )}
                 </div>
               </div>
-              <Button variant="primary" size="sm" className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button variant="primary" size="sm" onClick={() => onReview(item)} className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                 Review
               </Button>
             </div>
@@ -593,9 +594,6 @@ const InsightsPanel = ({ insights }) => {
                     <span className="text-[11px] text-[var(--neutral-400)]">
                       Based on {insight.citationCount} transactions
                     </span>
-                    <button className="text-[11px] font-medium text-[var(--accent-600)] hover:text-[var(--accent-700)]">
-                      Why am I seeing this?
-                    </button>
                   </div>
                 </div>
               </div>
@@ -607,7 +605,7 @@ const InsightsPanel = ({ insights }) => {
   );
 };
 
-const ReviewTable = ({ items }) => {
+const ReviewTable = ({ items, onExport }) => {
   const [selectedId, setSelectedId] = useState(null);
 
   const statusConfig = {
@@ -621,14 +619,10 @@ const ReviewTable = ({ items }) => {
     <Card className="overflow-hidden">
       <div className="p-4 border-b border-[var(--neutral-200)] flex items-center justify-between">
         <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider">
-          Needs Review
+          Needs Review ({items.length})
         </h3>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm">
-            <Filter className="w-4 h-4 mr-1.5" />
-            Filter
-          </Button>
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={onExport}>
             <Download className="w-4 h-4 mr-1.5" />
             Export
           </Button>
@@ -733,6 +727,12 @@ const Dashboard = () => {
   const [period, setPeriod] = useState("mtd");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tableRef, isTableVisible] = useIsVisible({ threshold: 0.1 });
+  const [user, setUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    base44.auth.me().then(setUser);
+  }, []);
 
   const { data: transactions = [], isLoading: txLoading, refetch: refetchTransactions } = useQuery({
     queryKey: ["revenueTransactions", period],
@@ -805,9 +805,15 @@ const Dashboard = () => {
       .map(([date, amount]) => ({ date, amount }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    const latestTransactions = inRange
+    const filteredLatest = inRange
       .slice()
       .sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date))
+      .filter((tx) => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        return (tx.description && tx.description.toLowerCase().includes(query)) ||
+          (tx.platform && tx.platform.toLowerCase().includes(query));
+      })
       .slice(0, 20)
       .map((tx) => ({
         id: tx.id,
@@ -821,9 +827,9 @@ const Dashboard = () => {
 
     return {
       grossRevenue, netRevenue, estimatedFees, revenueDelta, periodExpenses, operatingMargin,
-      latestTransactions, transactionCount: inRange.length, trendData
+      latestTransactions: filteredLatest, transactionCount: inRange.length, trendData
     };
-  }, [period, transactions, expenses]);
+  }, [period, transactions, expenses, searchQuery]);
 
   const dataCompleteness = useMemo(() => {
     let firstDate = null;
@@ -853,6 +859,26 @@ const Dashboard = () => {
     await Promise.all([refetchTransactions(), refetchPlatforms()]);
     setIsRefreshing(false);
   }, 1000);
+
+  const handleExportTransactions = useCallback(() => {
+    if (!transactions.length) return;
+    const header = ['Date', 'Platform', 'Description', 'Amount'];
+    const rows = transactions.map(tx => [
+      format(new Date(tx.transaction_date), "yyyy-MM-dd"),
+      tx.platform || 'Unknown',
+      `"${(tx.description || '').replace(/"/g, '""')}"`,
+      tx.amount || 0
+    ]);
+    const csvContent = [header, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `transactions_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [transactions]);
 
 
   // Real data integrations
@@ -960,11 +986,20 @@ const Dashboard = () => {
     <>
       <DesignTokens />
       <div className="min-h-screen bg-[var(--neutral-50)]">
-        <Header />
+        <Header
+          user={user}
+          onNavigate={navigate}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
 
         <main className="max-w-[1400px] mx-auto p-6">
           {/* Cash Hero */}
-          <CashHero position={cashPosition} />
+          <CashHero
+            position={cashPosition}
+            onExport={handleExportTransactions}
+            onConnect={() => navigate('/platforms')}
+          />
 
           {/* KPI Row */}
           <div className="grid grid-cols-5 gap-4 mb-6">
@@ -978,30 +1013,23 @@ const Dashboard = () => {
             {/* Left - 7 cols */}
             <div className="col-span-7 space-y-6">
               <ReconciliationCard summary={reconciliationSummary} />
-
-              {/* Cashflow Forecast Placeholder */}
-              <Card className="p-6">
-                <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider mb-4">
-                  Cashflow Forecast
-                </h3>
-                <div className="h-40 flex items-center justify-center border border-dashed border-[var(--neutral-300)] rounded-md">
-                  <div className="text-center">
-                    <p className="text-sm text-[var(--neutral-500)]">30-day projection</p>
-                    <p className="text-xs text-[var(--neutral-400)] mt-1">Coming soon</p>
-                  </div>
-                </div>
-              </Card>
             </div>
 
             {/* Right - 5 cols */}
             <div className="col-span-5 space-y-6">
-              <ActionQueue items={actionItems} />
-              <InsightsPanel insights={insights} />
+              <ActionQueue
+                items={actionItems}
+                onReview={(item) => navigate('/revenue_autopsy')}
+              />
+              {insights.length > 0 && <InsightsPanel insights={insights} />}
             </div>
           </div>
 
           {/* Review Table */}
-          <ReviewTable items={reviewItems} />
+          <ReviewTable
+            items={reviewItems}
+            onExport={handleExportTransactions}
+          />
         </main>
       </div>
     </>
