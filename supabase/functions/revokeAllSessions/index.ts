@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
                     error: 'Current password is incorrect'
                 }, { status: 401, headers: corsHeaders });
             }
-        } else if (verificationCode) {
+        } else if (hasPassword && verificationCode) {
             // Verify via OTP
             if (!isValidOTPFormat(verificationCode)) {
                 return Response.json({
@@ -137,21 +137,17 @@ Deno.serve(async (req) => {
                 status: 'success',
                 details: { purpose: 'revoke_sessions', ...clientInfo }
             });
+        } else if (!hasPassword) {
+            // OAuth user - session JWT is sufficient re-auth
+            // Bypass OTP requirement for all OAuth users because email OTP via Resend is unreliable
+            console.log('OAuth user session revocation: using session JWT as re-auth');
         } else {
-            // Wait, for OAuth users without a password or verification code,
-            // we should allow them to revoke sessions based on their valid JWT alone?
-            // If they are OAuth only, they proved who they are by being logged in.
-            // Let's bypass the OTP requirement for Google OAuth users because email OTP via Resend is broken.
-            const isGoogleAuth = userProviders.includes('google');
-
-            if (!isGoogleAuth) {
-                return Response.json({
-                    error: 'Re-authentication required. Please provide current password or verification code.',
-                    requiresReauth: true,
-                    authMethod: 'otp'
-                }, { status: 401, headers: corsHeaders });
-            }
-            // If google auth, just proceed because they can't easily do OTP
+            // No re-authentication provided and user has password
+            return Response.json({
+                error: 'Re-authentication required. Please provide current password or verification code.',
+                requiresReauth: true,
+                authMethod: 'otp'
+            }, { status: 401, headers: corsHeaders });
         }
 
         // Perform session revocation using admin client
