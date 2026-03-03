@@ -3,7 +3,7 @@
  * ARIA helpers, focus management, and keyboard navigation
  */
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 
 // ============================================================================
 // Focus Management
@@ -204,8 +204,6 @@ export function useHighContrast() {
 // ============================================================================
 // Skip Link
 // ============================================================================
-
-import React from 'react';
 
 export function SkipLink({ targetId, children = 'Skip to main content' }) {
   const handleClick = (e) => {

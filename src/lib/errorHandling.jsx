@@ -244,8 +244,6 @@ export function useError() {
 // Error Toast Component
 // ============================================================================
 
-import React from 'react';
-
 function ErrorToast({ error, onClose }) {
   const [progress, setProgress] = useState(100);
   const AUTO_DISMISS_TIME = 5000;
