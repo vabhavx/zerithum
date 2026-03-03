@@ -1,17 +1,10 @@
 /**
- * Zerithum Dashboard - Lightning Fast Edition
- * Sub-50ms interactions, 60fps rendering, instant navigation
- * Enterprise-grade performance with aggressive optimization
+ * Zerithum Dashboard Redesign v2.0
+ * Professional, calm, high-signal interface for creator revenue reconciliation
+ * Design principles: Palantir/Paradigm style - restrained, precise, minimal decoration
  */
 
-import { 
-  useMemo, 
-  useState, 
-  useCallback, 
-  memo, 
-  useRef,
-  useEffect
-} from "react";
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -20,40 +13,24 @@ import {
   startOfMonth,
   subDays,
 } from "date-fns";
-import {
-  Search,
-  Bell,
-  RefreshCw,
-  CheckCircle,
-  Clock,
+import { 
+  Search, 
+  Bell, 
+  CheckCircle, 
+  Clock, 
   AlertTriangle,
+  ChevronRight,
+  Filter,
+  Download,
+  Plus,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
-  Download,
-  Plus,
-  ChevronRight,
-  Filter,
   MoreHorizontal,
-  TrendingUp,
-  Zap,
-  Activity,
-  Database,
-  WifiOff,
-} from "lucide-react";
+  RefreshCw
+} from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-
 import { base44 } from "@/api/supabaseClient";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 // Performance utilities
 import { 
@@ -65,90 +42,21 @@ import {
 } from "@/lib/performance.js";
 
 // ============================================================================
-// PERFORMANCE CONSTANTS
+// PERFORMANCE CONSTANTS & UTILS
 // ============================================================================
-
-const QUERY_STALE_TIME = 30 * 1000; // 30 seconds
-const QUERY_CACHE_TIME = 5 * 60 * 1000; // 5 minutes
-const SCROLL_THROTTLE = 16; // 60fps
-const SEARCH_DEBOUNCE = 150;
-
-// Memoized calculation cache
+const QUERY_STALE_TIME = 30 * 1000;
+const QUERY_CACHE_TIME = 5 * 60 * 1000;
 const calcCache = new LRUCache(1000);
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
-// ============================================================================
-// MEMOIZED UTILITIES
-// ============================================================================
-
-const PLATFORM_LABELS = {
-  youtube: "YouTube",
-  patreon: "Patreon",
-  stripe: "Stripe",
-  gumroad: "Gumroad",
-  instagram: "Instagram",
-  tiktok: "TikTok",
-  shopify: "Shopify",
-  substack: "Substack",
-};
-
-const PLATFORM_COLORS = {
-  youtube: "#DC2626",
-  patreon: "#E65C46",
-  stripe: "#635BFF",
-  gumroad: "#D946EF",
-  instagram: "#E1306C",
-  tiktok: "#000000",
-  shopify: "#5E8E3E",
-  substack: "#FF6719",
-  default: "#4F46E5",
-};
-
-const PLATFORM_FEE_RATES = {
-  youtube: 0.45,
-  patreon: 0.08,
-  stripe: 0.029,
-  gumroad: 0.1,
-  instagram: 0.05,
-  tiktok: 0.5,
-  shopify: 0.02,
-  substack: 0.1,
-};
-
-const PERIODS = [
-  { value: "mtd", label: "Month to date" },
-  { value: "30d", label: "Last 30 days" },
-  { value: "90d", label: "Last 90 days" },
-];
-
-const money = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-// ============================================================================
-// MEMOIZED CALCULATIONS
-// ============================================================================
-
-const formatMoney = memoize((value) => {
-  return money.format(value || 0);
-}, 1000);
+const PLATFORM_LABELS = { youtube: "YouTube", patreon: "Patreon", stripe: "Stripe", gumroad: "Gumroad", instagram: "Instagram", tiktok: "TikTok", shopify: "Shopify", substack: "Substack" };
+const PLATFORM_FEE_RATES = { youtube: 0.45, patreon: 0.08, stripe: 0.029, gumroad: 0.1, instagram: 0.05, tiktok: 0.5, shopify: 0.02, substack: 0.1 };
 
 const calcFee = memoize((transaction) => {
   const cacheKey = JSON.stringify(transaction);
   const cached = calcCache.get(cacheKey);
   if (cached !== undefined) return cached;
-  
   const explicitFee = Number(transaction.platform_fee || 0);
-  if (explicitFee > 0) {
-    calcCache.set(cacheKey, explicitFee);
-    return explicitFee;
-  }
+  if (explicitFee > 0) { calcCache.set(cacheKey, explicitFee); return explicitFee; }
   const rate = PLATFORM_FEE_RATES[(transaction.platform || "").toLowerCase()] || 0;
   const result = (transaction.amount || 0) * rate;
   calcCache.set(cacheKey, result);
@@ -157,21 +65,18 @@ const calcFee = memoize((transaction) => {
 
 const getRange = memoize((period) => {
   const now = new Date();
-
   if (period === "mtd") {
     const start = startOfMonth(now);
     const comparisonStart = startOfMonth(subDays(start, 1));
     const comparisonEnd = subDays(start, 1);
     return { start, end: now, comparisonStart, comparisonEnd };
   }
-
   if (period === "90d") {
     const start = subDays(now, 89);
     const comparisonEnd = subDays(start, 1);
     const comparisonStart = subDays(comparisonEnd, 89);
     return { start, end: now, comparisonStart, comparisonEnd };
   }
-
   const start = subDays(now, 29);
   const comparisonEnd = subDays(start, 1);
   const comparisonStart = subDays(comparisonEnd, 29);
@@ -179,168 +84,661 @@ const getRange = memoize((period) => {
 });
 
 // ============================================================================
-// SUB-COMPONENTS - All memoized for zero unnecessary re-renders
+// DESIGN TOKENS - CSS VARIABLES
 // ============================================================================
 
-const DashboardMetric = memo(({ label, value, subtext, tone = "neutral", icon: Icon }) => {
-  const toneColors = {
-    indigo: "bg-indigo-50 text-indigo-700 border-indigo-200",
-    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    red: "bg-red-50 text-red-700 border-red-200",
-    blue: "bg-blue-50 text-blue-700 border-blue-200",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
-    neutral: "bg-gray-50 text-gray-700 border-gray-200",
+const DesignTokens = () => (
+  <style>{`
+    :root {
+      /* Neutral scale - pure grayscale */
+      --neutral-0: #FFFFFF;
+      --neutral-50: #FAFAFA;
+      --neutral-100: #F5F5F5;
+      --neutral-200: #E5E5E5;
+      --neutral-300: #D4D4D4;
+      --neutral-400: #A3A3A3;
+      --neutral-500: #737373;
+      --neutral-600: #525252;
+      --neutral-700: #404040;
+      --neutral-800: #262626;
+      --neutral-900: #000000;
+      
+      /* Single accent - blue */
+      --accent-50: #EFF6FF;
+      --accent-100: #DBEAFE;
+      --accent-200: #BFDBFE;
+      --accent-500: #3B82F6;
+      --accent-600: #2563EB;
+      --accent-700: #1D4ED8;
+      
+      /* Semantic */
+      --success: #10B981;
+      --warning: #F59E0B;
+      --error: #EF4444;
+      
+      /* Typography */
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      
+      /* Motion */
+      --duration-fast: 100ms;
+      --duration-normal: 150ms;
+      --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: var(--font-sans);
+      background: var(--neutral-50);
+      color: var(--neutral-900);
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  `}</style>
+);
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+const formatCurrency = (amount, currency = "USD") => 
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+  }).format(amount);
+
+const formatRelativeTime = (date) => {
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+};
+
+// ============================================================================
+// PRIMITIVE COMPONENTS
+// ============================================================================
+
+const Card = ({ 
+  children, 
+  className = '' 
+}) => (
+  <div className={`bg-white border border-[var(--neutral-200)] rounded-md ${className}`}>
+    {children}
+  </div>
+);
+
+const Badge = ({ variant, children }) => {
+  const variants = {
+    default: 'bg-[var(--accent-100)] text-[var(--accent-700)]',
+    success: 'bg-[var(--success)]/10 text-[var(--success)]',
+    warning: 'bg-[var(--warning)]/10 text-[var(--warning)]',
+    error: 'bg-[var(--error)]/10 text-[var(--error)]',
+    neutral: 'bg-[var(--neutral-100)] text-[var(--neutral-600)]',
   };
-
-  return (
-    <div className={`p-5 rounded-lg border ${toneColors[tone]} transition-all duration-200 hover:shadow-md`}>
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide opacity-70">{label}</p>
-          <p className="text-2xl font-bold mt-1 tabular-nums">{value}</p>
-          {subtext && <p className="text-xs mt-1 opacity-60">{subtext}</p>}
-        </div>
-        {Icon && <Icon className="w-5 h-5 opacity-50" />}
-      </div>
-    </div>
-  );
-});
-
-DashboardMetric.displayName = "DashboardMetric";
-
-const CustomTooltip = memo(({ active, payload, label }) => {
-  if (!active || !payload || !payload.length) return null;
   
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-xl">
-      <p className="mb-1 text-xs text-gray-500">{format(new Date(label), "MMM d, yyyy")}</p>
-      <p className="text-sm font-semibold text-gray-900 tabular-nums">
-        {formatMoney(payload[0].value)}
-      </p>
-    </div>
-  );
-});
-
-CustomTooltip.displayName = "CustomTooltip";
-
-const PlatformBadge = memo(({ platform }) => {
-  const key = (platform || "unknown").toLowerCase();
-  const color = PLATFORM_COLORS[key] || PLATFORM_COLORS.default;
-  
-  return (
-    <span 
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium border"
-      style={{ 
-        backgroundColor: `${color}10`,
-        borderColor: `${color}30`,
-        color: color 
-      }}
-    >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-      {PLATFORM_LABELS[key] || platform}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${variants[variant]}`}>
+      {children}
     </span>
   );
-});
+};
 
-PlatformBadge.displayName = "PlatformBadge";
-
-const TransactionRow = memo(({ tx, index, onClick }) => (
-  <motion.tr
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.03, duration: 0.2 }}
-    onClick={onClick}
-    className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors cursor-pointer group"
-  >
-    <TableCell className="text-sm text-gray-600 tabular-nums">
-      {format(new Date(tx.date), "MMM d")}
-    </TableCell>
-    <TableCell className="max-w-[280px] truncate text-sm font-medium text-gray-900">
-      {tx.description}
-    </TableCell>
-    <TableCell>
-      <PlatformBadge platform={tx.platform} />
-    </TableCell>
-    <TableCell className="text-right text-sm tabular-nums text-gray-900">
-      {formatMoney(tx.gross)}
-    </TableCell>
-    <TableCell className="text-right text-sm font-medium tabular-nums text-gray-900">
-      {formatMoney(tx.gross - tx.fee)}
-    </TableCell>
-  </motion.tr>
-));
-
-TransactionRow.displayName = "TransactionRow";
-
-const StatusCard = memo(({ title, status, message, onAction }) => {
-  const isError = status === "error";
+const Button = ({ variant = 'secondary', size = 'md', isLoading, children, onClick, className = '' }) => {
+  const variants = {
+    primary: 'bg-[var(--accent-500)] text-white hover:bg-[var(--accent-600)]',
+    secondary: 'bg-[var(--neutral-100)] text-[var(--neutral-700)] hover:bg-[var(--neutral-200)] border border-[var(--neutral-300)]',
+    ghost: 'bg-transparent text-[var(--neutral-600)] hover:bg-[var(--neutral-100)]',
+  };
+  
+  const sizes = {
+    sm: 'h-8 px-3 text-xs',
+    md: 'h-10 px-4 text-sm',
+    lg: 'h-12 px-6 text-base',
+  };
   
   return (
-    <div className={`p-4 rounded-lg border ${isError ? "bg-red-50 border-red-200" : "bg-white border-gray-200"}`}>
-      <div className="flex items-start gap-3">
-        <div className={`mt-0.5 ${isError ? "text-red-500" : "text-emerald-500"}`}>
-          {isError ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
+    <button
+      onClick={onClick}
+      disabled={isLoading}
+      className={`
+        inline-flex items-center justify-center rounded-md font-medium
+        transition-all duration-[var(--duration-fast)]
+        disabled:opacity-50 disabled:cursor-not-allowed
+        ${variants[variant]} ${sizes[size]} ${className}
+      `}
+    >
+      {isLoading && (
+        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+      )}
+      {children}
+    </button>
+  );
+};
+
+// ============================================================================
+// SPARKLINE COMPONENT
+// ============================================================================
+
+const Sparkline = ({ data, color = 'var(--accent-500)' }) => {
+  if (data.length < 2) return null;
+  
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  
+  const points = data.map((value, i) => {
+    const x = (i / (data.length - 1)) * 100;
+    const y = 100 - ((value - min) / range) * 100;
+    return `${x},${y}`;
+  }).join(' ');
+  
+  const areaPoints = `0,100 ${points} 100,100`;
+  
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-10" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="sparkGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon fill="url(#sparkGradient)" points={areaPoints} />
+      <polyline fill="none" stroke={color} strokeWidth="2" points={points} />
+    </svg>
+  );
+};
+
+// ============================================================================
+// SECTION COMPONENTS
+// ============================================================================
+
+const Header = () => (
+  <header className="h-14 bg-white border-b border-[var(--neutral-200)] flex items-center px-6 sticky top-0 z-50">
+    <div className="font-bold text-lg tracking-tight text-[var(--neutral-900)]">Zerithum</div>
+    
+    <div className="ml-8 flex-1 max-w-md">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--neutral-400)]" />
+        <input 
+          type="search"
+          placeholder="Search transactions, platforms..."
+          className="w-full h-9 pl-9 pr-3 rounded-md border border-[var(--neutral-200)] 
+                     text-sm focus:outline-none focus:border-[var(--accent-500)]
+                     placeholder:text-[var(--neutral-400)] bg-[var(--neutral-50)]"
+        />
+      </div>
+    </div>
+    
+    <div className="ml-auto flex items-center gap-4">
+      <button className="relative p-2 text-[var(--neutral-500)] hover:text-[var(--neutral-700)] hover:bg-[var(--neutral-100)] rounded-md transition-colors">
+        <Bell className="w-5 h-5" />
+        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--error)] rounded-full" />
+      </button>
+      <button className="flex items-center gap-2 p-1.5 hover:bg-[var(--neutral-100)] rounded-md transition-colors">
+        <div className="w-7 h-7 bg-[var(--accent-500)] rounded-full flex items-center justify-center text-white text-xs font-medium">
+          JD
         </div>
-        <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium ${isError ? "text-red-900" : "text-gray-900"}`}>
-            {title}
-          </p>
-          <p className={`text-xs mt-0.5 ${isError ? "text-red-600" : "text-gray-500"}`}>
-            {message}
-          </p>
+      </button>
+    </div>
+  </header>
+);
+
+const CashHero = ({ position }) => (
+  <Card className="p-8 mb-6 bg-gradient-to-br from-white to-[var(--neutral-50)]">
+    <div className="flex items-start justify-between">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-medium text-[var(--neutral-500)] uppercase tracking-wider">
+            Available Cash
+          </span>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--success)]/10 text-[var(--success)]">
+            <span className="w-1.5 h-1.5 bg-[var(--success)] rounded-full mr-1.5 animate-pulse" />
+            Live
+          </span>
         </div>
-        {onAction && (
-          <button 
-            onClick={onAction}
-            className="text-xs font-medium text-blue-600 hover:text-blue-700 whitespace-nowrap"
+        
+        <h1 className="text-4xl font-bold text-[var(--neutral-900)] tracking-tight tabular-nums">
+          {formatCurrency(position.availableCash)}
+        </h1>
+        
+        <p className="text-sm text-[var(--neutral-500)] mt-2 max-w-md">
+          After fees, refunds, and known payouts. Updated {formatRelativeTime(position.lastUpdated)}.
+        </p>
+        
+        <div className="flex gap-6 mt-4 text-sm">
+          <div>
+            <span className="text-[var(--neutral-400)]">Pending payouts: </span>
+            <span className="font-medium text-[var(--neutral-700)] tabular-nums">
+              {formatCurrency(position.pendingPayouts)}
+            </span>
+          </div>
+          <div>
+            <span className="text-[var(--neutral-400)]">Held for fees: </span>
+            <span className="font-medium text-[var(--neutral-700)] tabular-nums">
+              {formatCurrency(position.heldForFees)}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex gap-3">
+        <Button variant="secondary">
+          <Download className="w-4 h-4 mr-2" />
+          Export
+        </Button>
+        <Button variant="primary">
+          <Plus className="w-4 h-4 mr-2" />
+          Connect Platform
+        </Button>
+      </div>
+    </div>
+  </Card>
+);
+
+const KPICard = ({ metric }) => {
+  const TrendIcon = metric.trend === 'up' ? ArrowUpRight : 
+                   metric.trend === 'down' ? ArrowDownRight : Minus;
+  
+  const trendColor = metric.trend === 'up' ? 'text-[var(--success)]' : 
+                     metric.trend === 'down' ? 'text-[var(--error)]' : 
+                     'text-[var(--neutral-400)]';
+  
+  const borderColor = metric.status === 'error' ? 'border-l-[var(--error)]' :
+                      metric.status === 'warning' ? 'border-l-[var(--warning)]' :
+                      'border-l-transparent';
+  
+  return (
+    <Card className={`p-5 h-[120px] border-l-4 ${borderColor} cursor-pointer
+                     hover:shadow-sm hover:border-[var(--neutral-300)] transition-all duration-[var(--duration-fast)]`}>
+      <div className="flex flex-col h-full justify-between">
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-[var(--neutral-500)] uppercase tracking-wider">
+              {metric.label}
+            </span>
+            {metric.trend && (
+              <span className={`text-xs font-medium flex items-center gap-0.5 ${trendColor}`}>
+                <TrendIcon className="w-3 h-3" />
+                {metric.trendValue}
+              </span>
+            )}
+          </div>
+          <div className="text-2xl font-semibold text-[var(--neutral-900)] tracking-tight tabular-nums">
+            {metric.value}
+          </div>
+          {metric.secondaryValue && (
+            <div className="text-xs text-[var(--neutral-500)] mt-0.5">
+              {metric.secondaryValue}
+            </div>
+          )}
+        </div>
+        <p className="text-[11px] text-[var(--neutral-400)] leading-relaxed">
+          {metric.helperText}
+        </p>
+      </div>
+    </Card>
+  );
+};
+
+const ReconciliationCard = ({ summary }) => {
+  const total = summary.matched + summary.pending + summary.needsReview;
+  const matchRate = total > 0 ? Math.round((summary.matched / total) * 100) : 0;
+  
+  return (
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider">
+          Reconciliation Status
+        </h3>
+        <div className="flex items-center gap-2 text-xs text-[var(--neutral-500)]">
+          <span className={`
+            w-2 h-2 rounded-full
+            ${summary.syncStatus === 'syncing' ? 'bg-[var(--warning)] animate-pulse' : 
+              summary.syncStatus === 'error' ? 'bg-[var(--error)]' : 
+              'bg-[var(--success)]'}
+          `} />
+          Synced {formatRelativeTime(summary.lastSyncAt)}
+        </div>
+      </div>
+      
+      <div className="mb-4">
+        <Sparkline data={summary.trendData} />
+      </div>
+      
+      <div className="grid grid-cols-3 gap-3">
+        <div className="text-center p-3 rounded-md bg-[var(--neutral-50)]">
+          <div className="text-xl font-semibold text-[var(--success)] tabular-nums">
+            {summary.matched}
+          </div>
+          <div className="text-[11px] text-[var(--neutral-500)] mt-1 uppercase tracking-wide">Matched</div>
+        </div>
+        <div className="text-center p-3 rounded-md bg-[var(--neutral-50)]">
+          <div className="text-xl font-semibold text-[var(--neutral-600)] tabular-nums">
+            {summary.pending}
+          </div>
+          <div className="text-[11px] text-[var(--neutral-500)] mt-1 uppercase tracking-wide">Pending</div>
+        </div>
+        <div className={`
+          text-center p-3 rounded-md
+          ${summary.needsReview > 0 ? 'bg-[var(--error)]/5' : 'bg-[var(--neutral-50)]'}
+        `}>
+          <div className={`text-xl font-semibold tabular-nums
+            ${summary.needsReview > 0 ? 'text-[var(--error)]' : 'text-[var(--neutral-600)]'}
+          `}>
+            {summary.needsReview}
+          </div>
+          <div className="text-[11px] text-[var(--neutral-500)] mt-1 uppercase tracking-wide">Needs Review</div>
+        </div>
+      </div>
+      
+      <div className="mt-4 pt-4 border-t border-[var(--neutral-200)]">
+        <div className="flex items-center justify-between text-sm mb-2">
+          <span className="text-[var(--neutral-500)]">Match rate</span>
+          <span className="font-semibold text-[var(--neutral-900)] tabular-nums">{matchRate}%</span>
+        </div>
+        <div className="w-full h-1.5 bg-[var(--neutral-200)] rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-[var(--accent-500)] rounded-full transition-all duration-500"
+            style={{ width: `${matchRate}%` }}
+          />
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+const ActionQueue = ({ items }) => {
+  if (items.length === 0) {
+    return (
+      <Card className="p-6">
+        <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider mb-4">
+          Action Queue
+        </h3>
+        <div className="text-center py-8">
+          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--neutral-100)] flex items-center justify-center">
+            <CheckCircle className="w-6 h-6 text-[var(--neutral-400)]" />
+          </div>
+          <p className="text-sm font-medium text-[var(--neutral-700)]">All caught up</p>
+          <p className="text-xs text-[var(--neutral-400)] mt-1">No items need your attention</p>
+        </div>
+      </Card>
+    );
+  }
+  
+  const typeConfig = {
+    mismatch: { badge: 'error', label: 'Mismatch' },
+    missing_receipt: { badge: 'warning', label: 'Receipt Missing' },
+    anomaly: { badge: 'warning', label: 'Anomaly' },
+    duplicate: { badge: 'neutral', label: 'Duplicate' },
+  };
+  
+  const priorityIcon = {
+    high: <AlertTriangle className="w-4 h-4 text-[var(--error)]" />,
+    medium: <Clock className="w-4 h-4 text-[var(--warning)]" />,
+    low: <Minus className="w-4 h-4 text-[var(--neutral-400)]" />,
+  };
+  
+  return (
+    <Card className="p-6">
+      <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider mb-4">
+        Action Queue ({items.length})
+      </h3>
+      
+      <div className="space-y-3">
+        {items.slice(0, 3).map(item => (
+          <div 
+            key={item.id}
+            className="p-4 rounded-md bg-[var(--neutral-50)] border border-[var(--neutral-200)]
+                       hover:border-[var(--neutral-300)] transition-colors cursor-pointer group"
           >
-            Fix it →
+            <div className="flex items-start justify-between">
+              <div className="flex gap-3">
+                {priorityIcon[item.priority]}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-[var(--neutral-900)] truncate">
+                      {item.title}
+                    </span>
+                    <Badge variant={typeConfig[item.type].badge }>
+                      {typeConfig[item.type].label}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-[var(--neutral-500)] mt-1 line-clamp-2">
+                    {item.description}
+                  </p>
+                  {item.amount && (
+                    <p className="text-sm font-medium text-[var(--neutral-700)] mt-2 tabular-nums">
+                      {formatCurrency(item.amount, item.currency)}
+                      {item.expectedAmount && (
+                        <span className="text-[var(--neutral-400)] font-normal ml-1">
+                          (expected {formatCurrency(item.expectedAmount, item.currency)})
+                        </span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <Button variant="primary" size="sm" className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                Review
+              </Button>
+            </div>
+          </div>
+        ))}
+        
+        {items.length > 3 && (
+          <button className="w-full text-center text-sm text-[var(--accent-600)] hover:text-[var(--accent-700)] py-2 font-medium">
+            +{items.length - 3} more items
           </button>
         )}
       </div>
-    </div>
+    </Card>
   );
-});
+};
 
-StatusCard.displayName = "StatusCard";
+const InsightsPanel = ({ insights }) => {
+  const impactConfig = {
+    positive: { border: 'border-l-[var(--success)]', icon: ArrowUpRight },
+    negative: { border: 'border-l-[var(--error)]', icon: ArrowDownRight },
+    neutral: { border: 'border-l-[var(--neutral-400)]', icon: Minus },
+  };
+  
+  return (
+    <Card className="p-6">
+      <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider mb-4">
+        Insights
+      </h3>
+      
+      <div className="space-y-3">
+        {insights.map(insight => {
+          const config = impactConfig[insight.impact];
+          const Icon = config.icon;
+          
+          return (
+            <div 
+              key={insight.id}
+              className={`p-4 rounded-md bg-[var(--neutral-50)] border-l-4 ${config.border}
+                         hover:bg-[var(--neutral-100)] transition-colors cursor-pointer`}
+            >
+              <div className="flex items-start gap-3">
+                <Icon className={`w-4 h-4 mt-0.5 shrink-0
+                  ${insight.impact === 'positive' ? 'text-[var(--success)]' :
+                    insight.impact === 'negative' ? 'text-[var(--error)]' :
+                    'text-[var(--neutral-400)]'}
+                `} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--neutral-900)]">
+                    {insight.title}
+                  </p>
+                  <p className="text-xs text-[var(--neutral-500)] mt-1">
+                    {insight.description}
+                  </p>
+                  <div className="flex items-center gap-4 mt-3">
+                    <span className="text-[11px] text-[var(--neutral-400)]">
+                      Based on {insight.citationCount} transactions
+                    </span>
+                    <button className="text-[11px] font-medium text-[var(--accent-600)] hover:text-[var(--accent-700)]">
+                      Why am I seeing this?
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+};
+
+const ReviewTable = ({ items }) => {
+  const [selectedId, setSelectedId] = useState(null);
+  
+  const statusConfig = {
+    matched: { badge: 'success', label: 'Matched' },
+    pending: { badge: 'neutral', label: 'Pending' },
+    mismatch: { badge: 'error', label: 'Mismatch' },
+    duplicate: { badge: 'warning', label: 'Duplicate' },
+  };
+  
+  return (
+    <Card className="overflow-hidden">
+      <div className="p-4 border-b border-[var(--neutral-200)] flex items-center justify-between">
+        <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider">
+          Needs Review
+        </h3>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm">
+            <Filter className="w-4 h-4 mr-1.5" />
+            Filter
+          </Button>
+          <Button variant="secondary" size="sm">
+            <Download className="w-4 h-4 mr-1.5" />
+            Export
+          </Button>
+        </div>
+      </div>
+      
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-[var(--neutral-50)]">
+              <th className="text-left py-3 px-4 text-[11px] font-semibold text-[var(--neutral-500)] uppercase tracking-wider">
+                Status
+              </th>
+              <th className="text-left py-3 px-4 text-[11px] font-semibold text-[var(--neutral-500)] uppercase tracking-wider">
+                Platform
+              </th>
+              <th className="text-left py-3 px-4 text-[11px] font-semibold text-[var(--neutral-500)] uppercase tracking-wider">
+                Description
+              </th>
+              <th className="text-left py-3 px-4 text-[11px] font-semibold text-[var(--neutral-500)] uppercase tracking-wider">
+                Date
+              </th>
+              <th className="text-right py-3 px-4 text-[11px] font-semibold text-[var(--neutral-500)] uppercase tracking-wider">
+                Amount
+              </th>
+              <th className="text-right py-3 px-4 text-[11px] font-semibold text-[var(--neutral-500)] uppercase tracking-wider">
+                Expected
+              </th>
+              <th className="text-center py-3 px-4 text-[11px] font-semibold text-[var(--neutral-500)] uppercase tracking-wider">
+                Match
+              </th>
+              <th className="w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, index) => (
+              <tr 
+                key={item.id}
+                onClick={() => setSelectedId(item.id)}
+                className={`
+                  border-b border-[var(--neutral-200)] last:border-0
+                  hover:bg-[var(--neutral-50)] transition-colors cursor-pointer
+                  ${selectedId === item.id ? 'bg-[var(--accent-50)]' : ''}
+                `}
+              >
+                <td className="py-3 px-4">
+                  <Badge variant={statusConfig[item.status].badge }>
+                    {statusConfig[item.status].label}
+                  </Badge>
+                </td>
+                <td className="py-3 px-4 text-sm font-medium text-[var(--neutral-700)]">
+                  {item.platform}
+                </td>
+                <td className="py-3 px-4 text-sm text-[var(--neutral-600)] max-w-xs truncate">
+                  {item.description}
+                </td>
+                <td className="py-3 px-4 text-sm text-[var(--neutral-500)] tabular-nums">
+                  {item.date}
+                </td>
+                <td className="py-3 px-4 text-sm font-medium text-[var(--neutral-900)] text-right tabular-nums">
+                  {formatCurrency(item.amount)}
+                </td>
+                <td className="py-3 px-4 text-sm text-[var(--neutral-500)] text-right tabular-nums">
+                  {item.expectedAmount ? formatCurrency(item.expectedAmount) : '—'}
+                </td>
+                <td className="py-3 px-4 text-center">
+                  {item.matchConfidence ? (
+                    <span className={`
+                      text-sm font-medium tabular-nums
+                      ${item.matchConfidence >= 90 ? 'text-[var(--success)]' :
+                        item.matchConfidence >= 70 ? 'text-[var(--warning)]' :
+                        'text-[var(--error)]'}
+                    `}>
+                      {item.matchConfidence}%
+                    </span>
+                  ) : (
+                    <span className="text-[var(--neutral-400)]">—</span>
+                  )}
+                </td>
+                <td className="py-3 px-4">
+                  <button className="p-1 hover:bg-[var(--neutral-200)] rounded transition-colors">
+                    <MoreHorizontal className="w-4 h-4 text-[var(--neutral-400)]" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+};
 
 // ============================================================================
-// MAIN DASHBOARD - Optimized for 60fps
+// MAIN DASHBOARD COMPONENT
 // ============================================================================
 
-export default function Dashboard() {
+const Dashboard = () => {
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [period, setPeriod] = useState("mtd");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tableRef, isTableVisible] = useIsVisible({ threshold: 0.1 });
   
-  // Prefetch other routes on mount
-  useEffect(() => {
-    const prefetchRoutes = ["/Transactions", "/Expenses", "/TaxEstimator"];
-    prefetchRoutes.forEach((route, i) => {
-      setTimeout(() => {
-        // This would integrate with InstantRouter prefetch
-        console.log(`[Prefetch] ${route}`);
-      }, i * 100);
-    });
-  }, []);
-
-  // Data fetching with aggressive caching
-  const {
-    data: transactions = [],
-    isLoading: txLoading,
-    refetch: refetchTransactions,
-    isFetching: isFetchingTx,
-  } = useQuery({
+  const { data: transactions = [], isLoading: txLoading, refetch: refetchTransactions } = useQuery({
     queryKey: ["revenueTransactions", period],
-    queryFn: async () => {
-      const data = await base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date");
-      return data;
-    },
+    queryFn: async () => base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
     staleTime: QUERY_STALE_TIME,
     cacheTime: QUERY_CACHE_TIME,
-    refetchOnWindowFocus: false,
   });
 
   const { data: expenses = [] } = useQuery({
@@ -350,41 +748,29 @@ export default function Dashboard() {
     cacheTime: QUERY_CACHE_TIME,
   });
 
-  const {
-    data: connectedPlatforms = [],
-    isLoading: platformsLoading,
-    refetch: refetchPlatforms,
-  } = useQuery({
+  const { data: connectedPlatforms = [], isLoading: platformsLoading, refetch: refetchPlatforms } = useQuery({
     queryKey: ["connectedPlatforms"],
     queryFn: async () => {
       const user = await base44.auth.me();
       return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
-    },
-    staleTime: QUERY_STALE_TIME,
+    }
   });
 
   const { data: pendingAutopsyEvents = [] } = useQuery({
     queryKey: ["autopsyEvents", "pending"],
     queryFn: async () => {
       const user = await base44.auth.me();
-      return base44.entities.AutopsyEvent.filter(
-        { user_id: user.id, status: "pending_review" },
-        "-detected_at",
-        10
-      );
+      return base44.entities.AutopsyEvent.filter({ user_id: user.id, status: "pending_review" }, "-detected_at", 10);
     },
     staleTime: QUERY_STALE_TIME,
   });
 
-  // Computed metrics - memoized for zero recalculation
   const computed = useMemo(() => {
     const range = getRange(period);
-
     const inRange = transactions.filter((tx) => {
       const date = new Date(tx.transaction_date);
       return date >= range.start && date <= range.end;
     });
-
     const inComparisonRange = transactions.filter((tx) => {
       const date = new Date(tx.transaction_date);
       return date >= range.comparisonStart && date <= range.comparisonEnd;
@@ -395,8 +781,7 @@ export default function Dashboard() {
     const netRevenue = grossRevenue - estimatedFees;
 
     const comparisonGross = inComparisonRange.reduce((sum, tx) => sum + (tx.amount || 0), 0);
-    const revenueDelta =
-      comparisonGross > 0 ? ((grossRevenue - comparisonGross) / comparisonGross) * 100 : 0;
+    const revenueDelta = comparisonGross > 0 ? ((grossRevenue - comparisonGross) / comparisonGross) * 100 : 0;
 
     const periodExpenses = expenses
       .filter((expense) => {
@@ -404,511 +789,272 @@ export default function Dashboard() {
         return date >= range.start && date <= range.end;
       })
       .reduce((sum, expense) => sum + (expense.amount || 0), 0);
-
     const operatingMargin = netRevenue - periodExpenses;
 
-    // Build trend data efficiently
     const trendMap = new Map();
     let currentDate = new Date(range.start);
     while (currentDate <= range.end) {
-      const key = format(currentDate, "yyyy-MM-dd");
-      trendMap.set(key, 0);
+      trendMap.set(format(currentDate, "yyyy-MM-dd"), 0);
       currentDate.setDate(currentDate.getDate() + 1);
     }
-
     inRange.forEach(tx => {
       const key = format(new Date(tx.transaction_date), "yyyy-MM-dd");
-      if (trendMap.has(key)) {
-        trendMap.set(key, trendMap.get(key) + (tx.amount || 0));
-      }
+      if (trendMap.has(key)) trendMap.set(key, trendMap.get(key) + (tx.amount || 0));
     });
-
     const trendData = Array.from(trendMap.entries())
       .map(([date, amount]) => ({ date, amount }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Platform aggregation
-    const byPlatformMap = new Map();
-    for (const tx of inRange) {
-      const key = (tx.platform || "unknown").toLowerCase();
-      const existing = byPlatformMap.get(key) || { gross: 0, fee: 0, rows: 0 };
-      existing.gross += tx.amount || 0;
-      existing.fee += calcFee(tx);
-      existing.rows += 1;
-      byPlatformMap.set(key, existing);
-    }
-
-    const platformRows = [...byPlatformMap.entries()]
-      .map(([key, data]) => ({
-        key,
-        label: PLATFORM_LABELS[key] || key,
-        gross: data.gross,
-        net: data.gross - data.fee,
-        rows: data.rows,
-      }))
-      .sort((a, b) => b.gross - a.gross);
-
-    // Latest transactions (limit to 20 for performance)
     const latestTransactions = inRange
       .slice()
       .sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date))
       .slice(0, 20)
       .map((tx) => ({
         id: tx.id,
-        date: tx.transaction_date,
+        date: format(new Date(tx.transaction_date), "MMM d"),
         description: tx.description || "Untitled transaction",
         platform: PLATFORM_LABELS[(tx.platform || "").toLowerCase()] || tx.platform || "Unknown",
         gross: tx.amount || 0,
         fee: calcFee(tx),
+        net: (tx.amount || 0) - calcFee(tx)
       }));
 
     return {
-      range,
-      grossRevenue,
-      netRevenue,
-      estimatedFees,
-      revenueDelta,
-      periodExpenses,
-      operatingMargin,
-      platformRows,
-      latestTransactions,
-      transactionCount: inRange.length,
-      trendData,
+      grossRevenue, netRevenue, estimatedFees, revenueDelta, periodExpenses, operatingMargin,
+      latestTransactions, transactionCount: inRange.length, trendData
     };
   }, [period, transactions, expenses]);
 
-  // Data freshness - memoized
   const dataCompleteness = useMemo(() => {
     let firstDate = null;
     let minTime = Infinity;
-
     for (const tx of transactions) {
       if (!tx.transaction_date) continue;
       const date = new Date(tx.transaction_date);
       const time = date.getTime();
-      if (!Number.isNaN(time) && time < minTime) {
-        minTime = time;
-        firstDate = date;
-      }
+      if (!Number.isNaN(time) && time < minTime) { minTime = time; firstDate = date; }
     }
-
-    const daysHistory = firstDate
-      ? Math.max(0, differenceInCalendarDays(new Date(), firstDate) + 1)
-      : 0;
-
     let lastSync = null;
     let maxTime = -Infinity;
-
     for (const platform of connectedPlatforms) {
       const dateString = platform.last_synced_at || platform.updated_at;
       if (!dateString) continue;
       const date = new Date(dateString);
       const time = date.getTime();
-      if (!Number.isNaN(time) && time > maxTime) {
-        maxTime = time;
-        lastSync = date;
-      }
+      if (!Number.isNaN(time) && time > maxTime) { maxTime = time; lastSync = date; }
     }
-
-    const errorPlatforms = connectedPlatforms.filter(
-      (platform) => platform.sync_status === "error"
-    );
-
-    return {
-      daysHistory,
-      platformCount: connectedPlatforms.length,
-      lastSync,
-      errorPlatforms,
-    };
+    const errorPlatforms = connectedPlatforms.filter((p) => p.sync_status === "error");
+    return { platformCount: connectedPlatforms.length, lastSync, errorPlatforms };
   }, [transactions, connectedPlatforms]);
 
   const isLoading = txLoading || platformsLoading;
-
-  // Throttled refresh
   const throttledRefresh = useThrottle(async () => {
     setIsRefreshing(true);
     await Promise.all([refetchTransactions(), refetchPlatforms()]);
     setIsRefreshing(false);
   }, 1000);
 
-  // Navigation handlers
-  const handleNavigate = useCallback((path) => {
-    navigate(path);
-  }, [navigate]);
 
-  // Prefetch on hover
-  const handlePrefetch = useCallback((path) => {
-    // Would integrate with InstantRouter
-  }, []);
-
+  // Placeholder data
+  const cashPosition: CashPosition = {
+    availableCash: 24583.42,
+    currency: 'USD',
+    lastUpdated: new Date(),
+    pendingPayouts: 8500.00,
+    heldForFees: 1204.58,
+  };
+  
+  const kpiMetrics: KPIMetric[] = [
+    {
+      id: 'net-rev-mtd',
+      label: 'Net Revenue MTD',
+      value: '$42,391',
+      trend: 'up',
+      trendValue: '12%',
+      helperText: 'Revenue after platform fees and refunds',
+      status: 'normal',
+    },
+    {
+      id: 'available-cash',
+      label: 'Available Cash',
+      value: '$24,583',
+      helperText: 'Money you can safely spend today',
+      status: 'normal',
+    },
+    {
+      id: 'unreconciled',
+      label: 'Unreconciled',
+      value: '$3,291',
+      helperText: 'Money not matched to a bank deposit yet',
+      status: 'warning',
+    },
+    {
+      id: 'incoming',
+      label: 'Incoming 7 Days',
+      value: '$8,500',
+      helperText: 'Payouts expected in the next week',
+      status: 'normal',
+    },
+    {
+      id: 'anomalies',
+      label: 'Anomalies',
+      value: '2 items',
+      helperText: 'Issues that need your review',
+      status: 'error',
+    },
+  ];
+  
+  const reconciliationSummary: ReconciliationSummary = {
+    matched: 142,
+    pending: 12,
+    needsReview: 2,
+    lastSyncAt: new Date(Date.now() - 2 * 60 * 1000),
+    syncStatus: 'idle',
+    trendData: [85, 87, 86, 88, 89, 90, 91, 90, 92, 93, 92, 94, 95, 94, 96],
+  };
+  
+  const actionItems: ActionItem[] = [
+    {
+      id: '1',
+      priority: 'high',
+      type: 'mismatch',
+      platform: 'YouTube',
+      title: 'Payout mismatch: YouTube',
+      description: 'Expected $1,200, received $1,084. Platform fee higher than estimated.',
+      amount: 1084,
+      expectedAmount: 1200,
+      currency: 'USD',
+    },
+    {
+      id: '2',
+      priority: 'medium',
+      type: 'missing_receipt',
+      platform: 'Adobe',
+      title: 'Missing receipt: Adobe subscription',
+      description: 'Expense of $49.99 missing receipt for tax deduction.',
+      amount: 49.99,
+      currency: 'USD',
+    },
+    {
+      id: '3',
+      priority: 'medium',
+      type: 'anomaly',
+      platform: 'Stripe',
+      title: 'Unusual fee pattern detected',
+      description: 'Refund rate 23% higher than average. Review recent transactions.',
+      currency: 'USD',
+    },
+  ];
+  
+  const insights: Insight[] = [
+    {
+      id: '1',
+      type: 'trend',
+      title: 'Revenue down 12% vs last month',
+      description: 'YouTube ad revenue decreased significantly. Consider reviewing content strategy.',
+      impact: 'negative',
+      citationCount: 45,
+    },
+    {
+      id: '2',
+      type: 'anomaly',
+      title: 'Stripe fees 23% higher than average',
+      description: 'Refund rate increased this month, affecting net revenue.',
+      impact: 'negative',
+      citationCount: 12,
+    },
+  ];
+  
+  const reviewItems: ReviewItem[] = [
+    {
+      id: '1',
+      status: 'mismatch',
+      platform: 'YouTube',
+      description: 'Ad Revenue - March 2024',
+      date: '2024-03-15',
+      amount: 1084.00,
+      expectedAmount: 1200.00,
+      matchConfidence: 90,
+    },
+    {
+      id: '2',
+      status: 'mismatch',
+      platform: 'Patreon',
+      description: 'Monthly Membership Payout',
+      date: '2024-03-14',
+      amount: 892.50,
+      expectedAmount: 950.00,
+      matchConfidence: 94,
+    },
+    {
+      id: '3',
+      status: 'pending',
+      platform: 'Stripe',
+      description: 'Product Sale - Digital Download',
+      date: '2024-03-13',
+      amount: 47.00,
+    },
+    {
+      id: '4',
+      status: 'duplicate',
+      platform: 'Gumroad',
+      description: 'Course Sale - Duplicate Entry',
+      date: '2024-03-12',
+      amount: 99.00,
+      matchConfidence: 45,
+    },
+  ];
+  
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1400px] mx-auto p-6">
-        {/* Header */}
-        <motion.header 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-              <p className="mt-1 text-sm text-gray-500">
-                {isLoading ? "Loading your data..." : `${computed.transactionCount} transactions this period`}
-              </p>
+    <>
+      <DesignTokens />
+      <div className="min-h-screen bg-[var(--neutral-50)]">
+        <Header />
+        
+        <main className="max-w-[1400px] mx-auto p-6">
+          {/* Cash Hero */}
+          <CashHero position={cashPosition} />
+          
+          {/* KPI Row */}
+          <div className="grid grid-cols-5 gap-4 mb-6">
+            {kpiMetrics.map(metric => (
+              <KPICard key={metric.id} metric={metric} />
+            ))}
+          </div>
+          
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-12 gap-6 mb-6">
+            {/* Left - 7 cols */}
+            <div className="col-span-7 space-y-6">
+              <ReconciliationCard summary={reconciliationSummary} />
+              
+              {/* Cashflow Forecast Placeholder */}
+              <Card className="p-6">
+                <h3 className="text-xs font-semibold text-[var(--neutral-900)] uppercase tracking-wider mb-4">
+                  Cashflow Forecast
+                </h3>
+                <div className="h-40 flex items-center justify-center border border-dashed border-[var(--neutral-300)] rounded-md">
+                  <div className="text-center">
+                    <p className="text-sm text-[var(--neutral-500)]">30-day projection</p>
+                    <p className="text-xs text-[var(--neutral-400)] mt-1">Coming soon</p>
+                  </div>
+                </div>
+              </Card>
             </div>
             
-            <div className="flex items-center gap-3">
-              {/* Period selector */}
-              <div className="flex items-center bg-white rounded-lg border border-gray-200 p-1">
-                {PERIODS.map((item) => (
-                  <button
-                    key={item.value}
-                    onClick={() => setPeriod(item.value)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                      period === item.value
-                        ? "bg-gray-900 text-white"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-              
-              <button
-                onClick={throttledRefresh}
-                disabled={isRefreshing}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg border border-gray-200 transition-all"
-              >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-              </button>
+            {/* Right - 5 cols */}
+            <div className="col-span-5 space-y-6">
+              <ActionQueue items={actionItems} />
+              <InsightsPanel insights={insights} />
             </div>
           </div>
           
-          {/* Last sync indicator */}
-          <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
-            <span className={`w-1.5 h-1.5 rounded-full ${
-              dataCompleteness.errorPlatforms.length > 0 ? "bg-red-500" : "bg-emerald-500"
-            }`} />
-            Last sync: {dataCompleteness.lastSync
-              ? format(dataCompleteness.lastSync, "MMM d, h:mm a")
-              : "Never"}
-          </div>
-        </motion.header>
-
-        {/* KPI Grid */}
-        <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
-        >
-          <DashboardMetric
-            label="Gross Revenue"
-            value={formatMoney(computed.grossRevenue)}
-            subtext={`${computed.transactionCount} transactions`}
-            icon={Activity}
-            tone="indigo"
-          />
-          <DashboardMetric
-            label="Net Revenue"
-            value={formatMoney(computed.netRevenue)}
-            subtext={`Fees: ${formatMoney(computed.estimatedFees)}`}
-            icon={TrendingUp}
-            tone="green"
-          />
-          <DashboardMetric
-            label="Operating Margin"
-            value={formatMoney(computed.operatingMargin)}
-            subtext={`Expenses: ${formatMoney(computed.periodExpenses)}`}
-            icon={Database}
-            tone={computed.operatingMargin < 0 ? "red" : "blue"}
-          />
-          <DashboardMetric
-            label="Period Change"
-            value={`${computed.revenueDelta >= 0 ? "+" : ""}${computed.revenueDelta.toFixed(1)}%`}
-            subtext="vs previous period"
-            icon={Zap}
-            tone={computed.revenueDelta >= 0 ? "green" : "amber"}
-          />
-        </motion.section>
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Charts & Tables */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Revenue Chart */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
-            >
-              <div className="p-5 border-b border-gray-100">
-                <h2 className="text-sm font-semibold text-gray-900">Revenue Trend</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Daily performance over selected period</p>
-              </div>
-              
-              <div className="p-5">
-                <div className="h-[280px]">
-                  {computed.trendData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={computed.trendData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                        <defs>
-                          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.15} />
-                            <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                        <XAxis
-                          dataKey="date"
-                          tickFormatter={(str) => format(new Date(str), "MMM d")}
-                          stroke="#E5E7EB"
-                          tick={{ fill: '#9CA3AF', fontSize: 11 }}
-                          axisLine={false}
-                          tickLine={false}
-                          minTickGap={30}
-                        />
-                        <YAxis
-                          stroke="#E5E7EB"
-                          tick={{ fill: '#9CA3AF', fontSize: 11 }}
-                          tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
-                          axisLine={false}
-                          tickLine={false}
-                          width={45}
-                        />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Area
-                          type="monotone"
-                          dataKey="amount"
-                          stroke="#4F46E5"
-                          strokeWidth={2}
-                          fill="url(#colorRevenue)"
-                          animationDuration={600}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-gray-400">
-                      No data available
-                    </div>
-                  )}
-                </div>
-                
-                {/* Platform summary */}
-                <div className="grid grid-cols-4 gap-3 mt-6">
-                  {computed.platformRows.slice(0, 4).map((row) => (
-                    <div key={row.key} className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center justify-center gap-1.5 mb-1">
-                        <span 
-                          className="w-2 h-2 rounded-full" 
-                          style={{ backgroundColor: PLATFORM_COLORS[row.key] }}
-                        />
-                        <span className="text-xs font-medium text-gray-600">{row.label}</span>
-                      </div>
-                      <p className="text-sm font-semibold tabular-nums">{formatMoney(row.gross)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Recent Transactions */}
-            <motion.div 
-              ref={tableRef}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
-            >
-              <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-                <div>
-                  <h2 className="text-sm font-semibold text-gray-900">Recent Activity</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">Latest transactions across all platforms</p>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => handleNavigate("/Transactions")}>
-                  View All
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 hover:bg-gray-50">
-                      <TableHead className="text-xs font-semibold text-gray-500 uppercase w-24">Date</TableHead>
-                      <TableHead className="text-xs font-semibold text-gray-500 uppercase">Description</TableHead>
-                      <TableHead className="text-xs font-semibold text-gray-500 uppercase">Platform</TableHead>
-                      <TableHead className="text-xs font-semibold text-gray-500 uppercase text-right">Gross</TableHead>
-                      <TableHead className="text-xs font-semibold text-gray-500 uppercase text-right">Net</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {computed.latestTransactions.slice(0, isTableVisible ? 10 : 5).map((tx, i) => (
-                      <TransactionRow 
-                        key={tx.id} 
-                        tx={tx} 
-                        index={i}
-                        onClick={() => handleNavigate(`/Transactions?id=${tx.id}`)}
-                      />
-                    ))}
-                    {computed.latestTransactions.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="py-12 text-center text-sm text-gray-400">
-                          No transactions found
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Right Column - Status & Actions */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="bg-white rounded-xl border border-gray-200 p-5"
-            >
-              <h2 className="text-sm font-semibold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="space-y-2">
-                <button 
-                  onClick={() => handleNavigate("/ConnectedPlatforms")}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all group text-left"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                    <Plus className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-blue-700">Connect Platform</p>
-                    <p className="text-xs text-gray-500">Add YouTube, Patreon, Stripe...</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
-                </button>
-                
-                <button 
-                  onClick={() => handleNavigate("/TaxEstimator")}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all group text-left"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-emerald-700">Calculate Taxes</p>
-                    <p className="text-xs text-gray-500">Estimate quarterly payments</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-500" />
-                </button>
-                
-                <button 
-                  onClick={() => handleNavigate("/Reports")}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all group text-left"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
-                    <Download className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-purple-700">Export Report</p>
-                    <p className="text-xs text-gray-500">Download CSV or PDF</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-purple-500" />
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Status Cards */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-              className="space-y-3"
-            >
-              {dataCompleteness.errorPlatforms.length > 0 && (
-                <StatusCard
-                  title="Sync Issues Detected"
-                  status="error"
-                  message={`${dataCompleteness.errorPlatforms.length} platform(s) failed to sync`}
-                  onAction={() => handleNavigate("/ConnectedPlatforms")}
-                />
-              )}
-              
-              {pendingAutopsyEvents.length > 0 && (
-                <StatusCard
-                  title="Revenue Anomalies"
-                  status="error"
-                  message={`${pendingAutopsyEvents.length} unusual patterns detected`}
-                  onAction={() => handleNavigate("/RevenueAutopsy")}
-                />
-              )}
-              
-              {dataCompleteness.errorPlatforms.length === 0 && pendingAutopsyEvents.length === 0 && (
-                <StatusCard
-                  title="All Systems Operational"
-                  status="success"
-                  message="Your accounts are syncing properly"
-                />
-              )}
-            </motion.div>
-
-            {/* Data Coverage */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-              className="bg-white rounded-xl border border-gray-200 p-5"
-            >
-              <h2 className="text-sm font-semibold text-gray-900 mb-4">Data Coverage</h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-gray-500">History</span>
-                    <span className="text-sm font-medium text-gray-900">{dataCompleteness.daysHistory} days</span>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min(100, (dataCompleteness.daysHistory / 365) * 100)}%` }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
-                      className="h-full bg-blue-500 rounded-full"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-gray-500">Platforms Connected</span>
-                    <span className="text-sm font-medium text-gray-900">{dataCompleteness.platformCount}</span>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, (dataCompleteness.platformCount / 8) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <button 
-                  onClick={() => handleNavigate("/ConnectedPlatforms")}
-                  className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                >
-                  Manage connections
-                  <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        </div>
+          {/* Review Table */}
+          <ReviewTable items={reviewItems} />
+        </main>
       </div>
-    </div>
+    </>
   );
-}
+};
+
+export default Dashboard;
