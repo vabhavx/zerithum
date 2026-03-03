@@ -81,7 +81,11 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
         if (hasPasswordAuth) {
             setStep("auth");
         } else {
-            sendOTPMutation.mutate();
+            // OAuth users: skip OTP, go straight to deletion
+            setStep("processing");
+            deleteAccountMutation.mutate({
+                confirmationText: "DELETE"
+            });
         }
     };
 

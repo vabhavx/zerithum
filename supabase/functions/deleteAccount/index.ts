@@ -222,13 +222,17 @@ Deno.serve(async (req) => {
                 .from('verification_codes')
                 .update({ used_at: new Date().toISOString() })
                 .eq('id', codeData.id);
+        } else if (!hasPassword) {
+            // OAuth user - session JWT is sufficient re-auth
+            // JWT already validated by supabase.auth.getUser() above
+            console.log('OAuth user deletion: using session JWT as re-auth');
         } else {
-            // No re-authentication provided
+            // No re-authentication provided and user has password
             console.log('No auth provided, requesting reauth. hasPassword:', hasPassword);
             return Response.json({
                 error: 'Re-authentication required. Please provide current password or verification code.',
                 requiresReauth: true,
-                authMethod: hasPassword ? 'password' : 'otp'
+                authMethod: 'password'
             }, { status: 401, headers: corsHeaders });
         }
 
