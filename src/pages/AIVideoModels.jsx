@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Canvas } from "@react-three/fiber";
 import { ShaderPlane } from "@/components/ui/background-paper-shaders";
 import { Button } from '@/components/ui/button';
-import { Menu, X, ExternalLink, Star, Zap, Clock, Video, CheckCircle, Sparkles, Play, ChevronDown, Filter, Search } from 'lucide-react';
+import { Menu, X, ExternalLink, Star, Zap, Clock, Video, Sparkles, Play, Filter, Search } from 'lucide-react';
 
 // AI Video Models Data
 const aiVideoModels = [

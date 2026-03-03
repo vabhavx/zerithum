@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   User,
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/supabaseClient";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+
 import { OAUTH_PROVIDERS } from "@/lib/auth";
 
 import UpdatePasswordModal from "@/components/security/UpdatePasswordModal";
