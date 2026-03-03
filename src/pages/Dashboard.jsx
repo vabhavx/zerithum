@@ -62,7 +62,7 @@ import {
   useIsVisible,
   memoize,
   LRUCache 
-} from "@/lib/performance";
+} from "@/lib/performance.js";
 
 // ============================================================================
 // PERFORMANCE CONSTANTS
