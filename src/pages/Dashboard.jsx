@@ -772,7 +772,7 @@ export default function Dashboard() {
     return items.slice(0, 3);
   }, [computed, navigate]);
 
-  const isEmpty = !isLoading && transactions.length === 0 && connectedPlatforms.length === 0;
+  const noPlatforms = !isLoading && connectedPlatforms.length === 0;
 
   // ── Table rows: use reviewRows when available, else latest
   const tableRows = computed.reviewRows.length > 0 ? computed.reviewRows : computed.latestTx;
@@ -840,195 +840,208 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Empty state ── */}
-      {isEmpty && <EmptyState onConnect={() => navigate("/ConnectedPlatforms")} />}
 
-      {!isEmpty && (
-        <div className="space-y-6">
-
-          {/* ── Hero: Available Cash ── */}
-          <div className="bg-white border border-gray-200 rounded-md px-6 py-5">
-            <div className="flex items-start justify-between gap-6 flex-wrap">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Available Cash</span>
-                  <Tooltip text="After platform fees, refunds, and known upcoming payouts. This is what you could safely spend today.">
-                    <HelpCircle className="w-3 h-3 text-gray-300 cursor-help" />
-                  </Tooltip>
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    Live
-                  </span>
-                </div>
-                {isLoading ? (
-                  <Sk w={180} h={40} r={6} />
-                ) : (
-                  <div className="text-[38px] font-bold text-gray-900 tracking-tight tabular-nums leading-none">
-                    {fmt(computed.net)}
-                  </div>
-                )}
-                <div className="flex items-center gap-5 mt-3 text-sm">
-                  <span className="text-gray-400">
-                    Gross: <span className="font-medium text-gray-700 tabular-nums">{isLoading ? "—" : fmt(computed.gross)}</span>
-                  </span>
-                  <span className="text-gray-400">
-                    Fees: <span className="font-medium text-gray-700 tabular-nums">{isLoading ? "—" : fmt(computed.fees)}</span>
-                  </span>
-                  <span className="text-gray-400">
-                    Expenses: <span className="font-medium text-gray-700 tabular-nums">{isLoading ? "—" : fmt(computed.periodExp)}</span>
-                  </span>
-                </div>
-              </div>
-              {!isLoading && (
-                <div className="flex items-center gap-2 self-end">
-                  <TrendingUp className="w-4 h-4 text-emerald-500" />
-                  <span className="text-sm font-medium text-emerald-600">{computed.transactionCount} transactions this period</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* ── KPI Row (5 tiles) ── */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            <KPICard
-              label="Net Revenue"
-              helperText="Revenue after all platform fees and refunds, for this period."
-              value={fmt(computed.net)}
-              secondary={`${computed.transactionCount} transactions`}
-              loading={isLoading}
-              onClick={() => navigate("/TransactionAnalysis")}
-            />
-            <KPICard
-              label="Unreconciled"
-              helperText="Money that has not been matched to a bank deposit yet. Not missing — just in transit."
-              value={fmt(computed.unreconciled)}
-              status={computed.unreconciled > 2000 ? "warning" : "normal"}
-              loading={isLoading}
-              onClick={() => navigate("/Reconciliation")}
-            />
-            <KPICard
-              label="Arriving (7 days)"
-              helperText="Platform payouts expected to hit your bank in the next 7 days."
-              value={fmt(computed.pendingPayouts)}
-              loading={isLoading}
-              trend="up"
-              trendValue="expected"
-              onClick={() => navigate("/Reconciliation")}
-            />
-            <KPICard
-              label="Operating margin"
-              helperText="What's left after fees and business expenses. A positive number means you're profitable."
-              value={fmt(computed.operating)}
-              status={computed.operating < 0 ? "error" : "normal"}
-              loading={isLoading}
-              onClick={() => navigate("/Expenses")}
-            />
-            <KPICard
-              label="Needs review"
-              helperText="Mismatches and anomalies that need a human decision to resolve."
-              value={isLoading ? "—" : `${computed.needsReview + autopsyEvents.length} items`}
-              status={(computed.needsReview + autopsyEvents.length) > 0 ? "error" : "normal"}
-              loading={isLoading}
-              onClick={() => navigate("/RevenueAutopsy")}
-            />
-          </div>
-
-          {/* ── Main grid: Reconciliation left, Action+Insights right ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-            {/* Left column: Reconciliation + Cashflow */}
-            <div className="lg:col-span-7 space-y-5">
-              <ReconciliationOverview
-                matched={computed.matched}
-                pending={computed.pending}
-                needsReview={computed.needsReview}
-                trend={computed.trendData}
-                lastSync={computed.lastSync}
-                errorPlatforms={computed.errorPlatforms}
-                loading={isLoading}
-                onReview={() => navigate("/Reconciliation")}
-              />
-              <CashflowCard loading={isLoading} />
-            </div>
-
-            {/* Right column: Action Queue + Insights */}
-            <div className="lg:col-span-5 space-y-5">
-
-              {/* Action Queue */}
-              <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-sm font-semibold text-gray-900">
-                      What to do next
-                      {actionItems.length > 0 && (
-                        <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-red-600 text-[10px] font-bold">{actionItems.length}</span>
-                      )}
-                    </h2>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Prioritised tasks that need your attention</p>
-                  </div>
-                </div>
-                <div className="p-4 space-y-2">
-                  {isLoading ? (
-                    <div className="space-y-2">
-                      <Sk h={56} r={6} />
-                      <Sk h={56} r={6} />
-                    </div>
-                  ) : actionItems.length === 0 ? (
-                    <div className="py-8 flex flex-col items-center text-center gap-2">
-                      <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-                      <p className="text-sm font-medium text-gray-700">All caught up</p>
-                      <p className="text-[11px] text-gray-400 max-w-xs">No urgent items. Your books are in good shape.</p>
-                    </div>
-                  ) : actionItems.map(item => <ActionItem key={item.id} item={item} />)}
-                </div>
-              </div>
-
-              {/* Insights */}
-              <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100">
-                  <h2 className="text-sm font-semibold text-gray-900">Insights</h2>
-                  <p className="text-[11px] text-gray-400 mt-0.5">What your numbers are telling you</p>
-                </div>
-                <div className="p-4 space-y-3">
-                  {isLoading ? (
-                    <div className="space-y-3">
-                      <Sk h={80} r={6} />
-                      <Sk h={80} r={6} />
-                    </div>
-                  ) : insights.map(ins => <InsightCard key={ins.id} insight={ins} />)}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Needs Review Table ── */}
-          <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-900">{tableLabel}</h2>
-                <p className="text-[11px] text-gray-400 mt-0.5">
-                  {computed.reviewRows.length > 0
-                    ? "These items need a decision from you before they can be reconciled."
-                    : "Your most recent revenue transactions across all platforms."}
-                </p>
-              </div>
-              <button
-                onClick={() => navigate(computed.reviewRows.length > 0 ? "/Reconciliation" : "/TransactionAnalysis")}
-                className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                View all <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            <NeedsReviewTable
-              rows={tableRows}
-              loading={isLoading}
-              onRowClick={(row) => navigate(row.type === "anomaly" ? "/RevenueAutopsy" : "/Reconciliation")}
-            />
-          </div>
-
+      {/* ── No platform notice (never hides the dashboard) ── */}
+      {noPlatforms && (
+        <div className="mb-5 flex items-center gap-3 px-4 py-3 rounded-md border border-blue-100 bg-blue-50/60 text-sm">
+          <Link2 className="w-4 h-4 text-blue-400 shrink-0" />
+          <span className="text-gray-600">
+            <span className="font-medium text-gray-900">No platforms connected.</span>{" "}
+            All figures show $0 until you connect a platform.
+          </span>
+          <button
+            onClick={() => navigate("/ConnectedPlatforms")}
+            className="ml-auto shrink-0 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            Connect now →
+          </button>
         </div>
       )}
+
+      <div className="space-y-6">
+
+        {/* ── Hero: Available Cash ── */}
+        <div className="bg-white border border-gray-200 rounded-md px-6 py-5">
+          <div className="flex items-start justify-between gap-6 flex-wrap">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Available Cash</span>
+                <Tooltip text="After platform fees, refunds, and known upcoming payouts. This is what you could safely spend today.">
+                  <HelpCircle className="w-3 h-3 text-gray-300 cursor-help" />
+                </Tooltip>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Live
+                </span>
+              </div>
+              {isLoading ? (
+                <Sk w={180} h={40} r={6} />
+              ) : (
+                <div className="text-[38px] font-bold text-gray-900 tracking-tight tabular-nums leading-none">
+                  {fmt(computed.net)}
+                </div>
+              )}
+              <div className="flex items-center gap-5 mt-3 text-sm">
+                <span className="text-gray-400">
+                  Gross: <span className="font-medium text-gray-700 tabular-nums">{isLoading ? "—" : fmt(computed.gross)}</span>
+                </span>
+                <span className="text-gray-400">
+                  Fees: <span className="font-medium text-gray-700 tabular-nums">{isLoading ? "—" : fmt(computed.fees)}</span>
+                </span>
+                <span className="text-gray-400">
+                  Expenses: <span className="font-medium text-gray-700 tabular-nums">{isLoading ? "—" : fmt(computed.periodExp)}</span>
+                </span>
+              </div>
+            </div>
+            {!isLoading && (
+              <div className="flex items-center gap-2 self-end">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span className="text-sm font-medium text-emerald-600">{computed.transactionCount} transactions this period</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── KPI Row (5 tiles) ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <KPICard
+            label="Net Revenue"
+            helperText="Revenue after all platform fees and refunds, for this period."
+            value={fmt(computed.net)}
+            secondary={`${computed.transactionCount} transactions`}
+            loading={isLoading}
+            onClick={() => navigate("/TransactionAnalysis")}
+          />
+          <KPICard
+            label="Unreconciled"
+            helperText="Money that has not been matched to a bank deposit yet. Not missing — just in transit."
+            value={fmt(computed.unreconciled)}
+            status={computed.unreconciled > 2000 ? "warning" : "normal"}
+            loading={isLoading}
+            onClick={() => navigate("/Reconciliation")}
+          />
+          <KPICard
+            label="Arriving (7 days)"
+            helperText="Platform payouts expected to hit your bank in the next 7 days."
+            value={fmt(computed.pendingPayouts)}
+            loading={isLoading}
+            trend="up"
+            trendValue="expected"
+            onClick={() => navigate("/Reconciliation")}
+          />
+          <KPICard
+            label="Operating margin"
+            helperText="What's left after fees and business expenses. A positive number means you're profitable."
+            value={fmt(computed.operating)}
+            status={computed.operating < 0 ? "error" : "normal"}
+            loading={isLoading}
+            onClick={() => navigate("/Expenses")}
+          />
+          <KPICard
+            label="Needs review"
+            helperText="Mismatches and anomalies that need a human decision to resolve."
+            value={isLoading ? "—" : `${computed.needsReview + autopsyEvents.length} items`}
+            status={(computed.needsReview + autopsyEvents.length) > 0 ? "error" : "normal"}
+            loading={isLoading}
+            onClick={() => navigate("/RevenueAutopsy")}
+          />
+        </div>
+
+        {/* ── Main grid: Reconciliation left, Action+Insights right ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* Left column: Reconciliation + Cashflow */}
+          <div className="lg:col-span-7 space-y-5">
+            <ReconciliationOverview
+              matched={computed.matched}
+              pending={computed.pending}
+              needsReview={computed.needsReview}
+              trend={computed.trendData}
+              lastSync={computed.lastSync}
+              errorPlatforms={computed.errorPlatforms}
+              loading={isLoading}
+              onReview={() => navigate("/Reconciliation")}
+            />
+            <CashflowCard loading={isLoading} />
+          </div>
+
+          {/* Right column: Action Queue + Insights */}
+          <div className="lg:col-span-5 space-y-5">
+
+            {/* Action Queue */}
+            <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-gray-900">
+                    What to do next
+                    {actionItems.length > 0 && (
+                      <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-red-600 text-[10px] font-bold">{actionItems.length}</span>
+                    )}
+                  </h2>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Prioritised tasks that need your attention</p>
+                </div>
+              </div>
+              <div className="p-4 space-y-2">
+                {isLoading ? (
+                  <div className="space-y-2">
+                    <Sk h={56} r={6} />
+                    <Sk h={56} r={6} />
+                  </div>
+                ) : actionItems.length === 0 ? (
+                  <div className="py-8 flex flex-col items-center text-center gap-2">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                    <p className="text-sm font-medium text-gray-700">All caught up</p>
+                    <p className="text-[11px] text-gray-400 max-w-xs">No urgent items. Your books are in good shape.</p>
+                  </div>
+                ) : actionItems.map(item => <ActionItem key={item.id} item={item} />)}
+              </div>
+            </div>
+
+            {/* Insights */}
+            <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h2 className="text-sm font-semibold text-gray-900">Insights</h2>
+                <p className="text-[11px] text-gray-400 mt-0.5">What your numbers are telling you</p>
+              </div>
+              <div className="p-4 space-y-3">
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Sk h={80} r={6} />
+                    <Sk h={80} r={6} />
+                  </div>
+                ) : insights.map(ins => <InsightCard key={ins.id} insight={ins} />)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Needs Review Table ── */}
+        <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">{tableLabel}</h2>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                {computed.reviewRows.length > 0
+                  ? "These items need a decision from you before they can be reconciled."
+                  : "Your most recent revenue transactions across all platforms."}
+              </p>
+            </div>
+            <button
+              onClick={() => navigate(computed.reviewRows.length > 0 ? "/Reconciliation" : "/TransactionAnalysis")}
+              className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              View all <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          <NeedsReviewTable
+            rows={tableRows}
+            loading={isLoading}
+            onRowClick={(row) => navigate(row.type === "anomaly" ? "/RevenueAutopsy" : "/Reconciliation")}
+          />
+        </div>
+
+      </div>
     </div>
   );
 }
