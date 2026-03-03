@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
                     error: 'Current password is incorrect'
                 }, { status: 401, headers: corsHeaders });
             }
-        } else if (verificationCode) {
+        } else if (hasPassword && verificationCode) {
             // Verify via OTP
             if (!isValidOTPFormat(verificationCode)) {
                 console.error('Invalid OTP format:', verificationCode);
@@ -344,6 +344,7 @@ Deno.serve(async (req) => {
 
                         if (error) {
                             console.error(`Failed to delete from ${table}:`, error);
+                            stepsCompleted.push(`${table}_failed`);
                         } else {
                             stepsCompleted.push(`${table}_deleted`);
                         }
@@ -369,6 +370,7 @@ Deno.serve(async (req) => {
                     if (table === 'platform_connections' || table === 'connected_platforms') {
                         throw e;
                     }
+                    stepsCompleted.push(`${table}_failed`);
                 }
             }
 
