@@ -40,7 +40,7 @@ describe('deleteAccount vulnerability repro', () => {
             logAudit: vi.fn(),
         }));
 
-        vi.mock('../_shared/logic/security.ts', () => ({
+        vi.mock('../../supabase/functions/_shared/logic/security.ts', () => ({
             checkRateLimit: vi.fn(),
             isValidOTPFormat: vi.fn(),
             RATE_LIMITS: { DELETE_ACCOUNT: 1 },
@@ -64,7 +64,7 @@ describe('deleteAccount vulnerability repro', () => {
 
         // Load the module to trigger Deno.serve
         // We use dynamic import to ensure mocks are active
-        await import('../deleteAccount.ts');
+        await import('../../supabase/functions/deleteAccount/index.ts');
     });
 
     afterEach(() => {

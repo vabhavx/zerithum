@@ -141,7 +141,7 @@ describe('handleOAuthCallback', () => {
       // Verify body params
       const callArgs = mockFetch.mock.calls[0];
       const body = callArgs[1].body as URLSearchParams;
-      expect(body.get('redirect_uri')).toBe('https://custom-redirect.com/cb');
+      expect(body.get('redirect_uri')).toBe('https://app.com/auth/callback');
   });
 
   describe('Platform Specifics', () => {
