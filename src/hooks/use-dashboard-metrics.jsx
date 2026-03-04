@@ -7,29 +7,38 @@ export function useDashboardMetrics(transactions = [], reconciliations = []) {
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
 
-    // Current month
-    const currentMonthTxns = transactions.filter((t) => {
-      const date = new Date(t.transaction_date);
-      return date >= currentMonthStart && date <= currentMonthEnd;
-    });
-
-    // Previous month
     const prevMonthStart = startOfMonth(subMonths(now, 1));
     const prevMonthEnd = endOfMonth(subMonths(now, 1));
-    const prevMonthTxns = transactions.filter((t) => {
-      const date = new Date(t.transaction_date);
-      return date >= prevMonthStart && date <= prevMonthEnd;
-    });
+    const ninetyDaysAgo = subDays(now, 90);
 
-    // Total revenue
-    const totalRevenue = currentMonthTxns.reduce(
-      (sum, t) => sum + (t.amount || 0),
-      0
-    );
-    const prevRevenue = prevMonthTxns.reduce(
-      (sum, t) => sum + (t.amount || 0),
-      0
-    );
+    let totalRevenue = 0;
+    let prevRevenue = 0;
+    const currentPlatformMap = {};
+    const prevPlatformMap = {};
+    const recentPlatformMap = {};
+    let recentTotal = 0;
+
+    for (let i = 0; i < transactions.length; i++) {
+      const t = transactions[i];
+      const date = new Date(t.transaction_date);
+      const amount = t.amount || 0;
+      const platform = t.platform;
+
+      if (date >= currentMonthStart && date <= currentMonthEnd) {
+        totalRevenue += amount;
+        currentPlatformMap[platform] =
+          (currentPlatformMap[platform] || 0) + amount;
+      } else if (date >= prevMonthStart && date <= prevMonthEnd) {
+        prevRevenue += amount;
+        prevPlatformMap[platform] = (prevPlatformMap[platform] || 0) + amount;
+      }
+
+      if (date >= ninetyDaysAgo) {
+        recentPlatformMap[platform] =
+          (recentPlatformMap[platform] || 0) + amount;
+        recentTotal += amount;
+      }
+    }
 
     // Revenue change
     let revenueTrend = "neutral";
@@ -39,19 +48,6 @@ export function useDashboardMetrics(transactions = [], reconciliations = []) {
       revenueTrend = pct > 0 ? "up" : pct < 0 ? "down" : "neutral";
       revenueChange = `${pct > 0 ? "+" : ""}${pct.toFixed(1)}% vs last month`;
     }
-
-    // Platform breakdown (current + previous month)
-    const currentPlatformMap = {};
-    currentMonthTxns.forEach((t) => {
-      currentPlatformMap[t.platform] =
-        (currentPlatformMap[t.platform] || 0) + (t.amount || 0);
-    });
-
-    const prevPlatformMap = {};
-    prevMonthTxns.forEach((t) => {
-      prevPlatformMap[t.platform] =
-        (prevPlatformMap[t.platform] || 0) + (t.amount || 0);
-    });
 
     // Merge platforms
     const allPlatforms = new Set([
@@ -65,20 +61,6 @@ export function useDashboardMetrics(transactions = [], reconciliations = []) {
     }));
 
     // Concentration risk (last 90 days for more accuracy)
-    const ninetyDaysAgo = subDays(now, 90);
-    const recentTxns = transactions.filter(
-      (t) => new Date(t.transaction_date) >= ninetyDaysAgo
-    );
-    const recentPlatformMap = {};
-    recentTxns.forEach((t) => {
-      recentPlatformMap[t.platform] =
-        (recentPlatformMap[t.platform] || 0) + (t.amount || 0);
-    });
-    const recentTotal = Object.values(recentPlatformMap).reduce(
-      (sum, v) => sum + v,
-      0
-    );
-
     let concentrationRisk = null;
     if (recentTotal > 0) {
       const sorted = Object.entries(recentPlatformMap).sort(
@@ -97,15 +79,22 @@ export function useDashboardMetrics(transactions = [], reconciliations = []) {
     }
 
     // Reconciliation status
-    const reconciledAmount = reconciliations
-      .filter((r) => r.status === "matched" || r.status === "reconciled")
-      .reduce((sum, r) => sum + (r.amount || 0), 0);
-    const unreconciledCount = reconciliations.filter(
-      (r) => r.status === "pending" || r.status === "unmatched"
-    ).length;
-    const unreconciledAmount = reconciliations
-      .filter((r) => r.status === "pending" || r.status === "unmatched")
-      .reduce((sum, r) => sum + (r.amount || 0), 0);
+    let reconciledAmount = 0;
+    let unreconciledCount = 0;
+    let unreconciledAmount = 0;
+
+    for (let i = 0; i < reconciliations.length; i++) {
+      const r = reconciliations[i];
+      const amount = r.amount || 0;
+      const status = r.status;
+
+      if (status === "matched" || status === "reconciled") {
+        reconciledAmount += amount;
+      } else if (status === "pending" || status === "unmatched") {
+        unreconciledCount += 1;
+        unreconciledAmount += amount;
+      }
+    }
 
     // Count unique platforms with data
     const activePlatformCount = Object.keys(currentPlatformMap).length;
