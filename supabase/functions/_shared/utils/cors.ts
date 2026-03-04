@@ -10,7 +10,8 @@ export function getCorsHeaders(req: Request) {
         'https://app.base44.com',
         'https://base44.com',
         'https://zerithum.com',
-        'https://www.zerithum.com'
+        'https://www.zerithum.com',
+        'https://zerithum.vercel.app'
     ];
 
     // Check environment variable for base URL
@@ -21,9 +22,12 @@ export function getCorsHeaders(req: Request) {
 
     let allowOrigin = 'null';
 
-    const isAllowedBase44Subdomain = origin && /^https:\/\/([a-zA-Z0-9-]+\.)*base44\.app$/.test(origin);
+    const isAllowedSubdomain = origin && (
+        /^https:\/\/([a-zA-Z0-9-]+\.)*base44\.app$/.test(origin) ||
+        /^https:\/\/([a-zA-Z0-9-]+\.)*vercel\.app$/.test(origin)
+    );
 
-    if (origin && (allowedOrigins.includes(origin) || isAllowedBase44Subdomain)) {
+    if (origin && (allowedOrigins.includes(origin) || isAllowedSubdomain)) {
         allowOrigin = origin;
     }
 
