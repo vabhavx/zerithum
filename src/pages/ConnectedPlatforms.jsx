@@ -119,7 +119,9 @@ export default function ConnectedPlatforms() {
     setConnectingId(platform.id);
     const csrfToken = crypto.randomUUID(); sessionStorage.setItem("oauth_state", csrfToken); document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`; const stateValue = `${platform.id}:${csrfToken}`;
     let params;
-    const redirectUri = window.location.origin + (platform.redirectUri || "/authcallback");
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const baseOrigin = isLocal ? window.location.origin : 'https://zerithum.com';
+    const redirectUri = baseOrigin + (platform.redirectUri || "/authcallback");
     if (platform.id === "tiktok") { params = new URLSearchParams({ client_key: platform.clientKey, scope: platform.scope, response_type: "code", redirect_uri: redirectUri, state: stateValue }); }
     else { params = new URLSearchParams({ client_id: platform.clientId || platform.id, redirect_uri: redirectUri, response_type: "code", scope: platform.scope || "", state: stateValue, access_type: platform.id === "youtube" ? "offline" : undefined, prompt: platform.id === "youtube" ? "consent" : undefined }); }
     window.location.href = `${platform.oauthUrl}?${params.toString()}`;
@@ -136,7 +138,9 @@ export default function ConnectedPlatforms() {
       if (selectedPlatform.id === "shopify") {
         const csrfToken = crypto.randomUUID(); sessionStorage.setItem("oauth_state", csrfToken); sessionStorage.setItem("shopify_shop_name", shopName.trim()); document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`;
         const stateValue = `shopify:${shopName.trim()}:${csrfToken}`;
-        const redirectUri = window.location.origin + (selectedPlatform.redirectUri || "/authcallback");
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const baseOrigin = isLocal ? window.location.origin : 'https://zerithum.com';
+        const redirectUri = baseOrigin + (selectedPlatform.redirectUri || "/authcallback");
         const params = new URLSearchParams({ client_id: selectedPlatform.clientId, scope: selectedPlatform.scope, redirect_uri: redirectUri, state: stateValue });
         window.location.href = `https://${shopName.trim()}.myshopify.com/admin/oauth/authorize?${params.toString()}`; return;
       }
