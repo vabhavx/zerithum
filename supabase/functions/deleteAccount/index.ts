@@ -357,7 +357,8 @@ Deno.serve(async (req) => {
                         if (error) {
                             console.error(`Failed to delete from ${table}:`, error);
                             // Critical tables failure should potentially stop the process
-                            if (table === 'platform_connections' || table === 'connected_platforms') {
+                            // However, we allow platform_connections to fail gracefully since it is a legacy table
+                            if (table === 'connected_platforms') {
                                 throw new Error(`Critical failure: Could not delete from ${table}: ${error.message}`);
                             }
                             stepsCompleted.push(`${table}_failed`);
@@ -367,7 +368,7 @@ Deno.serve(async (req) => {
                     }
                 } catch (e: any) {
                     console.error(`Error processing table ${table}:`, e);
-                    if (table === 'platform_connections' || table === 'connected_platforms') {
+                    if (table === 'connected_platforms') {
                         throw e;
                     }
                     stepsCompleted.push(`${table}_failed`);

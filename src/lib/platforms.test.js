@@ -49,6 +49,6 @@ describe('PLATFORMS configuration', () => {
     expect(shopify.clientId).toBe('d8375e1adc7cab48d9e7bcece8913250');
 
     const twitch = PLATFORMS.find(p => p.id === 'twitch');
-    expect(twitch.clientId).toBe('YOUR_TWITCH_CLIENT_ID');
+    expect(twitch.clientId).toBe('si8cip89mvmuhf02qpwrtcy47673pp');
   });
 });
