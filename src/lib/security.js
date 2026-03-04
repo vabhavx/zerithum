@@ -387,23 +387,39 @@ function getPasswordSuggestions(checks) {
 // ============================================================================
 
 export const auditLogger = {
-  log(event, details = {}) {
+  async log(event, details = {}) {
     const entry = {
       event,
       timestamp: new Date().toISOString(),
-      url: window.location.href,
-      userAgent: navigator.userAgent.substring(0, 100),
+      url: typeof window !== 'undefined' ? window.location.href : '',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent.substring(0, 100) : '',
       ...details,
     };
 
     // Store locally for debugging
-    const logs = JSON.parse(localStorage.getItem('audit_logs') || '[]');
-    logs.push(entry);
-    localStorage.setItem('audit_logs', JSON.stringify(logs.slice(-100))); // Keep last 100
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const logs = JSON.parse(localStorage.getItem('audit_logs') || '[]');
+        logs.push(entry);
+        localStorage.setItem('audit_logs', JSON.stringify(logs.slice(-100))); // Keep last 100
+      } catch {
+        // Ignore localStorage quota or parsing errors silently to prevent app crashes
+      }
+    }
 
-    // Send to server in production
-    if (process.env.NODE_ENV === 'production') {
-      // TODO: Send to audit endpoint
+    // Send to server when an endpoint is configured
+    const endpoint = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_AUDIT_ENDPOINT : null;
+    if (endpoint) {
+      try {
+        await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entry),
+          keepalive: true, // Ensure delivery even if navigating away
+        });
+      } catch {
+        // Fail gracefully without exposing internal logging mechanism failures
+      }
     }
   },
 
