@@ -103,7 +103,7 @@ const AuthenticatedApp = memo(() => {
 
   // Public routes configuration
   const publicRoutes = [
-    'Login', 'Signup', 'AuthCallback', 'SignIn', 'Landing',
+    'Login', 'Signup', 'authcallback', 'SignIn', 'Landing',
     'Methodology', 'Privacy', 'Security', 'TermsOfService', 'Pricing',
     'data-deletion'
   ];
@@ -210,7 +210,7 @@ const AuthenticatedApp = memo(() => {
             />
 
             {Object.entries(Pages).map(([path, Page]) => {
-              const noLayoutRoutes = ['Login', 'Signup', 'SignIn', 'AuthCallback', 'Landing'];
+              const noLayoutRoutes = ['Login', 'Signup', 'SignIn', 'authcallback', 'Landing'];
               const shouldShowLayout = !publicRoutes.includes(path) ||
                 (isAuthenticated && !noLayoutRoutes.includes(path));
 

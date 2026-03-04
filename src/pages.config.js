@@ -33,7 +33,7 @@ import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "AuthCallback": AuthCallback,
+    "authcallback": AuthCallback,
     "ConnectedApps": ConnectedApps,
     "ConnectedPlatforms": ConnectedPlatforms,
     "Dashboard": Dashboard,
