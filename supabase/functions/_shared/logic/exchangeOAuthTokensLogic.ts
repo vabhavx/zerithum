@@ -5,6 +5,7 @@ export interface ExchangeTokensContext {
   encrypt: (data: string) => Promise<string>;
   base44: any;
   shop?: string; // Shopify-specific: the merchant's myshopify.com subdomain
+  redirectUri?: string; // Client-provided redirect URI (validated server-side)
 }
 
 export interface ServiceResponse {
@@ -99,10 +100,29 @@ export async function exchangeOAuthTokens(
     return { status: 500, body: { error: 'OAuth configuration error' } };
   }
 
-  const redirectUri = ctx.envGet(def.redirectUriEnv || 'OAUTH_REDIRECT_URI');
+  // Resolve redirect URI: prefer client-provided (validated), fall back to env var
+  let redirectUri = ctx.redirectUri || ctx.envGet(def.redirectUriEnv || 'OAUTH_REDIRECT_URI');
+
+  // Validate the redirect URI against allowed origins
+  if (redirectUri) {
+    const ALLOWED_ORIGINS = [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://zerithum.vercel.app',
+      'https://zerithum.com',
+      'https://www.zerithum.com'
+    ];
+    const isAllowed = ALLOWED_ORIGINS.some(origin => redirectUri!.startsWith(origin)) ||
+      /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app\//.test(redirectUri!) ||
+      /^https:\/\/([a-zA-Z0-9-]+\.)*base44\.app\//.test(redirectUri!);
+    if (!isAllowed) {
+      ctx.logError(`Rejected untrusted redirect_uri: ${redirectUri}`);
+      return { status: 400, body: { error: 'Invalid redirect URI' } };
+    }
+  }
 
   if (!redirectUri) {
-    ctx.logError('Missing OAUTH_REDIRECT_URI env var');
+    ctx.logError('Missing redirect URI: neither client-provided nor OAUTH_REDIRECT_URI env var found');
     return { status: 500, body: { error: 'OAuth configuration error' } };
   }
 

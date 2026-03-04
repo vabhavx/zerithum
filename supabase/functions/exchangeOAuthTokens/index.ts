@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
         } catch (e) {
             body = {};
         }
-        const { code, platform, shop } = body;
+        const { code, platform, shop, redirect_uri } = body;
 
         const result = await exchangeOAuthTokens(
             {
@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
                 logError: console.error,
                 encrypt: encrypt,
                 shop: shop || undefined,
+                redirectUri: redirect_uri || undefined,
                 base44: {
                     asServiceRole: {
                         entities: {

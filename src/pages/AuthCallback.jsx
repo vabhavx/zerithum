@@ -48,7 +48,8 @@ export default function AuthCallback() {
       sessionStorage.removeItem('shopify_shop_name');
 
       try {
-        const invokePayload = { code, platform: platform || "youtube" };
+        const redirectUri = window.location.origin + "/AuthCallback";
+        const invokePayload = { code, platform: platform || "youtube", redirect_uri: redirectUri };
         if (shop) invokePayload.shop = shop;
         const response = await base44.functions.invoke("exchangeOAuthTokens", invokePayload);
         if (response.success) {
