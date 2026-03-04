@@ -117,7 +117,7 @@ export default function ConnectedPlatforms() {
     if (connectedById.has(platform.id)) { toast.error(`${platform.name} is already connected.`); return; }
     if (platform.requiresApiKey || platform.requiresShopName) { setSelectedPlatform(platform); setCredentialsOpen(true); return; }
     setConnectingId(platform.id);
-    const csrfToken = crypto.randomUUID(); sessionStorage.setItem("oauth_state", csrfToken); document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`; const stateValue = `${platform.id}:${csrfToken}`;
+    const csrfToken = crypto.randomUUID(); localStorage.setItem("oauth_state", csrfToken); document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`; const stateValue = `${platform.id}:${csrfToken}`;
     let params;
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const baseOrigin = isLocal ? window.location.origin : 'https://zerithum.com';
@@ -136,7 +136,7 @@ export default function ConnectedPlatforms() {
       if (selectedPlatform.id === "gumroad") { const r = await fetch(`${selectedPlatform.validationUrl}?access_token=${apiKey}`); if (!r.ok) throw new Error("Invalid API key"); }
       if (selectedPlatform.id === "substack") { const r = await fetch(selectedPlatform.validationUrl, { headers: { Authorization: `Bearer ${apiKey}` } }); if (!r.ok) throw new Error("Invalid API key"); }
       if (selectedPlatform.id === "shopify") {
-        const csrfToken = crypto.randomUUID(); sessionStorage.setItem("oauth_state", csrfToken); sessionStorage.setItem("shopify_shop_name", shopName.trim()); document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`;
+        const csrfToken = crypto.randomUUID(); localStorage.setItem("oauth_state", csrfToken); localStorage.setItem("shopify_shop_name", shopName.trim()); document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`;
         const stateValue = `shopify:${shopName.trim()}:${csrfToken}`;
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const baseOrigin = isLocal ? window.location.origin : 'https://zerithum.com';

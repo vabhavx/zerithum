@@ -13,9 +13,13 @@ export default function AuthCallback() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const processedCodeRef = React.useRef(false);
 
   useEffect(() => {
     const handleCallback = async () => {
+      if (processedCodeRef.current) return;
+      processedCodeRef.current = true;
+
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get("code");
       const state = urlParams.get("state");
@@ -25,7 +29,7 @@ export default function AuthCallback() {
       if (error) { setStatus("error"); setError(errorDescription || error); return; }
       if (!code) { setStatus("error"); setError("No authorization code received"); return; }
 
-      const storedToken = sessionStorage.getItem('oauth_state');
+      const storedToken = localStorage.getItem('oauth_state');
       let platform = state;
       let shop = null;
 
@@ -35,17 +39,17 @@ export default function AuthCallback() {
         const parts = state.split(':');
         if (parts[0] === 'shopify' && parts.length === 3) {
           const [platformId, shopName, token] = parts;
-          if (token !== storedToken) { setStatus("error"); setError("Security validation failed (CSRF mismatch)."); sessionStorage.removeItem('oauth_state'); sessionStorage.removeItem('shopify_shop_name'); return; }
-          platform = platformId; shop = shopName || sessionStorage.getItem('shopify_shop_name');
+          if (token !== storedToken) { setStatus("error"); setError("Security validation failed (CSRF mismatch)."); localStorage.removeItem('oauth_state'); localStorage.removeItem('shopify_shop_name'); return; }
+          platform = platformId; shop = shopName || localStorage.getItem('shopify_shop_name');
         } else if (parts.length === 2) {
           const [platformId, token] = parts;
-          if (token !== storedToken) { setStatus("error"); setError("Security validation failed (CSRF mismatch)."); sessionStorage.removeItem('oauth_state'); return; }
+          if (token !== storedToken) { setStatus("error"); setError("Security validation failed (CSRF mismatch)."); localStorage.removeItem('oauth_state'); return; }
           platform = platformId;
-        } else { setStatus("error"); setError("Security error: Invalid state format."); sessionStorage.removeItem('oauth_state'); return; }
-      } else { setStatus("error"); setError("Security error: Invalid state format."); sessionStorage.removeItem('oauth_state'); return; }
+        } else { setStatus("error"); setError("Security error: Invalid state format."); localStorage.removeItem('oauth_state'); return; }
+      } else { setStatus("error"); setError("Security error: Invalid state format."); localStorage.removeItem('oauth_state'); return; }
 
-      sessionStorage.removeItem('oauth_state');
-      sessionStorage.removeItem('shopify_shop_name');
+      localStorage.removeItem('oauth_state');
+      localStorage.removeItem('shopify_shop_name');
 
       try {
         const platformDef = PLATFORMS.find(p => p.id === (platform || "youtube"));
