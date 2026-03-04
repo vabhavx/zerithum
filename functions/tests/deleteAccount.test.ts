@@ -36,7 +36,7 @@ describe('deleteAccount type check', () => {
             logAudit: vi.fn(),
         }));
 
-        vi.mock('../_shared/logic/security.ts', () => ({
+        vi.mock('../../supabase/functions/_shared/logic/security.ts', () => ({
             checkRateLimit: vi.fn(() => Promise.resolve({ allowed: true, resetAt: new Date() })),
             isValidOTPFormat: vi.fn(() => true),
             RATE_LIMITS: { DELETE_ACCOUNT: 1 },
@@ -69,7 +69,7 @@ describe('deleteAccount type check', () => {
     });
 
     it('should load deleteAccount without type errors', async () => {
-        await import('../deleteAccount.ts');
+        await import('../../supabase/functions/deleteAccount/index.ts');
         expect(globalThis.Deno.serve).toHaveBeenCalled();
     });
 });

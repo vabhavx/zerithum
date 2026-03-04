@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { render, cleanup, screen } from "@testing-library/react";
+import { describe, afterEach, it, expect, vi } from "vitest";
 import * as matchers from '@testing-library/jest-dom/matchers';
 import SummaryCard from "./SummaryCard";
 
@@ -16,6 +16,10 @@ vi.mock("lucide-react", () => ({
 }));
 
 describe("SummaryCard", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
     const defaultProps = {
         icon: ({ className }) => <div data-testid="test-icon" className={className} />,
         label: "Total Revenue",
@@ -38,6 +42,10 @@ describe("SummaryCard", () => {
     });
 
     describe("Trend indicator", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
         it("renders positive trend correctly", () => {
             render(
                 <SummaryCard
@@ -94,6 +102,10 @@ describe("SummaryCard", () => {
     });
 
     describe("Badge rendering", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
         it("renders info badge by default when variant is missing", () => {
             render(<SummaryCard {...defaultProps} badge={{ text: "New" }} />);
 
@@ -122,6 +134,10 @@ describe("SummaryCard", () => {
     });
 
     describe("Optional content", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
         it("renders subtitle when provided", () => {
             render(<SummaryCard {...defaultProps} subtitle="vs last month" />);
             expect(screen.getByText("vs last month")).toBeInTheDocument();
@@ -139,6 +155,10 @@ describe("SummaryCard", () => {
     });
 
     describe("Styling props", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
         it("applies monospace font to value by default", () => {
             render(<SummaryCard {...defaultProps} />);
             const valueElement = screen.getByText("$12,345.00");

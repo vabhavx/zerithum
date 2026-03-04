@@ -193,6 +193,7 @@ describe('syncPlatform', () => {
       mockFetchExistingTransactionIdsInRange.mockResolvedValue(new Set());
 
       const promise = syncPlatform(ctx, user, connectionId, 'youtube', oauthToken);
+        promise.catch(() => {});
 
       // Advance timers to trigger the retry
       await vi.runAllTimersAsync();
@@ -221,6 +222,7 @@ describe('syncPlatform', () => {
         mockFetchPlatformData.mockRejectedValue(error);
 
         const promise = syncPlatform(ctx, user, connectionId, 'youtube', oauthToken);
+        promise.catch(() => {});
 
         // Advance timers to exhaust all retries
         await vi.runAllTimersAsync();

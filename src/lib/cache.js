@@ -434,10 +434,25 @@ export const backgroundSync = {
 
   async queueAction(action) {
     const queue = JSON.parse(localStorage.getItem('action_queue') || '[]');
+
+    // Secure ID generation with fallback for older browsers
+    let secureId;
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      secureId = crypto.randomUUID();
+    } else if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      secureId = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+      );
+    } else {
+      // Fallback only if crypto is completely unavailable (e.g. non-secure context in old browser)
+      // We append a timestamp to make it slightly less predictable than just Math.random
+      secureId = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    }
+
     queue.push({
       ...action,
       timestamp: Date.now(),
-      id: Math.random().toString(36).substr(2, 9),
+      id: secureId,
     });
     localStorage.setItem('action_queue', JSON.stringify(queue));
     

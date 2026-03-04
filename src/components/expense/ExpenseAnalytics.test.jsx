@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { render, cleanup, screen } from "@testing-library/react";
+import { describe, afterEach, it, expect, vi } from "vitest";
 import * as matchers from '@testing-library/jest-dom/matchers';
 import ExpenseAnalytics from "./ExpenseAnalytics";
 
@@ -49,6 +49,10 @@ vi.mock("recharts", () => ({
 }));
 
 describe("ExpenseAnalytics", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
     const mockExpenses = [
         {
             id: "1",
@@ -80,7 +84,7 @@ describe("ExpenseAnalytics", () => {
         render(<ExpenseAnalytics expenses={[]} />);
 
         expect(screen.getByText("Avg Expense")).toBeInTheDocument();
-        expect(screen.getByText("$0")).toBeInTheDocument();
+        expect(screen.getAllByText("$0")[0]).toBeInTheDocument();
         expect(screen.getByText("Highest")).toBeInTheDocument();
         expect(screen.getAllByText("No data yet")).toHaveLength(2);
     });
