@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
@@ -34,6 +35,11 @@ describe("AssumptionsDrawer", () => {
   });
 
   it("does not render content when open is false", () => {
+    // We must unmount previous renders because Shadcn Drawer uses Portals which
+    // can leave elements in the DOM if we re-render without cleanup in the same file.
+    // We clean up before testing this specific false state.
+    document.body.innerHTML = '';
+
     render(
       <AssumptionsDrawer
         open={false}

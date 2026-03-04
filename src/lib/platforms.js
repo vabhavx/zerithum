@@ -93,7 +93,7 @@ export const PLATFORMS = [
     scope: "read_orders,read_products,read_customers,read_analytics,read_reports,read_shopify_payments_payouts,read_shopify_payments_disputes",
     redirectUri: "/AuthCallback",
     requiresApiKey: false,
-    clientId: import.meta.env.VITE_SHOPIFY_CLIENT_ID || "d8375e1adc7cab48d9e7bcece8913250",
+    clientId: import.meta.env.VITE_SHOPIFY_CLIENT_ID || "YOUR_SHOPIFY_API_KEY",
     requiresShopName: true
   },
   {
@@ -106,7 +106,7 @@ export const PLATFORMS = [
     scope: "channel:read:subscriptions bits:read analytics:read:extensions",
     redirectUri: "/AuthCallback",
     requiresApiKey: false,
-    clientId: import.meta.env.VITE_TWITCH_CLIENT_ID || "si8cip89mvmuhf02qpwrtcy47673pp"
+    clientId: import.meta.env.VITE_TWITCH_CLIENT_ID || "YOUR_TWITCH_CLIENT_ID"
   },
   {
     id: "substack",

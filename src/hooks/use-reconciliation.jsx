@@ -80,11 +80,24 @@ export const useReconciliations = (page = 1, pageSize = 10, filterStatus = 'all'
         bankIds.length > 0 ? base44.entities.BankTransaction.filter({ id: { $in: bankIds } }) : []
       ]);
 
-      // Map details to reconciliation records
+      // Create lookup maps to avoid O(N*M) lookups
+      const revenueMap = new Map();
+      for (let i = 0; i < revenueTransactions.length; i++) {
+        const t = revenueTransactions[i];
+        revenueMap.set(t.id, t);
+      }
+
+      const bankMap = new Map();
+      for (let i = 0; i < bankTransactions.length; i++) {
+        const t = bankTransactions[i];
+        bankMap.set(t.id, t);
+      }
+
+      // Map details to reconciliation records using O(1) lookups
       const joinedData = data.map(rec => ({
         ...rec,
-        revenue_transaction: revenueTransactions.find(t => t.id === rec.revenue_transaction_id),
-        bank_transaction: bankTransactions.find(t => t.id === rec.bank_transaction_id)
+        revenue_transaction: revenueMap.get(rec.revenue_transaction_id),
+        bank_transaction: bankMap.get(rec.bank_transaction_id)
       }));
 
       return { data: joinedData, count };
