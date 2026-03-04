@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, afterEach, it, expect, vi } from 'vitest';
+import { render, cleanup, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import Landing from './Landing';
@@ -30,6 +30,10 @@ vi.mock('@/components/landing/HowItWorksSection', () => ({ default: () => <div d
 vi.mock('@/components/landing/AccuracySection', () => ({ default: () => <div data-testid="accuracy-section">Accuracy Section</div> }));
 vi.mock('@/components/landing/SecuritySection', () => ({ default: () => <div data-testid="security-section">Security Section</div> }));
 vi.mock('@/components/landing/Footer', () => ({ default: () => <div data-testid="footer">Footer</div> }));
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('Landing Page', () => {
   it('renders all sections', () => {

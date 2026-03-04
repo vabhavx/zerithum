@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react"
-import { describe, it, expect, vi } from "vitest"
+import { render, cleanup, screen } from "@testing-library/react"
+import { describe, afterEach, it, expect, vi } from "vitest"
 import * as matchers from '@testing-library/jest-dom/matchers'
 import { ChartContainer, ChartStyle } from "./chart"
 
@@ -12,6 +12,10 @@ vi.mock("recharts", () => ({
   Tooltip: () => <div>Tooltip</div>,
   Legend: () => <div>Legend</div>,
 }))
+
+afterEach(() => {
+  cleanup();
+});
 
 describe("ChartContainer", () => {
   const config = {

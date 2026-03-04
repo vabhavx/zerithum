@@ -69,7 +69,7 @@ describe('deleteAccount type check', () => {
     });
 
     it('should load deleteAccount without type errors', async () => {
-        await import('../deleteAccount.ts');
+        await import('../../supabase/functions/deleteAccount/index.ts');
         expect(globalThis.Deno.serve).toHaveBeenCalled();
     });
 });

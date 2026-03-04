@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, afterEach, it, expect } from 'vitest';
+import { render, cleanup, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import Footer from './Footer';
 
 expect.extend(matchers);
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('Footer', () => {
     it('renders correct links', () => {

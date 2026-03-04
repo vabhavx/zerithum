@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, afterEach, it, expect, vi } from 'vitest';
+import { render, cleanup, screen } from '@testing-library/react';
 import ConnectedPlatforms from './ConnectedPlatforms';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import React from 'react';
@@ -97,6 +97,10 @@ vi.mock('../components/platform/ConnectedPlatformRow', () => ({ default: () => <
 vi.mock('../components/platform/SyncHistoryRow', () => ({ default: () => <div data-testid="sync-history-row" /> }));
 vi.mock('../components/shared/MotivationalQuote', () => ({ default: () => <div data-testid="motivational-quote" /> }));
 vi.mock('../components/shared/SuccessConfetti', () => ({ default: () => <div data-testid="success-confetti" /> }));
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('ConnectedPlatforms Page', () => {
     it('renders the page title', () => {

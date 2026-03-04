@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, cleanup, screen, fireEvent } from '@testing-library/react';
+import { describe, afterEach, it, expect, vi, beforeEach } from 'vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import InsightsPanel from './InsightsPanel';
 
@@ -29,6 +29,10 @@ vi.mock('framer-motion', () => ({
   },
   AnimatePresence: ({ children }) => <>{children}</>,
 }));
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('InsightsPanel', () => {
   const mockInsights = [

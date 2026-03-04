@@ -222,6 +222,10 @@ describe('syncPlatform', () => {
 
         const promise = syncPlatform(ctx, user, connectionId, 'youtube', oauthToken);
 
+        // Attach a dummy catch handler to prevent UnhandledPromiseRejection errors
+        // when fake timers are advanced before the promise is fully resolved/rejected.
+        promise.catch(() => {});
+
         // Advance timers to exhaust all retries
         await vi.runAllTimersAsync();
 

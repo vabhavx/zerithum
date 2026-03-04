@@ -1,11 +1,16 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+// @vitest-environment jsdom
+import { render, cleanup, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, afterEach, it, expect, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { AssumptionsDrawer } from "./AssumptionsDrawer";
 
 vi.mock("lucide-react", () => ({
   X: () => <div data-testid="mock-x-icon">X</div>,
 }));
+
+afterEach(() => {
+  cleanup();
+});
 
 describe("AssumptionsDrawer", () => {
   const mockAssumptions = {
