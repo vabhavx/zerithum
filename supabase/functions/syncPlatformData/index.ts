@@ -113,6 +113,7 @@ Deno.serve(async (req) => {
 
         // Create Context
         const ctx: SyncContext = {
+            env: { get: (key: string) => Deno.env.get(key) },
             fetchPlatformData: async (url: string, headers: any) => {
                 const res = await fetch(url, { headers });
                 if (!res.ok) {

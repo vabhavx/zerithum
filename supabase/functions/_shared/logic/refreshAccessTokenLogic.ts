@@ -13,7 +13,7 @@ export interface RefreshAccessTokenContext {
   decrypt: (text: string) => Promise<string>;
 }
 
-const REFRESH_CONFIG: Record<string, { tokenUrl: string; clientId: string; clientSecretEnv: string }> = {
+const REFRESH_CONFIG: Record<string, { tokenUrl: string; clientId?: string; clientIdEnv?: string; clientSecretEnv: string }> = {
   youtube: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
     clientId: '985180453886-8qbvanuid2ifpdoq84culbg4gta83rbn.apps.googleusercontent.com',
@@ -28,6 +28,31 @@ const REFRESH_CONFIG: Record<string, { tokenUrl: string; clientId: string; clien
     tokenUrl: 'https://connect.stripe.com/oauth/token',
     clientId: 'YOUR_STRIPE_CLIENT_ID',
     clientSecretEnv: 'STRIPE_CLIENT_SECRET'
+  },
+  twitch: {
+    tokenUrl: 'https://id.twitch.tv/oauth2/token',
+    clientIdEnv: 'TWITCH_CLIENT_ID',
+    clientSecretEnv: 'TWITCH_CLIENT_SECRET'
+  },
+  square: {
+    tokenUrl: 'https://connect.squareup.com/oauth2/token',
+    clientIdEnv: 'SQUARE_CLIENT_ID',
+    clientSecretEnv: 'SQUARE_CLIENT_SECRET'
+  },
+  gumroad: {
+    tokenUrl: 'https://api.gumroad.com/oauth/token',
+    clientIdEnv: 'GUMROAD_CLIENT_ID',
+    clientSecretEnv: 'GUMROAD_CLIENT_SECRET'
+  },
+  tiktok: {
+    tokenUrl: 'https://open.tiktokapis.com/v2/oauth/token/',
+    clientIdEnv: 'TIKTOK_CLIENT_KEY',
+    clientSecretEnv: 'TIKTOK_CLIENT_SECRET'
+  },
+  instagram: {
+    tokenUrl: 'https://graph.facebook.com/v20.0/oauth/access_token',
+    clientIdEnv: 'META_APP_ID',
+    clientSecretEnv: 'META_APP_SECRET'
   }
 };
 
@@ -65,33 +90,49 @@ export async function refreshAccessTokenLogic(
     return { status: 400, body: { error: 'Token refresh not supported for this platform' } };
   }
 
+  const clientId = config.clientId || (config.clientIdEnv ? ctx.env.get(config.clientIdEnv) : undefined);
+  if (!clientId) {
+    return { status: 500, body: { error: `Client ID not configured for ${connection.platform}` } };
+  }
+
   const clientSecret = ctx.env.get(config.clientSecretEnv);
   if (!clientSecret) {
-    return { status: 500, body: {
-      error: `OAuth not configured for ${connection.platform}`
-    } };
+    return {
+      status: 500, body: {
+        error: `OAuth not configured for ${connection.platform}`
+      }
+    };
+  }
+
+  const requestBody: any = {
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: refreshToken,
+    grant_type: 'refresh_token'
+  };
+
+  if (connection.platform === 'tiktok') {
+    requestBody.client_key = clientId;
+    delete requestBody.client_id;
   }
 
   // Refresh the token
   const refreshResponse = await ctx.fetch(config.tokenUrl, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': connection.platform === 'square' ? 'application/json' : 'application/x-www-form-urlencoded',
     },
-    body: new URLSearchParams({
-      client_id: config.clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token'
-    }),
+    body: connection.platform === 'square' ? JSON.stringify(requestBody) : new URLSearchParams(requestBody),
   });
 
   if (!refreshResponse.ok) {
     const errorData = await refreshResponse.json();
-    return { status: 400, body: {
-      error: 'Failed to refresh token',
-      details: errorData
-    } };
+    return {
+      status: 400, body: {
+        error: 'Failed to refresh token',
+        details: errorData
+      }
+    };
   }
 
   const tokens = await refreshResponse.json();
@@ -115,8 +156,10 @@ export async function refreshAccessTokenLogic(
 
   await ctx.base44.asServiceRole.entities.ConnectedPlatform.update(connectionId, updateData);
 
-  return { status: 200, body: {
-    success: true,
-    message: 'Token refreshed successfully'
-  } };
+  return {
+    status: 200, body: {
+      success: true,
+      message: 'Token refreshed successfully'
+    }
+  };
 }
