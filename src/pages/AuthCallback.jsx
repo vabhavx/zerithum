@@ -48,14 +48,17 @@ export default function AuthCallback() {
       sessionStorage.removeItem('shopify_shop_name');
 
       try {
+        const platformDef = PLATFORMS.find(p => p.id === (platform || "youtube"));
         const redirectUri = window.location.origin + "/AuthCallback";
         const invokePayload = { code, platform: platform || "youtube", redirect_uri: redirectUri };
+        if (platformDef?.clientId) invokePayload.client_id = platformDef.clientId;
+        if (platformDef?.clientKey) invokePayload.client_key = platformDef.clientKey;
         if (shop) invokePayload.shop = shop;
         const response = await base44.functions.invoke("exchangeOAuthTokens", invokePayload);
         if (response.success) {
           setStatus("success");
           queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
-          const platformName = PLATFORMS.find(p => p.id === platform)?.name || platform;
+          const platformName = platformDef?.name || platform;
           setTimeout(() => { toast.success(`${platformName} connected successfully!`); navigate(createPageUrl("ConnectedPlatforms")); }, 1500);
         } else throw new Error(response.error || "Failed to connect");
       } catch (err) { setStatus("error"); setError(err.response?.data?.error || err.message || "Failed to connect platform"); }

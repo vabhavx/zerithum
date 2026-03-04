@@ -6,6 +6,8 @@ export interface ExchangeTokensContext {
   base44: any;
   shop?: string; // Shopify-specific: the merchant's myshopify.com subdomain
   redirectUri?: string; // Client-provided redirect URI (validated server-side)
+  clientId?: string;
+  clientKey?: string;
 }
 
 export interface ServiceResponse {
@@ -130,15 +132,15 @@ export async function exchangeOAuthTokens(
   let clientKey: string | undefined;
 
   if (platform === 'tiktok') {
-    clientKey = ctx.envGet(def.clientKeyEnv!);
+    clientKey = ctx.clientKey || ctx.envGet(def.clientKeyEnv!);
     if (!clientKey) {
-      ctx.logError('Missing TIKTOK_CLIENT_KEY env var');
+      ctx.logError('Missing TIKTOK_CLIENT_KEY env var or payload property');
       return { status: 500, body: { error: 'OAuth configuration error' } };
     }
   } else {
-    clientId = ctx.envGet(def.clientIdEnv!);
+    clientId = ctx.clientId || ctx.envGet(def.clientIdEnv!);
     if (!clientId) {
-      ctx.logError(`Missing Client ID env var for ${platform}`);
+      ctx.logError(`Missing Client ID env var or payload property for ${platform}`);
       return { status: 500, body: { error: 'OAuth configuration error' } };
     }
   }
@@ -222,12 +224,21 @@ export async function exchangeOAuthTokens(
     tokenParams.client_secret = clientSecret;
   }
 
+  let requestHeaders: Record<string, string> = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Accept': 'application/json'
+  };
+  let requestBody: string | URLSearchParams = new URLSearchParams(tokenParams);
+
+  if (platform === 'square') {
+    requestHeaders['Content-Type'] = 'application/json';
+    requestBody = JSON.stringify(tokenParams);
+  }
+
   const tokenResponse = await ctx.fetch(def.tokenUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams(tokenParams),
+    headers: requestHeaders,
+    body: requestBody,
   });
 
   if (!tokenResponse.ok) {
@@ -261,6 +272,8 @@ export async function exchangeOAuthTokens(
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + tokens.expires_in);
     expiresAtStr = expiresAt.toISOString();
+  } else if (tokens.expires_at) {
+    expiresAtStr = tokens.expires_at; // Format like 2024-03-24T00:00:00Z
   } else if (platform === 'gumroad') {
     expiresAtStr = null; // Gumroad tokens do not expire
   } else {
