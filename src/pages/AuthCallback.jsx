@@ -49,7 +49,9 @@ export default function AuthCallback() {
 
       try {
         const platformDef = PLATFORMS.find(p => p.id === (platform || "youtube"));
-        const redirectUri = window.location.origin + "/AuthCallback";
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const baseOrigin = isLocal ? window.location.origin : 'https://zerithum.com';
+        const redirectUri = baseOrigin + "/authcallback";
         const invokePayload = { code, platform: platform || "youtube", redirect_uri: redirectUri };
         if (platformDef?.clientId) invokePayload.client_id = platformDef.clientId;
         if (platformDef?.clientKey) invokePayload.client_key = platformDef.clientKey;
