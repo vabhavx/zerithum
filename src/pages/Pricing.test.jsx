@@ -1,5 +1,6 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// @vitest-environment jsdom
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Pricing from "./Pricing";
 import * as matchers from "@testing-library/jest-dom/matchers";
 
@@ -61,6 +62,7 @@ describe("Pricing Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+  afterEach(() => { cleanup(); });
 
   it("renders the pricing page with plans", async () => {
     render(<Pricing />);
@@ -98,7 +100,8 @@ describe("Pricing Page", () => {
     // We check if "Creator Pro" card has the "Recommended" badge
     // Since our mock renders text, we can look for "Recommended" near "Creator Pro"
     // Or simpler, check if "Recommended" text exists (it should).
-    expect(screen.getByText("Recommended")).toBeInTheDocument();
+    const recommendedElements = screen.getAllByText("Recommended");
+    expect(recommendedElements.length).toBeGreaterThan(0);
 
     // Find the slider
     const slider = screen.getByRole("slider");

@@ -115,7 +115,7 @@ describe('handleOAuthCallback', () => {
       });
   });
 
-  it('should use OAUTH_REDIRECT_URI env var if present', async () => {
+  it('should construct redirect URI from origin instead of using OAUTH_REDIRECT_URI', async () => {
       mockEnvGet.mockImplementation((key: string) => {
          if (key === 'OAUTH_REDIRECT_URI') return 'https://custom-redirect.com/cb';
          if (key === 'YOUTUBE_CLIENT_ID') return 'client_id';
@@ -141,7 +141,8 @@ describe('handleOAuthCallback', () => {
       // Verify body params
       const callArgs = mockFetch.mock.calls[0];
       const body = callArgs[1].body as URLSearchParams;
-      expect(body.get('redirect_uri')).toBe('https://custom-redirect.com/cb');
+      // Memory: derives the redirect URI solely from the request origin appended with /auth/callback
+      expect(body.get('redirect_uri')).toBe('https://app.com/auth/callback');
   });
 
   describe('Platform Specifics', () => {

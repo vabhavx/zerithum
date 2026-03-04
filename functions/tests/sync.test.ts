@@ -221,6 +221,8 @@ describe('syncPlatform', () => {
         mockFetchPlatformData.mockRejectedValue(error);
 
         const promise = syncPlatform(ctx, user, connectionId, 'youtube', oauthToken);
+        // Memory: attach a dummy catch handler to the promise (`promise.catch(() => {})`) before advancing timers to prevent unhandled promise rejection errors.
+        promise.catch(() => {});
 
         // Advance timers to exhaust all retries
         await vi.runAllTimersAsync();

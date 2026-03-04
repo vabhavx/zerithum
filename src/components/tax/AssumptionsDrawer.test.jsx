@@ -1,5 +1,6 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+// @vitest-environment jsdom
+import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { AssumptionsDrawer } from "./AssumptionsDrawer";
 
@@ -8,6 +9,7 @@ vi.mock("lucide-react", () => ({
 }));
 
 describe("AssumptionsDrawer", () => {
+  afterEach(() => { cleanup(); });
   const mockAssumptions = {
     stateLabel: "California",
     stateRate: 0.093,
