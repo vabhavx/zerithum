@@ -64,7 +64,7 @@ describe('deleteAccount vulnerability repro', () => {
 
         // Load the module to trigger Deno.serve
         // We use dynamic import to ensure mocks are active
-        await import('../deleteAccount.ts');
+        await import('../../supabase/functions/deleteAccount/index.ts');
     });
 
     afterEach(() => {

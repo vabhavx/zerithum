@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import * as matchers from '@testing-library/jest-dom/matchers';
 import ExpenseRow from "./ExpenseRow";
 
@@ -29,6 +29,10 @@ vi.mock("framer-motion", () => {
 });
 
 describe("ExpenseRow", () => {
+    afterEach(() => {
+        cleanup();
+    });
+
     const mockOnDelete = vi.fn();
     const defaultExpense = {
         id: "exp-123",
