@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { render, cleanup, screen, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import Reconciliation from './Reconciliation';
 
@@ -57,6 +57,10 @@ const createWrapper = () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('Reconciliation Page', () => {
   beforeEach(() => {

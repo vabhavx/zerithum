@@ -1,5 +1,6 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// @vitest-environment jsdom
+import { render, cleanup, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, afterEach, it, expect, vi, beforeEach } from "vitest";
 import Pricing from "./Pricing";
 import * as matchers from "@testing-library/jest-dom/matchers";
 
@@ -56,6 +57,10 @@ vi.mock("framer-motion", () => ({
   },
   AnimatePresence: ({ children }) => <>{children}</>,
 }));
+
+afterEach(() => {
+  cleanup();
+});
 
 describe("Pricing Page", () => {
   beforeEach(() => {

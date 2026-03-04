@@ -1,0 +1,3146 @@
+bun test v1.2.14 (6a363a38)
+
+vitest.config.test.ts:
+
+src/hooks/use-mobile.test.jsx:
+11 |     const mql = {
+12 |       matches: true,
+13 |       addEventListener: vi.fn(),
+14 |       removeEventListener: vi.fn(),
+15 |     }
+16 |     window.matchMedia = vi.fn().mockReturnValue(mql)
+         ^
+ReferenceError: window is not defined
+      at <anonymous> (/app/src/hooks/use-mobile.test.jsx:16:5)
+(fail) useIsMobile > should return true when is mobile [0.28ms]
+26 |     const mql = {
+27 |       matches: false,
+28 |       addEventListener: vi.fn(),
+29 |       removeEventListener: vi.fn(),
+30 |     }
+31 |     window.matchMedia = vi.fn().mockReturnValue(mql)
+         ^
+ReferenceError: window is not defined
+      at <anonymous> (/app/src/hooks/use-mobile.test.jsx:31:5)
+(fail) useIsMobile > should return false when is not mobile [0.10ms]
+44 |           changeHandler = handler
+45 |         }
+46 |       }),
+47 |       removeEventListener: vi.fn(),
+48 |     }
+49 |     window.matchMedia = vi.fn().mockReturnValue(mql)
+         ^
+ReferenceError: window is not defined
+      at <anonymous> (/app/src/hooks/use-mobile.test.jsx:49:5)
+(fail) useIsMobile > should update state when media query changes [0.15ms]
+74 |     const mql = {
+75 |       matches: false,
+76 |       addEventListener: vi.fn(),
+77 |       removeEventListener,
+78 |     }
+79 |     window.matchMedia = vi.fn().mockReturnValue(mql)
+         ^
+ReferenceError: window is not defined
+      at <anonymous> (/app/src/hooks/use-mobile.test.jsx:79:5)
+(fail) useIsMobile > should cleanup event listener on unmount [0.09ms]
+
+src/hooks/use-dashboard-metrics.test.jsx:
+3 | import { useDashboardMetrics } from "./use-dashboard-metrics";
+4 |
+5 | describe("useDashboardMetrics", () => {
+6 |   beforeEach(() => {
+7 |     // Set system time to 2023-10-15
+8 |     vi.useFakeTimers();
+           ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:8:8)
+(fail) useDashboardMetrics > should return default metrics when no data is provided [876510.77ms]
+
+# Unhandled error between tests
+-------------------------------
+ 8 |     vi.useFakeTimers();
+ 9 |     vi.setSystemTime(new Date("2023-10-15T12:00:00Z"));
+10 |   });
+11 |
+12 |   afterEach(() => {
+13 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:13:8)
+-------------------------------
+
+(fail) useDashboardMetrics > should return default metrics when no data is provided
+3 | import { useDashboardMetrics } from "./use-dashboard-metrics";
+4 |
+5 | describe("useDashboardMetrics", () => {
+6 |   beforeEach(() => {
+7 |     // Set system time to 2023-10-15
+8 |     vi.useFakeTimers();
+           ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:8:8)
+(fail) useDashboardMetrics > should calculate current month revenue correctly [876510.89ms]
+
+# Unhandled error between tests
+-------------------------------
+ 8 |     vi.useFakeTimers();
+ 9 |     vi.setSystemTime(new Date("2023-10-15T12:00:00Z"));
+10 |   });
+11 |
+12 |   afterEach(() => {
+13 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:13:8)
+-------------------------------
+
+(fail) useDashboardMetrics > should calculate current month revenue correctly
+3 | import { useDashboardMetrics } from "./use-dashboard-metrics";
+4 |
+5 | describe("useDashboardMetrics", () => {
+6 |   beforeEach(() => {
+7 |     // Set system time to 2023-10-15
+8 |     vi.useFakeTimers();
+           ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:8:8)
+(fail) useDashboardMetrics > should calculate revenue trend correctly (up) [876510.94ms]
+
+# Unhandled error between tests
+-------------------------------
+ 8 |     vi.useFakeTimers();
+ 9 |     vi.setSystemTime(new Date("2023-10-15T12:00:00Z"));
+10 |   });
+11 |
+12 |   afterEach(() => {
+13 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:13:8)
+-------------------------------
+
+(fail) useDashboardMetrics > should calculate revenue trend correctly (up)
+3 | import { useDashboardMetrics } from "./use-dashboard-metrics";
+4 |
+5 | describe("useDashboardMetrics", () => {
+6 |   beforeEach(() => {
+7 |     // Set system time to 2023-10-15
+8 |     vi.useFakeTimers();
+           ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:8:8)
+(fail) useDashboardMetrics > should calculate revenue trend correctly (down) [876511.01ms]
+
+# Unhandled error between tests
+-------------------------------
+ 8 |     vi.useFakeTimers();
+ 9 |     vi.setSystemTime(new Date("2023-10-15T12:00:00Z"));
+10 |   });
+11 |
+12 |   afterEach(() => {
+13 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:13:8)
+-------------------------------
+
+(fail) useDashboardMetrics > should calculate revenue trend correctly (down)
+3 | import { useDashboardMetrics } from "./use-dashboard-metrics";
+4 |
+5 | describe("useDashboardMetrics", () => {
+6 |   beforeEach(() => {
+7 |     // Set system time to 2023-10-15
+8 |     vi.useFakeTimers();
+           ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:8:8)
+(fail) useDashboardMetrics > should calculate platform breakdown correctly [876511.07ms]
+
+# Unhandled error between tests
+-------------------------------
+ 8 |     vi.useFakeTimers();
+ 9 |     vi.setSystemTime(new Date("2023-10-15T12:00:00Z"));
+10 |   });
+11 |
+12 |   afterEach(() => {
+13 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:13:8)
+-------------------------------
+
+(fail) useDashboardMetrics > should calculate platform breakdown correctly
+3 | import { useDashboardMetrics } from "./use-dashboard-metrics";
+4 |
+5 | describe("useDashboardMetrics", () => {
+6 |   beforeEach(() => {
+7 |     // Set system time to 2023-10-15
+8 |     vi.useFakeTimers();
+           ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:8:8)
+(fail) useDashboardMetrics > should calculate concentration risk correctly (high risk) [876511.11ms]
+
+# Unhandled error between tests
+-------------------------------
+ 8 |     vi.useFakeTimers();
+ 9 |     vi.setSystemTime(new Date("2023-10-15T12:00:00Z"));
+10 |   });
+11 |
+12 |   afterEach(() => {
+13 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:13:8)
+-------------------------------
+
+(fail) useDashboardMetrics > should calculate concentration risk correctly (high risk)
+3 | import { useDashboardMetrics } from "./use-dashboard-metrics";
+4 |
+5 | describe("useDashboardMetrics", () => {
+6 |   beforeEach(() => {
+7 |     // Set system time to 2023-10-15
+8 |     vi.useFakeTimers();
+           ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:8:8)
+(fail) useDashboardMetrics > should calculate concentration risk correctly (moderate risk) [876511.17ms]
+
+# Unhandled error between tests
+-------------------------------
+ 8 |     vi.useFakeTimers();
+ 9 |     vi.setSystemTime(new Date("2023-10-15T12:00:00Z"));
+10 |   });
+11 |
+12 |   afterEach(() => {
+13 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:13:8)
+-------------------------------
+
+(fail) useDashboardMetrics > should calculate concentration risk correctly (moderate risk)
+3 | import { useDashboardMetrics } from "./use-dashboard-metrics";
+4 |
+5 | describe("useDashboardMetrics", () => {
+6 |   beforeEach(() => {
+7 |     // Set system time to 2023-10-15
+8 |     vi.useFakeTimers();
+           ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:8:8)
+(fail) useDashboardMetrics > should calculate concentration risk correctly (diversified) [876511.22ms]
+
+# Unhandled error between tests
+-------------------------------
+ 8 |     vi.useFakeTimers();
+ 9 |     vi.setSystemTime(new Date("2023-10-15T12:00:00Z"));
+10 |   });
+11 |
+12 |   afterEach(() => {
+13 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:13:8)
+-------------------------------
+
+(fail) useDashboardMetrics > should calculate concentration risk correctly (diversified)
+3 | import { useDashboardMetrics } from "./use-dashboard-metrics";
+4 |
+5 | describe("useDashboardMetrics", () => {
+6 |   beforeEach(() => {
+7 |     // Set system time to 2023-10-15
+8 |     vi.useFakeTimers();
+           ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:8:8)
+(fail) useDashboardMetrics > should calculate reconciliation metrics correctly [876511.27ms]
+
+# Unhandled error between tests
+-------------------------------
+ 8 |     vi.useFakeTimers();
+ 9 |     vi.setSystemTime(new Date("2023-10-15T12:00:00Z"));
+10 |   });
+11 |
+12 |   afterEach(() => {
+13 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/src/hooks/use-dashboard-metrics.test.jsx:13:8)
+-------------------------------
+
+(fail)  $\xce  alculate reconciliation metrics correctly
+
+src/utils/index.test.ts:
+(pass) createPageUrl > should create a simple URL for a single word page name [8.31ms]
+(pass) createPageUrl > should replace spaces with hyphens [0.21ms]
+(pass) createPageUrl > should handle multiple spaces correctly by replacing each with a hyphen [0.03ms]
+(pass) createPageUrl > should handle empty string [0.03ms]
+(pass) createPageUrl > should handle leading and trailing spaces by replacing them with hyphens [0.03ms]
+(pass) createPageUrl > should preserve case [0.02ms]
+(pass) createPageUrl > should handle numbers [0.02ms]
+(pass) createPageUrl > should preserve special characters [0.02ms]
+(pass) createPageUrl > should handle consecutive spaces as multiple hyphens [0.03ms]
+(pass) createPageUrl > should handle strings with no spaces correctly [0.07ms]
+(pass) createPageUrl > should preserve forward slashes [0.02ms]
+(pass) createPageUrl > should preserve URL unsafe characters [0.02ms]
+(pass) createPageUrl > should preserve tabs and newlines (only replaces spaces) [0.03ms]
+
+src/utils/csvExport.test.js:
+(pass) csvExport utility > generateCSV > should return an empty string if data is empty, null, or undefined [0.19ms]
+(pass) csvExport utility > generateCSV > should generate a CSV with BOM, headers, and rows [0.36ms]
+(pass) csvExport utility > generateCSV > should escape double quotes in headers and data [7.17ms]
+(pass) csvExport utility > generateCSV > should handle commas and newlines in data [0.27ms]
+(pass) csvExport utility > generateCSV > should use custom formatters and pass the full item object [144.63ms]
+(pass) csvExport utility > generateCSV > should handle null and undefined values in data cells by returning empty fields [0.32ms]
+(pass) csvExport utility > generateCSV > should handle falsy boundary values (0, false, empty string) correctly [0.09ms]
+(pass) csvExport utility > generateCSV > should handle custom formatters returning empty or boundary values [0.27ms]
+108 |         let createElementSpy;
+109 |
+110 |         beforeEach(() => {
+111 |             createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:url');
+112 |             revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+113 |             appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
+                                            ^
+ReferenceError: document is not defined
+      at <anonymous> (/app/src/utils/csvExport.test.js:113:39)
+(fail) csvExport utility > downloadCSV > should trigger a download flow [876692.30ms]
+(fail) csvExport utility > downloadCSV > should trigger a download flow
+108 |         let createElementSpy;
+109 |
+110 |         beforeEach(() => {
+111 |             createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:url');
+112 |             revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+113 |             appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
+                                            ^
+ReferenceError: document is not defined
+      at <anonymous> (/app/src/utils/csvExport.test.js:113:39)
+(fail) csvExport utility > downloadCSV > should do nothing if link.download is not supported [876692.38ms]
+(fail) csvExport utility > @!\xce  o nothing if link.download is not supported
+
+src/api/supabaseClient.test.js:
+
+# Unhandled error between tests
+-------------------------------
+145 | * @returns {URL} - The validated base URL.
+146 | * @throws {Error}
+147 | */
+148 | function validateSupabaseUrl(supabaseUrl) {
+149 | 	const trimmedUrl = supabaseUrl === null || supabaseUrl === void 0 ? void 0 : supabaseUrl.trim();
+150 | 	if (!trimmedUrl) throw new Error("supabaseUrl is required.");
+                              ^
+error: supabaseUrl is required.
+      at validateSupabaseUrl (/app/node_modules/@supabase/supabase-js/dist/index.mjs:150:25)
+      at new SupabaseClient (/app/node_modules/@supabase/supabase-js/dist/index.mjs:199:19)
+      at createClient (/app/node_modules/@supabase/supabase-js/dist/index.mjs:392:9)
+      at /app/src/api/supabaseClient.js:13:25
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/api/supabaseClientEntities.test.js:
+
+# Unhandled error between tests
+-------------------------------
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 |
+3 | // Mock the environment variables
+4 | vi.stubGlobal('import.meta', {
+       ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("import.meta", {
+  env: {
+    VITE_SUPABASE_URL: "https://example.supabase.co",
+    VITE_SUPABASE_ANON_KEY: "test-anon-key"
+  }
+})', 'vi.stubGlobal' is undefined)
+      at /app/src/api/supabaseClientEntities.test.js:4:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/lib/taxUtils.test.js:
+(pass) taxUtils > clamp > should clamp value between min and max [0.07ms]
+(pass) taxUtils > toNonNegativeNumber > should parse valid numbers [0.07ms]
+(pass) taxUtils > toNonNegativeNumber > should return 0 for negative numbers [0.04ms]
+(pass) taxUtils > toNonNegativeNumber > should return 0 for invalid inputs [0.04ms]
+(pass) taxUtils > formatCurrency > should format currency correctly [0.78ms]
+(pass) taxUtils > formatCurrency > should handle 0 [0.26ms]
+(pass) taxUtils > formatPercent > should format percentage correctly [0.41ms]
+(pass) taxUtils > formatPercent > should handle 0 [0.43ms]
+(pass) taxUtils > calculateProgressiveTax > should return 0 for 0 or negative income [0.33ms]
+(pass) taxUtils > calculateProgressiveTax > should calculate tax for first bracket [0.05ms]
+(pass) taxUtils > calculateProgressiveTax > should calculate tax for second bracket [0.03ms]
+(pass) taxUtils > calculateProgressiveTax > should calculate tax for third bracket [0.02ms]
+(pass) taxUtils > getQuarterSchedule > should return correct schedule for a given year [54.89ms]
+(pass) taxUtils > getConfidenceLabel > should return correct labels [0.16ms]
+(pass) taxUtils > getConfidenceTone > should return correct color classes [0.06ms]
+(pass) taxUtils > getUncertaintyBand > should calculate uncertainty band correctly [0.13ms]
+(pass) taxUtils > getUncertaintyBand > should apply penalties [0.03ms]
+(pass) taxUtils > getUncertaintyBand > should clamp result between 0.02 and 0.12 [0.03ms]
+
+src/lib/utils.test.js:
+(pass) cn > should merge class names correctly [9.73ms]
+(pass) cn > should handle conditional classes [0.16ms]
+(pass) cn > should handle tailwind conflicts [0.76ms]
+(pass) cn > should handle arrays and objects [0.24ms]
+(pass) cn > should handle empty inputs [0.11ms]
+31 |   })
+32 | })
+33 |
+34 | describe('isIframe', () => {
+35 |   beforeEach(() => {
+36 |     vi.resetModules()
+            ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/src/lib/utils.test.js:36:8)
+(fail) isIframe > should be true when window.self !== window.top [876864.87ms]
+
+# Unhandled error between tests
+-------------------------------
+35 |   beforeEach(() => {
+36 |     vi.resetModules()
+37 |   })
+38 |
+39 |   afterEach(() => {
+40 |     vi.unstubAllGlobals()
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/src/lib/utils.test.js:40:8)
+-------------------------------
+
+(fail) isIframe > should be true when window.self !== window.top
+31 |   })
+32 | })
+33 |
+34 | describe('isIframe', () => {
+35 |   beforeEach(() => {
+36 |     vi.resetModules()
+            ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/src/lib/utils.test.js:36:8)
+(fail) isIframe > should be false when window.self === window.top [876865.12ms]
+
+# Unhandled error between tests
+-------------------------------
+35 |   beforeEach(() => {
+36 |     vi.resetModules()
+37 |   })
+38 |
+39 |   afterEach(() => {
+40 |     vi.unstubAllGlobals()
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/src/lib/utils.test.js:40:8)
+-------------------------------
+
+(fail) pO\xce  e false when window.self === window.top
+
+src/lib/AuthContext.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+3 | import React from 'react';
+4 | import { AuthProvider } from './AuthContext';
+5 | import { supabase } from '@/api/supabaseClient';
+6 |
+7 | // Mock the Supabase client
+8 | vi.mock('@/api/supabaseClient', () => {
+       ^
+TypeError: vi.mock is not a function. (In 'vi.mock("@/api/supabaseClient", () => {
+  return {
+    supabase: {
+      auth: {
+        getSession: vi.fn(),
+        onAuthStateChange: vi.fn(() => ({
+          data: { subscription: { unsubscribe: vi.fn() } }
+        })),
+        signOut: vi.fn(),
+        setSession: vi.fn()
+      },
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({ data: {}, error: null }))
+          }))
+        }))
+      }))
+    },
+    base44: {
+      auth: {
+        me: vi.fn()
+      }
+    }
+  };
+})', 'vi.mock' is undefined)
+      at /app/src/lib/AuthContext.test.jsx:8:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/lib/platforms.test.js:
+1 |
+2 | import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+3 |
+4 | describe('PLATFORMS configuration', () => {
+5 |   beforeEach(() => {
+6 |     vi.resetModules();
+           ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/src/lib/platforms.test.js:6:8)
+(fail) PLATFORMS configuration > uses environment variables for client IDs when available [876879.20ms]
+
+# Unhandled error between tests
+-------------------------------
+ 5 |   beforeEach(() => {
+ 6 |     vi.resetModules();
+ 7 |   });
+ 8 |
+ 9 |   afterEach(() => {
+10 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/src/lib/platforms.test.js:10:8)
+-------------------------------
+
+(fail) PLATFORMS configuration > uses environment variables for client IDs when available
+1 |
+2 | import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+3 |
+4 | describe('PLATFORMS configuration', () => {
+5 |   beforeEach(() => {
+6 |     vi.resetModules();
+           ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/src/lib/platforms.test.js:6:8)
+(fail) PLATFORMS configuration > falls back to placeholders when environment variables are missing [876879.29ms]
+
+# Unhandled error between tests
+-------------------------------
+ 5 |   beforeEach(() => {
+ 6 |     vi.resetModules();
+ 7 |   });
+ 8 |
+ 9 |   afterEach(() => {
+10 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/src/lib/platforms.test.js:10:8)
+-------------------------------
+
+(fail) \x80]\xce  ck to placeholders when environment variables are missing
+
+src/pages/Pricing.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 5 |
+ 6 | // Extend Jest matchers
+ 7 | expect.extend(matchers);
+ 8 |
+ 9 | // Mock Dependencies
+10 | vi.mock("@/api/supabaseClient", () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("@/api/supabaseClient", () => ({
+  base44: {
+    auth: {
+      me: vi.fn().mockResolvedValue({ id: "test-user" }),
+      redirectToLogin: vi.fn()
+    },
+    functions: {
+      invoke: vi.fn().mockResolvedValue({
+        data: { success: !0, payment_url: "https://checkout.stripe.com/test" }
+      })
+    }
+  }
+}))', 'vi.mock' is undefined)
+      at /app/src/pages/Pricing.test.jsx:10:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/pages/Methodology.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 7 |
+ 8 | // Extend Vitest's expect with jest-dom matchers
+ 9 | expect.extend(matchers);
+10 |
+11 | // Mock framer-motion to avoid animation issues in tests
+12 | vi.mock('framer-motion', async () => {
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("framer-motion", async () => {
+  return {
+    AnimatePresence: ({ children }) => jsxDEV_7x81h0kn(Fragment_8vg9x3sq, {
+      children
+    }, void 0, !1, void 0, this),
+    motion: {
+      div: ({ children, layout, layoutId, ...props }) => jsxDEV_7x81h0kn("div", {
+        ...props,
+        children
+      }, void 0, !1, void 0, this),
+      span: ({ children, layout, layoutId, ...props }) => jsxDEV_7x81h0kn("span", {
+        ...props,
+        children
+      }, void 0, !1, void 0, this)
+    }
+  };
+})', 'vi.mock' is undefined)
+      at /app/src/pages/Methodology.test.jsx:12:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/pages/ConnectedPlatforms.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 7 |
+ 8 | // Extend Vitest's expect with jest-dom matchers
+ 9 | expect.extend(matchers);
+10 |
+11 | // Mock framer-motion
+12 | vi.mock('framer-motion', async () => {
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("framer-motion", async () => {
+  return {
+    AnimatePresence: ({ children }) => jsxDEV_7x81h0kn(Fragment_8vg9x3sq, {
+      children
+    }, void 0, !1, void 0, this),
+    motion: new Proxy({}, {
+      get: (target, prop) => {
+        return React.forwardRef(({ children, ...props }, ref) => jsxDEV_7x81h0kn("div", {
+          ...props,
+          ref,
+          "data-testid": `motion-${String(prop)}`,
+          children
+        }, void 0, !1, void 0, this));
+      }
+    })
+  };
+})', 'vi.mock' is undefined)
+      at /app/src/pages/ConnectedPlatforms.test.jsx:12:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/pages/Reconciliation.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 8 | import { base44 } from '@/api/supabaseClient';
+ 9 | import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+10 | import React from 'react';
+11 |
+12 | // Mock the base44 client
+13 | vi.mock('@/api/supabaseClient', () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("@/api/supabaseClient", () => ({
+  base44: {
+    entities: {
+      RevenueTransaction: {
+        list: vi.fn(),
+        count: vi.fn(),
+        paginate: vi.fn(),
+        fetchAllIds: vi.fn(),
+        filter: vi.fn()
+      },
+      BankTransaction: {
+        list: vi.fn(),
+        filter: vi.fn()
+      },
+      Reconciliation: {
+        list: vi.fn(),
+        create: vi.fn(),
+        count: vi.fn(),
+        paginate: vi.fn(),
+        fetchAllIds: vi.fn()
+      }
+    },
+    functions: {
+      invoke: vi.fn()
+    }
+  }
+}))', 'vi.mock' is undefined)
+      at /app/src/pages/Reconciliation.test.jsx:13:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/pages/Privacy.test.jsx:
+251 |     throw error;
+252 |   }
+253 |   if (!baseElement) {
+254 |     // default to document.body instead of documentElement to avoid output of potentially-large
+255 |     // head elements (such as JSS style blocks) in debug output
+256 |     baseElement = document.body;
+                        ^
+ReferenceError: document is not defined
+      at render (/app/node_modules/@testing-library/react/dist/pure.js:256:19)
+      at <anonymous> (/app/src/pages/Privacy.test.jsx:16:5)
+(fail) Privacy Page > renders privacy policy heading [1.78ms]
+251 |     throw error;
+252 |   }
+253 |   if (!baseElement) {
+254 |     // default to document.body instead of documentElement to avoid output of potentially-large
+255 |     // head elements (such as JSS style blocks) in debug output
+256 |     baseElement = document.body;
+                        ^
+ReferenceError: document is not defined
+      at render (/app/node_modules/@testing-library/react/dist/pure.js:256:19)
+      at <anonymous> (/app/src/pages/Privacy.test.jsx:26:5)
+(fail) Privacy Page > renders quick summary section [0.25ms]
+251 |     throw error;
+252 |   }
+253 |   if (!baseElement) {
+254 |     // default to document.body instead of documentElement to avoid output of potentially-large
+255 |     // head elements (such as JSS style blocks) in debug output
+256 |     baseElement = document.body;
+                        ^
+ReferenceError: document is not defined
+      at render (/app/node_modules/@testing-library/react/dist/pure.js:256:19)
+      at <anonymous> (/app/src/pages/Privacy.test.jsx:44:5)
+(fail) Privacy Page > renders table of contents [0.21ms]
+251 |     throw error;
+252 |   }
+253 |   if (!baseElement) {
+254 |     // default to document.body instead of documentElement to avoid output of potentially-large
+255 |     // head elements (such as JSS style blocks) in debug output
+256 |     baseElement = document.body;
+                        ^
+ReferenceError: document is not defined
+      at render (/app/node_modules/@testing-library/react/dist/pure.js:256:19)
+      at <anonymous> (/app/src/pages/Privacy.test.jsx:61:5)
+(fail) Privacy Page > renders back to home link [0.12ms]
+251 |     throw error;
+252 |   }
+253 |   if (!baseElement) {
+254 |     // default to document.body instead of documentElement to avoid output of potentially-large
+255 |     // head elements (such as JSS style blocks) in debug output
+256 |     baseElement = document.body;
+                        ^
+ReferenceError: document is not defined
+      at render (/app/node_modules/@testing-library/react/dist/pure.js:256:19)
+      at <anonymous> (/app/src/pages/Privacy.test.jsx:71:5)
+(fail) Privacy Page > does not contain delete account button [0.09ms]
+
+src/pages/TermsOfService.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+11 | class MockIntersectionObserver {
+12 |   observe() {}
+13 |   unobserve() {}
+14 |   disconnect() {}
+15 | }
+16 | window.IntersectionObserver = MockIntersectionObserver;
+     ^
+ReferenceError: window is not defined
+      at /app/src/pages/TermsOfService.test.jsx:16:1
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/pages/Landing.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 7 |
+ 8 | // Extend Vitest's expect with jest-dom matchers
+ 9 | expect.extend(matchers);
+10 |
+11 | // Mock Three.js components to avoid JSDOM issues
+12 | vi.mock('@react-three/fiber', () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("@react-three/fiber", () => ({
+  Canvas: ({ children }) => jsxDEV_7x81h0kn("div", {
+    "data-testid": "mock-canvas",
+    children
+  }, void 0, !1, void 0, this)
+}))', 'vi.mock' is undefined)
+      at /app/src/pages/Landing.test.jsx:12:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+functions/tests/processReceipt.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+1 | import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
+2 |
+3 | // Hoist mocks to be accessible inside vi.mock factories
+4 | const mocks = vi.hoisted(() => ({
+                     ^
+TypeError: vi.hoisted is not a function. (In 'vi.hoisted(() => ({
+  serve: vi.fn(),
+  createClientFromRequest: vi.fn(),
+  logAudit: vi.fn(),
+  processReceiptLogic: vi.fn()
+}))', 'vi.hoisted' is undefined)
+      at /app/functions/tests/processReceipt.test.ts:4:18
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+functions/tests/sendSyncFailedEmail.test.ts:
+(pass) sendSyncFailedEmailLogic > should generate sync failed email with correct layout [2.01ms]
+(pass) sendSyncFailedEmailLogic > should throw error if userId is missing [0.26ms]
+(pass) sendSyncFailedEmailLogic > should throw error if platform is missing [0.15ms]
+(pass) sendSyncFailedEmailLogic > should throw error if user not found [0.35ms]
+(pass) sendSyncFailedEmailLogic > should sanitize platform and error message [0.38ms]
+(pass) sendSyncFailedEmailLogic > should use default error message if none provided [0.35ms]
+(pass) sendSyncFailedEmailLogic > should use fallback name if user has no full_name [0.26ms]
+
+functions/tests/deleteAccount.test.ts:
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 |
+3 | describe('deleteAccount type check', () => {
+4 |     beforeEach(() => {
+5 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount.test.ts:5:12)
+(fail) deleteAccount type check > should load deleteAccount without type errors [878876.05ms]
+
+# Unhandled error between tests
+-------------------------------
+63 |             CORS_METHODS: 'mock-methods',
+64 |         }));
+65 |     });
+66 |
+67 |     afterEach(() => {
+68 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount.test.ts:68:12)
+-------------------------------
+
+(fail) @m\xce  oad deleteAccount without type errors
+
+functions/tests/deleteAccount_functional.test.ts:
+2 |
+3 | describe('deleteAccount legacy table failure', () => {
+4 |     let handler: any;
+5 |
+6 |     beforeEach(() => {
+7 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_functional.test.ts:7:12)
+(fail) deleteAccount legacy table failure > should NOT fail critically when platform_connections deletion fails [878882.28ms]
+
+# Unhandled error between tests
+-------------------------------
+69 |             getCorsHeaders: vi.fn(() => ({})),
+70 |         }));
+71 |     });
+72 |
+73 |     afterEach(() => {
+74 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_functional.test.ts:74:12)
+-------------------------------
+
+(fail) \xc0]\xce  OT fail critically when platform_connections deletion fails
+
+functions/tests/security_cors_regression.test.ts:
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 |
+3 | describe('CORS security regression', () => {
+4 |     beforeEach(() => {
+5 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/security_cors_regression.test.ts:5:12)
+(fail) CORS security regression > updatePassword should use getCorsHeaders [878885.57ms]
+
+# Unhandled error between tests
+-------------------------------
+18 |             createClient: vi.fn(() => ({})),
+19 |         }));
+20 |     });
+21 |
+22 |     afterEach(() => {
+23 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/security_cors_regression.test.ts:23:12)
+-------------------------------
+
+(fail) CORS security regression > updatePassword should use getCorsHeaders
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 |
+3 | describe('CORS security regression', () => {
+4 |     beforeEach(() => {
+5 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/security_cors_regression.test.ts:5:12)
+(fail) CORS security regression > sendVerificationCode should use getCorsHeaders [878885.69ms]
+
+# Unhandled error between tests
+-------------------------------
+18 |             createClient: vi.fn(() => ({})),
+19 |         }));
+20 |     });
+21 |
+22 |     afterEach(() => {
+23 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/security_cors_regression.test.ts:23:12)
+-------------------------------
+
+(fail) CORS security regression > sendVerificationCode should use getCorsHeaders
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 |
+3 | describe('CORS security regression', () => {
+4 |     beforeEach(() => {
+5 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/security_cors_regression.test.ts:5:12)
+(fail) CORS security regression > revokeAllSessions should use getCorsHeaders [878885.73ms]
+
+# Unhandled error between tests
+-------------------------------
+18 |             createClient: vi.fn(() => ({})),
+19 |         }));
+20 |     });
+21 |
+22 |     afterEach(() => {
+23 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/security_cors_regression.test.ts:23:12)
+-------------------------------
+
+(fail) @j\xce  lSessions should use getCorsHeaders
+
+functions/tests/password.test.ts:
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validatePassword } from '../logic/security.ts';
+3 |
+4 | describe('validatePassword', () => {
+5 |     beforeEach(() => {
+6 |         vi.resetAllMocks();
+               ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/password.test.ts:6:12)
+(fail) validatePassword > should reject passwords shorter than 12 characters [878891.86ms]
+(fail) validatePassword > should reject passwords shorter than 12 characters
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validatePassword } from '../logic/security.ts';
+3 |
+4 | describe('validatePassword', () => {
+5 |     beforeEach(() => {
+6 |         vi.resetAllMocks();
+               ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/password.test.ts:6:12)
+(fail) validatePassword > should reject pwned passwords [878892.01ms]
+(fail) validatePassword > should reject pwned passwords
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validatePassword } from '../logic/security.ts';
+3 |
+4 | describe('validatePassword', () => {
+5 |     beforeEach(() => {
+6 |         vi.resetAllMocks();
+               ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/password.test.ts:6:12)
+(fail) validatePassword > should accept strong unique passwords [878892.05ms]
+(fail) validatePassword > should accept strong unique passwords
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validatePassword } from '../logic/security.ts';
+3 |
+4 | describe('validatePassword', () => {
+5 |     beforeEach(() => {
+6 |         vi.resetAllMocks();
+               ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/password.test.ts:6:12)
+(fail) validatePassword > should calculate strength correctly [878892.08ms]
+(fail) validatePassword > should calculate strength correctly
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validatePassword } from '../logic/security.ts';
+3 |
+4 | describe('validatePassword', () => {
+5 |     beforeEach(() => {
+6 |         vi.resetAllMocks();
+               ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/password.test.ts:6:12)
+(fail) validatePassword > should fail open if HIBP API is down [878892.10ms]
+(fail) \xe0f\xce  ail open if HIBP API is down
+
+functions/tests/sendQuarterlyTaxReport.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+1 | import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+2 |
+3 | // Mock dependencies
+4 | vi.mock('npm:@base44/sdk@0.8.6', () => ({
+       ^
+TypeError: vi.mock is not a function. (In 'vi.mock("npm:@base44/sdk@0.8.6", () => ({
+  createClientFromRequest: vi.fn()
+}))', 'vi.mock' is undefined)
+      at /app/functions/tests/sendQuarterlyTaxReport.test.ts:4:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+functions/tests/processReceiptLogic.test.ts:
+ 6 |   let mockLogAudit: any;
+ 7 |   let ctx: ProcessReceiptContext;
+ 8 |   let user: any;
+ 9 |
+10 |   beforeEach(() => {
+11 |     vi.stubGlobal('Deno', {
+            ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockResolvedValue([])
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/processReceiptLogic.test.ts:11:8)
+(fail) processReceiptLogic > should process receipt successfully [878907.98ms]
+(fail) processReceiptLogic > should process receipt successfully
+ 6 |   let mockLogAudit: any;
+ 7 |   let ctx: ProcessReceiptContext;
+ 8 |   let user: any;
+ 9 |
+10 |   beforeEach(() => {
+11 |     vi.stubGlobal('Deno', {
+            ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockResolvedValue([])
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/processReceiptLogic.test.ts:11:8)
+(fail) processReceiptLogic > should return 400 if receiptUrl is missing [878908.10ms]
+(fail) processReceiptLogic > should return 400 if receiptUrl is missing
+ 6 |   let mockLogAudit: any;
+ 7 |   let ctx: ProcessReceiptContext;
+ 8 |   let user: any;
+ 9 |
+10 |   beforeEach(() => {
+11 |     vi.stubGlobal('Deno', {
+            ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockResolvedValue([])
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/processReceiptLogic.test.ts:11:8)
+(fail) processReceiptLogic > should return 400 if receiptUrl is invalid (localhost) [878908.20ms]
+(fail) processReceiptLogic > should return 400 if receiptUrl is invalid (localhost)
+ 6 |   let mockLogAudit: any;
+ 7 |   let ctx: ProcessReceiptContext;
+ 8 |   let user: any;
+ 9 |
+10 |   beforeEach(() => {
+11 |     vi.stubGlobal('Deno', {
+            ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockResolvedValue([])
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/processReceiptLogic.test.ts:11:8)
+(fail) processReceiptLogic > should return 400 if receiptUrl is invalid (private IP) [878908.27ms]
+(fail) processReceiptLogic > should return 400 if receiptUrl is invalid (private IP)
+ 6 |   let mockLogAudit: any;
+ 7 |   let ctx: ProcessReceiptContext;
+ 8 |   let user: any;
+ 9 |
+10 |   beforeEach(() => {
+11 |     vi.stubGlobal('Deno', {
+            ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockResolvedValue([])
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/processReceiptLogic.test.ts:11:8)
+(fail) processReceiptLogic > should handle LLM failure [878908.32ms]
+(fail) processReceiptLogic > should handle LLM failure
+ 6 |   let mockLogAudit: any;
+ 7 |   let ctx: ProcessReceiptContext;
+ 8 |   let user: any;
+ 9 |
+10 |   beforeEach(() => {
+11 |     vi.stubGlobal('Deno', {
+            ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockResolvedValue([])
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/processReceiptLogic.test.ts:11:8)
+(fail) processReceiptLogic > should handle categorization failure [878908.35ms]
+(fail) 0e\xce  andle categorization failure
+
+functions/tests/cors.test.ts:
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 | import { getCorsHeaders } from '../utils/cors';
+3 |
+4 | describe('getCorsHeaders', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: vi.fn()
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:6:12)
+(fail) getCorsHeaders > should return null when no origin is present [878914.61ms]
+
+# Unhandled error between tests
+-------------------------------
+ 9 |             },
+10 |         });
+11 |     });
+12 |
+13 |     afterEach(() => {
+14 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:14:12)
+-------------------------------
+
+(fail) getCorsHeaders > should return null when no origin is present
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 | import { getCorsHeaders } from '../utils/cors';
+3 |
+4 | describe('getCorsHeaders', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: vi.fn()
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:6:12)
+(fail) getCorsHeaders > should allow localhost:3000 [878914.74ms]
+
+# Unhandled error between tests
+-------------------------------
+ 9 |             },
+10 |         });
+11 |     });
+12 |
+13 |     afterEach(() => {
+14 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:14:12)
+-------------------------------
+
+(fail) getCorsHeaders > should allow localhost:3000
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 | import { getCorsHeaders } from '../utils/cors';
+3 |
+4 | describe('getCorsHeaders', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: vi.fn()
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:6:12)
+(fail) getCorsHeaders > should allow base44.app subdomains [878914.92ms]
+
+# Unhandled error between tests
+-------------------------------
+ 9 |             },
+10 |         });
+11 |     });
+12 |
+13 |     afterEach(() => {
+14 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:14:12)
+-------------------------------
+
+(fail) getCorsHeaders > should allow base44.app subdomains
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 | import { getCorsHeaders } from '../utils/cors';
+3 |
+4 | describe('getCorsHeaders', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: vi.fn()
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:6:12)
+(fail) getCorsHeaders > should not allow malicious base44.app domains [878914.97ms]
+
+# Unhandled error between tests
+-------------------------------
+ 9 |             },
+10 |         });
+11 |     });
+12 |
+13 |     afterEach(() => {
+14 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:14:12)
+-------------------------------
+
+(fail) getCorsHeaders > should not allow malicious base44.app domains
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 | import { getCorsHeaders } from '../utils/cors';
+3 |
+4 | describe('getCorsHeaders', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: vi.fn()
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:6:12)
+(fail) getCorsHeaders > should not allow vercel.app domains anymore [878915.01ms]
+
+# Unhandled error between tests
+-------------------------------
+ 9 |             },
+10 |         });
+11 |     });
+12 |
+13 |     afterEach(() => {
+14 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:14:12)
+-------------------------------
+
+(fail) getCorsHeaders > should not allow vercel.app domains anymore
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 | import { getCorsHeaders } from '../utils/cors';
+3 |
+4 | describe('getCorsHeaders', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: vi.fn()
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:6:12)
+(fail) getCorsHeaders > should allow VITE_BASE44_APP_BASE_URL if set [878915.06ms]
+
+# Unhandled error between tests
+-------------------------------
+ 9 |             },
+10 |         });
+11 |     });
+12 |
+13 |     afterEach(() => {
+14 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:14:12)
+-------------------------------
+
+(fail) getCorsHeaders > should allow VITE_BASE44_APP_BASE_URL if set
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 | import { getCorsHeaders } from '../utils/cors';
+3 |
+4 | describe('getCorsHeaders', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: vi.fn()
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:6:12)
+(fail) getCorsHeaders > should return null for disallowed origin [878915.22ms]
+
+# Unhandled error between tests
+-------------------------------
+ 9 |             },
+10 |         });
+11 |     });
+12 |
+13 |     afterEach(() => {
+14 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/cors.test.ts:14:12)
+-------------------------------
+
+(fail) \xb0]\xce  eturn null for disallowed origin
+
+functions/tests/updatePassword.test.ts:
+2 |
+3 | describe('updatePassword', () => {
+4 |     let serveHandler: any;
+5 |
+6 |     beforeEach(() => {
+7 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/updatePassword.test.ts:7:12)
+(fail) updatePassword > should use secure CORS headers [878921.95ms]
+
+# Unhandled error between tests
+-------------------------------
+56 |             })),
+57 |         }));
+58 |     });
+59 |
+60 |     afterEach(() => {
+61 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/updatePassword.test.ts:61:12)
+-------------------------------
+
+(fail)  \xce  se secure CORS headers
+
+functions/tests/anomalies_correctness.test.ts:
+(pass) Shared Anomaly Logic Correctness > should correctly separate and sort weeks across month boundaries [43.84ms]
+(pass) Shared Anomaly Logic Correctness > should not merge weeks from different months and should normalize across them [0.62ms]
+
+functions/tests/anomalies.test.ts:
+(pass) detectAnomalies Logic > should return early if insufficient data [0.31ms]
+(pass) detectAnomalies Logic > should not detect revenue anomalies if changes are small [1.04ms]
+(pass) detectAnomalies Logic > should skip LLM if recent autopsy exists [0.40ms]
+(pass) detectAnomalies Logic > should detect anomaly and call LLM if no recent autopsy [0.57ms]
+
+functions/tests/exchangeOAuthTokens.test.ts:
+(pass) exchangeOAuthTokens > should return 400 if code or platform missing [1.05ms]
+(pass) exchangeOAuthTokens > should return 400 for unsupported platform [0.13ms]
+(pass) exchangeOAuthTokens > should exchange token successfully [0.45ms]
+(pass) exchangeOAuthTokens > should handle token exchange failure securely [0.43ms]
+
+functions/tests/html.test.ts:
+(pass) HTML Utils > escapeHtml > should return empty string for non-string input [0.09ms]
+(pass) HTML Utils > escapeHtml > should return the same string if no special characters are present [2.47ms]
+(pass) HTML Utils > escapeHtml > should escape & [0.10ms]
+(pass) HTML Utils > escapeHtml > should escape < [0.02ms]
+(pass) HTML Utils > escapeHtml > should escape > [0.02ms]
+(pass) HTML Utils > escapeHtml > should escape " [0.02ms]
+(pass) HTML Utils > escapeHtml > should escape ' [0.02ms]
+(pass) HTML Utils > escapeHtml > should escape mixed special characters correctly [0.02ms]
+
+functions/tests/reconcile.test.ts:
+(pass) autoReconcile Correctness > should match exact amount on same day [1.30ms]
+(pass) autoReconcile Correctness > should match exact amount within 14 days [0.19ms]
+(pass) autoReconcile Correctness > should NOT match if > 14 days [0.19ms]
+(pass) autoReconcile Correctness > should NOT match if bank is before revenue [0.16ms]
+(pass) autoReconcile Correctness > should match fee deduction [0.22ms]
+(pass) autoReconcile Correctness > should pick best match when multiple candidates exist [0.30ms]
+
+functions/tests/encryption.test.ts:
+2 |
+3 | describe('Encryption Utils', () => {
+4 |   const TEST_KEY = '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'; // 32 bytes hex
+5 |
+6 |   beforeEach(() => {
+7 |     vi.stubGlobal('Deno', {
+           ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: (key) => {
+          if (key === "ENCRYPTION_KEY")
+            return "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+          return;
+        }
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:7:8)
+(fail) Encryption Utils > should encrypt and decrypt correctly [879010.29ms]
+
+# Unhandled error between tests
+-------------------------------
+13 |       }
+14 |     });
+15 |   });
+16 |
+17 |   afterEach(() => {
+18 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:18:8)
+-------------------------------
+
+(fail) Encryption Utils > should encrypt and decrypt correctly
+2 |
+3 | describe('Encryption Utils', () => {
+4 |   const TEST_KEY = '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'; // 32 bytes hex
+5 |
+6 |   beforeEach(() => {
+7 |     vi.stubGlobal('Deno', {
+           ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: (key) => {
+          if (key === "ENCRYPTION_KEY")
+            return "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+          return;
+        }
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:7:8)
+(fail) Encryption Utils > should decrypt legacy tokens correctly using decryptLegacy [879010.44ms]
+
+# Unhandled error between tests
+-------------------------------
+13 |       }
+14 |     });
+15 |   });
+16 |
+17 |   afterEach(() => {
+18 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:18:8)
+-------------------------------
+
+(fail) Encryption Utils > should decrypt legacy tokens correctly using decryptLegacy
+2 |
+3 | describe('Encryption Utils', () => {
+4 |   const TEST_KEY = '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'; // 32 bytes hex
+5 |
+6 |   beforeEach(() => {
+7 |     vi.stubGlobal('Deno', {
+           ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: (key) => {
+          if (key === "ENCRYPTION_KEY")
+            return "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+          return;
+        }
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:7:8)
+(fail) Encryption Utils > should THROW for legacy tokens using strict decrypt [879010.49ms]
+
+# Unhandled error between tests
+-------------------------------
+13 |       }
+14 |     });
+15 |   });
+16 |
+17 |   afterEach(() => {
+18 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:18:8)
+-------------------------------
+
+(fail) Encryption Utils > should THROW for legacy tokens using strict decrypt
+2 |
+3 | describe('Encryption Utils', () => {
+4 |   const TEST_KEY = '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'; // 32 bytes hex
+5 |
+6 |   beforeEach(() => {
+7 |     vi.stubGlobal('Deno', {
+           ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: (key) => {
+          if (key === "ENCRYPTION_KEY")
+            return "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+          return;
+        }
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:7:8)
+(fail) Encryption Utils > decryptLegacy should also decrypt new tokens [879010.60ms]
+
+# Unhandled error between tests
+-------------------------------
+13 |       }
+14 |     });
+15 |   });
+16 |
+17 |   afterEach(() => {
+18 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:18:8)
+-------------------------------
+
+(fail) Encryption Utils > decryptLegacy should also decrypt new tokens
+2 |
+3 | describe('Encryption Utils', () => {
+4 |   const TEST_KEY = '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'; // 32 bytes hex
+5 |
+6 |   beforeEach(() => {
+7 |     vi.stubGlobal('Deno', {
+           ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: (key) => {
+          if (key === "ENCRYPTION_KEY")
+            return "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+          return;
+        }
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:7:8)
+(fail) Encryption Utils > should handle empty strings [879010.66ms]
+
+# Unhandled error between tests
+-------------------------------
+13 |       }
+14 |     });
+15 |   });
+16 |
+17 |   afterEach(() => {
+18 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:18:8)
+-------------------------------
+
+(fail) Encryption Utils > should handle empty strings
+2 |
+3 | describe('Encryption Utils', () => {
+4 |   const TEST_KEY = '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'; // 32 bytes hex
+5 |
+6 |   beforeEach(() => {
+7 |     vi.stubGlobal('Deno', {
+           ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      env: {
+        get: (key) => {
+          if (key === "ENCRYPTION_KEY")
+            return "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+          return;
+        }
+      }
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:7:8)
+(fail) Encryption Utils > should throw error if ENCRYPTION_KEY is missing [879010.71ms]
+
+# Unhandled error between tests
+-------------------------------
+13 |       }
+14 |     });
+15 |   });
+16 |
+17 |   afterEach(() => {
+18 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/encryption.test.ts:18:8)
+-------------------------------
+
+(fail) \xe0f\xce  hrow error if ENCRYPTION_KEY is missing
+
+functions/tests/sync_optimization.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+1 | import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+2 | import { refreshAccessTokenLogic } from '../logic/refreshAccessTokenLogic.ts';
+3 |
+4 | vi.mock('../logic/refreshAccessTokenLogic.ts', () => ({
+       ^
+TypeError: vi.mock is not a function. (In 'vi.mock("../logic/refreshAccessTokenLogic.ts", () => ({
+  refreshAccessTokenLogic: vi.fn()
+}))', 'vi.mock' is undefined)
+      at /app/functions/tests/sync_optimization.test.ts:4:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+functions/tests/securityLogic_bias.test.ts:
+(pass) generateOTPCode Bias Fix > should reject values in the biased range [0.19ms]
+
+functions/tests/deleteAccount_security.test.ts:
+2 |
+3 | describe('deleteAccount security', () => {
+4 |     let handler: (req: Request) => Promise<Response>;
+5 |
+6 |     beforeEach(async () => {
+7 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:7:12)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:6:16)
+(fail) deleteAccount security > should handle null JSON body gracefully [879028.74ms]
+
+# Unhandled error between tests
+-------------------------------
+74 |         // Import the module to trigger Deno.serve
+75 |         await import('../../supabase/functions/deleteAccount/index.ts');
+76 |     });
+77 |
+78 |     afterEach(() => {
+79 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:79:12)
+-------------------------------
+
+(fail) deleteAccount security > should handle null JSON body gracefully
+
+# Unhandled error between tests
+-------------------------------
+2 |
+3 | describe('deleteAccount security', () => {
+4 |     let handler: (req: Request) => Promise<Response>;
+5 |
+6 |     beforeEach(async () => {
+7 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:7:12)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:6:16)
+-------------------------------
+
+2 |
+3 | describe('deleteAccount security', () => {
+4 |     let handler: (req: Request) => Promise<Response>;
+5 |
+6 |     beforeEach(async () => {
+7 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:7:12)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:6:16)
+(fail) deleteAccount security > should handle primitive JSON body gracefully (number) [879028.88ms]
+
+# Unhandled error between tests
+-------------------------------
+74 |         // Import the module to trigger Deno.serve
+75 |         await import('../../supabase/functions/deleteAccount/index.ts');
+76 |     });
+77 |
+78 |     afterEach(() => {
+79 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:79:12)
+-------------------------------
+
+(fail) deleteAccount security > should handle primitive JSON body gracefully (number)
+
+# Unhandled error between tests
+-------------------------------
+2 |
+3 | describe('deleteAccount security', () => {
+4 |     let handler: (req: Request) => Promise<Response>;
+5 |
+6 |     beforeEach(async () => {
+7 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:7:12)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:6:16)
+-------------------------------
+
+2 |
+3 | describe('deleteAccount security', () => {
+4 |     let handler: (req: Request) => Promise<Response>;
+5 |
+6 |     beforeEach(async () => {
+7 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:7:12)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:6:16)
+(fail) deleteAccount security > should handle primitive JSON body gracefully (string) [879028.95ms]
+
+# Unhandled error between tests
+-------------------------------
+74 |         // Import the module to trigger Deno.serve
+75 |         await import('../../supabase/functions/deleteAccount/index.ts');
+76 |     });
+77 |
+78 |     afterEach(() => {
+79 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:79:12)
+-------------------------------
+
+(fail) deleteAccount security > should handle primitive JSON body gracefully (string)
+
+# Unhandled error between tests
+-------------------------------
+2 |
+3 | describe('deleteAccount security', () => {
+4 |     let handler: (req: Request) => Promise<Response>;
+5 |
+6 |     beforeEach(async () => {
+7 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:7:12)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:6:16)
+-------------------------------
+
+2 |
+3 | describe('deleteAccount security', () => {
+4 |     let handler: (req: Request) => Promise<Response>;
+5 |
+6 |     beforeEach(async () => {
+7 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:7:12)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:6:16)
+(fail) deleteAccount security > should handle array JSON body gracefully [879029.02ms]
+
+# Unhandled error between tests
+-------------------------------
+74 |         // Import the module to trigger Deno.serve
+75 |         await import('../../supabase/functions/deleteAccount/index.ts');
+76 |     });
+77 |
+78 |     afterEach(() => {
+79 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:79:12)
+-------------------------------
+
+(fail) j\xce  andle array JSON body gracefully
+
+# Unhandled error between tests
+-------------------------------
+2 |
+3 | describe('deleteAccount security', () => {
+4 |     let handler: (req: Request) => Promise<Response>;
+5 |
+6 |     beforeEach(async () => {
+7 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:7:12)
+      at <anonymous> (/app/functions/tests/deleteAccount_security.test.ts:6:16)
+-------------------------------
+
+
+functions/tests/exportTaxReportLogic.test.ts:
+(pass) exportTaxReportLogic > should filter transactions by date range at the database level [1.81ms]
+
+functions/tests/shared_anomalies_regression.test.ts:
+(pass) Shared Anomaly Logic Performance > should call fetchRecentAutopsies multiple times (inefficiently) [0.74ms]
+
+functions/tests/categorizeExpenseLogic.test.ts:
+(pass) categorizeExpenseLogic > should construct a secure prompt with XML tags and instructions to ignore injected commands [0.68ms]
+(pass) categorizeExpenseLogic > should sanitize user input to prevent XML injection [0.16ms]
+(pass) categorizeExpenseLogic > should return 400 if description and merchant are missing [0.11ms]
+
+functions/tests/dailyDigest.test.ts:
+(pass) sendDailyDigestLogic > should process users and send emails correctly with pagination [9.67ms]
+
+functions/tests/oauthCallbackLogic.test.ts:
+(pass) handleOAuthCallback > CSRF Validation > should fail if state format is invalid (missing token) [1.30ms]
+(pass) handleOAuthCallback > CSRF Validation > should fail if cookie is missing [0.19ms]
+(pass) handleOAuthCallback > CSRF Validation > should fail if tokens mismatch [0.14ms]
+(pass) handleOAuthCallback > CSRF Validation > should pass if tokens match [0.36ms]
+(pass) handleOAuthCallback > Platform Specifics > should handle Youtube token exchange [0.27ms]
+(pass) handleOAuthCallback > Platform Specifics > should handle Patreon token exchange [0.18ms]
+(pass) handleOAuthCallback > Platform Specifics > should handle Stripe token exchange [0.16ms]
+(pass) handleOAuthCallback > Platform Specifics > should handle Instagram token exchange [0.20ms]
+(pass) handleOAuthCallback > Platform Specifics > should handle TikTok token exchange [0.33ms]
+(pass) handleOAuthCallback > Platform Specifics > should return 400 for unknown platform [0.19ms]
+(pass) handleOAuthCallback > should return 401 if user is not authenticated [0.14ms]
+(pass) handleOAuthCallback > should return 400 if code or state is missing [0.12ms]
+(pass) handleOAuthCallback > should return 400 if error parameter is present [0.13ms]
+139 |       );
+140 |
+141 |       // Verify body params
+142 |       const callArgs = mockFetch.mock.calls[0];
+143 |       const body = callArgs[1].body as URLSearchParams;
+144 |       expect(body.get('redirect_uri')).toBe('https://custom-redirect.com/cb');
+                                             ^
+error: expect(received).toBe(expected)
+
+Expected: "https://custom-redirect.com/cb"
+Received: "https://app.com/auth/callback"
+
+      at <anonymous> (/app/functions/tests/oauthCallbackLogic.test.ts:144:40)
+(fail) handleOAuthCallback > should use OAUTH_REDIRECT_URI env var if present [7.59ms]
+(pass) handleOAuthCallback > should create connection and trigger sync on success [0.69ms]
+(pass) handleOAuthCallback > should handle fetch errors gracefully [0.66ms]
+
+functions/tests/csv.test.ts:
+(pass) CSV Utils > escapeCsv > should handle null and undefined [0.04ms]
+(pass) CSV Utils > escapeCsv > should handle numbers [0.11ms]
+(pass) CSV Utils > escapeCsv > should handle simple strings [0.03ms]
+(pass) CSV Utils > escapeCsv > should escape double quotes [0.03ms]
+(pass) CSV Utils > escapeCsv > should wrap in quotes if it contains a comma [0.02ms]
+(pass) CSV Utils > escapeCsv > should wrap in quotes if it contains a newline [0.03ms]
+(pass) CSV Utils > escapeCsv > should mitigate CSV injection characters at the start and wrap in quotes [0.04ms]
+(pass) CSV Utils > escapeCsv > should handle multiple special conditions [0.02ms]
+
+functions/tests/anomaliesParallel.test.ts:
+Detected 5 anomalies in 103ms. Expected duration < 500ms
+(pass) detectAnomalies Parallelism > should detect multiple anomalies in parallel (benchmark) [103.24ms]
+LLM Analysis failed for anomaly index 1: 91 |     // Mock invokeLLM to fail on the 2nd call
+92 |     let callCount = 0;
+93 |     mockCtx.invokeLLM.mockImplementation(async () => {
+94 |       callCount++;
+95 |       if (callCount === 2) {
+96 |         throw new Error('LLM API Failure');
+                   ^
+error: LLM API Failure
+      at <anonymous> (/app/functions/tests/anomaliesParallel.test.ts:96:15)
+      at <anonymous> (/app/functions/tests/anomaliesParallel.test.ts:93:42)
+      at detectAnomalies (/app/functions/logic/anomalies.ts:95:31)
+
+(pass) detectAnomalies Parallelism > should continue processing other anomalies if one LLM call fails [1.60ms]
+
+functions/tests/reconcile_benchmark.test.ts:
+Benchmark: Processed 5000 revenue and 6522 bank txns in 14351.09ms
+(pass) autoReconcile Benchmark > should be performant with large datasets [14402.77ms]
+
+functions/tests/dailyDigest_benchmark.test.ts:
+Optimized: 150 users fetched in 2 pages (100 and 50).
+(pass) Daily Digest Pagination Benchmark (Optimized) > should demonstrate the paginated fetch behavior [5.74ms]
+
+functions/tests/dailyDigest_security.test.ts:
+19 |
+20 | describe('sendDailyDigest Security Fix Verification', () => {
+21 |   let handler: (req: Request) => Promise<Response>;
+22 |
+23 |   beforeEach(async () => {
+24 |     vi.resetModules();
+            ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:24:8)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:23:14)
+(fail) sendDailyDigest Security Fix Verification > should return 401 and NOT execute logic without any Authorization header [893630.01ms]
+
+# Unhandled error between tests
+-------------------------------
+52 |     expect(mockDenoServe).toHaveBeenCalled();
+53 |     handler = mockDenoServe.mock.calls[0][0];
+54 |   });
+55 |
+56 |   afterEach(() => {
+57 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:57:8)
+-------------------------------
+
+(fail) sendDailyDigest Security Fix Verification > should return 401 and NOT execute logic without any Authorization header
+
+# Unhandled error between tests
+-------------------------------
+19 |
+20 | describe('sendDailyDigest Security Fix Verification', () => {
+21 |   let handler: (req: Request) => Promise<Response>;
+22 |
+23 |   beforeEach(async () => {
+24 |     vi.resetModules();
+            ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:24:8)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:23:14)
+-------------------------------
+
+19 |
+20 | describe('sendDailyDigest Security Fix Verification', () => {
+21 |   let handler: (req: Request) => Promise<Response>;
+22 |
+23 |   beforeEach(async () => {
+24 |     vi.resetModules();
+            ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:24:8)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:23:14)
+(fail) sendDailyDigest Security Fix Verification > should return 401 and NOT execute logic with invalid Authorization header [893630.18ms]
+
+# Unhandled error between tests
+-------------------------------
+52 |     expect(mockDenoServe).toHaveBeenCalled();
+53 |     handler = mockDenoServe.mock.calls[0][0];
+54 |   });
+55 |
+56 |   afterEach(() => {
+57 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:57:8)
+-------------------------------
+
+(fail) sendDailyDigest Security Fix Verification > should return 401 and NOT execute logic with invalid Authorization header
+
+# Unhandled error between tests
+-------------------------------
+19 |
+20 | describe('sendDailyDigest Security Fix Verification', () => {
+21 |   let handler: (req: Request) => Promise<Response>;
+22 |
+23 |   beforeEach(async () => {
+24 |     vi.resetModules();
+            ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:24:8)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:23:14)
+-------------------------------
+
+19 |
+20 | describe('sendDailyDigest Security Fix Verification', () => {
+21 |   let handler: (req: Request) => Promise<Response>;
+22 |
+23 |   beforeEach(async () => {
+24 |     vi.resetModules();
+            ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:24:8)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:23:14)
+(fail) sendDailyDigest Security Fix Verification > should return 200 and execute logic with correct Service Role Key [893630.30ms]
+
+# Unhandled error between tests
+-------------------------------
+52 |     expect(mockDenoServe).toHaveBeenCalled();
+53 |     handler = mockDenoServe.mock.calls[0][0];
+54 |   });
+55 |
+56 |   afterEach(() => {
+57 |     vi.unstubAllGlobals();
+            ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:57:8)
+-------------------------------
+
+(fail) \x90W]\xce  eturn 200 and execute logic with correct Service Role Key
+
+# Unhandled error between tests
+-------------------------------
+19 |
+20 | describe('sendDailyDigest Security Fix Verification', () => {
+21 |   let handler: (req: Request) => Promise<Response>;
+22 |
+23 |   beforeEach(async () => {
+24 |     vi.resetModules();
+            ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:24:8)
+      at <anonymous> (/app/functions/tests/dailyDigest_security.test.ts:23:14)
+-------------------------------
+
+
+functions/tests/createSkydoPayment.test.ts:
+(pass) createSkydoPayment > should create payment link successfully [1.20ms]
+(pass) createSkydoPayment > should return 400 if required fields are missing [0.13ms]
+(pass) createSkydoPayment > should return 400 if plan is invalid [0.17ms]
+(pass) createSkydoPayment > should return 500 if Skydo API key is missing [0.09ms]
+(pass) createSkydoPayment > should return error if Skydo API fails [0.21ms]
+(pass) createSkydoPayment > should not leak sensitive details in error response [0.24ms]
+(pass) createSkydoPayment > should handle fetch exceptions [0.22ms]
+
+functions/tests/deleteAccount_input_validation.test.ts:
+3 |
+4 | describe('deleteAccount vulnerability repro', () => {
+5 |     let handler: any;
+6 |
+7 |     beforeEach(async () => {
+8 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_input_validation.test.ts:8:12)
+      at <anonymous> (/app/functions/tests/deleteAccount_input_validation.test.ts:7:16)
+(fail) deleteAccount vulnerability repro > should crash when body is null (or primitive) due to missing validation [893646.64ms]
+
+# Unhandled error between tests
+-------------------------------
+66 |         // We use dynamic import to ensure mocks are active
+67 |         await import('../deleteAccount.ts');
+68 |     });
+69 |
+70 |     afterEach(() => {
+71 |         vi.unstubAllGlobals();
+                ^
+TypeError: vi.unstubAllGlobals is not a function. (In 'vi.unstubAllGlobals()', 'vi.unstubAllGlobals' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_input_validation.test.ts:71:12)
+-------------------------------
+
+(fail) \xa0]\xce  rash when body is null (or primitive) due to missing validation
+
+# Unhandled error between tests
+-------------------------------
+3 |
+4 | describe('deleteAccount vulnerability repro', () => {
+5 |     let handler: any;
+6 |
+7 |     beforeEach(async () => {
+8 |         vi.resetModules();
+               ^
+TypeError: vi.resetModules is not a function. (In 'vi.resetModules()', 'vi.resetModules' is undefined)
+      at <anonymous> (/app/functions/tests/deleteAccount_input_validation.test.ts:8:12)
+      at <anonymous> (/app/functions/tests/deleteAccount_input_validation.test.ts:7:16)
+-------------------------------
+
+
+functions/tests/refreshAccessTokenLogic.test.ts:
+(pass) refreshAccessTokenLogic > should return 400 if connectionId is missing [0.60ms]
+(pass) refreshAccessTokenLogic > should return 404 if connection not found [0.15ms]
+(pass) refreshAccessTokenLogic > should return 400 if no refresh token available [0.12ms]
+(pass) refreshAccessTokenLogic > should return 400 if platform is not supported [0.18ms]
+(pass) refreshAccessTokenLogic > should return 500 if client secret is missing [0.26ms]
+(pass) refreshAccessTokenLogic > should return 400 if token refresh fails [0.25ms]
+(pass) refreshAccessTokenLogic > should successfully refresh token and update connection [0.35ms]
+(pass) refreshAccessTokenLogic > should re-encrypt old refresh token if new one is not provided [0.20ms]
+
+functions/tests/welcomeEmail.test.ts:
+(pass) sendWelcomeEmailLogic > should generate welcome email with correct layout [0.47ms]
+(pass) sendWelcomeEmailLogic > should handle missing userName [0.17ms]
+(pass) sendWelcomeEmailLogic > should throw error if userId is missing [0.18ms]
+(pass) sendWelcomeEmailLogic > should throw error if userEmail is missing [0.08ms]
+
+functions/tests/securityLogic.test.ts:
+(pass) Security Logic > generateOTPCode > should generate a 6-digit OTP code [0.12ms]
+(pass) Security Logic > generateOTPCode > should be reasonably distributed [0.09ms]
+(pass) Security Logic > isValidOTPFormat > should accept 6-digit numbers [0.15ms]
+(pass) Security Logic > isValidOTPFormat > should reject non-6-digit strings [0.07ms]
+46 |         const config = { maxAttempts: 3, windowMs: 1000 };
+47 |         const mockRpc = vi.fn();
+48 |         const mockClient = { rpc: mockRpc } as any;
+49 |
+50 |         beforeEach(() => {
+51 |             vi.useFakeTimers();
+                    ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/functions/tests/securityLogic.test.ts:51:16)
+(fail) Security Logic > checkRateLimit > should allow requests within limit and track remaining [893663.53ms]
+
+# Unhandled error between tests
+-------------------------------
+52 |             vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+53 |             mockRpc.mockReset();
+54 |         });
+55 |
+56 |         afterEach(() => {
+57 |             vi.useRealTimers();
+                    ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/securityLogic.test.ts:57:16)
+-------------------------------
+
+(fail) Security Logic > checkRateLimit > should allow requests within limit and track remaining
+46 |         const config = { maxAttempts: 3, windowMs: 1000 };
+47 |         const mockRpc = vi.fn();
+48 |         const mockClient = { rpc: mockRpc } as any;
+49 |
+50 |         beforeEach(() => {
+51 |             vi.useFakeTimers();
+                    ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/functions/tests/securityLogic.test.ts:51:16)
+(fail) Security Logic > checkRateLimit > should reject requests over limit [893663.61ms]
+
+# Unhandled error between tests
+-------------------------------
+52 |             vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+53 |             mockRpc.mockReset();
+54 |         });
+55 |
+56 |         afterEach(() => {
+57 |             vi.useRealTimers();
+                    ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/securityLogic.test.ts:57:16)
+-------------------------------
+
+(fail) Security Logic > checkRateLimit > should reject requests over limit
+46 |         const config = { maxAttempts: 3, windowMs: 1000 };
+47 |         const mockRpc = vi.fn();
+48 |         const mockClient = { rpc: mockRpc } as any;
+49 |
+50 |         beforeEach(() => {
+51 |             vi.useFakeTimers();
+                    ^
+TypeError: vi.useFakeTimers is not a function. (In 'vi.useFakeTimers()', 'vi.useFakeTimers' is undefined)
+      at <anonymous> (/app/functions/tests/securityLogic.test.ts:51:16)
+(fail) Security Logic > checkRateLimit > should fail open (allow) on DB error [893663.66ms]
+
+# Unhandled error between tests
+-------------------------------
+52 |             vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+53 |             mockRpc.mockReset();
+54 |         });
+55 |
+56 |         afterEach(() => {
+57 |             vi.useRealTimers();
+                    ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/securityLogic.test.ts:57:16)
+-------------------------------
+
+(fail) Security Logic > `e\xce  ail open (allow) on DB error
+(pass) Security Logic > extractClientInfo > should extract IP from x-forwarded-for [13.45ms]
+(pass) Security Logic > extractClientInfo > should extract IP from x-real-ip if x-forwarded-for is missing [0.15ms]
+(pass) Security Logic > extractClientInfo > should fallback to unknown for IP and user agent [0.05ms]
+(pass) Security Logic > extractClientInfo > should extract user-agent [0.05ms]
+(pass) Security Logic > sanitizeErrorMessage > should return generic message for stack traces [0.13ms]
+(pass) Security Logic > sanitizeErrorMessage > should redact sensitive keywords [0.14ms]
+(pass) Security Logic > sanitizeErrorMessage > should handle non-object or missing message [0.05ms]
+
+functions/tests/taxReport_benchmark.test.ts:
+Processed 1000 users in 9.76ms
+(pass) sendQuarterlyTaxReportLogic Benchmark > should process users efficiently using batching [11.09ms]
+
+functions/tests/verificationCode.test.ts:
+(pass) getVerificationEmailHtml > should generate email for password_change [0.26ms]
+(pass) getVerificationEmailHtml > should generate email for delete_account [0.10ms]
+(pass) getVerificationEmailHtml > should generate email for revoke_sessions [0.05ms]
+
+functions/tests/updatePasswordLogic.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+3 | import { getCorsHeaders } from '../utils/cors.ts';
+4 | import { validatePassword, checkRateLimit, isValidOTPFormat, extractClientInfo, sanitizeErrorMessage } from '../logic/security.ts';
+5 | import { createClient } from 'npm:@supabase/supabase-js@2';
+6 |
+7 | // Define mocks using vi.hoisted to allow usage in vi.mock factories
+8 | const mocks = vi.hoisted(() => {
+                     ^
+TypeError: vi.hoisted is not a function. (In 'vi.hoisted(() => {
+  const mockGetUser = vi.fn(), mockSignInWithPassword = vi.fn(), mockUpdateUserById = vi.fn(), mockSignOut = vi.fn(), mockSingle = vi.fn(), mockUpdateEq = vi.fn(), mockQueryChain = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
+    gt: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: mockSingle,
+    update: vi.fn().mockReturnThis()
+  };
+  return {
+    mockGetUser,
+    mockSignInWithPassword,
+    mockUpdateUserById,
+    mockSignOut,
+    mockSingle,
+    mockUpdateEq,
+    mockQueryChain,
+    mockUpdateChain: {
+      eq: mockUpdateEq
+    }
+  };
+})', 'vi.hoisted' is undefined)
+      at /app/functions/tests/updatePasswordLogic.test.ts:8:18
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+functions/tests/security.test.ts:
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validateReceiptUrl } from '../utils/security.ts';
+3 |
+4 | describe('validateReceiptUrl', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockImplementation(async (hostname, type) => {
+        if (hostname === "safe.com")
+          return type === "A" ? ["93.184.216.34"] : [];
+        if (hostname === "malicious.com")
+          return type === "A" ? ["127.0.0.1"] : [];
+        if (hostname === "malicious6.com")
+          return type === "AAAA" ? ["::1"] : [];
+        return [];
+      })
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/security.test.ts:6:12)
+(fail) validateReceiptUrl > should accept valid https URLs [893710.84ms]
+(fail) validateReceiptUrl > should accept valid https URLs
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validateReceiptUrl } from '../utils/security.ts';
+3 |
+4 | describe('validateReceiptUrl', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockImplementation(async (hostname, type) => {
+        if (hostname === "safe.com")
+          return type === "A" ? ["93.184.216.34"] : [];
+        if (hostname === "malicious.com")
+          return type === "A" ? ["127.0.0.1"] : [];
+        if (hostname === "malicious6.com")
+          return type === "AAAA" ? ["::1"] : [];
+        return [];
+      })
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/security.test.ts:6:12)
+(fail) validateReceiptUrl > should accept valid http URLs [893710.90ms]
+(fail) validateReceiptUrl > should accept valid http URLs
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validateReceiptUrl } from '../utils/security.ts';
+3 |
+4 | describe('validateReceiptUrl', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockImplementation(async (hostname, type) => {
+        if (hostname === "safe.com")
+          return type === "A" ? ["93.184.216.34"] : [];
+        if (hostname === "malicious.com")
+          return type === "A" ? ["127.0.0.1"] : [];
+        if (hostname === "malicious6.com")
+          return type === "AAAA" ? ["::1"] : [];
+        return [];
+      })
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/security.test.ts:6:12)
+(fail) validateReceiptUrl > should reject invalid protocols [893710.94ms]
+(fail) validateReceiptUrl > should reject invalid protocols
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validateReceiptUrl } from '../utils/security.ts';
+3 |
+4 | describe('validateReceiptUrl', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockImplementation(async (hostname, type) => {
+        if (hostname === "safe.com")
+          return type === "A" ? ["93.184.216.34"] : [];
+        if (hostname === "malicious.com")
+          return type === "A" ? ["127.0.0.1"] : [];
+        if (hostname === "malicious6.com")
+          return type === "AAAA" ? ["::1"] : [];
+        return [];
+      })
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/security.test.ts:6:12)
+(fail) validateReceiptUrl > should reject localhost [893710.97ms]
+(fail) validateReceiptUrl > should reject localhost
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validateReceiptUrl } from '../utils/security.ts';
+3 |
+4 | describe('validateReceiptUrl', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockImplementation(async (hostname, type) => {
+        if (hostname === "safe.com")
+          return type === "A" ? ["93.184.216.34"] : [];
+        if (hostname === "malicious.com")
+          return type === "A" ? ["127.0.0.1"] : [];
+        if (hostname === "malicious6.com")
+          return type === "AAAA" ? ["::1"] : [];
+        return [];
+      })
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/security.test.ts:6:12)
+(fail) validateReceiptUrl > should reject private IPv4 addresses [893711.00ms]
+(fail) validateReceiptUrl > should reject private IPv4 addresses
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validateReceiptUrl } from '../utils/security.ts';
+3 |
+4 | describe('validateReceiptUrl', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockImplementation(async (hostname, type) => {
+        if (hostname === "safe.com")
+          return type === "A" ? ["93.184.216.34"] : [];
+        if (hostname === "malicious.com")
+          return type === "A" ? ["127.0.0.1"] : [];
+        if (hostname === "malicious6.com")
+          return type === "AAAA" ? ["::1"] : [];
+        return [];
+      })
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/security.test.ts:6:12)
+(fail) validateReceiptUrl > should reject private IPv6 addresses [893711.08ms]
+(fail) validateReceiptUrl > should reject private IPv6 addresses
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validateReceiptUrl } from '../utils/security.ts';
+3 |
+4 | describe('validateReceiptUrl', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockImplementation(async (hostname, type) => {
+        if (hostname === "safe.com")
+          return type === "A" ? ["93.184.216.34"] : [];
+        if (hostname === "malicious.com")
+          return type === "A" ? ["127.0.0.1"] : [];
+        if (hostname === "malicious6.com")
+          return type === "AAAA" ? ["::1"] : [];
+        return [];
+      })
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/security.test.ts:6:12)
+(fail) validateReceiptUrl > should reject domains resolving to private IPs [893711.11ms]
+(fail) validateReceiptUrl > should reject domains resolving to private IPs
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validateReceiptUrl } from '../utils/security.ts';
+3 |
+4 | describe('validateReceiptUrl', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockImplementation(async (hostname, type) => {
+        if (hostname === "safe.com")
+          return type === "A" ? ["93.184.216.34"] : [];
+        if (hostname === "malicious.com")
+          return type === "A" ? ["127.0.0.1"] : [];
+        if (hostname === "malicious6.com")
+          return type === "AAAA" ? ["::1"] : [];
+        return [];
+      })
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/security.test.ts:6:12)
+(fail) validateReceiptUrl > should accept domains resolving to public IPs [893711.14ms]
+(fail) validateReceiptUrl > should accept domains resolving to public IPs
+1 | import { describe, it, expect, vi, beforeEach } from 'vitest';
+2 | import { validateReceiptUrl } from '../utils/security.ts';
+3 |
+4 | describe('validateReceiptUrl', () => {
+5 |     beforeEach(() => {
+6 |         vi.stubGlobal('Deno', {
+               ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+      resolveDns: vi.fn().mockImplementation(async (hostname, type) => {
+        if (hostname === "safe.com")
+          return type === "A" ? ["93.184.216.34"] : [];
+        if (hostname === "malicious.com")
+          return type === "A" ? ["127.0.0.1"] : [];
+        if (hostname === "malicious6.com")
+          return type === "AAAA" ? ["::1"] : [];
+        return [];
+      })
+    })', 'vi.stubGlobal' is undefined)
+      at <anonymous> (/app/functions/tests/security.test.ts:6:12)
+(fail) validateReceiptUrl > should handle invalid URLs gracefully [893711.17ms]
+(fail) \xe0o\xce  andle invalid URLs gracefully
+
+functions/tests/revokeToken.test.ts:
+(pass) revokeToken > should revoke youtube token [1.14ms]
+(pass) revokeToken > should handle youtube revocation failure with refresh token [0.17ms]
+(pass) revokeToken > should log info for patreon [0.09ms]
+(pass) revokeToken > should revoke stripe token [0.37ms]
+(pass) revokeToken > should fail stripe revocation if missing client id [0.18ms]
+(pass) revokeToken > should revoke instagram token [0.19ms]
+(pass) revokeToken > should revoke tiktok token [0.09ms]
+
+functions/tests/paymentLogic.test.ts:
+(pass) paymentLogic > getPlanDetails > should return correct details for Free monthly plan [0.08ms]
+(pass) paymentLogic > getPlanDetails > should return correct details for Creator Pro monthly plan [0.03ms]
+(pass) paymentLogic > getPlanDetails > should return correct details for Creator Max monthly plan [0.02ms]
+(pass) paymentLogic > getPlanDetails > should return correct details for Free annual plan [0.02ms]
+(pass) paymentLogic > getPlanDetails > should return correct details for Creator Pro annual plan [0.02ms]
+(pass) paymentLogic > getPlanDetails > should return correct details for Creator Max annual plan [0.03ms]
+(pass) paymentLogic > getPlanDetails > should throw error for invalid billing period [0.07ms]
+(pass) paymentLogic > getPlanDetails > should throw error for invalid plan name [0.05ms]
+(pass) paymentLogic > getPlanDetails > should be case sensitive for plan name [0.04ms]
+(pass) paymentLogic > getPlanDetails > should be case sensitive for billing period [0.04ms]
+
+functions/tests/sync.test.ts:
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > Patreon > should process Patreon campaigns and members correctly [893730.16ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform >  \x8b\xcf  rocess Patreon campaigns and members correctly
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > YouTube > should process YouTube analytics data correctly [893730.35ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform > YouTube > should process YouTube analytics data correctly
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > YouTube > should use 90 days for forceFullSync [893730.40ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform > \xa0m\xce  se 90 days for forceFullSync
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > Stripe > should process Stripe charges correctly [893730.45ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform > Stripe > should process Stripe charges correctly
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > Stripe > should use limit 500 for forceFullSync [893730.49ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform > Po\xce  se limit 500 for forceFullSync
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > Deduplication > should skip existing transactions [893730.55ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform > \xf0n\xce  kip existing transactions
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > Error Handling > should retry on temporary errors [893730.59ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform > Error Handling > should retry on temporary errors
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > Error Handling > should fail on fatal errors [893730.64ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform > Error Handling > should fail on fatal errors
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > Error Handling > should handle rate limit errors with specific message [893730.68ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform >  N\x8b\xcf  andle rate limit errors with specific message
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > Unsupported Platforms > should return empty for instagram [893730.74ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform > Unsupported Platforms > should return empty for instagram
+22 | const connectionId = 'test-connection';
+23 | const oauthToken = 'test-token';
+24 |
+25 | describe('syncPlatform', () => {
+26 |   beforeEach(() => {
+27 |     vi.resetAllMocks();
+            ^
+TypeError: vi.resetAllMocks is not a function. (In 'vi.resetAllMocks()', 'vi.resetAllMocks' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:27:8)
+(fail) syncPlatform > Unsupported Platforms > should throw for unknown platform [893730.80ms]
+
+# Unhandled error between tests
+-------------------------------
+27 |     vi.resetAllMocks();
+28 |     vi.useFakeTimers();
+29 |   });
+30 |
+31 |   afterEach(() => {
+32 |     vi.useRealTimers();
+            ^
+TypeError: vi.useRealTimers is not a function. (In 'vi.useRealTimers()', 'vi.useRealTimers' is undefined)
+      at <anonymous> (/app/functions/tests/sync.test.ts:32:8)
+-------------------------------
+
+(fail) syncPlatform > pj\xce  hrow for unknown platform
+
+supabase/functions/deleteAccount/security_fix.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+ 7 |   SUPABASE_URL: 'https://example.supabase.co',
+ 8 |   SUPABASE_SERVICE_ROLE_KEY: 'service-role-key',
+ 9 |   ENCRYPTION_KEY: '0000000000000000000000000000000000000000000000000000000000000000' // 32 bytes hex
+10 | };
+11 |
+12 | vi.stubGlobal('Deno', {
+        ^
+TypeError: vi.stubGlobal is not a function. (In 'vi.stubGlobal("Deno", {
+  env: {
+    get: (key) => mockEnv[key]
+  },
+  serve: vi.fn()
+})', 'vi.stubGlobal' is undefined)
+      at /app/supabase/functions/deleteAccount/security_fix.test.ts:12:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/components/tax/AssumptionsDrawer.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+1 | import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+2 | import { describe, it, expect, vi } from "vitest";
+3 | import "@testing-library/jest-dom/vitest";
+4 | import { AssumptionsDrawer } from "./AssumptionsDrawer";
+5 |
+6 | vi.mock("lucide-react", () => ({
+       ^
+TypeError: vi.mock is not a function. (In 'vi.mock("lucide-react", () => ({
+  X: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "mock-x-icon",
+    children: "X"
+  }, void 0, !1, void 0, this)
+}))', 'vi.mock' is undefined)
+      at /app/src/components/tax/AssumptionsDrawer.test.jsx:6:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/components/tax/CalculationBreakdown.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 6 | import * as matchers from '@testing-library/jest-dom/matchers';
+ 7 | import { CalculationBreakdown } from './CalculationBreakdown';
+ 8 |
+ 9 | expect.extend(matchers);
+10 |
+11 | vi.mock('lucide-react', () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("lucide-react", () => ({
+  Calculator: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-calculator"
+  }, void 0, !1, void 0, this),
+  ChevronDown: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-chevron-down"
+  }, void 0, !1, void 0, this),
+  ChevronUp: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-chevron-up"
+  }, void 0, !1, void 0, this)
+}))', 'vi.mock' is undefined)
+      at /app/src/components/tax/CalculationBreakdown.test.jsx:11:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/components/dashboard/InsightsPanel.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 7 |
+ 8 | // Setup matchers
+ 9 | expect.extend(matchers);
+10 |
+11 | // Mock lucide-react icons
+12 | vi.mock('lucide-react', () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("lucide-react", () => ({
+  AlertTriangle: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-alert-triangle"
+  }, void 0, !1, void 0, this),
+  TrendingUp: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-trending-up"
+  }, void 0, !1, void 0, this),
+  DollarSign: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-dollar-sign"
+  }, void 0, !1, void 0, this),
+  AlertCircle: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-alert-circle"
+  }, void 0, !1, void 0, this),
+  Sparkles: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-sparkles"
+  }, void 0, !1, void 0, this),
+  X: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-x"
+  }, void 0, !1, void 0, this)
+}))', 'vi.mock' is undefined)
+      at /app/src/components/dashboard/InsightsPanel.test.jsx:12:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/components/dashboard/SummaryCard.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 6 | import SummaryCard from "./SummaryCard";
+ 7 |
+ 8 | expect.extend(matchers);
+ 9 |
+10 | // Mock lucide-react icons since we are testing the component logic, not the icons themselves
+11 | vi.mock("lucide-react", () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("lucide-react", () => ({
+  TrendingUp: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-trending-up",
+    children: "TrendingUp"
+  }, void 0, !1, void 0, this),
+  TrendingDown: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-trending-down",
+    children: "TrendingDown"
+  }, void 0, !1, void 0, this),
+  Minus: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-minus",
+    children: "Minus"
+  }, void 0, !1, void 0, this),
+  DollarSign: (props) => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-dollar",
+    className: props.className,
+    children: "DollarSign"
+  }, void 0, !1, void 0, this)
+}))', 'vi.mock' is undefined)
+      at /app/src/components/dashboard/SummaryCard.test.jsx:11:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/components/landing/Footer.test.jsx:
+251 |     throw error;
+252 |   }
+253 |   if (!baseElement) {
+254 |     // default to document.body instead of documentElement to avoid output of potentially-large
+255 |     // head elements (such as JSS style blocks) in debug output
+256 |     baseElement = document.body;
+                        ^
+ReferenceError: document is not defined
+      at render (/app/node_modules/@testing-library/react/dist/pure.js:256:19)
+      at <anonymous> (/app/src/components/landing/Footer.test.jsx:12:9)
+(fail) Footer > renders correct links [0.52ms]
+
+src/components/landing/HowItWorksSection.test.tsx:
+
+# Unhandled error between tests
+-------------------------------
+ 5 | import HowItWorksSection from './HowItWorksSection';
+ 6 |
+ 7 | expect.extend(matchers);
+ 8 |
+ 9 | // Mock framer-motion
+10 | vi.mock('framer-motion', async () => {
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("framer-motion", async () => {
+  return {
+    ...await vi.importActual("framer-motion"),
+    AnimatePresence: ({ children }) => jsxDEV_7x81h0kn(Fragment_8vg9x3sq, {
+      children
+    }, void 0, !1, void 0, this),
+    motion: {
+      div: ({ children, layout, style, ...props }) => jsxDEV_7x81h0kn("div", {
+        style,
+        ...props,
+        children
+      }, void 0, !1, void 0, this),
+      span: ({ children, ...props }) => jsxDEV_7x81h0kn("span", {
+        ...props,
+        children
+      }, void 0, !1, void 0, this)
+    }
+  };
+})', 'vi.mock' is undefined)
+      at /app/src/components/landing/HowItWorksSection.test.tsx:10:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/components/landing/AccuracySection.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+17 | beforeEach(() => {
+18 |     vi.useFakeTimers();
+19 | });
+20 |
+21 | // Mock Lucide icons
+22 | vi.mock('lucide-react', () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("lucide-react", () => ({
+  Check: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-check"
+  }, void 0, !1, void 0, this),
+  X: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-x"
+  }, void 0, !1, void 0, this),
+  Search: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-search"
+  }, void 0, !1, void 0, this),
+  AlertCircle: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-alert-circle"
+  }, void 0, !1, void 0, this),
+  ChevronRight: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-chevron-right"
+  }, void 0, !1, void 0, this),
+  ArrowRight: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-arrow-right"
+  }, void 0, !1, void 0, this),
+  ShieldCheck: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-shield-check"
+  }, void 0, !1, void 0, this),
+  FileText: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-file-text"
+  }, void 0, !1, void 0, this),
+  Link: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-link"
+  }, void 0, !1, void 0, this),
+  Clock: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-clock"
+  }, void 0, !1, void 0, this),
+  User: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-user"
+  }, void 0, !1, void 0, this),
+  Eye: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-eye"
+  }, void 0, !1, void 0, this),
+  Play: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-play"
+  }, void 0, !1, void 0, this),
+  Pause: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-pause"
+  }, void 0, !1, void 0, this),
+  RefreshCw: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-refresh"
+  }, void 0, !1, void 0, this)
+}))', 'vi.mock' is undefined)
+      at /app/src/components/landing/AccuracySection.test.jsx:22:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/components/ui/chart.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 5 | import { ChartContainer, ChartStyle } from "./chart"
+ 6 |
+ 7 | expect.extend(matchers)
+ 8 |
+ 9 | // Mock recharts ResponsiveContainer to just render children
+10 | vi.mock("recharts", () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("recharts", () => ({
+  ResponsiveContainer: ({ children }) => jsxDEV_7x81h0kn("div", {
+    children
+  }, void 0, !1, void 0, this),
+  Tooltip: () => jsxDEV_7x81h0kn("div", {
+    children: "Tooltip"
+  }, void 0, !1, void 0, this),
+  Legend: () => jsxDEV_7x81h0kn("div", {
+    children: "Legend"
+  }, void 0, !1, void 0, this)
+}))', 'vi.mock' is undefined)
+      at /app/src/components/ui/chart.test.jsx:10:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/components/expense/ExpenseAnalytics.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 6 | import ExpenseAnalytics from "./ExpenseAnalytics";
+ 7 |
+ 8 | expect.extend(matchers);
+ 9 |
+10 | // Mock lucide-react icons
+11 | vi.mock("lucide-react", () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("lucide-react", () => ({
+  TrendingUp: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-trending-up",
+    children: "TrendingUp"
+  }, void 0, !1, void 0, this),
+  DollarSign: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-dollar-sign",
+    children: "DollarSign"
+  }, void 0, !1, void 0, this)
+}))', 'vi.mock' is undefined)
+      at /app/src/components/expense/ExpenseAnalytics.test.jsx:11:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/components/expense/AddExpenseDialog.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 8 | import { base44 } from "@/api/supabaseClient";
+ 9 |
+10 | expect.extend(matchers);
+11 |
+12 | // Mock sonner
+13 | vi.mock("sonner", () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn()
+  }
+}))', 'vi.mock' is undefined)
+      at /app/src/components/expense/AddExpenseDialog.test.jsx:13:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+src/components/expense/ExpenseRow.test.jsx:
+
+# Unhandled error between tests
+-------------------------------
+ 6 | import ExpenseRow from "./ExpenseRow";
+ 7 |
+ 8 | expect.extend(matchers);
+ 9 |
+10 | // Mock lucide-react icons
+11 | vi.mock("lucide-react", () => ({
+        ^
+TypeError: vi.mock is not a function. (In 'vi.mock("lucide-react", () => ({
+  Trash2: () => jsxDEV_7x81h0kn("div", {
+    "data-testid": "icon-trash",
+    children: "Trash2"
+  }, void 0, !1, void 0, this)
+}))', 'vi.mock' is undefined)
+      at /app/src/components/expense/ExpenseRow.test.jsx:11:4
+      at loadAndEvaluateModule (2:1)
+-------------------------------
+
+
+187 tests failed:
+(fail) useIsMobile > should return true when is mobile [0.28ms]
+(fail) useIsMobile > should return false when is not mobile [0.10ms]
+(fail) useIsMobile > should update state when media query changes [0.15ms]
+(fail) useIsMobile > should cleanup event listener on unmount [0.09ms]
+(fail) useDashboardMetrics > should return default metrics when no data is provided [876510.77ms]
+(fail) useDashboardMetrics > should return default metrics when no data is provided
+(fail) useDashboardMetrics > should calculate current month revenue correctly [876510.89ms]
+(fail) useDashboardMetrics > should calculate current month revenue correctly
+(fail) useDashboardMetrics > should calculate revenue trend correctly (up) [876510.94ms]
+(fail) useDashboardMetrics > should calculate revenue trend correctly (up)
+(fail) useDashboardMetrics > should calculate revenue trend correctly (down) [876511.01ms]
+(fail) useDashboardMetrics > should calculate revenue trend correctly (down)
+(fail) useDashboardMetrics > should calculate platform breakdown correctly [876511.07ms]
+(fail) useDashboardMetrics > should calculate platform breakdown correctly
+(fail) useDashboardMetrics > should calculate concentration risk correctly (high risk) [876511.11ms]
+(fail) useDashboardMetrics > should calculate concentration risk correctly (high risk)
+(fail) useDashboardMetrics > should calculate concentration risk correctly (moderate risk) [876511.17ms]
+(fail) useDashboardMetrics > should calculate concentration risk correctly (moderate risk)
+(fail) useDashboardMetrics > should calculate concentration risk correctly (diversified) [876511.22ms]
+(fail) useDashboardMetrics > should calculate concentration risk correctly (diversified)
+(fail) useDashboardMetrics > should calculate reconciliation metrics correctly [876511.27ms]
+(fail)  $\xce  alculate reconciliation metrics correctly
+(fail) csvExport utility > downloadCSV > should trigger a download flow [876692.30ms]
+(fail) csvExport utility > downloadCSV > should trigger a download flow
+(fail) csvExport utility > downloadCSV > should do nothing if link.download is not supported [876692.38ms]
+(fail) csvExport utility > @!\xce  o nothing if link.download is not supported
+(fail) isIframe > should be true when window.self !== window.top [876864.87ms]
+(fail) isIframe > should be true when window.self !== window.top
+(fail) isIframe > should be false when window.self === window.top [876865.12ms]
+(fail) pO\xce  e false when window.self === window.top
+(fail) PLATFORMS configuration > uses environment variables for client IDs when available [876879.20ms]
+(fail) PLATFORMS configuration > uses environment variables for client IDs when available
+(fail) PLATFORMS configuration > falls back to placeholders when environment variables are missing [876879.29ms]
+(fail) \x80]\xce  ck to placeholders when environment variables are missing
+(fail) Privacy Page > renders privacy policy heading [1.78ms]
+(fail) Privacy Page > renders quick summary section [0.25ms]
+(fail) Privacy Page > renders table of contents [0.21ms]
+(fail) Privacy Page > renders back to home link [0.12ms]
+(fail) Privacy Page > does not contain delete account button [0.09ms]
+(fail) deleteAccount type check > should load deleteAccount without type errors [878876.05ms]
+(fail) @m\xce  oad deleteAccount without type errors
+(fail) deleteAccount legacy table failure > should NOT fail critically when platform_connections deletion fails [878882.28ms]
+(fail) \xc0]\xce  OT fail critically when platform_connections deletion fails
+(fail) CORS security regression > updatePassword should use getCorsHeaders [878885.57ms]
+(fail) CORS security regression > updatePassword should use getCorsHeaders
+(fail) CORS security regression > sendVerificationCode should use getCorsHeaders [878885.69ms]
+(fail) CORS security regression > sendVerificationCode should use getCorsHeaders
+(fail) CORS security regression > revokeAllSessions should use getCorsHeaders [878885.73ms]
+(fail) @j\xce  lSessions should use getCorsHeaders
+(fail) validatePassword > should reject passwords shorter than 12 characters [878891.86ms]
+(fail) validatePassword > should reject passwords shorter than 12 characters
+(fail) validatePassword > should reject pwned passwords [878892.01ms]
+(fail) validatePassword > should reject pwned passwords
+(fail) validatePassword > should accept strong unique passwords [878892.05ms]
+(fail) validatePassword > should accept strong unique passwords
+(fail) validatePassword > should calculate strength correctly [878892.08ms]
+(fail) validatePassword > should calculate strength correctly
+(fail) validatePassword > should fail open if HIBP API is down [878892.10ms]
+(fail) \xe0f\xce  ail open if HIBP API is down
+(fail) processReceiptLogic > should process receipt successfully [878907.98ms]
+(fail) processReceiptLogic > should process receipt successfully
+(fail) processReceiptLogic > should return 400 if receiptUrl is missing [878908.10ms]
+(fail) processReceiptLogic > should return 400 if receiptUrl is missing
+(fail) processReceiptLogic > should return 400 if receiptUrl is invalid (localhost) [878908.20ms]
+(fail) processReceiptLogic > should return 400 if receiptUrl is invalid (localhost)
+(fail) processReceiptLogic > should return 400 if receiptUrl is invalid (private IP) [878908.27ms]
+(fail) processReceiptLogic > should return 400 if receiptUrl is invalid (private IP)
+(fail) processReceiptLogic > should handle LLM failure [878908.32ms]
+(fail) processReceiptLogic > should handle LLM failure
+(fail) processReceiptLogic > should handle categorization failure [878908.35ms]
+(fail) 0e\xce  andle categorization failure
+(fail) getCorsHeaders > should return null when no origin is present [878914.61ms]
+(fail) getCorsHeaders > should return null when no origin is present
+(fail) getCorsHeaders > should allow localhost:3000 [878914.74ms]
+(fail) getCorsHeaders > should allow localhost:3000
+(fail) getCorsHeaders > should allow base44.app subdomains [878914.92ms]
+(fail) getCorsHeaders > should allow base44.app subdomains
+(fail) getCorsHeaders > should not allow malicious base44.app domains [878914.97ms]
+(fail) getCorsHeaders > should not allow malicious base44.app domains
+(fail) getCorsHeaders > should not allow vercel.app domains anymore [878915.01ms]
+(fail) getCorsHeaders > should not allow vercel.app domains anymore
+(fail) getCorsHeaders > should allow VITE_BASE44_APP_BASE_URL if set [878915.06ms]
+(fail) getCorsHeaders > should allow VITE_BASE44_APP_BASE_URL if set
+(fail) getCorsHeaders > should return null for disallowed origin [878915.22ms]
+(fail) \xb0]\xce  eturn null for disallowed origin
+(fail) updatePassword > should use secure CORS headers [878921.95ms]
+(fail)  \xce  se secure CORS headers
+(fail) Encryption Utils > should encrypt and decrypt correctly [879010.29ms]
+(fail) Encryption Utils > should encrypt and decrypt correctly
+(fail) Encryption Utils > should decrypt legacy tokens correctly using decryptLegacy [879010.44ms]
+(fail) Encryption Utils > should decrypt legacy tokens correctly using decryptLegacy
+(fail) Encryption Utils > should THROW for legacy tokens using strict decrypt [879010.49ms]
+(fail) Encryption Utils > should THROW for legacy tokens using strict decrypt
+(fail) Encryption Utils > decryptLegacy should also decrypt new tokens [879010.60ms]
+(fail) Encryption Utils > decryptLegacy should also decrypt new tokens
+(fail) Encryption Utils > should handle empty strings [879010.66ms]
+(fail) Encryption Utils > should handle empty strings
+(fail) Encryption Utils > should throw error if ENCRYPTION_KEY is missing [879010.71ms]
+(fail) \xe0f\xce  hrow error if ENCRYPTION_KEY is missing
+(fail) deleteAccount security > should handle null JSON body gracefully [879028.74ms]
+(fail) deleteAccount security > should handle null JSON body gracefully
+(fail) deleteAccount security > should handle primitive JSON body gracefully (number) [879028.88ms]
+(fail) deleteAccount security > should handle primitive JSON body gracefully (number)
+(fail) deleteAccount security > should handle primitive JSON body gracefully (string) [879028.95ms]
+(fail) deleteAccount security > should handle primitive JSON body gracefully (string)
+(fail) deleteAccount security > should handle array JSON body gracefully [879029.02ms]
+(fail) j\xce  andle array JSON body gracefully
+(fail) handleOAuthCallback > should use OAUTH_REDIRECT_URI env var if present [7.59ms]
+(fail) sendDailyDigest Security Fix Verification > should return 401 and NOT execute logic without any Authorization header [893630.01ms]
+(fail) sendDailyDigest Security Fix Verification > should return 401 and NOT execute logic without any Authorization header
+(fail) sendDailyDigest Security Fix Verification > should return 401 and NOT execute logic with invalid Authorization header [893630.18ms]
+(fail) sendDailyDigest Security Fix Verification > should return 401 and NOT execute logic with invalid Authorization header
+(fail) sendDailyDigest Security Fix Verification > should return 200 and execute logic with correct Service Role Key [893630.30ms]
+(fail) \x90W]\xce  eturn 200 and execute logic with correct Service Role Key
+(fail) deleteAccount vulnerability repro > should crash when body is null (or primitive) due to missing validation [893646.64ms]
+(fail) \xa0]\xce  rash when body is null (or primitive) due to missing validation
+(fail) Security Logic > checkRateLimit > should allow requests within limit and track remaining [893663.53ms]
+(fail) Security Logic > checkRateLimit > should allow requests within limit and track remaining
+(fail) Security Logic > checkRateLimit > should reject requests over limit [893663.61ms]
+(fail) Security Logic > checkRateLimit > should reject requests over limit
+(fail) Security Logic > checkRateLimit > should fail open (allow) on DB error [893663.66ms]
+(fail) Security Logic > `e\xce  ail open (allow) on DB error
+(fail) validateReceiptUrl > should accept valid https URLs [893710.84ms]
+(fail) validateReceiptUrl > should accept valid https URLs
+(fail) validateReceiptUrl > should accept valid http URLs [893710.90ms]
+(fail) validateReceiptUrl > should accept valid http URLs
+(fail) validateReceiptUrl > should reject invalid protocols [893710.94ms]
+(fail) validateReceiptUrl > should reject invalid protocols
+(fail) validateReceiptUrl > should reject localhost [893710.97ms]
+(fail) validateReceiptUrl > should reject localhost
+(fail) validateReceiptUrl > should reject private IPv4 addresses [893711.00ms]
+(fail) validateReceiptUrl > should reject private IPv4 addresses
+(fail) validateReceiptUrl > should reject private IPv6 addresses [893711.08ms]
+(fail) validateReceiptUrl > should reject private IPv6 addresses
+(fail) validateReceiptUrl > should reject domains resolving to private IPs [893711.11ms]
+(fail) validateReceiptUrl > should reject domains resolving to private IPs
+(fail) validateReceiptUrl > should accept domains resolving to public IPs [893711.14ms]
+(fail) validateReceiptUrl > should accept domains resolving to public IPs
+(fail) validateReceiptUrl > should handle invalid URLs gracefully [893711.17ms]
+(fail) \xe0o\xce  andle invalid URLs gracefully
+(fail) syncPlatform > Patreon > should process Patreon campaigns and members correctly [893730.16ms]
+(fail) syncPlatform >  \x8b\xcf  rocess Patreon campaigns and members correctly
+(fail) syncPlatform > YouTube > should process YouTube analytics data correctly [893730.35ms]
+(fail) syncPlatform > YouTube > should process YouTube analytics data correctly
+(fail) syncPlatform > YouTube > should use 90 days for forceFullSync [893730.40ms]
+(fail) syncPlatform > \xa0m\xce  se 90 days for forceFullSync
+(fail) syncPlatform > Stripe > should process Stripe charges correctly [893730.45ms]
+(fail) syncPlatform > Stripe > should process Stripe charges correctly
+(fail) syncPlatform > Stripe > should use limit 500 for forceFullSync [893730.49ms]
+(fail) syncPlatform > Po\xce  se limit 500 for forceFullSync
+(fail) syncPlatform > Deduplication > should skip existing transactions [893730.55ms]
+(fail) syncPlatform > \xf0n\xce  kip existing transactions
+(fail) syncPlatform > Error Handling > should retry on temporary errors [893730.59ms]
+(fail) syncPlatform > Error Handling > should retry on temporary errors
+(fail) syncPlatform > Error Handling > should fail on fatal errors [893730.64ms]
+(fail) syncPlatform > Error Handling > should fail on fatal errors
+(fail) syncPlatform > Error Handling > should handle rate limit errors with specific message [893730.68ms]
+(fail) syncPlatform >  N\x8b\xcf  andle rate limit errors with specific message
+(fail) syncPlatform > Unsupported Platforms > should return empty for instagram [893730.74ms]
+(fail) syncPlatform > Unsupported Platforms > should return empty for instagram
+(fail) syncPlatform > Unsupported Platforms > should throw for unknown platform [893730.80ms]
+(fail) syncPlatform > pj\xce  hrow for unknown platform
+(fail) Footer > renders correct links [0.52ms]
+
+ 160 pass
+ 187 fail
+ 86 errors
+ 342 expect() calls
+Ran 347 tests across 71 files. [19.00s]

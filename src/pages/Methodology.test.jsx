@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, afterEach, it, expect, vi, beforeEach } from 'vitest';
+import { render, cleanup, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import Methodology from './Methodology';
@@ -25,6 +25,10 @@ vi.mock('@/components/landing/methodology/MethodologyAnimations', () => ({
 }));
 
 vi.mock('@/components/landing/Footer', () => ({ default: () => <div data-testid="footer">Footer</div> }));
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('Methodology Page', () => {
   beforeEach(() => {

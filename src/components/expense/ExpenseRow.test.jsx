@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { render, cleanup, screen, fireEvent } from "@testing-library/react";
+import { describe, afterEach, it, expect, vi } from "vitest";
 import * as matchers from '@testing-library/jest-dom/matchers';
 import ExpenseRow from "./ExpenseRow";
 
@@ -26,6 +26,10 @@ vi.mock("framer-motion", () => {
         }
     });
     return { motion, AnimatePresence: ({ children }) => <>{children}</> };
+});
+
+afterEach(() => {
+  cleanup();
 });
 
 describe("ExpenseRow", () => {
