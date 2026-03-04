@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { render, screen, cleanup } from '@testing-library/react';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import SummaryCard from "./SummaryCard";
 
@@ -16,6 +16,10 @@ vi.mock("lucide-react", () => ({
 }));
 
 describe("SummaryCard", () => {
+    afterEach(() => {
+        cleanup();
+    });
+
     const defaultProps = {
         icon: ({ className }) => <div data-testid="test-icon" className={className} />,
         label: "Total Revenue",

@@ -1,5 +1,6 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// @vitest-environment jsdom
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Pricing from "./Pricing";
 import * as matchers from "@testing-library/jest-dom/matchers";
 
@@ -60,6 +61,10 @@ vi.mock("framer-motion", () => ({
 describe("Pricing Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("renders the pricing page with plans", async () => {

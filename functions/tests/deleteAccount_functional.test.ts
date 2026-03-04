@@ -75,7 +75,7 @@ describe('deleteAccount legacy table failure', () => {
     });
 
     it('should NOT fail critically when platform_connections deletion fails', async () => {
-        await import('../deleteAccount.ts');
+        await import('../../supabase/functions/deleteAccount/index.ts');
         expect(handler).toBeDefined();
 
         const req = new Request('http://localhost', {
