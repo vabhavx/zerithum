@@ -12,14 +12,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PageTransition, AnimatedItem } from "@/components/ui/PageTransition";
 import { ChartContainer } from "@/components/ui/ChartContainer";
 import { GlassCard, InteractiveMetricCard } from "@/components/ui/glass-card";
+import { formatMoney } from "@/lib/utils";
 
 const PLATFORM_NAMES = { youtube: "YouTube", patreon: "Patreon", stripe: "Stripe", gumroad: "Gumroad", instagram: "Instagram", tiktok: "TikTok", shopify: "Shopify", substack: "Substack" };
 const CATEGORY_NAMES = { ad_revenue: "Ad revenue", sponsorship: "Sponsorship", affiliate: "Affiliate", product_sale: "Product sale", membership: "Membership", service: "Service" };
 const STATUS_NAMES = { completed: "Completed", pending: "Pending", unmatched: "Unmatched", refunded: "Refunded", failed: "Failed", reviewed: "Reviewed" };
 const QUICK_VIEWS = [{ value: "all", label: "All" }, { value: "unmatched", label: "Needs match" }, { value: "refunded", label: "Refunds" }, { value: "failed", label: "Failed" }];
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
-const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-function formatMoney(v) { return money.format(v || 0); }
 function calcNet(t) { return (t.amount || 0) - (t.platform_fee || 0); }
 
 export default function TransactionAnalysis() {
