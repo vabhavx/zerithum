@@ -18,8 +18,8 @@ import Settings from './pages/Settings';
 import SettingsAccount from './pages/SettingsAccount';
 import SettingsConnectedApps from './pages/SettingsConnectedApps';
 import SettingsPrivacy from './pages/SettingsPrivacy';
-import SettingsSubscription from './pages/SettingsSubscription';
-import Subscription from './pages/Subscription';
+import Billing from './pages/Billing';
+import BillingConfirm from './pages/BillingConfirm';
 import TaxEstimator from './pages/TaxEstimator';
 import TaxExport from './pages/TaxExport';
 import TaxReports from './pages/TaxReports';
@@ -54,9 +54,9 @@ export const PAGES = {
     "SettingsAccount": SettingsAccount,
     "SettingsConnectedApps": SettingsConnectedApps,
     "SettingsPrivacy": SettingsPrivacy,
-    "SettingsSubscription": SettingsSubscription,
+    "Billing": Billing,
+    "BillingConfirm": BillingConfirm,
     "Signup": Signup,
-    "Subscription": Subscription,
     "TaxEstimator": TaxEstimator,
     "TaxExport": TaxExport,
     "TaxReports": TaxReports,

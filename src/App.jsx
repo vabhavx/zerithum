@@ -105,7 +105,7 @@ const AuthenticatedApp = memo(() => {
   const publicRoutes = [
     'Login', 'Signup', 'authcallback', 'SignIn', 'Landing',
     'Methodology', 'Privacy', 'Security', 'TermsOfService', 'Pricing',
-    'data-deletion'
+    'data-deletion', 'BillingConfirm'
   ];
 
   const currentPath = window.location.pathname.substring(1);

@@ -113,8 +113,28 @@ export default function ConnectedPlatforms() {
     } catch (error) { toast.error(error?.response?.data?.error || error?.message || "Sync failed"); } finally { setSyncingId(null); }
   };
 
-  const beginConnect = (platform) => {
+  const beginConnect = async (platform) => {
     if (connectedById.has(platform.id)) { toast.error(`${platform.name} is already connected.`); return; }
+
+    // Entitlement enforcement
+    try {
+      const subStatus = await base44.functions.invoke('getSubscriptionStatus');
+      const maxP = subStatus?.entitlements?.max_platforms ?? 0;
+      const usedP = subStatus?.platforms_used ?? 0;
+      if (usedP >= maxP) {
+        toast.error(
+          maxP === 0
+            ? 'You need an active subscription to connect platforms. Go to Billing to subscribe.'
+            : `Platform limit reached (${usedP}/${maxP}). Upgrade your plan to connect more.`,
+          { duration: 5000 }
+        );
+        return;
+      }
+    } catch (err) {
+      console.error('Failed to check entitlements:', err);
+      // Allow connection attempt if entitlements check fails (graceful degradation)
+    }
+
     if (platform.requiresApiKey || platform.requiresShopName) { setSelectedPlatform(platform); setCredentialsOpen(true); return; }
     setConnectingId(platform.id);
     const csrfToken = crypto.randomUUID(); localStorage.setItem("oauth_state", csrfToken); document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`; const stateValue = `${platform.id}:${csrfToken}`;

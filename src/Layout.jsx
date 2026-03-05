@@ -101,8 +101,8 @@ export default function Layout({ children, currentPageName }) {
                         <Link to={createPageUrl("Settings")} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
                           <Settings className="w-3.5 h-3.5" />Settings
                         </Link>
-                        <Link to={createPageUrl("Pricing")} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                          <DollarSign className="w-3.5 h-3.5" />Pricing
+                        <Link to={createPageUrl("Billing")} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                          <DollarSign className="w-3.5 h-3.5" />Billing
                         </Link>
                         <div className="border-t border-gray-100 mt-1 pt-1">
                           <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors">
@@ -134,7 +134,7 @@ export default function Layout({ children, currentPageName }) {
                 <div className="h-px bg-gray-100 my-2" />
                 <p className="px-4 pt-2 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">More</p>
                 {secondaryNav.map((item) => <NavLink key={item.page} item={item} mobile />)}
-                <NavLink item={{ name: "Pricing", icon: DollarSign, page: "Pricing" }} mobile />
+                <NavLink item={{ name: "Billing", icon: DollarSign, page: "Billing" }} mobile />
               </nav>
               {user && (
                 <div className="p-3 border-t border-gray-100">
