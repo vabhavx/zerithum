@@ -79,10 +79,17 @@ Deno.serve(async (req) => {
             .update({ status: 'CANCELLED', updated_at: new Date().toISOString() })
             .eq('id', subscription.id);
 
-        await serviceSupabase.from('entitlements').upsert(
-            { user_id: user.id, max_platforms: 0, updated_at: new Date().toISOString() },
-            { onConflict: 'user_id' },
-        );
+        // Soft-cancel: Only zero out entitlements if the period has actually expired.
+        // Otherwise, the user keeps their access until subscription.current_period_end.
+        const now = new Date();
+        const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end) : null;
+
+        if (!periodEnd || periodEnd <= now) {
+            await serviceSupabase.from('entitlements').upsert(
+                { user_id: user.id, max_platforms: 0, updated_at: new Date().toISOString() },
+                { onConflict: 'user_id' },
+            );
+        }
 
         return Response.json({ status: 'cancelled' }, { headers: corsHeaders });
     } catch (error: any) {

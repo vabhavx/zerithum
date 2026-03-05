@@ -134,7 +134,9 @@ Deno.serve(async (req) => {
                             : new Date().toISOString(),
                         current_period_end: resource.billing_info?.next_billing_time
                             ? new Date(resource.billing_info.next_billing_time).toISOString()
-                            : null,
+                            : resource.billing_info?.cycle_executions?.[0]?.next_billing_time
+                                ? new Date(resource.billing_info.cycle_executions[0].next_billing_time).toISOString()
+                                : null,
                         updated_at: new Date().toISOString(),
                     },
                     { onConflict: 'paypal_subscription_id' },
@@ -179,10 +181,23 @@ Deno.serve(async (req) => {
                     .update({ status: 'CANCELLED', updated_at: new Date().toISOString() })
                     .eq('paypal_subscription_id', paypalSubscriptionId);
 
-                await supabase.from('entitlements').upsert(
-                    { user_id: userId, max_platforms: 0, updated_at: new Date().toISOString() },
-                    { onConflict: 'user_id' },
-                );
+                // DO NOT zero out entitlements immediately if the period is still active.
+                // This prevents "stolen" access for days already paid.
+                const { data: sub } = await supabase
+                    .from('subscriptions')
+                    .select('current_period_end')
+                    .eq('paypal_subscription_id', paypalSubscriptionId)
+                    .maybeSingle();
+
+                const now = new Date();
+                const periodEnd = sub?.current_period_end ? new Date(sub.current_period_end) : null;
+
+                if (!periodEnd || periodEnd <= now) {
+                    await supabase.from('entitlements').upsert(
+                        { user_id: userId, max_platforms: 0, updated_at: new Date().toISOString() },
+                        { onConflict: 'user_id' },
+                    );
+                }
                 break;
             }
 
@@ -218,6 +233,18 @@ Deno.serve(async (req) => {
                     { user_id: userId, max_platforms: maxPlatforms, updated_at: new Date().toISOString() },
                     { onConflict: 'user_id' },
                 );
+                break;
+            }
+
+            case 'BILLING.SUBSCRIPTION.PAYMENT.SUCCEEDED':
+            case 'PAYMENT.SALE.COMPLETED': {
+                const subIdForSuccess = paypalSubscriptionId || resource?.billing_agreement_id;
+                if (!subIdForSuccess) break;
+
+                await supabase.from('subscriptions').update({
+                    status: 'ACTIVE',
+                    updated_at: new Date().toISOString(),
+                }).eq('paypal_subscription_id', subIdForSuccess);
                 break;
             }
 

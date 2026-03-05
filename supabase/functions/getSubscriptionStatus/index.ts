@@ -42,6 +42,27 @@ Deno.serve(async (req) => {
             .limit(1)
             .maybeSingle();
 
+        // Auto-expiration logic: If the period has ended, ensure entitlements are 0
+        if (subscription && subscription.current_period_end) {
+            const now = new Date();
+            const periodEnd = new Date(subscription.current_period_end);
+            if (periodEnd < now && (subscription.status === 'ACTIVE' || subscription.status === 'CANCELLED')) {
+                // If it was ACTIVE but date passed, it might be a missed webhook or real expiration.
+                // If it was CANCELLED, it's definitely time to stop access.
+                const newStatus = subscription.status === 'ACTIVE' ? 'PAST_DUE' : 'EXPIRED';
+
+                await serviceSupabase.from('subscriptions')
+                    .update({ status: newStatus, updated_at: now.toISOString() })
+                    .eq('id', subscription.id);
+
+                await serviceSupabase.from('entitlements')
+                    .upsert({ user_id: user.id, max_platforms: 0, updated_at: now.toISOString() }, { onConflict: 'user_id' });
+
+                // Refresh local object for response
+                subscription.status = newStatus;
+            }
+        }
+
         // Get entitlements
         const { data: entitlement } = await serviceSupabase
             .from('entitlements')
