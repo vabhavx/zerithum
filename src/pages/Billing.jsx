@@ -36,17 +36,18 @@ const PLANS = [
     {
         id: 'pro',
         name: 'Pro',
-        price: 15,
+        price: 20,
         maxPlatforms: 5,
-        description: 'For serious creators scaling up',
+        description: 'Scaling fast? Unlock VIP treatment and maximize your revenue.',
         popular: true,
         features: [
             'Connect up to 5 platforms',
             'Advanced analytics & insights',
             'Tax estimator & exports',
             'Bank reconciliation',
-            'Priority support',
+            'Dedicated primary customer support',
             'AI-powered insights',
+            'White-glove onboarding & setup',
         ],
         color: 'violet',
         gradientFrom: 'from-violet-500',
@@ -198,10 +199,10 @@ export default function Billing() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.4, delay: 0.15 + i * 0.1 }}
                                 className={`relative rounded-xl border bg-white overflow-hidden transition-all duration-300 hover:shadow-lg ${isCurrent
-                                        ? `${plan.borderAccent} ring-2 ${plan.ringAccent} shadow-md`
-                                        : plan.popular
-                                            ? 'border-gray-200 shadow-sm'
-                                            : 'border-gray-200'
+                                    ? `${plan.borderAccent} ring-2 ${plan.ringAccent} shadow-md`
+                                    : plan.popular
+                                        ? 'border-gray-200 shadow-sm'
+                                        : 'border-gray-200'
                                     }`}
                             >
                                 {/* Gradient accent bar */}
@@ -254,8 +255,8 @@ export default function Billing() {
                                         onClick={() => handleSubscribe(plan.id)}
                                         disabled={isCurrent || isSubscribing}
                                         className={`w-full h-11 text-sm font-semibold transition-all duration-200 ${isCurrent
-                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                : `bg-gradient-to-r ${plan.gradientFrom} ${plan.gradientTo} text-white hover:opacity-90 shadow-sm`
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            : `bg-gradient-to-r ${plan.gradientFrom} ${plan.gradientTo} text-white hover:opacity-90 shadow-sm`
                                             }`}
                                     >
                                         {isSubscribing ? (
@@ -309,10 +310,10 @@ export default function Billing() {
                                                 animate={{ width: `${usagePercent}%` }}
                                                 transition={{ duration: 0.8, delay: 0.5 }}
                                                 className={`h-full rounded-full transition-colors ${usagePercent >= 100
-                                                        ? 'bg-red-500'
-                                                        : usagePercent >= 80
-                                                            ? 'bg-amber-500'
-                                                            : 'bg-indigo-500'
+                                                    ? 'bg-red-500'
+                                                    : usagePercent >= 80
+                                                        ? 'bg-amber-500'
+                                                        : 'bg-indigo-500'
                                                     }`}
                                             />
                                         </div>

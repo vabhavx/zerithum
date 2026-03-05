@@ -26,15 +26,17 @@ const PLANS = {
     {
       name: "Pro",
       id: "pro",
-      price: 15,
-      bestFor: "Creators running a serious business",
+      price: 20,
+      bestFor: "For serious creators who refuse to leave money on the table",
       limit: "Up to 5 connected platforms",
       features: [
         "Automated platform sync",
         "Reconciliation alerts",
         "Tax estimator and accountant-ready exports",
         "AI-powered insights",
-        "Priority support",
+        "Dedicated primary customer support",
+        "White-glove onboarding & setup",
+        "Exclusive community access",
       ],
       cta: "Get Pro",
       featured: true,
@@ -108,8 +110,8 @@ function PlanCard({ plan, user, onSelect, processingPayment }) {
         type="button"
         onClick={handleClick}
         className={`h-11 w-full text-sm font-medium transition-all duration-200 ${plan.featured
-            ? "bg-indigo-600 text-white hover:bg-indigo-700"
-            : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
+          ? "bg-indigo-600 text-white hover:bg-indigo-700"
+          : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
           }`}
       >
         {plan.cta}
@@ -165,7 +167,7 @@ export default function Pricing() {
                   <tr className="border-b border-gray-100 text-left bg-gray-50">
                     <th className="px-6 py-4 font-medium text-gray-400 uppercase tracking-wider text-xs">Feature</th>
                     <th className="px-6 py-4 font-medium text-gray-900">Starter ($9)</th>
-                    <th className="px-6 py-4 font-semibold text-gray-900">Pro ($15)</th>
+                    <th className="px-6 py-4 font-semibold text-gray-900">Pro ($20)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
