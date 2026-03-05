@@ -104,6 +104,11 @@ export default function Billing() {
             setData(result);
         } catch (err) {
             console.error('Failed to load subscription status:', err);
+            if (err.message?.includes('401') || err.status === 401) {
+                toast.error('Session expired. Please sign in again.');
+            } else {
+                toast.error('Failed to load billing information.');
+            }
         } finally {
             setLoading(false);
         }

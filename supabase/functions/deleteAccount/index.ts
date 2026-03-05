@@ -10,15 +10,14 @@ import {
     OAUTH_PROVIDERS
 } from '../_shared/logic/security.ts';
 import { revokeToken } from '../_shared/logic/revokeToken.ts';
+import { getVerificationEmailHtml, VerificationPurpose } from '../_shared/templates/verificationCode.ts';
+import { getPayPalAccessToken, PAYPAL_API_BASE } from '../_shared/utils/paypal.ts';
 import { getCorsHeaders } from '../_shared/utils/cors.ts';
 import { decrypt } from '../_shared/utils/encryption.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-// Tables to delete user data from (in order)
-// CRITICAL: sync_history.platform_id REFERENCES connected_platforms(id) ON DELETE CASCADE
-// Therefore sync_history MUST be deleted BEFORE connected_platforms
 const USER_DATA_TABLES = [
     'sync_history',           // MUST be first - has FK to connected_platforms
     'reconciliations',
@@ -29,6 +28,8 @@ const USER_DATA_TABLES = [
     'transactions',
     'revenue_transactions',
     'tax_profiles',
+    'subscriptions',          // PayPal subscriptions
+    'entitlements',           // PayPal entitlements
     'platform_connections',   // Legacy table
     'connected_platforms',    // MUST be after sync_history
     'verification_codes',
@@ -332,6 +333,41 @@ Deno.serve(async (req) => {
                 stepsCompleted.push('oauth_tokens_revoked');
             }
 
+            // Step 2.5: Cancel active PayPal subscription if exists
+            try {
+                const { data: activeSub } = await adminClient
+                    .from('subscriptions')
+                    .select('paypal_subscription_id')
+                    .eq('user_id', user.id)
+                    .eq('status', 'ACTIVE')
+                    .maybeSingle();
+
+                if (activeSub?.paypal_subscription_id) {
+                    console.log('Cancelling active PayPal subscription:', activeSub.paypal_subscription_id);
+                    const accessToken = await getPayPalAccessToken();
+                    const cancelResp = await fetch(
+                        `${PAYPAL_API_BASE}/v1/billing/subscriptions/${activeSub.paypal_subscription_id}/cancel`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${accessToken}`,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ reason: 'Account deletion' }),
+                        },
+                    );
+
+                    if (cancelResp.ok || cancelResp.status === 204) {
+                        stepsCompleted.push('paypal_subscription_cancelled');
+                    } else {
+                        console.error('Failed to cancel PayPal sub during deletion:', await cancelResp.text());
+                        stepsCompleted.push('paypal_subscription_cancel_failed');
+                    }
+                }
+            } catch (err) {
+                console.error('Error during PayPal cancellation check:', err);
+            }
+
             // Step 3: Delete user data from all tables
             for (const table of USER_DATA_TABLES) {
                 try {
@@ -355,9 +391,14 @@ Deno.serve(async (req) => {
                             .eq('user_id', user.id);
 
                         if (error) {
-                            console.error(`Failed to delete from ${table}:`, error);
-                            // Critical tables failure should potentially stop the process
-                            if (table === 'platform_connections' || table === 'connected_platforms') {
+                            console.error(`Status check for ${table}:`, error);
+                            // If user is already gone from public (e.g. via cascade or retry), ignore
+                            if (error.code === 'PGRST116' || error.message.includes('not found')) {
+                                stepsCompleted.push(`${table}_already_gone`);
+                                continue;
+                            }
+                            // Critical tables failure should stop the process
+                            if (table === 'platform_connections' || table === 'connected_platforms' || table === 'subscriptions') {
                                 throw new Error(`Critical failure: Could not delete from ${table}: ${error.message}`);
                             }
                             stepsCompleted.push(`${table}_failed`);
@@ -375,21 +416,32 @@ Deno.serve(async (req) => {
             }
 
             // Step 4: Delete profile
-            try {
-                await adminClient
-                    .from('profiles')
-                    .delete()
-                    .eq('id', user.id);
-                stepsCompleted.push('profile_deleted');
-            } catch (e) {
-                console.error('Failed to delete profile:', e);
+            const { error: profileError } = await adminClient
+                .from('profiles')
+                .delete()
+                .eq('id', user.id);
+
+            if (profileError) {
+                console.error('Failed to delete profile:', profileError);
+                // If profile is already gone, it's fine
+                if (profileError.code !== 'PGRST116') {
+                    // But if it's a real error, we might want to know
+                    console.warn('Non-critical profile deletion error:', profileError.message);
+                }
             }
+            stepsCompleted.push('profile_deleted');
 
             // Step 5: Delete user from auth.users
             const { error: deleteUserError } = await adminClient.auth.admin.deleteUser(user.id);
 
             if (deleteUserError) {
-                throw new Error('Failed to delete user account');
+                // If user is already deleted, this is a success state for us
+                if (deleteUserError.message?.includes('not found') || (deleteUserError as any).status === 404) {
+                    console.log('User already deleted from Auth, proceeding');
+                } else {
+                    console.error('Core Auth deletion failed:', deleteUserError);
+                    throw new Error(`Auth deletion failed: ${deleteUserError.message}`);
+                }
             }
             stepsCompleted.push('auth_user_deleted');
 

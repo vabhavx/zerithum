@@ -130,9 +130,16 @@ export default function ConnectedPlatforms() {
         );
         return;
       }
-    } catch (err) {
-      console.error('Failed to check entitlements:', err);
-      // Allow connection attempt if entitlements check fails (graceful degradation)
+    } catch (error) {
+      console.error("Entitlement check failed:", error);
+      toast.error("Failed to verify subscription limits. Please try again.");
+      // Assuming setConnecting(false) was meant to clear a connecting state,
+      // and given connectingId is set *after* this block,
+      // we'll use setConnectingId(null) if it was already set, or just return.
+      // If connectingId was not set yet, no need to clear it.
+      // If there was a global 'connecting' state, it would be set here.
+      // For now, we'll just return as per the fail-closed instruction.
+      return;
     }
 
     if (platform.requiresApiKey || platform.requiresShopName) { setSelectedPlatform(platform); setCredentialsOpen(true); return; }

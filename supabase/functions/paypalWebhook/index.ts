@@ -92,18 +92,27 @@ Deno.serve(async (req) => {
         // Process by event type
         switch (eventType) {
             case 'BILLING.SUBSCRIPTION.CREATED': {
-                await supabase.from('subscriptions').upsert(
-                    {
-                        user_id: userId,
-                        provider: 'paypal',
-                        paypal_subscription_id: paypalSubscriptionId,
-                        paypal_plan_id: planId,
-                        plan: getPlanName(planId),
-                        status: 'PENDING',
-                        updated_at: new Date().toISOString(),
-                    },
-                    { onConflict: 'paypal_subscription_id' },
-                );
+                // Use a smarter approach to avoid overwriting ACTIVE status
+                const { data: currentSub } = await supabase
+                    .from('subscriptions')
+                    .select('status')
+                    .eq('paypal_subscription_id', paypalSubscriptionId)
+                    .maybeSingle();
+
+                if (!currentSub || (currentSub.status !== 'ACTIVE' && currentSub.status !== 'CANCELLED' && currentSub.status !== 'EXPIRED')) {
+                    await supabase.from('subscriptions').upsert(
+                        {
+                            user_id: userId,
+                            provider: 'paypal',
+                            paypal_subscription_id: paypalSubscriptionId,
+                            paypal_plan_id: planId,
+                            plan: getPlanName(planId),
+                            status: 'PENDING',
+                            updated_at: new Date().toISOString(),
+                        },
+                        { onConflict: 'paypal_subscription_id' },
+                    );
+                }
                 break;
             }
 

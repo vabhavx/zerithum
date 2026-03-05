@@ -288,6 +288,31 @@ export async function exchangeOAuthTokens(
     platform: platform
   });
 
+  // Check entitlements for NEW connections
+  if (existingConnections.length === 0) {
+    const { data: entitlement, error: entError } = await ctx.base44.asServiceRole.supabase
+      .from('entitlements')
+      .select('max_platforms')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const maxPlatforms = entitlement?.max_platforms ?? 0;
+
+    const allConnections = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
+      user_id: user.id
+    });
+
+    if (allConnections.length >= maxPlatforms) {
+      return {
+        status: 403,
+        body: {
+          error: 'Platform limit reached',
+          message: `You have reached the limit of ${maxPlatforms} platforms for your current plan. Please upgrade to connect more.`
+        }
+      };
+    }
+  }
+
   const connectionData = {
     user_id: user.id,
     platform: platform,
