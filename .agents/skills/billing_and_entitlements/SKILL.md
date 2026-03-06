@@ -21,7 +21,7 @@ Enforcement must happen at every layer of the stack to prevent bypasses:
 ## 3. UI/UX Consistency
 - **Active Only**: Never show a plan tier name (e.g., "Starter") in the UI if the subscription status is not `ACTIVE`. Default to "No Active Plan".
 - **Real Checkouts**: No "mock" or "fake" upgrade flows. All upgrade buttons must navigate to `/billing` to trigger the actual PayPal flow.
-- **Explicit Blocking**: When a user without a plan tries to connect, use the standardized message: *"No active plan. Please purchase your Starter pack to begin connecting."*
+- **Explicit Blocking**: When a user without a plan tries to connect, use the standardized message: *"No active subscription. Begin your journey now with Starter pack."*
 
 ## 4. Integrity Checks
 - **Auto-Expiration**: If a subscription period ends without renewal, entitlements must be zeroed out immediately via the `getSubscriptionStatus` logic or webhooks.

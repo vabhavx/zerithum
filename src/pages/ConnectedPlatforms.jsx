@@ -124,7 +124,7 @@ export default function ConnectedPlatforms() {
       if (usedP >= maxP) {
         toast.error(
           maxP === 0
-            ? 'No active plan. Please purchase your Starter pack to begin connecting.'
+            ? 'No active subscription. Begin your journey now with Starter pack.'
             : `Platform limit reached (${usedP}/${maxP}). Upgrade your plan to connect more.`,
           { duration: 5000 }
         );
