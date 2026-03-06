@@ -69,7 +69,7 @@ export default function SettingsBilling({ user }) {
                                 <p className="text-xs font-bold uppercase tracking-wider text-purple-600 mb-1">Active Plan</p>
                                 <div className="flex items-center gap-3">
                                     <h3 className="text-2xl font-black text-gray-900 tracking-tight">
-                                        {sub ? planLabel(sub.plan) : "No Active Plan"}
+                                        {sub && sub.status === 'ACTIVE' ? planLabel(sub.plan) : "No Active Plan"}
                                     </h3>
                                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${badge.className}`}>
                                         {badge.label}
