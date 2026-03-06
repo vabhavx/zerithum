@@ -6,8 +6,8 @@ const LoadingScreen = ({ fullScreen = false, text = 'Loading', className }) => {
     return (
         <div
             className={cn(
-                "bg-background relative overflow-hidden flex flex-col items-center justify-center",
-                fullScreen ? "fixed inset-0 z-50 min-h-screen" : "w-full min-h-[50vh]",
+                "bg-[#FDFDFD] relative overflow-hidden flex flex-col items-center justify-center",
+                fullScreen ? "fixed inset-0 z-50 min-h-screen" : "w-full min-h-[40vh]",
                 className
             )}
         >
@@ -23,7 +23,7 @@ const LoadingScreen = ({ fullScreen = false, text = 'Loading', className }) => {
             </div>
 
             {/* Loader Component Container */}
-            <div className="relative w-full max-w-2xl h-[400px] flex items-center justify-center">
+            <div className="relative w-full max-w-md h-[180px] flex items-center justify-center transform scale-[0.6]">
                 <div className="z-loader">
                     <span>
                         <span></span>
@@ -39,14 +39,14 @@ const LoadingScreen = ({ fullScreen = false, text = 'Loading', className }) => {
             </div>
 
             {/* Content Overlay */}
-            <div className="z-20 text-center mt-[-100px] space-y-4">
-                <h1 className="font-mono text-2xl font-bold tracking-widest text-foreground uppercase animate-pulse">
+            <div className="z-20 text-center mt-[-40px] space-y-3">
+                <h1 className="font-mono text-lg font-bold tracking-[0.2em] text-[#111827] uppercase animate-pulse">
                     {text}
                 </h1>
 
                 {/* Progress Bar Mockup */}
-                <div className="w-64 h-1 bg-muted rounded-full mx-auto mt-8 overflow-hidden relative">
-                    <div className="h-full bg-foreground w-1/3 animate-[loader-progress_2s_ease-in-out_infinite]"></div>
+                <div className="w-40 h-[2px] bg-gray-200 mx-auto mt-4 overflow-hidden relative">
+                    <div className="h-full bg-[#111827] w-1/3 animate-[loader-progress_2s_ease-in-out_infinite]"></div>
                 </div>
             </div>
         </div>
