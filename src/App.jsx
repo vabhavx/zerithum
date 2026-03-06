@@ -16,7 +16,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import { Loader2, WifiOff } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 
 // Import new optimization layers
 import { GlobalErrorBoundary, ErrorProvider, useNetworkStatus } from '@/lib/errorHandling.jsx';
@@ -38,20 +39,9 @@ const LayoutWrapper = memo(({ children, currentPageName }) => Layout ?
 LayoutWrapper.displayName = 'LayoutWrapper';
 
 /**
- * Enhanced Page Loader with skeleton states
+ * Enhanced Page Loader with custom hyper-speed animation
  */
-const PageLoader = memo(() => (
-  <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-    <div className="relative">
-      <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      <div className="absolute inset-0 w-8 h-8 rounded-full border-2 border-indigo-100" />
-    </div>
-    <div className="flex flex-col items-center gap-2">
-      <div className="h-2 w-24 bg-gray-200 rounded animate-pulse" />
-      <div className="h-2 w-16 bg-gray-100 rounded animate-pulse" />
-    </div>
-  </div>
-));
+const PageLoader = memo(() => <LoadingScreen />);
 
 PageLoader.displayName = 'PageLoader';
 
@@ -140,36 +130,7 @@ const AuthenticatedApp = memo(() => {
 
   // Loading state
   if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
-        <div className="relative mb-6">
-          <Loader2 className="w-12 h-12 animate-spin text-indigo-600" />
-          <div className="absolute inset-0 w-12 h-12 rounded-full border-4 border-indigo-100" />
-        </div>
-
-        <p className="text-gray-600 font-medium mb-2">
-          {isLoadingAuth ? 'Verifying authentication...' : 'Loading settings...'}
-        </p>
-
-        {!isOnline && (
-          <p className="text-amber-600 text-sm mb-4">
-            You appear to be offline. Some features may be limited.
-          </p>
-        )}
-
-        {showSlowLoadingMessage && (
-          <div className="flex flex-col items-center gap-2 mt-4">
-            <p className="text-xs text-gray-400">Taking longer than expected?</p>
-            <button
-              onClick={() => window.location.href = '/SignIn'}
-              className="text-sm text-indigo-600 hover:text-indigo-800 underline transition-colors"
-            >
-              Go to Login
-            </button>
-          </div>
-        )}
-      </div>
-    );
+    return <LoadingScreen fullScreen text={isLoadingAuth ? 'Verifying authentication...' : 'Loading settings...'} />;
   }
 
   // Authentication errors
