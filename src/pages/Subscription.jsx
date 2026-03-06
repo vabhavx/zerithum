@@ -22,40 +22,39 @@ const PLANS = [
     ]
   },
   {
+    tier: 'starter',
+    name: 'Starter',
+    price: 9,
+    description: 'For creators getting started',
+    features: [
+      { text: '3 platform connections', included: true },
+      { text: 'Unified revenue dashboard', included: true },
+      { text: 'Basic transaction tracking', included: true },
+      { text: 'Manual data exports', included: true },
+      { text: 'Email support', included: true },
+      { text: 'AI insights', included: false },
+      { text: 'Bank reconciliation', included: false }
+    ],
+    annualPrice: 90,
+    annualSavings: 18
+  },
+  {
     tier: 'pro',
-    name: 'Creator Pro',
-    price: 49,
-    description: 'Best for full-time creators',
+    name: 'Pro',
+    price: 20,
+    description: 'Scaling fast? Unlock VIP treatment',
     badge: 'POPULAR',
     features: [
       { text: '5 platform connections', included: true },
-      { text: 'Unlimited history', included: true },
-      { text: 'Advanced dashboard', included: true },
+      { text: 'Advanced analytics & insights', included: true },
+      { text: 'Tax estimator & exports', included: true },
       { text: 'Bank reconciliation', included: true },
-      { text: 'Tax export (CSV, PDF)', included: true },
-      { text: 'AI insights', included: true },
-      { text: 'White-label', included: false }
+      { text: 'AI-powered insights', included: true },
+      { text: 'White-glove onboarding', included: true },
+      { text: 'Dedicated support', included: true }
     ],
-    annualPrice: 490,
-    annualSavings: 98
-  },
-  {
-    tier: 'max',
-    name: 'Creator Max',
-    price: 199,
-    description: 'For agencies & power users',
-    badge: 'BEST VALUE',
-    features: [
-      { text: 'Unlimited platforms', included: true },
-      { text: 'Unlimited history', included: true },
-      { text: 'Advanced dashboard', included: true },
-      { text: 'Bank reconciliation', included: true },
-      { text: 'Tax export (all formats)', included: true },
-      { text: 'AI insights + automation', included: true },
-      { text: 'White-label reporting', included: true },
-      { text: 'Accountant API access', included: true },
-      { text: 'Priority support', included: true }
-    ]
+    annualPrice: 200,
+    annualSavings: 40
   }
 ];
 

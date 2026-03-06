@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles, Crown } from "lucide-react";
@@ -7,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 export default function SettingsSubscription() {
   const [user, setUser] = useState(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadUser();
@@ -44,63 +46,53 @@ export default function SettingsSubscription() {
       icon: null,
     },
     {
-      id: "pro",
-      name: "Creator Pro",
-      price: "$49",
+      id: "starter",
+      name: "Starter",
+      price: "$9",
       period: "/month",
-      annual: "$490/year (save $98)",
-      description: "Most popular for serious creators",
+      annual: "$90/year (save $18)",
+      description: "For creators getting started",
+      features: [
+        "3 platform connections",
+        "Unified revenue dashboard",
+        "Basic transaction tracking",
+        "Manual data exports",
+        "Email support",
+      ],
+      limitations: [
+        "No AI insights",
+        "No Bank reconciliation"
+      ],
+      cta: "Upgrade to Starter",
+      color: "#208D9E",
+      icon: null,
+    },
+    {
+      id: "pro",
+      name: "Pro",
+      price: "$20",
+      period: "/month",
+      annual: "$200/year (save $40)",
+      description: "Scaling fast? Unlock VIP treatment",
       features: [
         "5 platform connections",
-        "Unlimited history",
+        "Advanced analytics & insights",
+        "Tax estimator & exports",
         "Bank reconciliation",
-        "Tax exports (1099-K ready)",
-        "AI insights",
-        "Priority support",
-        "Advanced analytics",
+        "AI-powered insights",
+        "White-glove onboarding",
+        "Dedicated support"
       ],
       limitations: [],
       cta: "Upgrade to Pro",
-      color: "#208D9E",
+      color: "#6366f1",
       icon: Sparkles,
       popular: true,
-    },
-    {
-      id: "max",
-      name: "Creator Max",
-      price: "$199",
-      period: "/month",
-      description: "Best for agencies & teams",
-      features: [
-        "Unlimited platforms",
-        "White-label dashboard",
-        "Accountant API access",
-        "Multi-user access",
-        "Custom integrations",
-        "Dedicated support",
-        "Quarterly tax planning",
-      ],
-      limitations: [],
-      cta: "Upgrade to Max",
-      color: "#C0152F",
-      icon: Crown,
     },
   ];
 
   const handleUpgrade = (planId) => {
-    // Mock upgrade flow
-    toast({
-      title: "Redirecting to Checkout",
-      description: `Processing upgrade to ${planId}...`,
-    });
-
-    // In production, integrate with Stripe/Paddle
-    setTimeout(() => {
-      toast({
-        title: "Upgrade Successful!",
-        description: `You're now on ${planId} plan.`,
-      });
-    }, 2000);
+    navigate('/billing');
   };
 
   const currentPlan = user?.plan_tier || "free";
@@ -165,13 +157,10 @@ export default function SettingsSubscription() {
               <Button
                 onClick={() => handleUpgrade(plan.id)}
                 disabled={isCurrent}
-                className={`w-full ${
-                  isCurrent
+                className={`w-full ${isCurrent
                     ? "bg-[#5E5240]/10 text-[#5E5240] cursor-not-allowed"
-                    : isUpgrade || plan.id === "pro" || plan.id === "max"
-                    ? "btn-primary"
-                    : "btn-secondary"
-                }`}
+                    : "btn-primary"
+                  }`}
               >
                 {isCurrent ? "Current Plan" : plan.cta}
               </Button>
