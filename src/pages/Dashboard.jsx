@@ -71,14 +71,14 @@ const QUERY_CACHE_TIME = 5 * 60 * 1000;
 const calcCache = new LRUCache(1000);
 const VISIBLE_ROWS = 50;
 
-const PLATFORM_LABELS = { 
-  youtube: "YouTube", 
-  patreon: "Patreon", 
-  stripe: "Stripe", 
-  gumroad: "Gumroad", 
-  instagram: "Instagram", 
-  tiktok: "TikTok", 
-  shopify: "Shopify", 
+const PLATFORM_LABELS = {
+  youtube: "YouTube",
+  patreon: "Patreon",
+  stripe: "Stripe",
+  gumroad: "Gumroad",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  shopify: "Shopify",
   substack: "Substack",
   paypal: "PayPal",
   "ko-fi": "Ko-fi",
@@ -99,14 +99,14 @@ const PLATFORM_COLORS = {
   "buy_me_a_coffee": '#FFDD00',
 };
 
-const PLATFORM_FEE_RATES = { 
-  youtube: 0.45, 
-  patreon: 0.08, 
-  stripe: 0.029, 
-  gumroad: 0.1, 
-  instagram: 0.05, 
-  tiktok: 0.5, 
-  shopify: 0.02, 
+const PLATFORM_FEE_RATES = {
+  youtube: 0.45,
+  patreon: 0.08,
+  stripe: 0.029,
+  gumroad: 0.1,
+  instagram: 0.05,
+  tiktok: 0.5,
+  shopify: 0.02,
   substack: 0.1,
   paypal: 0.034,
   "ko-fi": 0.05,
@@ -200,7 +200,7 @@ const generateCSV = (data, filename) => {
       return val;
     }).join(','))
   ].join('\n');
-  
+
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
@@ -237,12 +237,12 @@ const calculateTrend = (data) => {
   const sumXX = data.reduce((sum, _, i) => sum + i * i, 0);
   const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
   const intercept = (sumY - slope * sumX) / n;
-  
+
   const yMean = sumY / n;
   const ssTotal = data.reduce((sum, val) => sum + Math.pow(val - yMean, 2), 0);
   const ssResidual = data.reduce((sum, val, i) => sum + Math.pow(val - (slope * i + intercept), 2), 0);
   const r2 = ssTotal > 0 ? 1 - (ssResidual / ssTotal) : 0;
-  
+
   return { slope, intercept, r2 };
 };
 
@@ -250,11 +250,11 @@ const generateForecast = (historicalData, days = 30) => {
   if (historicalData.length < 7) return [];
   const values = historicalData.map(d => d.amount || d.value || 0);
   const { slope, intercept } = calculateTrend(values);
-  
-  const lastDate = historicalData[historicalData.length - 1]?.date 
+
+  const lastDate = historicalData[historicalData.length - 1]?.date
     ? parseISO(historicalData[historicalData.length - 1].date)
     : new Date();
-  
+
   const forecast = [];
   for (let i = 1; i <= days; i++) {
     const predictedValue = Math.max(0, slope * (values.length + i) + intercept);
@@ -336,7 +336,7 @@ const DesignTokens = () => (
 // ============================================================================
 
 const Card = ({ children, className = '', onClick }) => (
-  <div 
+  <div
     onClick={onClick}
     className={cn(
       "bg-white border border-[var(--neutral-200)] rounded-lg overflow-hidden",
@@ -372,12 +372,12 @@ const Badge = ({ variant = 'default', children, className }) => {
 // COMPONENT: Button
 // ============================================================================
 
-const Button = ({ 
-  variant = 'secondary', 
-  size = 'md', 
-  isLoading, 
-  children, 
-  onClick, 
+const Button = ({
+  variant = 'secondary',
+  size = 'md',
+  isLoading,
+  children,
+  onClick,
   className = '',
   disabled,
   icon: Icon,
@@ -421,22 +421,22 @@ const Button = ({
 const ExportMenu = ({ onExport, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
-  
+
   useEffect(() => {
     const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setIsOpen(false); };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
-  
+
   const exportOptions = [
     { label: 'CSV', icon: FileSpreadsheet, format: 'csv' },
     { label: 'JSON', icon: FileText, format: 'json' },
   ];
-  
+
   return (
     <div className="relative" ref={menuRef}>
-      <Button 
-        variant="secondary" 
+      <Button
+        variant="secondary"
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
         icon={Download}
@@ -445,7 +445,7 @@ const ExportMenu = ({ onExport, disabled }) => {
         Export
         <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isOpen && "rotate-180")} />
       </Button>
-      
+
       {isOpen && (
         <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg border border-[var(--neutral-200)] shadow-lg z-50 py-1">
           {exportOptions.map((opt) => (
@@ -475,7 +475,7 @@ const PeriodSelector = ({ value, onChange }) => {
     { value: 'mtd', label: 'Month to Date' },
     { value: '90d', label: '90 Days' },
   ];
-  
+
   return (
     <div className="flex items-center gap-1 bg-[var(--neutral-100)] rounded-lg p-1">
       {periods.map((p) => (
@@ -484,8 +484,8 @@ const PeriodSelector = ({ value, onChange }) => {
           onClick={() => onChange(p.value)}
           className={cn(
             "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-            value === p.value 
-              ? "bg-white text-[var(--neutral-900)] shadow-sm" 
+            value === p.value
+              ? "bg-white text-[var(--neutral-900)] shadow-sm"
               : "text-[var(--neutral-500)] hover:text-[var(--neutral-700)]"
           )}
         >
@@ -502,12 +502,12 @@ const PeriodSelector = ({ value, onChange }) => {
 
 const Sparkline = ({ data, color = 'var(--accent-500)', height = 40 }) => {
   if (data.length < 2) return <div className="w-full" style={{ height }} />;
-  
-  const chartData = data.map((val, i) => ({ 
-    index: i, 
-    value: typeof val === 'object' ? val.amount || val.value : val 
+
+  const chartData = data.map((val, i) => ({
+    index: i,
+    value: typeof val === 'object' ? val.amount || val.value : val
   }));
-  
+
   return (
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -538,13 +538,13 @@ const Sparkline = ({ data, color = 'var(--accent-500)', height = 40 }) => {
 
 const CashHero = ({ position, onExport, onConnect, onRefresh, isRefreshing, lastUpdated }) => {
   const [showCopied, setShowCopied] = useState(false);
-  
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(formatCurrency(position.availableCash));
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 2000);
   };
-  
+
   return (
     <Card className="p-6 lg:p-8 mb-6 bg-gradient-to-br from-white via-white to-[var(--neutral-50)]">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
@@ -563,12 +563,12 @@ const CashHero = ({ position, onExport, onConnect, onRefresh, isRefreshing, last
               </span>
             )}
           </div>
-          
+
           <div className="flex items-center gap-3 group">
             <h1 className="text-4xl lg:text-5xl font-bold text-[var(--neutral-900)] tracking-tight tabular-nums">
               {formatCurrency(position.availableCash)}
             </h1>
-            <button 
+            <button
               onClick={copyToClipboard}
               className="p-2 text-[var(--neutral-400)] hover:text-[var(--neutral-600)] hover:bg-[var(--neutral-100)] rounded-lg transition-all opacity-0 group-hover:opacity-100"
               title="Copy amount"
@@ -576,11 +576,11 @@ const CashHero = ({ position, onExport, onConnect, onRefresh, isRefreshing, last
               {showCopied ? <Check className="w-4 h-4 text-[var(--success)]" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
-          
+
           <p className="text-sm text-[var(--neutral-500)] mt-3 max-w-lg">
             Actual cash available after all platform fees, pending payouts, and expenses.
           </p>
-          
+
           <div className="flex flex-wrap gap-6 mt-5">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-[var(--warning)]/10 flex items-center justify-center">
@@ -617,10 +617,10 @@ const CashHero = ({ position, onExport, onConnect, onRefresh, isRefreshing, last
             </div>
           </div>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-3">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={onRefresh}
             isLoading={isRefreshing}
@@ -647,9 +647,9 @@ const KPICard = ({ metric, onClick }) => {
   const TrendIcon = metric.trend === 'up' ? TrendingUp : metric.trend === 'down' ? TrendingDown : Minus;
   const trendColor = metric.trend === 'up' ? 'text-[var(--success)]' : metric.trend === 'down' ? 'text-[var(--error)]' : 'text-[var(--neutral-400)]';
   const borderColor = metric.status === 'error' ? 'border-l-[var(--error)]' : metric.status === 'warning' ? 'border-l-[var(--warning)]' : 'border-l-transparent';
-  
+
   return (
-    <Card 
+    <Card
       onClick={onClick}
       className={cn(
         "p-5 h-[140px] border-l-4",
@@ -701,14 +701,14 @@ const KPICard = ({ metric, onClick }) => {
 const ReconciliationCard = ({ summary, onViewDetails }) => {
   const total = summary.matched + summary.pending + summary.needsReview;
   const matchRate = total > 0 ? Math.round((summary.matched / total) * 100) : 0;
-  
+
   const statusConfig = {
     idle: { color: 'var(--success)', label: 'Synced' },
     syncing: { color: 'var(--warning)', label: 'Syncing...' },
     error: { color: 'var(--error)', label: 'Sync Failed' },
   };
   const status = statusConfig[summary.syncStatus] || statusConfig.idle;
-  
+
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-5">
@@ -724,13 +724,13 @@ const ReconciliationCard = ({ summary, onViewDetails }) => {
           <span className="text-[var(--neutral-400)]">{formatRelativeTime(summary.lastSyncAt)}</span>
         </div>
       </div>
-      
+
       {summary.trendData?.length > 0 && (
         <div className="mb-5">
           <Sparkline data={summary.trendData} color="var(--accent-500)" height={50} />
         </div>
       )}
-      
+
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="text-center p-4 rounded-lg bg-[var(--success)]/5 border border-[var(--success)]/10">
           <div className="text-2xl font-bold text-[var(--success)] tabular-nums">{formatNumber(summary.matched)}</div>
@@ -750,25 +750,25 @@ const ReconciliationCard = ({ summary, onViewDetails }) => {
           <div className="text-[11px] text-[var(--neutral-500)] mt-1 uppercase tracking-wide font-medium">Needs Review</div>
         </div>
       </div>
-      
+
       <div className="pt-4 border-t border-[var(--neutral-200)]">
         <div className="flex items-center justify-between text-sm mb-2">
           <span className="text-[var(--neutral-500)]">Match Rate</span>
           <span className="font-bold text-[var(--neutral-900)] tabular-nums">{matchRate}%</span>
         </div>
         <div className="w-full h-2 bg-[var(--neutral-200)] rounded-full overflow-hidden">
-          <div 
+          <div
             className="h-full rounded-full transition-all duration-700 ease-out"
-            style={{ 
+            style={{
               width: `${matchRate}%`,
               background: matchRate >= 95 ? 'var(--success)' : matchRate >= 80 ? 'var(--warning)' : 'var(--error)'
             }}
           />
         </div>
       </div>
-      
+
       {summary.needsReview > 0 && (
-        <button 
+        <button
           onClick={onViewDetails}
           className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-[var(--error)] bg-[var(--error)]/5 hover:bg-[var(--error)]/10 rounded-lg transition-colors"
         >
@@ -786,15 +786,15 @@ const ReconciliationCard = ({ summary, onViewDetails }) => {
 
 const CashflowForecast = ({ historicalData, forecastData }) => {
   const [showConfidenceInterval, setShowConfidenceInterval] = useState(true);
-  
+
   const combinedData = useMemo(() => {
     const historical = historicalData.map(d => ({ ...d, isHistorical: true }));
     return [...historical, ...forecastData];
   }, [historicalData, forecastData]);
-  
+
   const totalPredicted = forecastData.reduce((sum, d) => sum + d.predicted, 0);
   const avgDaily = forecastData.length > 0 ? totalPredicted / forecastData.length : 0;
-  
+
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-5">
@@ -805,14 +805,14 @@ const CashflowForecast = ({ historicalData, forecastData }) => {
           </h3>
           <Badge variant="default">30 Days</Badge>
         </div>
-        <button 
+        <button
           onClick={() => setShowConfidenceInterval(!showConfidenceInterval)}
           className="text-xs text-[var(--accent-600)] hover:text-[var(--accent-700)] font-medium"
         >
           {showConfidenceInterval ? 'Hide' : 'Show'} Confidence Interval
         </button>
       </div>
-      
+
       {forecastData.length > 0 ? (
         <>
           <div className="h-48 mb-4">
@@ -829,15 +829,15 @@ const CashflowForecast = ({ historicalData, forecastData }) => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--neutral-200)" vertical={false} />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   tickFormatter={(val) => format(parseISO(val), 'MMM d')}
                   stroke="var(--neutral-400)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
                 />
-                <YAxis 
+                <YAxis
                   tickFormatter={(val) => `$${formatCompactNumber(val)}`}
                   stroke="var(--neutral-400)"
                   fontSize={10}
@@ -845,7 +845,7 @@ const CashflowForecast = ({ historicalData, forecastData }) => {
                   axisLine={false}
                   width={50}
                 />
-                <Tooltip 
+                <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
                     const data = payload[0].payload;
@@ -905,7 +905,7 @@ const CashflowForecast = ({ historicalData, forecastData }) => {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--neutral-200)]">
             <div>
               <span className="text-xs text-[var(--neutral-400)] block">30-Day Projection</span>
@@ -938,7 +938,7 @@ const CashflowForecast = ({ historicalData, forecastData }) => {
 // COMPONENT: PlatformHealth
 // ============================================================================
 
-const PlatformHealth = ({ platforms }) => {
+const PlatformHealth = ({ platforms, onConnect }) => {
   const getStatus = (platform) => {
     if (platform.sync_status === 'error') return { label: 'Error', color: 'var(--error)', icon: WifiOff };
     if (platform.sync_status === 'syncing') return { label: 'Syncing', color: 'var(--warning)', icon: RefreshCw };
@@ -947,7 +947,7 @@ const PlatformHealth = ({ platforms }) => {
     if (hoursSinceSync > 24) return { label: 'Stale', color: 'var(--warning)', icon: Clock };
     return { label: 'Healthy', color: 'var(--success)', icon: CheckCircle };
   };
-  
+
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-5">
@@ -961,18 +961,18 @@ const PlatformHealth = ({ platforms }) => {
           {platforms.length} Connected
         </Badge>
       </div>
-      
+
       {platforms.length > 0 ? (
         <div className="space-y-3">
           {platforms.map((platform) => {
             const status = getStatus(platform);
             const StatusIcon = status.icon;
             const color = PLATFORM_COLORS[platform.provider?.toLowerCase()] || 'var(--neutral-400)';
-            
+
             return (
               <div key={platform.id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--neutral-50)] hover:bg-[var(--neutral-100)] transition-colors">
                 <div className="flex items-center gap-3">
-                  <div 
+                  <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
                     style={{ backgroundColor: color }}
                   >
@@ -1000,7 +1000,7 @@ const PlatformHealth = ({ platforms }) => {
           <WifiOff className="w-12 h-12 text-[var(--neutral-300)] mx-auto mb-3" />
           <p className="text-sm text-[var(--neutral-500)]">No platforms connected</p>
           <p className="text-xs text-[var(--neutral-400)] mt-1 mb-4">Connect platforms to see health status</p>
-          <Button variant="primary" size="sm">Connect Platform</Button>
+          <Button variant="primary" size="sm" onClick={onConnect}>Connect Platform</Button>
         </div>
       )}
     </Card>
@@ -1031,7 +1031,7 @@ const ActionQueue = ({ items, onReview }) => {
       </Card>
     );
   }
-  
+
   const typeConfig = {
     mismatch: { badge: 'error', label: 'Mismatch', icon: AlertTriangle },
     missing_receipt: { badge: 'warning', label: 'Receipt Missing', icon: FileText },
@@ -1039,13 +1039,13 @@ const ActionQueue = ({ items, onReview }) => {
     duplicate: { badge: 'neutral', label: 'Duplicate', icon: Copy },
     sync_error: { badge: 'error', label: 'Sync Error', icon: WifiOff },
   };
-  
+
   const priorityConfig = {
     high: { color: 'var(--error)', label: 'High' },
     medium: { color: 'var(--warning)', label: 'Medium' },
     low: { color: 'var(--neutral-400)', label: 'Low' },
   };
-  
+
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -1057,15 +1057,15 @@ const ActionQueue = ({ items, onReview }) => {
         </div>
         <Badge variant="warning">{items.length} Items</Badge>
       </div>
-      
+
       <div className="space-y-3">
         {items.slice(0, 4).map((item) => {
           const config = typeConfig[item.type] || typeConfig.anomaly;
           const TypeIcon = config.icon;
           const priority = priorityConfig[item.priority] || priorityConfig.medium;
-          
+
           return (
-            <div 
+            <div
               key={item.id}
               onClick={() => onReview(item)}
               className="p-4 rounded-lg bg-[var(--neutral-50)] border border-[var(--neutral-200)] hover:border-[var(--warning)]/50 hover:shadow-sm transition-all cursor-pointer group"
@@ -1097,9 +1097,9 @@ const ActionQueue = ({ items, onReview }) => {
                     )}
                   </div>
                 </div>
-                <Button 
-                  variant="primary" 
-                  size="sm" 
+                <Button
+                  variant="primary"
+                  size="sm"
                   className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => { e.stopPropagation(); onReview(item); }}
                 >
@@ -1109,7 +1109,7 @@ const ActionQueue = ({ items, onReview }) => {
             </div>
           );
         })}
-        
+
         {items.length > 4 && (
           <button className="w-full text-center text-sm font-medium text-[var(--accent-600)] hover:text-[var(--accent-700)] py-2 hover:bg-[var(--accent-50)] rounded-lg transition-colors">
             +{items.length - 4} more items
@@ -1127,7 +1127,7 @@ const ActionQueue = ({ items, onReview }) => {
 const InsightsPanel = ({ insights, transactions, periodExpenses }) => {
   const generatedInsights = useMemo(() => {
     const computed = [...insights];
-    
+
     // Platform concentration insight
     const platformTotals = transactions.reduce((acc, tx) => {
       acc[tx.platform] = (acc[tx.platform] || 0) + (tx.amount || 0);
@@ -1135,11 +1135,11 @@ const InsightsPanel = ({ insights, transactions, periodExpenses }) => {
     }, {});
     const totalRevenue = Object.values(platformTotals).reduce((a, b) => a + b, 0);
     const sortedPlatforms = Object.entries(platformTotals).sort((a, b) => b[1] - a[1]);
-    
+
     if (sortedPlatforms.length > 0 && totalRevenue > 0) {
       const [topPlatform, topAmount] = sortedPlatforms[0];
       const concentration = (topAmount / totalRevenue) * 100;
-      
+
       if (concentration > 60) {
         computed.push({
           id: 'concentration-risk',
@@ -1151,7 +1151,7 @@ const InsightsPanel = ({ insights, transactions, periodExpenses }) => {
         });
       }
     }
-    
+
     // Expense ratio insight
     const totalRevenueVal = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
     if (totalRevenueVal > 0 && periodExpenses > 0) {
@@ -1167,16 +1167,16 @@ const InsightsPanel = ({ insights, transactions, periodExpenses }) => {
         });
       }
     }
-    
+
     return computed.slice(0, 5);
   }, [insights, transactions, periodExpenses]);
-  
+
   const impactConfig = {
     positive: { border: 'border-l-[var(--success)]', bg: 'bg-[var(--success)]/5', icon: TrendingUp },
     negative: { border: 'border-l-[var(--error)]', bg: 'bg-[var(--error)]/5', icon: TrendingDown },
     neutral: { border: 'border-l-[var(--neutral-400)]', bg: 'bg-[var(--neutral-100)]', icon: Minus },
   };
-  
+
   return (
     <Card className="p-6">
       <div className="flex items-center gap-2 mb-4">
@@ -1185,12 +1185,12 @@ const InsightsPanel = ({ insights, transactions, periodExpenses }) => {
           AI Insights
         </h3>
       </div>
-      
+
       <div className="space-y-3">
         {generatedInsights.map((insight) => {
           const config = impactConfig[insight.impact];
           const Icon = config.icon;
-          
+
           return (
             <div
               key={insight.id}
@@ -1202,9 +1202,9 @@ const InsightsPanel = ({ insights, transactions, periodExpenses }) => {
               )}
             >
               <div className="flex items-start gap-3">
-                <Icon className={cn("w-4 h-4 mt-0.5 shrink-0", 
+                <Icon className={cn("w-4 h-4 mt-0.5 shrink-0",
                   insight.impact === 'positive' ? 'text-[var(--success)]' :
-                  insight.impact === 'negative' ? 'text-[var(--error)]' : 'text-[var(--neutral-400)]'
+                    insight.impact === 'negative' ? 'text-[var(--error)]' : 'text-[var(--neutral-400)]'
                 )} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[var(--neutral-900)]">
@@ -1223,7 +1223,7 @@ const InsightsPanel = ({ insights, transactions, periodExpenses }) => {
             </div>
           );
         })}
-        
+
         {generatedInsights.length === 0 && (
           <div className="text-center py-6">
             <Activity className="w-10 h-10 text-[var(--neutral-300)] mx-auto mb-2" />
@@ -1247,7 +1247,7 @@ const PlatformBreakdown = ({ transactions }) => {
       acc[platform] = (acc[platform] || 0) + (tx.amount || 0);
       return acc;
     }, {});
-    
+
     return Object.entries(platformTotals)
       .map(([platform, amount]) => ({
         name: PLATFORM_LABELS[platform] || platform,
@@ -1257,9 +1257,9 @@ const PlatformBreakdown = ({ transactions }) => {
       }))
       .sort((a, b) => b.value - a.value);
   }, [transactions]);
-  
+
   const total = data.reduce((sum, d) => sum + d.value, 0);
-  
+
   return (
     <Card className="p-6">
       <div className="flex items-center gap-2 mb-5">
@@ -1268,7 +1268,7 @@ const PlatformBreakdown = ({ transactions }) => {
           Revenue by Platform
         </h3>
       </div>
-      
+
       {data.length > 0 ? (
         <>
           <div className="h-40 mb-4">
@@ -1288,14 +1288,14 @@ const PlatformBreakdown = ({ transactions }) => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => formatCurrency(value)}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                 />
               </RePieChart>
             </ResponsiveContainer>
           </div>
-          
+
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {data.map((item) => (
               <div key={item.name} className="flex items-center justify-between text-sm">
@@ -1331,14 +1331,14 @@ const ReviewTable = ({ items, onExport }) => {
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [filterStatus, setFilterStatus] = useState('all');
   const tableRef = useRef(null);
-  
+
   const statusConfig = {
     matched: { badge: 'success', label: 'Matched' },
     pending: { badge: 'neutral', label: 'Pending' },
     mismatch: { badge: 'error', label: 'Mismatch' },
     duplicate: { badge: 'warning', label: 'Duplicate' },
   };
-  
+
   const filteredItems = useMemo(() => {
     let filtered = filterStatus === 'all' ? items : items.filter(i => i.status === filterStatus);
     return filtered.sort((a, b) => {
@@ -1348,14 +1348,14 @@ const ReviewTable = ({ items, onExport }) => {
       return aVal < bVal ? 1 : -1;
     });
   }, [items, filterStatus, sortConfig]);
-  
+
   const handleSort = (key) => {
     setSortConfig(current => ({
       key,
       direction: current.key === key && current.direction === 'desc' ? 'asc' : 'desc',
     }));
   };
-  
+
   return (
     <Card className="overflow-hidden">
       <div className="p-4 border-b border-[var(--neutral-200)] flex flex-wrap items-center justify-between gap-3">
@@ -1366,7 +1366,7 @@ const ReviewTable = ({ items, onExport }) => {
           <Badge variant="neutral">{items.length}</Badge>
         </div>
         <div className="flex items-center gap-2">
-          <select 
+          <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="text-xs border border-[var(--neutral-200)] rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:border-[var(--accent-500)]"
@@ -1381,7 +1381,7 @@ const ReviewTable = ({ items, onExport }) => {
           </Button>
         </div>
       </div>
-      
+
       <div className="overflow-x-auto" ref={tableRef}>
         <table className="w-full">
           <thead>
@@ -1395,7 +1395,7 @@ const ReviewTable = ({ items, onExport }) => {
                 { key: 'expectedAmount', label: 'Expected', right: true },
                 { key: 'matchConfidence', label: 'Match', center: true },
               ].map((col) => (
-                <th 
+                <th
                   key={col.key}
                   onClick={() => handleSort(col.key)}
                   className={cn(
@@ -1450,7 +1450,7 @@ const ReviewTable = ({ items, onExport }) => {
                     <span className={cn(
                       "text-sm font-semibold tabular-nums",
                       item.matchConfidence >= 90 ? 'text-[var(--success)]' :
-                      item.matchConfidence >= 70 ? 'text-[var(--warning)]' : 'text-[var(--error)]'
+                        item.matchConfidence >= 70 ? 'text-[var(--warning)]' : 'text-[var(--error)]'
                     )}>
                       {item.matchConfidence}%
                     </span>
@@ -1468,7 +1468,7 @@ const ReviewTable = ({ items, onExport }) => {
           </tbody>
         </table>
       </div>
-      
+
       {filteredItems.length > VISIBLE_ROWS && (
         <div className="p-3 border-t border-[var(--neutral-200)] text-center">
           <span className="text-xs text-[var(--neutral-400)]">
@@ -1486,7 +1486,7 @@ const ReviewTable = ({ items, onExport }) => {
 
 const KeyboardShortcuts = () => {
   const [showHelp, setShowHelp] = useState(false);
-  
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === '?' && !e.metaKey && !e.ctrlKey) {
@@ -1499,9 +1499,9 @@ const KeyboardShortcuts = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-  
+
   if (!showHelp) return null;
-  
+
   const shortcuts = [
     { key: '?', description: 'Show keyboard shortcuts' },
     { key: 'R', description: 'Refresh data' },
@@ -1511,7 +1511,7 @@ const KeyboardShortcuts = () => {
     { key: 'Esc', description: 'Close modal / Deselect' },
     { key: '/', description: 'Focus search' },
   ];
-  
+
   return (
     <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowHelp(false)}>
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
@@ -1549,16 +1549,16 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  
+
   // Fetch user
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => setUser(null));
   }, []);
-  
+
   // Fetch transactions
-  const { 
-    data: transactions = [], 
-    isLoading: txLoading, 
+  const {
+    data: transactions = [],
+    isLoading: txLoading,
     refetch: refetchTransactions,
     dataUpdatedAt: txUpdatedAt,
   } = useQuery({
@@ -1571,7 +1571,7 @@ const Dashboard = () => {
     staleTime: QUERY_STALE_TIME,
     cacheTime: QUERY_CACHE_TIME,
   });
-  
+
   // Fetch expenses
   const { data: expenses = [] } = useQuery({
     queryKey: ["expenses", period],
@@ -1579,11 +1579,11 @@ const Dashboard = () => {
     staleTime: QUERY_STALE_TIME,
     cacheTime: QUERY_CACHE_TIME,
   });
-  
+
   // Fetch connected platforms
-  const { 
-    data: connectedPlatforms = [], 
-    isLoading: platformsLoading, 
+  const {
+    data: connectedPlatforms = [],
+    isLoading: platformsLoading,
     refetch: refetchPlatforms,
   } = useQuery({
     queryKey: ["connectedPlatforms"],
@@ -1594,7 +1594,7 @@ const Dashboard = () => {
     },
     staleTime: QUERY_STALE_TIME,
   });
-  
+
   // Fetch pending autopsy events
   const { data: pendingAutopsyEvents = [] } = useQuery({
     queryKey: ["autopsyEvents", "pending"],
@@ -1605,7 +1605,7 @@ const Dashboard = () => {
     },
     staleTime: QUERY_STALE_TIME,
   });
-  
+
   // Computed metrics
   const computed = useMemo(() => {
     const range = getRange(period);
@@ -1617,14 +1617,14 @@ const Dashboard = () => {
       const date = new Date(tx.transaction_date);
       return date >= range.comparisonStart && date <= range.comparisonEnd;
     });
-    
+
     const grossRevenue = inRange.reduce((sum, tx) => sum + (tx.amount || 0), 0);
     const estimatedFees = inRange.reduce((sum, tx) => sum + calcFee(tx), 0);
     const netRevenue = grossRevenue - estimatedFees;
-    
+
     const comparisonGross = inComparisonRange.reduce((sum, tx) => sum + (tx.amount || 0), 0);
     const revenueDelta = comparisonGross > 0 ? ((grossRevenue - comparisonGross) / comparisonGross) * 100 : 0;
-    
+
     const periodExpenses = expenses
       .filter((expense) => {
         const date = new Date(expense.expense_date);
@@ -1632,7 +1632,7 @@ const Dashboard = () => {
       })
       .reduce((sum, expense) => sum + (expense.amount || 0), 0);
     const operatingMargin = netRevenue - periodExpenses;
-    
+
     // Build trend data
     const trendMap = new Map();
     let currentDate = new Date(range.start);
@@ -1647,7 +1647,7 @@ const Dashboard = () => {
     const trendData = Array.from(trendMap.entries())
       .map(([date, amount]) => ({ date, amount }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-    
+
     // Filtered transactions for table
     const filteredLatest = inRange
       .slice()
@@ -1668,7 +1668,7 @@ const Dashboard = () => {
         fee: calcFee(tx),
         net: (tx.amount || 0) - calcFee(tx)
       }));
-    
+
     return {
       grossRevenue,
       netRevenue,
@@ -1682,7 +1682,7 @@ const Dashboard = () => {
       range,
     };
   }, [period, transactions, expenses, searchQuery]);
-  
+
   // Data completeness
   const dataCompleteness = useMemo(() => {
     let firstDate = null;
@@ -1705,12 +1705,12 @@ const Dashboard = () => {
     const errorPlatforms = connectedPlatforms.filter((p) => p.sync_status === "error");
     return { platformCount: connectedPlatforms.length, lastSync, errorPlatforms, firstDate };
   }, [transactions, connectedPlatforms]);
-  
+
   // Forecast data
   const forecastData = useMemo(() => {
     return generateForecast(computed.trendData, 30);
   }, [computed.trendData]);
-  
+
   // Refresh handler
   const throttledRefresh = useThrottle(async () => {
     setIsRefreshing(true);
@@ -1718,9 +1718,9 @@ const Dashboard = () => {
     setIsRefreshing(false);
     toast({ title: "Data refreshed", description: "Dashboard data has been updated." });
   }, 1000);
-  
+
   // Export handlers
-  const handleExport = useCallback((format) => {
+  const handleExport = useCallback((exportFormat) => {
     const exportData = transactions.map(tx => ({
       Date: format(new Date(tx.transaction_date), "yyyy-MM-dd"),
       Platform: PLATFORM_LABELS[tx.platform?.toLowerCase()] || tx.platform || 'Unknown',
@@ -1730,22 +1730,22 @@ const Dashboard = () => {
       Net: (tx.amount || 0) - calcFee(tx),
       Currency: tx.currency || 'USD',
     }));
-    
-    if (format === 'csv') {
+
+    if (exportFormat === 'csv') {
       generateCSV(exportData, 'transactions');
       toast({ title: "Export complete", description: "Transactions exported as CSV." });
-    } else if (format === 'json') {
+    } else if (exportFormat === 'json') {
       generateJSON(exportData, 'transactions');
       toast({ title: "Export complete", description: "Transactions exported as JSON." });
     }
   }, [transactions, toast]);
-  
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      
-      switch(e.key.toLowerCase()) {
+
+      switch (e.key.toLowerCase()) {
         case 'r':
           e.preventDefault();
           throttledRefresh();
@@ -1767,9 +1767,9 @@ const Dashboard = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [throttledRefresh, handleExport, navigate]);
-  
+
   const isLoading = txLoading || platformsLoading;
-  
+
   // Cash position
   const cashPosition = {
     availableCash: computed.netRevenue - computed.periodExpenses,
@@ -1779,7 +1779,7 @@ const Dashboard = () => {
     heldForFees: computed.estimatedFees,
     grossRevenue: computed.grossRevenue,
   };
-  
+
   // KPI metrics
   const kpiMetrics = [
     {
@@ -1822,7 +1822,7 @@ const Dashboard = () => {
       status: pendingAutopsyEvents.length > 0 || dataCompleteness.errorPlatforms?.length > 0 ? 'error' : 'normal',
     },
   ];
-  
+
   // Reconciliation summary
   const reconciliationSummary = {
     matched: computed.transactionCount,
@@ -1832,7 +1832,7 @@ const Dashboard = () => {
     syncStatus: dataCompleteness.errorPlatforms?.length > 0 ? 'error' : isLoading ? 'syncing' : 'idle',
     trendData: computed.trendData.map(d => d.amount),
   };
-  
+
   // Action items
   const actionItems = [
     ...pendingAutopsyEvents.map(event => ({
@@ -1855,21 +1855,21 @@ const Dashboard = () => {
       currency: 'USD',
     })),
   ];
-  
+
   // Insights
   const insights = [
     {
       id: 'trend-1',
       type: 'trend',
-      title: computed.revenueDelta >= 0 
-        ? `Revenue up ${computed.revenueDelta.toFixed(1)}%` 
+      title: computed.revenueDelta >= 0
+        ? `Revenue up ${computed.revenueDelta.toFixed(1)}%`
         : `Revenue down ${Math.abs(computed.revenueDelta).toFixed(1)}%`,
       description: `Compared to previous ${period === 'mtd' ? 'month' : period === '7d' ? 'week' : 'period'}.`,
       impact: computed.revenueDelta >= 0 ? 'positive' : 'negative',
       citationCount: computed.transactionCount,
     },
   ];
-  
+
   // Review items
   const reviewItems = computed.latestTransactions.map(tx => ({
     id: tx.id,
@@ -1881,18 +1881,18 @@ const Dashboard = () => {
     expectedAmount: tx.net,
     matchConfidence: 100,
   }));
-  
+
   return (
     <>
       <DesignTokens />
       <KeyboardShortcuts />
-      
+
       <div className="min-h-screen bg-[var(--neutral-50)]">
         {/* Header */}
         <header className="h-14 bg-white border-b border-[var(--neutral-200)] flex items-center px-4 lg:px-6 sticky top-0 z-40">
           <div className="flex items-center gap-4 flex-1">
             <div className="font-bold text-lg tracking-tight text-[var(--neutral-900)]">Zerithum</div>
-            
+
             <div className="hidden md:flex flex-1 max-w-md">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--neutral-400)]" />
@@ -1906,11 +1906,11 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <PeriodSelector value={period} onChange={setPeriod} />
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               onClick={throttledRefresh}
               isLoading={isRefreshing}
@@ -1919,7 +1919,7 @@ const Dashboard = () => {
             >
               <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
             </Button>
-            <button 
+            <button
               onClick={() => navigate('/settings')}
               className="flex items-center gap-2 p-1.5 hover:bg-[var(--neutral-100)] rounded-lg transition-colors"
             >
@@ -1929,7 +1929,7 @@ const Dashboard = () => {
             </button>
           </div>
         </header>
-        
+
         {/* Main Content */}
         <main className="max-w-[1600px] mx-auto p-4 lg:p-6">
           {/* Cash Hero */}
@@ -1941,13 +1941,13 @@ const Dashboard = () => {
             isRefreshing={isRefreshing}
             lastUpdated={lastUpdated}
           />
-          
+
           {/* KPI Row */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
             {kpiMetrics.map(metric => (
-              <KPICard 
-                key={metric.id} 
-                metric={metric} 
+              <KPICard
+                key={metric.id}
+                metric={metric}
                 onClick={() => {
                   if (metric.id === 'anomalies' && metric.status === 'error') {
                     navigate('/RevenueAutopsy');
@@ -1956,41 +1956,41 @@ const Dashboard = () => {
               />
             ))}
           </div>
-          
+
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
             {/* Left - 8 cols */}
             <div className="lg:col-span-8 space-y-6">
-              <ReconciliationCard 
-                summary={reconciliationSummary} 
+              <ReconciliationCard
+                summary={reconciliationSummary}
                 onViewDetails={() => navigate('/RevenueAutopsy')}
               />
-              
-              <CashflowForecast 
+
+              <CashflowForecast
                 historicalData={computed.trendData}
                 forecastData={forecastData}
               />
             </div>
-            
+
             {/* Right - 4 cols */}
             <div className="lg:col-span-4 space-y-6">
-              <PlatformHealth platforms={connectedPlatforms} />
-              
+              <PlatformHealth platforms={connectedPlatforms} onConnect={() => navigate('/ConnectedPlatforms')} />
+
               <PlatformBreakdown transactions={computed.latestTransactions} />
-              
-              <ActionQueue 
+
+              <ActionQueue
                 items={actionItems}
                 onReview={(item) => navigate('/RevenueAutopsy')}
               />
-              
-              <InsightsPanel 
+
+              <InsightsPanel
                 insights={insights}
                 transactions={computed.latestTransactions}
                 periodExpenses={computed.periodExpenses}
               />
             </div>
           </div>
-          
+
           {/* Review Table */}
           <ReviewTable
             items={reviewItems}
