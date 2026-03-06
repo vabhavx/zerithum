@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Check, X, Crown, Zap } from 'lucide-react';
@@ -61,6 +62,7 @@ const PLANS = [
 export default function Subscription() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -73,17 +75,8 @@ export default function Subscription() {
     fetchUser();
   }, []);
 
-  const handleUpgrade = async (tier) => {
-    setLoading(true);
-    try {
-      await base44.auth.updateMe({ plan_tier: tier });
-      setUser({ ...user, plan_tier: tier });
-      toast.success(`Successfully upgraded to ${tier.charAt(0).toUpperCase() + tier.slice(1)}!`);
-    } catch {
-      toast.error('Failed to upgrade. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const handleUpgrade = (tier) => {
+    navigate('/billing');
   };
 
   return (
@@ -115,9 +108,8 @@ export default function Subscription() {
         {PLANS.map((plan) => (
           <div
             key={plan.tier}
-            className={`clay-card p-6 flex flex-col relative ${
-              plan.tier === 'pro' ? 'ring-2 ring-[#208D9E] transform scale-105' : ''
-            }`}
+            className={`clay-card p-6 flex flex-col relative ${plan.tier === 'pro' ? 'ring-2 ring-[#208D9E] transform scale-105' : ''
+              }`}
           >
             {/* Badge */}
             {plan.badge && (
@@ -136,7 +128,7 @@ export default function Subscription() {
                 <span className="text-[#5E5240]/60">/month</span>
               </div>
               <p className="text-sm text-[#5E5240]/60">{plan.description}</p>
-              
+
               {plan.annualPrice && (
                 <div className="mt-3 p-2 bg-green-50 rounded-lg">
                   <div className="text-xs text-green-800">
@@ -173,15 +165,13 @@ export default function Subscription() {
                 user?.plan_tier === plan.tier
                   ? 'btn-secondary w-full cursor-not-allowed'
                   : plan.tier === 'pro'
-                  ? 'btn-primary w-full'
-                  : 'btn-secondary w-full'
+                    ? 'btn-primary w-full'
+                    : 'btn-secondary w-full'
               }
             >
               {user?.plan_tier === plan.tier
                 ? 'Current Plan'
-                : plan.tier === 'free'
-                ? 'Downgrade'
-                : 'Upgrade Now'}
+                : 'Manage in Billing'}
             </Button>
           </div>
         ))}

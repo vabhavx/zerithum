@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
                 clientKey: client_key || undefined,
                 base44: {
                     asServiceRole: {
+                        supabase: supabase,
                         entities: {
                             ConnectedPlatform: {
                                 filter: async (f: any) => {

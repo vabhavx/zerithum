@@ -94,6 +94,36 @@ export async function exchangeOAuthTokens(
     return { status: 400, body: { error: 'Unsupported platform' } };
   }
 
+  // Limit Check: Check if connection already exists for this user+platform
+  const existingConnections = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
+    user_id: user.id,
+    platform: platform
+  });
+
+  // Check entitlements for NEW connections before executing any logic
+  if (existingConnections.length === 0) {
+    const { data: entitlement } = await ctx.base44.asServiceRole.supabase
+      .from('entitlements')
+      .select('max_platforms')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const maxPlatforms = entitlement?.max_platforms ?? 0;
+    const allConnections = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
+      user_id: user.id
+    });
+
+    if (allConnections.length >= maxPlatforms) {
+      return {
+        status: 403,
+        body: {
+          error: 'Platform limit reached',
+          message: `You have reached the limit of ${maxPlatforms} platforms for your current plan. Please upgrade to connect more.`
+        }
+      };
+    }
+  }
+
   const def = PLATFORM_DEFS[platform];
 
   const clientSecret = ctx.envGet(def.clientSecretEnv);
@@ -280,37 +310,6 @@ export async function exchangeOAuthTokens(
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + 3600);
     expiresAtStr = expiresAt.toISOString();
-  }
-
-  // UPSERT: Check if connection already exists for this user+platform
-  const existingConnections = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
-    user_id: user.id,
-    platform: platform
-  });
-
-  // Check entitlements for NEW connections
-  if (existingConnections.length === 0) {
-    const { data: entitlement, error: entError } = await ctx.base44.asServiceRole.supabase
-      .from('entitlements')
-      .select('max_platforms')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    const maxPlatforms = entitlement?.max_platforms ?? 0;
-
-    const allConnections = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
-      user_id: user.id
-    });
-
-    if (allConnections.length >= maxPlatforms) {
-      return {
-        status: 403,
-        body: {
-          error: 'Platform limit reached',
-          message: `You have reached the limit of ${maxPlatforms} platforms for your current plan. Please upgrade to connect more.`
-        }
-      };
-    }
   }
 
   const connectionData = {
