@@ -60,11 +60,19 @@ Deno.serve(async (req) => {
         const subscriptionPayload = {
             plan_id: planId,
             custom_id: user.id,
+            subscriber: {
+                email_address: user.email,
+            },
             application_context: {
                 brand_name: 'Zerithum',
                 locale: 'en-US',
                 shipping_preference: 'NO_SHIPPING',
                 user_action: 'SUBSCRIBE_NOW',
+                landing_page: 'BILLING',
+                payment_method: {
+                    payer_selected: 'PAYPAL',
+                    payee_preferred: 'UNRESTRICTED'
+                },
                 return_url: `${appBaseUrl}/BillingConfirm`,
                 cancel_url: `${appBaseUrl}/Billing`,
             },
