@@ -1666,7 +1666,8 @@ const Dashboard = () => {
         platform: PLATFORM_LABELS[(tx.platform || "").toLowerCase()] || tx.platform || "Unknown",
         gross: tx.amount || 0,
         fee: calcFee(tx),
-        net: (tx.amount || 0) - calcFee(tx)
+        net: (tx.amount || 0) - calcFee(tx),
+        status: tx.status || 'completed'
       }));
 
     return {
@@ -1825,8 +1826,8 @@ const Dashboard = () => {
 
   // Reconciliation summary
   const reconciliationSummary = {
-    matched: computed.transactionCount,
-    pending: 0,
+    matched: transactions.filter(t => t.status === 'completed' || !t.status).length,
+    pending: transactions.filter(t => t.status === 'pending').length,
     needsReview: pendingAutopsyEvents.length + (dataCompleteness.errorPlatforms?.length || 0),
     lastSyncAt: dataCompleteness.lastSync || new Date(),
     syncStatus: dataCompleteness.errorPlatforms?.length > 0 ? 'error' : isLoading ? 'syncing' : 'idle',
@@ -1873,13 +1874,13 @@ const Dashboard = () => {
   // Review items
   const reviewItems = computed.latestTransactions.map(tx => ({
     id: tx.id,
-    status: 'matched',
+    status: tx.status,
     platform: tx.platform,
     description: tx.description,
     date: tx.date,
     amount: tx.gross,
     expectedAmount: tx.net,
-    matchConfidence: 100,
+    matchConfidence: tx.status === 'completed' ? 100 : tx.status === 'pending' ? 50 : 0,
   }));
 
   return (
