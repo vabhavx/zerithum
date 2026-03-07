@@ -7,8 +7,6 @@ export function getCorsHeaders(req: Request) {
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'http://localhost:5173',
-        'https://app.base44.com',
-        'https://base44.com',
         'https://zerithum.com',
         'https://www.zerithum.com',
         'https://zerithum.vercel.app'
@@ -22,9 +20,9 @@ export function getCorsHeaders(req: Request) {
 
     let allowOrigin = 'null';
 
+    // Only allow *.base44.app subdomain (legacy Base44 internal tooling)
     const isAllowedSubdomain = origin && (
-        /^https:\/\/([a-zA-Z0-9-]+\.)*base44\.app$/.test(origin) ||
-        /^https:\/\/([a-zA-Z0-9-]+\.)*vercel\.app$/.test(origin)
+        /^https:\/\/([a-zA-Z0-9-]+\.)*base44\.app$/.test(origin)
     );
 
     if (origin && (allowedOrigins.includes(origin) || isAllowedSubdomain)) {

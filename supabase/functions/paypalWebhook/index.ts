@@ -8,6 +8,8 @@ import {
     verifyWebhookSignature,
     getPlanEntitlements,
     getPlanName,
+    getPayPalAccessToken,
+    PAYPAL_API_BASE,
 } from '../_shared/utils/paypal.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -219,12 +221,13 @@ Deno.serve(async (req) => {
                 const maxPlatforms = getPlanEntitlements(newPlanId);
                 const plan = getPlanName(newPlanId);
 
+                // Only update plan/entitlement info — do NOT change status.
+                // Status lifecycle is driven by dedicated status events (ACTIVATED, PAYMENT.FAILED, SUSPENDED, CANCELLED, EXPIRED).
                 await supabase
                     .from('subscriptions')
                     .update({
                         paypal_plan_id: newPlanId,
                         plan,
-                        status: 'ACTIVE',
                         updated_at: new Date().toISOString(),
                     })
                     .eq('paypal_subscription_id', paypalSubscriptionId);
@@ -241,10 +244,47 @@ Deno.serve(async (req) => {
                 const subIdForSuccess = paypalSubscriptionId || resource?.billing_agreement_id;
                 if (!subIdForSuccess) break;
 
-                await supabase.from('subscriptions').update({
-                    status: 'ACTIVE',
-                    updated_at: new Date().toISOString(),
-                }).eq('paypal_subscription_id', subIdForSuccess);
+                try {
+                    // Fetch updated subscription from PayPal to get new billing period end date
+                    const accessToken = await getPayPalAccessToken();
+                    const subDetailsResponse = await fetch(
+                        `${PAYPAL_API_BASE}/v1/billing/subscriptions/${subIdForSuccess}`,
+                        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+                    );
+
+                    let newPeriodEnd = null;
+                    if (subDetailsResponse.ok) {
+                        const subDetails = await subDetailsResponse.json();
+                        newPeriodEnd = subDetails.billing_info?.next_billing_time
+                            ? new Date(subDetails.billing_info.next_billing_time).toISOString()
+                            : null;
+                    }
+
+                    // Update subscription with renewed period end date
+                    await supabase.from('subscriptions').update({
+                        status: 'ACTIVE',
+                        current_period_end: newPeriodEnd,
+                        updated_at: new Date().toISOString(),
+                    }).eq('paypal_subscription_id', subIdForSuccess);
+
+                    // Also ensure entitlements are set (in case they were zeroed by missed event)
+                    const { data: sub } = await supabase
+                        .from('subscriptions')
+                        .select('paypal_plan_id')
+                        .eq('paypal_subscription_id', subIdForSuccess)
+                        .maybeSingle();
+
+                    if (sub?.paypal_plan_id) {
+                        const maxPlatforms = getPlanEntitlements(sub.paypal_plan_id);
+                        await supabase.from('entitlements').upsert(
+                            { user_id: userId, max_platforms: maxPlatforms, updated_at: new Date().toISOString() },
+                            { onConflict: 'user_id' }
+                        );
+                    }
+                } catch (error) {
+                    console.error(`Error processing payment success for ${subIdForSuccess}:`, error);
+                    // Continue without failing — the subscription status was updated even if entitlement refresh failed
+                }
                 break;
             }
 
