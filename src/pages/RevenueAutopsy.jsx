@@ -6,7 +6,8 @@ import {
   RefreshCw,
   TrendingUp,
   Activity,
-  ArrowRight
+  ArrowRight,
+  Shield,
 } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Tooltip, XAxis, YAxis } from "recharts";
 import { base44 } from "@/api/supabaseClient";
@@ -75,6 +76,78 @@ function feeFor(tx) {
   if (reported > 0) return reported;
   const rate = PLATFORM_FEE_RATES[(tx.platform || "").toLowerCase()] || 0;
   return (tx.amount || 0) * rate;
+}
+
+const SEVERITY_CONFIG = {
+  critical: {
+    label: "Critical",
+    badgeCls: "border-red-200 bg-red-50 text-red-700",
+    barCls: "bg-red-500",
+    dotCls: "bg-red-500",
+  },
+  high: {
+    label: "High",
+    badgeCls: "border-amber-200 bg-amber-50 text-amber-700",
+    barCls: "bg-amber-500",
+    dotCls: "bg-amber-500",
+  },
+  medium: {
+    label: "Medium",
+    badgeCls: "border-yellow-200 bg-yellow-50 text-yellow-700",
+    barCls: "bg-yellow-400",
+    dotCls: "bg-yellow-400",
+  },
+  low: {
+    label: "Low",
+    badgeCls: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    barCls: "bg-emerald-500",
+    dotCls: "bg-emerald-500",
+  },
+};
+
+function RiskSignalCard({ signal }) {
+  const cfg = SEVERITY_CONFIG[signal.severity] || SEVERITY_CONFIG.low;
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-5">
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          {signal.category}
+        </span>
+        <span
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.badgeCls}`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${cfg.dotCls}`} />
+          {cfg.label}
+        </span>
+      </div>
+
+      <p className="mt-2 text-sm font-semibold text-gray-900">{signal.title}</p>
+
+      <div className="mt-3 flex items-end justify-between">
+        <span className="font-mono-financial text-2xl font-bold tabular-nums text-gray-900">
+          {signal.value}
+        </span>
+        <span className="mb-0.5 text-xs text-gray-400">
+          Target: <span className="font-mono-financial">{signal.threshold}</span>
+        </span>
+      </div>
+
+      <div className="mt-3 space-y-1.5">
+        <div className="flex justify-between text-xs text-gray-400">
+          <span>Risk exposure</span>
+          <span className="font-mono-financial font-medium">{signal.riskScore}/100</span>
+        </div>
+        <div className="h-1 overflow-hidden rounded-full bg-gray-100">
+          <div
+            className={`h-full rounded-full transition-all duration-700 ${cfg.barCls}`}
+            style={{ width: `${signal.riskScore}%` }}
+          />
+        </div>
+      </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-gray-500">{signal.description}</p>
+    </div>
+  );
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -253,6 +326,176 @@ export default function RevenueAutopsy() {
       text: `Month-to-date gross is ${changePct >= 0 ? "up" : "down"} ${Math.abs(changePct).toFixed(1)}% vs previous month.`,
     });
 
+    // ── Risk Signal Computation ──────────────────────────────────────────
+    const riskSignals = [];
+
+    // 1. Platform Concentration
+    riskSignals.push({
+      id: "concentration",
+      category: "Concentration",
+      title: "Platform Concentration",
+      severity:
+        concentrationShare >= 65
+          ? "critical"
+          : concentrationShare >= 40
+          ? "high"
+          : concentrationShare >= 25
+          ? "medium"
+          : "low",
+      value: `${concentrationShare.toFixed(1)}%`,
+      threshold: "< 40%",
+      riskScore: Math.min(100, Math.round(concentrationShare * 1.3)),
+      description: topPlatform
+        ? `${topPlatform.label} accounts for ${concentrationShare.toFixed(1)}% of MTD gross revenue.`
+        : "No revenue data available for the current month.",
+    });
+
+    // 2. Refund Rate
+    riskSignals.push({
+      id: "refund-rate",
+      category: "Quality",
+      title: "Refund Rate (90d)",
+      severity:
+        refundRate > 5
+          ? "critical"
+          : refundRate > 3
+          ? "high"
+          : refundRate > 1.5
+          ? "medium"
+          : "low",
+      value: `${refundRate.toFixed(2)}%`,
+      threshold: "< 3%",
+      riskScore: Math.min(100, Math.round(refundRate * 15)),
+      description: `Trailing 90-day refund rate is ${refundRate.toFixed(2)}%. ${
+        refundRate > 5
+          ? "Exceeds critical threshold — investigate refund drivers immediately."
+          : refundRate > 3
+          ? "Above safe threshold. Closely monitor refund patterns."
+          : "Within acceptable bounds."
+      }`,
+    });
+
+    // 3. Revenue Momentum
+    riskSignals.push({
+      id: "momentum",
+      category: "Trend",
+      title: "Revenue Momentum",
+      severity:
+        changePct < -20
+          ? "critical"
+          : changePct < -10
+          ? "high"
+          : changePct < 0
+          ? "medium"
+          : "low",
+      value: `${changePct >= 0 ? "+" : ""}${changePct.toFixed(1)}%`,
+      threshold: "> 0% MoM",
+      riskScore: Math.max(0, Math.min(100, Math.round(50 - changePct * 1.5))),
+      description: `Month-to-date gross is ${changePct >= 0 ? "up" : "down"} ${Math.abs(changePct).toFixed(1)}% versus the prior month. ${
+        changePct < -10
+          ? "Significant revenue contraction — investigate immediately."
+          : changePct < 0
+          ? "Mild softening — monitor trajectory closely."
+          : "Positive momentum. No immediate concern."
+      }`,
+    });
+
+    // 4. Source Diversification
+    const activePlatformCount = platformRows.length;
+    riskSignals.push({
+      id: "diversification",
+      category: "Concentration",
+      title: "Source Diversification",
+      severity:
+        activePlatformCount <= 1
+          ? "critical"
+          : activePlatformCount === 2
+          ? "high"
+          : activePlatformCount === 3
+          ? "medium"
+          : "low",
+      value: `${activePlatformCount} source${activePlatformCount !== 1 ? "s" : ""}`,
+      threshold: ">= 4 sources",
+      riskScore: Math.max(0, Math.min(100, (5 - activePlatformCount) * 20)),
+      description:
+        activePlatformCount <= 1
+          ? "Revenue is entirely dependent on a single platform — a critical single point of failure."
+          : activePlatformCount <= 2
+          ? "Only 2 active revenue sources. Serious dependency risk if either platform fails."
+          : `${activePlatformCount} active revenue sources. ${
+              activePlatformCount >= 4
+                ? "Healthy diversification across platforms."
+                : "Consider expanding to further reduce dependency risk."
+            }`,
+    });
+
+    // 5. Fee Data Coverage
+    const totalTxRows = platformRows.reduce((s, r) => s + r.rows, 0);
+    const withFeeRows = platformRows.reduce((s, r) => s + r.withReportedFee, 0);
+    const feeQuality = totalTxRows > 0 ? (withFeeRows / totalTxRows) * 100 : 100;
+    riskSignals.push({
+      id: "fee-quality",
+      category: "Data Integrity",
+      title: "Fee Data Coverage",
+      severity: feeQuality < 50 ? "high" : feeQuality < 80 ? "medium" : "low",
+      value: `${feeQuality.toFixed(0)}%`,
+      threshold: "> 80%",
+      riskScore: Math.max(0, Math.min(100, Math.round((100 - feeQuality) * 0.7))),
+      description: `${feeQuality.toFixed(0)}% of transactions include reported platform fee data. ${
+        feeQuality < 80
+          ? "Remaining fees are estimated — net revenue figures carry accuracy risk."
+          : "Fee coverage is sufficient for accurate net calculations."
+      }`,
+    });
+
+    // 6. Revenue Volatility (coefficient of variation of daily revenue)
+    const positiveDailyValues = trendData.map((d) => d.value).filter((v) => v > 0);
+    let volScore = 0;
+    let volDescription = "Fewer than 6 days of revenue data — volatility cannot be computed yet.";
+    let volSeverity = "low";
+    let volValue = "< 6 days";
+
+    if (positiveDailyValues.length >= 6) {
+      const mean = positiveDailyValues.reduce((s, v) => s + v, 0) / positiveDailyValues.length;
+      const variance =
+        positiveDailyValues.reduce((s, v) => s + Math.pow(v - mean, 2), 0) /
+        positiveDailyValues.length;
+      const cv = mean > 0 ? (Math.sqrt(variance) / mean) * 100 : 0;
+      volValue = `${cv.toFixed(0)}% CV`;
+      volSeverity = cv > 80 ? "high" : cv > 50 ? "medium" : "low";
+      volScore = Math.min(100, Math.round(cv * 0.8));
+      volDescription = `Daily revenue coefficient of variation is ${cv.toFixed(0)}%. ${
+        cv > 80
+          ? "Highly erratic revenue pattern — cash flow is unpredictable."
+          : cv > 50
+          ? "Moderate volatility. Revenue consistency could improve."
+          : "Revenue distribution is stable and predictable."
+      }`;
+    }
+
+    riskSignals.push({
+      id: "volatility",
+      category: "Stability",
+      title: "Revenue Volatility",
+      severity: volSeverity,
+      value: volValue,
+      threshold: "CV < 50%",
+      riskScore: volScore,
+      description: volDescription,
+    });
+
+    const riskWeights = {
+      concentration: 0.25,
+      "refund-rate": 0.2,
+      momentum: 0.2,
+      diversification: 0.15,
+      "fee-quality": 0.1,
+      volatility: 0.1,
+    };
+    const overallRiskScore = Math.round(
+      riskSignals.reduce((sum, s) => sum + s.riskScore * (riskWeights[s.id] || 0.1), 0)
+    );
+
     return {
       monthGross,
       monthNet,
@@ -262,7 +505,8 @@ export default function RevenueAutopsy() {
       platformRows,
       concentrationShare,
       plainInsights,
-      trendData
+      trendData,
+      riskData: { signals: riskSignals, overallScore: overallRiskScore },
     };
   }, [transactions]);
 
@@ -374,7 +618,7 @@ export default function RevenueAutopsy() {
         <div className="xl:col-span-2 space-y-6">
 
           {/* Revenue Trend Chart */}
-          {(lens === "overview" || lens === "risk") && (
+          {lens === "overview" && (
             <AnimatedItem delay={0.6}>
               <GlassCard variant="panel" className="p-6">
                 <div className="mb-6 flex items-center justify-between">
@@ -424,7 +668,7 @@ export default function RevenueAutopsy() {
           )}
 
           {/* Platform Concentration */}
-          {(lens === "overview" || lens === "risk") && (
+          {lens === "overview" && (
             <AnimatedItem delay={0.7}>
               <GlassCard variant="panel" className="p-6">
                 <div className="mb-6">
@@ -499,7 +743,7 @@ export default function RevenueAutopsy() {
           )}
 
           {/* Event Queue Lens */}
-          {(lens === "events" || lens === "risk") && (
+          {lens === "events" && (
             <AnimatedItem delay={0.6}>
               <GlassCard variant="panel" className="overflow-hidden">
                 <div className="flex flex-col gap-3 border-b border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -573,6 +817,126 @@ export default function RevenueAutopsy() {
                 </Table>
               </GlassCard>
             </AnimatedItem>
+          )}
+          {/* Risk Signals Lens */}
+          {lens === "risk" && (
+            <>
+              {/* Portfolio Risk Score Banner */}
+              <AnimatedItem delay={0.6}>
+                <GlassCard variant="panel" className="p-6">
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-gray-400" />
+                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                          Portfolio Risk Score
+                        </p>
+                      </div>
+                      <div className="mt-2 flex items-end gap-3">
+                        <span
+                          className={`font-mono-financial text-5xl font-bold tabular-nums ${
+                            analysis.riskData.overallScore >= 65
+                              ? "text-red-600"
+                              : analysis.riskData.overallScore >= 40
+                              ? "text-amber-600"
+                              : analysis.riskData.overallScore >= 20
+                              ? "text-yellow-600"
+                              : "text-emerald-600"
+                          }`}
+                        >
+                          {analysis.riskData.overallScore}
+                        </span>
+                        <span className="mb-1.5 text-sm text-gray-400">/ 100</span>
+                      </div>
+                      <p className="mt-1.5 max-w-xs text-sm text-gray-500">
+                        {analysis.riskData.overallScore >= 65
+                          ? "High risk — immediate action required on flagged signals."
+                          : analysis.riskData.overallScore >= 40
+                          ? "Moderate risk — monitor flagged signals closely."
+                          : analysis.riskData.overallScore >= 20
+                          ? "Low-moderate risk — portfolio is generally healthy."
+                          : "Low risk — all portfolio metrics within safe parameters."}
+                      </p>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-5 rounded-lg border border-gray-100 bg-gray-50 px-6 py-4">
+                      {[
+                        {
+                          label: "Critical",
+                          count: analysis.riskData.signals.filter(
+                            (s) => s.severity === "critical"
+                          ).length,
+                          cls: "text-red-600",
+                        },
+                        {
+                          label: "High",
+                          count: analysis.riskData.signals.filter(
+                            (s) => s.severity === "high"
+                          ).length,
+                          cls: "text-amber-600",
+                        },
+                        {
+                          label: "Medium",
+                          count: analysis.riskData.signals.filter(
+                            (s) => s.severity === "medium"
+                          ).length,
+                          cls: "text-yellow-600",
+                        },
+                        {
+                          label: "Low",
+                          count: analysis.riskData.signals.filter(
+                            (s) => s.severity === "low"
+                          ).length,
+                          cls: "text-emerald-600",
+                        },
+                      ].map((item) => (
+                        <div key={item.label} className="text-center">
+                          <p
+                            className={`font-mono-financial text-2xl font-bold tabular-nums ${item.cls}`}
+                          >
+                            {item.count}
+                          </p>
+                          <p className="mt-0.5 text-xs text-gray-400">{item.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Composite risk bar */}
+                  <div className="mt-6 space-y-2">
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>Composite exposure</span>
+                      <span className="font-mono-financial font-medium">
+                        {analysis.riskData.overallScore}%
+                      </span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          analysis.riskData.overallScore >= 65
+                            ? "bg-red-500"
+                            : analysis.riskData.overallScore >= 40
+                            ? "bg-amber-500"
+                            : analysis.riskData.overallScore >= 20
+                            ? "bg-yellow-400"
+                            : "bg-emerald-500"
+                        }`}
+                        style={{ width: `${analysis.riskData.overallScore}%` }}
+                      />
+                    </div>
+                  </div>
+                </GlassCard>
+              </AnimatedItem>
+
+              {/* Individual Risk Signal Cards */}
+              <AnimatedItem delay={0.7}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {analysis.riskData.signals.map((signal) => (
+                    <RiskSignalCard key={signal.id} signal={signal} />
+                  ))}
+                </div>
+              </AnimatedItem>
+            </>
           )}
         </div>
 
