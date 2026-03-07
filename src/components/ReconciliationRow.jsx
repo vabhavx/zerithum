@@ -27,46 +27,46 @@ const MATCH_CATEGORY_COLORS = {
  */
 const ReconciliationRow = memo(({ rec }) => {
   return (
-    <div className="clay rounded-2xl p-5">
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <Badge className={cn("border", MATCH_CATEGORY_COLORS[rec.match_category])}>
+        <Badge className={cn("border text-xs font-medium", MATCH_CATEGORY_COLORS[rec.match_category])}>
           {MATCH_CATEGORY_LABELS[rec.match_category]}
         </Badge>
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-sm text-gray-500">
           {rec.reconciled_by === "auto" ? (
-            <Sparkles className="w-4 h-4 text-violet-500" />
+            <Sparkles className="w-3.5 h-3.5 text-blue-500" />
           ) : (
-            <Check className="w-4 h-4 text-emerald-500" />
+            <Check className="w-3.5 h-3.5 text-green-500" />
           )}
-          <span>{rec.reconciled_by === "auto" ? "Auto-matched" : "Manual"}</span>
+          <span className="text-xs">{rec.reconciled_by === "auto" ? "Auto-matched" : "Manual"}</span>
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="flex-1 clay-sm rounded-xl p-3">
-          <p className="text-xs text-slate-500 mb-1">Platform Revenue</p>
-          <p className="font-medium text-slate-800">Revenue Transaction</p>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2.5">
+          <p className="text-xs text-gray-400 mb-0.5">Platform Revenue</p>
+          <p className="font-medium text-gray-900 text-sm">Revenue Transaction</p>
         </div>
-        <ArrowRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
-        <div className="flex-1 clay-sm rounded-xl p-3">
-          <p className="text-xs text-slate-500 mb-1">Bank Deposit</p>
-          <p className="font-medium text-slate-800">Bank Transaction</p>
+        <ArrowRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+        <div className="flex-1 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2.5">
+          <p className="text-xs text-gray-400 mb-0.5">Bank Deposit</p>
+          <p className="font-medium text-gray-900 text-sm">Bank Transaction</p>
         </div>
       </div>
       {rec.match_confidence && (
         <div className="mt-3 flex items-center gap-2">
-          <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full"
+              className="h-full bg-blue-500 rounded-full transition-all"
               style={{ width: `${rec.match_confidence * 100}%` }}
             />
           </div>
-          <span className="text-xs font-medium text-slate-600">
+          <span className="text-xs font-medium text-gray-500 tabular-nums">
             {(rec.match_confidence * 100).toFixed(0)}% confidence
           </span>
         </div>
       )}
       {rec.creator_notes && (
-        <p className="mt-3 text-sm text-slate-500 italic">"{rec.creator_notes}"</p>
+        <p className="mt-3 text-sm text-gray-500 italic">"{rec.creator_notes}"</p>
       )}
     </div>
   );
