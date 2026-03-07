@@ -7,6 +7,9 @@ const MATCH_CATEGORY_LABELS = {
   exact_match: "Exact Match",
   fee_deduction: "Fee Deduction",
   hold_period: "Hold Period",
+  refund: "Refund",
+  duplicate: "Possible Duplicate",
+  grouped_payout: "Grouped Payout",
   unmatched: "Unmatched"
 };
 
@@ -14,6 +17,9 @@ const MATCH_CATEGORY_COLORS = {
   exact_match: "bg-emerald-50 text-emerald-700 border-emerald-200",
   fee_deduction: "bg-blue-50 text-blue-700 border-blue-200",
   hold_period: "bg-amber-50 text-amber-700 border-amber-200",
+  refund: "bg-violet-50 text-violet-700 border-violet-200",
+  duplicate: "bg-orange-50 text-orange-700 border-orange-200",
+  grouped_payout: "bg-cyan-50 text-cyan-700 border-cyan-200",
   unmatched: "bg-red-50 text-red-700 border-red-200"
 };
 

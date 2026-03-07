@@ -393,7 +393,9 @@ const tableNameMap = {
     AutopsyEvent: 'autopsy_events',
     Reconciliation: 'reconciliations',
     SyncHistory: 'sync_history',
-    TaxProfile: 'tax_profiles'
+    TaxProfile: 'tax_profiles',
+    BankConnection: 'bank_connections',
+    BankAccount: 'bank_accounts'
 };
 
 export const entities = Object.fromEntries(

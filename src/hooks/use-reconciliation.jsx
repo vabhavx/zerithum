@@ -58,6 +58,38 @@ export const useUnreconciledTransactions = () => {
   });
 };
 
+export const useReviewQueue = (page = 1, pageSize = 10) => {
+  return useQuery({
+    queryKey: ["reviewQueue", page, pageSize],
+    queryFn: async () => {
+      const { data, count } = await base44.entities.Reconciliation.paginate(
+        page, pageSize,
+        { review_status: 'pending_review' },
+        '-reconciled_at'
+      );
+
+      if (data.length === 0) return { data: [], count: 0 };
+
+      const revenueIds = data.map(r => r.revenue_transaction_id).filter(Boolean);
+      const bankIds = data.map(r => r.bank_transaction_id).filter(Boolean);
+
+      const [revenueTransactions, bankTransactions] = await Promise.all([
+        revenueIds.length > 0 ? base44.entities.RevenueTransaction.filter({ id: { $in: revenueIds } }) : [],
+        bankIds.length > 0 ? base44.entities.BankTransaction.filter({ id: { $in: bankIds } }) : []
+      ]);
+
+      const joinedData = data.map(rec => ({
+        ...rec,
+        revenue_transaction: revenueTransactions.find(t => t.id === rec.revenue_transaction_id),
+        bank_transaction: bankTransactions.find(t => t.id === rec.bank_transaction_id)
+      }));
+
+      return { data: joinedData, count };
+    },
+    placeholderData: keepPreviousData,
+  });
+};
+
 export const useReconciliations = (page = 1, pageSize = 10, filterStatus = 'all') => {
   return useQuery({
     queryKey: ["reconciliations", page, pageSize, filterStatus],

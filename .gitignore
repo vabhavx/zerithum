@@ -29,3 +29,6 @@ dist-ssr
 *.sw?
 
 .env
+
+# Teller mTLS credentials — never commit
+secrets/

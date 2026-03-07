@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import ReconciliationRow from "@/components/ReconciliationRow";
 import { useToast } from "@/components/ui/use-toast";
-import { useReconciliationStats, useUnreconciledTransactions, useReconciliations } from "@/hooks/use-reconciliation";
+import { useReconciliationStats, useUnreconciledTransactions, useReconciliations, useReviewQueue } from "@/hooks/use-reconciliation";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 
@@ -32,6 +32,8 @@ export default function Reconciliation() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [page, setPage] = useState(1);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [reviewPage, setReviewPage] = useState(1);
   const pageSize = 10;
 
   const queryClient = useQueryClient();
@@ -46,6 +48,26 @@ export default function Reconciliation() {
   const reconciliations = reconciliationsData?.data || [];
   const totalReconciliations = reconciliationsData?.count || 0;
   const totalPages = Math.ceil(totalReconciliations / pageSize);
+
+  const { data: reviewData, isLoading: isLoadingReview } = useReviewQueue(reviewPage, pageSize);
+  const reviewItems = reviewData?.data || [];
+  const reviewCount = reviewData?.count || 0;
+  const reviewPages = Math.ceil(reviewCount / pageSize);
+
+  const handleReviewAction = async (recId, action, notes = "") => {
+    try {
+      await base44.entities.Reconciliation.update(recId, {
+        review_status: action,
+        reviewer_notes: notes || null,
+      });
+      toast({ title: action === "approved" ? "Match Approved" : "Match Rejected" });
+      queryClient.invalidateQueries({ queryKey: ["reviewQueue"] });
+      queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
+      queryClient.invalidateQueries({ queryKey: ["reconciliationStats"] });
+    } catch (err) {
+      toast({ title: "Action Failed", description: err.message, variant: "destructive" });
+    }
+  };
 
   const filteredUnreconciled = useMemo(() => {
     if (!searchTerm.trim()) return unreconciledRevenue;
@@ -160,13 +182,104 @@ export default function Reconciliation() {
             <SelectItem value="exact_match">Exact Match</SelectItem>
             <SelectItem value="fee_deduction">Fee Deduction</SelectItem>
             <SelectItem value="hold_period">Hold Period</SelectItem>
+            <SelectItem value="refund">Refund</SelectItem>
+            <SelectItem value="grouped_payout">Grouped Payout</SelectItem>
             <SelectItem value="unmatched">Unmatched</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Pending Reconciliation */}
-      {filteredUnreconciled.length > 0 && (
+      {/* Tab Bar */}
+      <div className="flex gap-1 mb-6 border-b border-gray-100">
+        {[
+          { key: "overview", label: "Overview" },
+          { key: "review", label: "Review Queue", count: reviewCount },
+          { key: "history", label: "History" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              activeTab === tab.key
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {tab.label}
+            {tab.count > 0 && (
+              <span className="ml-1.5 inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">
+                {tab.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Review Queue Tab */}
+      {activeTab === "review" && (
+        <div>
+          <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-500" />
+            Pending Review
+          </h2>
+          {isLoadingReview ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
+            </div>
+          ) : reviewItems.length === 0 ? (
+            <div className="rounded-xl border border-gray-100 bg-white p-16 text-center shadow-sm">
+              <CheckCircle2 className="w-10 h-10 text-gray-200 mx-auto mb-4" />
+              <h3 className="font-semibold text-gray-900 mb-1">Review queue is empty</h3>
+              <p className="text-sm text-gray-500">All matches have been reviewed or auto-approved.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reviewItems.map((rec) => (
+                <div key={rec.id} className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+                  <ReconciliationRow rec={rec} />
+                  <div className="mt-3 flex items-center gap-2 border-t border-gray-50 pt-3">
+                    <Button
+                      size="sm"
+                      onClick={() => handleReviewAction(rec.id, "approved")}
+                      className="h-8 bg-emerald-600 text-white hover:bg-emerald-700 text-xs"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const notes = prompt("Reason for rejection (optional):");
+                        handleReviewAction(rec.id, "rejected", notes || "");
+                      }}
+                      className="h-8 border-red-200 text-red-600 hover:bg-red-50 text-xs"
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {reviewPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <p className="text-sm text-gray-500">Page {reviewPage} of {reviewPages}</p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setReviewPage((p) => Math.max(1, p - 1))} disabled={reviewPage === 1} className="h-8 w-8 p-0 border-gray-200">
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setReviewPage((p) => Math.min(reviewPages, p + 1))} disabled={reviewPage === reviewPages} className="h-8 w-8 p-0 border-gray-200">
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Overview Tab — Pending Reconciliation */}
+      {activeTab === "overview" && filteredUnreconciled.length > 0 && (
         <div className="mb-8">
           <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
             <Clock className="w-4 h-4 text-amber-500" />
@@ -205,8 +318,8 @@ export default function Reconciliation() {
         </div>
       )}
 
-      {/* Reconciliation History */}
-      <div>
+      {/* Reconciliation History (shown in overview and history tabs) */}
+      {(activeTab === "overview" || activeTab === "history") && <div>
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
           Reconciliation History
         </h2>
@@ -258,7 +371,7 @@ export default function Reconciliation() {
             </div>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

@@ -17,6 +17,7 @@ const navItems = [
   { name: "Expenses", icon: Scale, page: "Expenses" },
   { name: "Tax", icon: AlertTriangle, page: "TaxEstimator" },
   { name: "Platforms", icon: Link2, page: "ConnectedPlatforms" },
+  { name: "Reconciliation", icon: DollarSign, page: "Reconciliation" },
 ];
 
 const secondaryNav = [

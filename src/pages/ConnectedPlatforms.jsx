@@ -14,6 +14,7 @@ import { GlassCard, containerVariants, itemVariants } from "@/components/ui/glas
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PLATFORMS } from "@/lib/platforms";
+import BankConnectionCard from "@/components/BankConnectionCard";
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -72,6 +73,27 @@ export default function ConnectedPlatforms() {
     queryFn: async () => { const user = await base44.auth.me(); return base44.entities.ConnectedPlatform.filter({ user_id: user.id }, '-connected_at'); },
     staleTime: 1000 * 60 * 2,
   });
+  const { data: bankConnection, isLoading: bankLoading } = useQuery({
+    queryKey: ["bankConnection"],
+    queryFn: async () => {
+      const user = await base44.auth.me();
+      const connections = await base44.entities.BankConnection.filter({ user_id: user.id });
+      // Return the first active/reauth connection, or null
+      return connections.find((c) => c.status !== "disconnected") || null;
+    },
+    staleTime: 1000 * 60 * 2,
+  });
+  const { data: bankAccounts = [] } = useQuery({
+    queryKey: ["bankAccounts"],
+    queryFn: async () => {
+      if (!bankConnection?.id) return [];
+      const user = await base44.auth.me();
+      return base44.entities.BankAccount.filter({ user_id: user.id, bank_connection_id: bankConnection.id });
+    },
+    enabled: !!bankConnection?.id,
+    staleTime: 1000 * 60 * 2,
+  });
+
   const { data: syncHistory = [], refetch: refetchHistory } = useQuery({
     queryKey: ["syncHistory"],
     queryFn: async () => { const user = await base44.auth.me(); return base44.entities.SyncHistory.filter({ user_id: user.id }, "-sync_started_at", 100); },
@@ -198,6 +220,14 @@ export default function ConnectedPlatforms() {
           <MetricCard label="Healthy" value={String(stats.active)} helper="Currently synced" tone="green" icon={CheckCircle2} />
           <MetricCard label="Syncing" value={String(stats.syncing)} helper="In progress" tone="amber" icon={RefreshCw} />
           <MetricCard label="Errors" value={String(stats.errors)} helper="Needs review" tone={stats.errors > 0 ? "red" : "teal"} icon={AlertTriangle} />
+        </motion.section>
+
+        <motion.section variants={itemVariants} className="mb-6">
+          <BankConnectionCard
+            connection={bankConnection}
+            accounts={bankAccounts}
+            isLoading={bankLoading}
+          />
         </motion.section>
 
         <GlassCard className="mb-6 p-4">
