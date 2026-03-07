@@ -261,7 +261,7 @@ export default function Billing() {
                                         disabled={isCurrent || isSubscribing}
                                         className={`w-full h-11 text-sm font-semibold transition-all duration-200 ${isCurrent
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : `bg-gradient-to-r ${plan.gradientFrom} ${plan.gradientTo} text-white hover:opacity-90 shadow-sm`
+                                            : 'bg-blue-600 hover:bg-blue-700 text-white shadow-none'
                                             }`}
                                     >
                                         {isSubscribing ? (

@@ -1546,14 +1546,8 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const [period, setPeriod] = useState("30d");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [user, setUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [lastUpdated, setLastUpdated] = useState(new Date());
-
-  // Fetch user
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => setUser(null));
-  }, []);
 
   // Fetch transactions
   const {
@@ -1888,116 +1882,101 @@ const Dashboard = () => {
       <DesignTokens />
       <KeyboardShortcuts />
 
-      <div className="min-h-screen bg-[var(--neutral-50)]">
-        {/* Header */}
-        <header className="h-14 bg-white border-b border-[var(--neutral-200)] flex items-center px-4 lg:px-6 sticky top-0 z-40">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="font-bold text-lg tracking-tight text-[var(--neutral-900)]">Zerithum</div>
-
-            <div className="hidden md:flex flex-1 max-w-md">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--neutral-400)]" />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search transactions... (Press /)"
-                  className="w-full h-9 pl-9 pr-3 rounded-lg border border-[var(--neutral-200)] text-sm focus:outline-none focus:border-[var(--accent-500)] focus:ring-2 focus:ring-[var(--accent-500)]/20 placeholder:text-[var(--neutral-400)] bg-[var(--neutral-50)]"
-                />
-              </div>
-            </div>
+      <div className="w-full">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-semibold text-[var(--neutral-900)] tracking-tight">Dashboard</h1>
+            <p className="text-sm text-[var(--neutral-500)] mt-0.5">Financial overview and analytics</p>
           </div>
-
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--neutral-400)]" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search transactions…"
+                className="w-56 h-9 pl-9 pr-3 rounded-lg border border-[var(--neutral-200)] text-sm focus:outline-none focus:border-[var(--accent-500)] focus:ring-2 focus:ring-[var(--accent-500)]/20 placeholder:text-[var(--neutral-400)] bg-white"
+              />
+            </div>
             <PeriodSelector value={period} onChange={setPeriod} />
             <Button
               variant="ghost"
               size="icon"
               onClick={throttledRefresh}
               isLoading={isRefreshing}
-              className="hidden sm:flex"
               title="Refresh (R)"
             >
               <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
             </Button>
-            <button
-              onClick={() => navigate('/settings')}
-              className="flex items-center gap-2 p-1.5 hover:bg-[var(--neutral-100)] rounded-lg transition-colors"
-            >
-              <div className="w-8 h-8 bg-gradient-to-br from-[var(--accent-500)] to-[var(--accent-700)] rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                {user?.email?.[0]?.toUpperCase() || user?.full_name?.[0]?.toUpperCase() || 'U'}
-              </div>
-            </button>
           </div>
-        </header>
+        </div>
 
-        {/* Main Content */}
-        <main className="max-w-[1600px] mx-auto p-4 lg:p-6">
-          {/* Cash Hero */}
-          <CashHero
-            position={cashPosition}
-            onExport={handleExport}
-            onConnect={() => navigate('/ConnectedPlatforms')}
-            onRefresh={throttledRefresh}
-            isRefreshing={isRefreshing}
-            lastUpdated={lastUpdated}
-          />
+        {/* Cash Hero */}
+        <CashHero
+          position={cashPosition}
+          onExport={handleExport}
+          onConnect={() => navigate('/ConnectedPlatforms')}
+          onRefresh={throttledRefresh}
+          isRefreshing={isRefreshing}
+          lastUpdated={lastUpdated}
+        />
 
-          {/* KPI Row */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            {kpiMetrics.map(metric => (
-              <KPICard
-                key={metric.id}
-                metric={metric}
-                onClick={() => {
-                  if (metric.id === 'anomalies' && metric.status === 'error') {
-                    navigate('/RevenueAutopsy');
-                  }
-                }}
-              />
-            ))}
-          </div>
+        {/* KPI Row */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+          {kpiMetrics.map(metric => (
+            <KPICard
+              key={metric.id}
+              metric={metric}
+              onClick={() => {
+                if (metric.id === 'anomalies' && metric.status === 'error') {
+                  navigate('/RevenueAutopsy');
+                }
+              }}
+            />
+          ))}
+        </div>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-            {/* Left - 8 cols */}
-            <div className="lg:col-span-8 space-y-6">
-              <ReconciliationCard
-                summary={reconciliationSummary}
-                onViewDetails={() => navigate('/RevenueAutopsy')}
-              />
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+          {/* Left - 8 cols */}
+          <div className="lg:col-span-8 space-y-6">
+            <ReconciliationCard
+              summary={reconciliationSummary}
+              onViewDetails={() => navigate('/RevenueAutopsy')}
+            />
 
-              <CashflowForecast
-                historicalData={computed.trendData}
-                forecastData={forecastData}
-              />
-            </div>
-
-            {/* Right - 4 cols */}
-            <div className="lg:col-span-4 space-y-6">
-              <PlatformHealth platforms={connectedPlatforms} onConnect={() => navigate('/ConnectedPlatforms')} />
-
-              <PlatformBreakdown transactions={computed.latestTransactions} />
-
-              <ActionQueue
-                items={actionItems}
-                onReview={(item) => navigate('/RevenueAutopsy')}
-              />
-
-              <InsightsPanel
-                insights={insights}
-                transactions={computed.latestTransactions}
-                periodExpenses={computed.periodExpenses}
-              />
-            </div>
+            <CashflowForecast
+              historicalData={computed.trendData}
+              forecastData={forecastData}
+            />
           </div>
 
-          {/* Review Table */}
-          <ReviewTable
-            items={reviewItems}
-            onExport={handleExport}
-          />
-        </main>
+          {/* Right - 4 cols */}
+          <div className="lg:col-span-4 space-y-6">
+            <PlatformHealth platforms={connectedPlatforms} onConnect={() => navigate('/ConnectedPlatforms')} />
+
+            <PlatformBreakdown transactions={computed.latestTransactions} />
+
+            <ActionQueue
+              items={actionItems}
+              onReview={() => navigate('/RevenueAutopsy')}
+            />
+
+            <InsightsPanel
+              insights={insights}
+              transactions={computed.latestTransactions}
+              periodExpenses={computed.periodExpenses}
+            />
+          </div>
+        </div>
+
+        {/* Review Table */}
+        <ReviewTable
+          items={reviewItems}
+          onExport={handleExport}
+        />
       </div>
     </>
   );
