@@ -1,33 +1,31 @@
+import { AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
-} from "@/components/ui/toast";
+import { Toast } from "@/components/ui/toast";
 
 export function Toaster() {
-  const { toasts } = useToast();
+  const { toasts, dismiss } = useToast();
+  const visible = toasts.filter((t) => t.open);
 
   return (
-    <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
-        return (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
-            </div>
-            {action}
-            <ToastClose />
-          </Toast>
-        );
-      })}
-      <ToastViewport />
-    </ToastProvider>
+    <div
+      aria-live="polite"
+      aria-atomic="false"
+      className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2.5 items-end"
+      style={{ pointerEvents: visible.length ? "auto" : "none" }}
+    >
+      <AnimatePresence mode="sync" initial={false}>
+        {visible.map(({ id, title, description, variant, duration }) => (
+          <Toast
+            key={id}
+            title={title}
+            description={description}
+            variant={variant}
+            duration={duration}
+            onClose={() => dismiss(id)}
+            open
+          />
+        ))}
+      </AnimatePresence>
+    </div>
   );
-} 
+}

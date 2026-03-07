@@ -1,104 +1,142 @@
 import * as React from "react";
-import { cva } from "class-variance-authority";
-import { X } from "lucide-react";
+import { motion } from "framer-motion";
+import { X, CheckCircle2, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TOAST_DURATION } from "@/components/ui/use-toast";
 
-const ToastProvider = React.forwardRef(({ ...props }, ref) => (
-  <div
-    ref={ref}
-    className="fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]"
-    {...props}
-  />
-));
-ToastProvider.displayName = "ToastProvider";
+const VARIANT_CONFIG = {
+  default: {
+    Icon: Info,
+    accentColor: "var(--z-accent)",
+    iconBg: "var(--z-accent-light)",
+    iconColor: "var(--z-accent)",
+    progressColor: "var(--z-accent)",
+  },
+  success: {
+    Icon: CheckCircle2,
+    accentColor: "var(--z-success)",
+    iconBg: "var(--z-success-light)",
+    iconColor: "var(--z-success)",
+    progressColor: "var(--z-success)",
+  },
+  destructive: {
+    Icon: AlertCircle,
+    accentColor: "var(--z-danger)",
+    iconBg: "var(--z-danger-light)",
+    iconColor: "var(--z-danger)",
+    progressColor: "var(--z-danger)",
+  },
+  warning: {
+    Icon: AlertTriangle,
+    accentColor: "var(--z-warn)",
+    iconBg: "var(--z-warn-light)",
+    iconColor: "var(--z-warn)",
+    progressColor: "var(--z-warn)",
+  },
+};
 
-const ToastViewport = React.forwardRef(({ ...props }, ref) => (
-  <div
-    ref={ref}
-    className="fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]"
-    {...props}
-  />
-));
-ToastViewport.displayName = "ToastViewport";
-
-const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+export const Toast = React.forwardRef(function Toast(
   {
-    variants: {
-      variant: {
-        default: "border bg-background text-foreground",
-        destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-);
+    title,
+    description,
+    variant = "default",
+    onClose,
+    duration = TOAST_DURATION,
+    className,
+    open,
+    ...props
+  },
+  ref
+) {
+  const config = VARIANT_CONFIG[variant] ?? VARIANT_CONFIG.default;
+  const { Icon, accentColor, iconBg, iconColor, progressColor } = config;
 
-const Toast = React.forwardRef(({ className, variant, ...props }, ref) => {
   return (
-    <div
+    <motion.div
       ref={ref}
-      className={cn(toastVariants({ variant }), className)}
+      layout
+      initial={{ x: 110, opacity: 0, scale: 0.93 }}
+      animate={{ x: 0, opacity: 1, scale: 1 }}
+      exit={{
+        x: 110,
+        opacity: 0,
+        scale: 0.95,
+        transition: { duration: 0.28, ease: [0.32, 0, 0.67, 0] },
+      }}
+      transition={{ type: "spring", stiffness: 420, damping: 32 }}
+      className={cn(
+        "relative flex w-full max-w-[360px] items-start gap-3 overflow-hidden rounded-xl border border-[var(--z-border-1)] bg-[var(--z-bg-0)] p-4 pr-10",
+        className
+      )}
+      style={{
+        boxShadow: "var(--z-shadow-lg)",
+        borderLeftWidth: "3px",
+        borderLeftColor: accentColor,
+      }}
       {...props}
-    />
+    >
+      {/* Icon badge */}
+      <div
+        className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+        style={{ backgroundColor: iconBg }}
+      >
+        <Icon size={14} style={{ color: iconColor }} strokeWidth={2.5} />
+      </div>
+
+      {/* Text content */}
+      <div className="flex-1 min-w-0 pt-px">
+        {title && (
+          <p className="text-sm font-semibold leading-tight text-[var(--z-text-1)]">
+            {title}
+          </p>
+        )}
+        {description && (
+          <p
+            className={cn(
+              "text-xs leading-snug text-[var(--z-text-3)]",
+              title && "mt-0.5"
+            )}
+          >
+            {description}
+          </p>
+        )}
+      </div>
+
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-md text-[var(--z-text-3)] transition-colors hover:bg-[var(--z-bg-2)] hover:text-[var(--z-text-1)] focus:outline-none focus:ring-2 focus:ring-[var(--z-accent)] focus:ring-offset-1"
+        aria-label="Dismiss"
+      >
+        <X size={12} strokeWidth={2.5} />
+      </button>
+
+      {/* Draining progress bar */}
+      {duration !== Infinity && (
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--z-bg-3)]">
+          <motion.div
+            className="h-full"
+            style={{ backgroundColor: progressColor }}
+            initial={{ width: "100%" }}
+            animate={{ width: "0%" }}
+            transition={{ duration: duration / 1000, ease: "linear" }}
+          />
+        </div>
+      )}
+    </motion.div>
   );
 });
+
 Toast.displayName = "Toast";
 
-const ToastAction = React.forwardRef(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
-      className
-    )}
-    {...props}
-  />
-));
-ToastAction.displayName = "ToastAction";
-
-const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
-  <button
-    ref={ref}
-    className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
-      className
-    )}
-    toast-close=""
-    {...props}
-  >
-    <X className="h-4 w-4" />
-  </button>
-));
-ToastClose.displayName = "ToastClose";
-
-const ToastTitle = React.forwardRef(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("text-sm font-semibold", className)}
-    {...props}
-  />
-));
-ToastTitle.displayName = "ToastTitle";
-
-const ToastDescription = React.forwardRef(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("text-sm opacity-90", className)}
-    {...props}
-  />
-));
-ToastDescription.displayName = "ToastDescription";
-
-export {
-  ToastProvider,
-  ToastViewport,
-  Toast,
-  ToastTitle,
-  ToastDescription,
-  ToastClose,
-  ToastAction,
-}; 
+// Legacy named exports — kept so existing import sites don't break
+export const ToastProvider = ({ children }) => <>{children}</>;
+export const ToastViewport = () => null;
+export const ToastTitle = ({ children, className }) => (
+  <span className={className}>{children}</span>
+);
+export const ToastDescription = ({ children, className }) => (
+  <span className={className}>{children}</span>
+);
+export const ToastClose = () => null;
+export const ToastAction = ({ children }) => <>{children}</>;
