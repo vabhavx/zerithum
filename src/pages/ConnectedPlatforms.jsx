@@ -144,12 +144,14 @@ export default function ConnectedPlatforms() {
       const maxP = subStatus?.entitlements?.max_platforms ?? 0;
       const usedP = subStatus?.platforms_used ?? 0;
       if (usedP >= maxP) {
-        toast.error(
-          maxP === 0
-            ? 'No active subscription. Begin your journey with the Starter pack — $9/mo.'
-            : `Platform limit reached (${usedP}/${maxP}). Upgrade your plan to connect more.`,
-          { duration: 5000 }
-        );
+        if (maxP === 0) {
+          toast('Begin your journey with the Starter pack ✨', {
+            description: 'You need an active subscription to connect platforms.',
+            duration: 5000,
+          });
+        } else {
+          toast.error(`Platform limit reached (${usedP}/${maxP}). Upgrade your plan to connect more.`, { duration: 5000 });
+        }
         return;
       }
     } catch (error) {

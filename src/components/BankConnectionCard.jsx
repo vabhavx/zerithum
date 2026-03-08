@@ -94,6 +94,7 @@ export default function BankConnectionCard({
     const [disconnectOpen, setDisconnectOpen] = useState(false);
     const [disconnecting, setDisconnecting] = useState(false);
     const [csvUploading, setCsvUploading] = useState(false);
+    const [connectingBank, setConnectingBank] = useState(false);
     const fileInputRef = useRef(null);
 
     const invalidate = useCallback(() => {
@@ -111,6 +112,27 @@ export default function BankConnectionCard({
             toast.error(err?.message || "Failed to connect bank");
         },
     });
+
+    const handleConnectBank = async () => {
+        setConnectingBank(true);
+        try {
+            const subStatus = await base44.functions.invoke('getSubscriptionStatus');
+            const maxP = subStatus?.entitlements?.max_platforms ?? 0;
+            if (maxP === 0) {
+                toast('Begin your journey with the Starter pack ✨', {
+                    description: 'You need an active subscription to connect your bank.',
+                    duration: 5000,
+                });
+                return;
+            }
+            openTellerConnect();
+        } catch (error) {
+            console.error("Entitlement check failed:", error);
+            toast.error("Failed to verify subscription limits. Please try again.");
+        } finally {
+            setConnectingBank(false);
+        }
+    };
 
     const handleSync = async () => {
         if (!connection?.id || syncing) return;
@@ -236,11 +258,11 @@ export default function BankConnectionCard({
                     <div className="flex flex-col gap-2 shrink-0">
                         <Button
                             type="button"
-                            onClick={openTellerConnect}
-                            disabled={tellerLoading || !tellerReady}
+                            onClick={handleConnectBank}
+                            disabled={tellerLoading || !tellerReady || connectingBank}
                             className="h-9 bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-medium"
                         >
-                            {tellerLoading ? (
+                            {tellerLoading || connectingBank ? (
                                 <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Connecting</>
                             ) : (
                                 <><Landmark className="mr-1.5 h-3.5 w-3.5" /> Connect Bank</>
@@ -282,9 +304,8 @@ export default function BankConnectionCard({
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex items-start gap-4">
                     <div className="relative flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
-                        <div className={`absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-white ${
-                            needsReauth ? "bg-amber-500" : "bg-emerald-500"
-                        }`} />
+                        <div className={`absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-white ${needsReauth ? "bg-amber-500" : "bg-emerald-500"
+                            }`} />
                         <Landmark className="h-6 w-6 text-gray-600" />
                     </div>
                     <div>
@@ -318,11 +339,11 @@ export default function BankConnectionCard({
                     {needsReauth ? (
                         <Button
                             type="button"
-                            onClick={openTellerConnect}
-                            disabled={tellerLoading}
+                            onClick={handleConnectBank}
+                            disabled={tellerLoading || connectingBank}
                             className="h-8 bg-amber-600 text-white hover:bg-amber-700 text-xs font-medium"
                         >
-                            {tellerLoading ? (
+                            {tellerLoading || connectingBank ? (
                                 <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Reconnecting</>
                             ) : (
                                 <><RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Reconnect</>
