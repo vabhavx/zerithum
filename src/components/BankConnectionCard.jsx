@@ -117,20 +117,6 @@ export default function BankConnectionCard({
     const handleConnectBank = async () => {
         setConnectingBank(true);
         try {
-            const subStatus = await base44.functions.invoke('getSubscriptionStatus');
-            const maxP = subStatus?.entitlements?.max_platforms ?? 0;
-            if (maxP === 0) {
-                toast('Begin your journey with the Starter pack', {
-                    description: 'You need an active subscription to connect your bank.',
-                    duration: 5000,
-                });
-                setConnectingBank(false);
-                return;
-            }
-        } catch (error) {
-            console.warn("Entitlement pre-check unavailable, proceeding:", error?.message);
-        }
-        try {
             openTellerConnect();
         } finally {
             setConnectingBank(false);

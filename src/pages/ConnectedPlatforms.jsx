@@ -138,20 +138,13 @@ export default function ConnectedPlatforms() {
   const beginConnect = async (platform) => {
     if (connectedById.has(platform.id)) { toast.error(`${platform.name} is already connected.`); return; }
 
-    // Entitlement pre-check (advisory) — DB trigger is the authoritative enforcement
+    // Entitlement pre-check (advisory only — DB trigger + server edge function enforce)
     try {
       const subStatus = await base44.functions.invoke('getSubscriptionStatus');
       const maxP = subStatus?.entitlements?.max_platforms ?? 0;
       const usedP = subStatus?.platforms_used ?? 0;
-      if (usedP >= maxP) {
-        if (maxP === 0) {
-          toast('Begin your journey with the Starter pack', {
-            description: 'You need an active subscription to connect platforms.',
-            duration: 5000,
-          });
-        } else {
-          toast.error(`Platform limit reached (${usedP}/${maxP}). Upgrade your plan to connect more.`, { duration: 5000 });
-        }
+      if (maxP > 0 && usedP >= maxP) {
+        toast.error(`Platform limit reached (${usedP}/${maxP}). Upgrade your plan to connect more.`, { duration: 5000 });
         return;
       }
     } catch (error) {
