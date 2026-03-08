@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/supabaseClient";
+import supabase from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { GlassCard, itemVariants } from "@/components/ui/glass-card";
 import { useTellerConnect } from "@/hooks/use-teller-connect";
@@ -119,16 +120,18 @@ export default function BankConnectionCard({
             const subStatus = await base44.functions.invoke('getSubscriptionStatus');
             const maxP = subStatus?.entitlements?.max_platforms ?? 0;
             if (maxP === 0) {
-                toast('Begin your journey with the Starter pack ✨', {
+                toast('Begin your journey with the Starter pack', {
                     description: 'You need an active subscription to connect your bank.',
                     duration: 5000,
                 });
+                setConnectingBank(false);
                 return;
             }
-            openTellerConnect();
         } catch (error) {
-            console.error("Entitlement check failed:", error);
-            toast.error("Failed to verify subscription limits. Please try again.");
+            console.warn("Entitlement pre-check unavailable, proceeding:", error?.message);
+        }
+        try {
+            openTellerConnect();
         } finally {
             setConnectingBank(false);
         }
@@ -205,10 +208,9 @@ export default function BankConnectionCard({
 
             if (rows.length === 0) throw new Error("No valid transactions found in CSV");
 
-            // Use upsert instead of bulkCreate for compatibility
-            const { error } = await base44.supabase
+            const { error } = await supabase
                 .from('bank_transactions')
-                .upsert(rows, { onConflict: 'id', ignoreDuplicates: true });
+                .insert(rows);
 
             if (error) throw new Error(`Failed to import: ${error.message}`);
             toast.success(`Imported ${rows.length} transactions from CSV`);

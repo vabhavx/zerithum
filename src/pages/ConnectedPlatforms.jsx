@@ -138,14 +138,14 @@ export default function ConnectedPlatforms() {
   const beginConnect = async (platform) => {
     if (connectedById.has(platform.id)) { toast.error(`${platform.name} is already connected.`); return; }
 
-    // Entitlement enforcement
+    // Entitlement pre-check (advisory) — DB trigger is the authoritative enforcement
     try {
       const subStatus = await base44.functions.invoke('getSubscriptionStatus');
       const maxP = subStatus?.entitlements?.max_platforms ?? 0;
       const usedP = subStatus?.platforms_used ?? 0;
       if (usedP >= maxP) {
         if (maxP === 0) {
-          toast('Begin your journey with the Starter pack ✨', {
+          toast('Begin your journey with the Starter pack', {
             description: 'You need an active subscription to connect platforms.',
             duration: 5000,
           });
@@ -155,15 +155,7 @@ export default function ConnectedPlatforms() {
         return;
       }
     } catch (error) {
-      console.error("Entitlement check failed:", error);
-      toast.error("Failed to verify subscription limits. Please try again.");
-      // Assuming setConnecting(false) was meant to clear a connecting state,
-      // and given connectingId is set *after* this block,
-      // we'll use setConnectingId(null) if it was already set, or just return.
-      // If connectingId was not set yet, no need to clear it.
-      // If there was a global 'connecting' state, it would be set here.
-      // For now, we'll just return as per the fail-closed instruction.
-      return;
+      console.warn("Entitlement pre-check unavailable, proceeding:", error?.message);
     }
 
     if (platform.requiresApiKey || platform.requiresShopName) { setSelectedPlatform(platform); setCredentialsOpen(true); return; }
