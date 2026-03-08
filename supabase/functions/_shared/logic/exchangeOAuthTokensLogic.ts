@@ -109,18 +109,22 @@ export async function exchangeOAuthTokens(
       .maybeSingle();
 
     const maxPlatforms = entitlement?.max_platforms ?? 0;
-    const allConnections = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
-      user_id: user.id
-    });
 
-    if (allConnections.length >= maxPlatforms) {
-      return {
-        status: 403,
-        body: {
-          error: 'Platform limit reached',
-          message: `You have reached the limit of ${maxPlatforms} platforms for your current plan. Please upgrade to connect more.`
-        }
-      };
+    // Only enforce limit when the user actually has a subscription with a real limit
+    if (maxPlatforms > 0) {
+      const allConnections = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
+        user_id: user.id
+      });
+
+      if (allConnections.length >= maxPlatforms) {
+        return {
+          status: 403,
+          body: {
+            error: 'Platform limit reached',
+            message: `You have reached the limit of ${maxPlatforms} platforms for your current plan. Please upgrade to connect more.`
+          }
+        };
+      }
     }
   }
 
