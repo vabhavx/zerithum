@@ -17,15 +17,24 @@ export function useTellerConnect({ onSuccess, onError, enrollmentId } = {}) {
     // Load Teller Connect script once
     useEffect(() => {
         if (typeof window === "undefined") return;
+
+        // Already available
         if (window.TellerConnect) {
             setScriptLoaded(true);
             return;
         }
 
+        // Script tag already in DOM — may already be loaded (race condition fix)
         const existing = document.querySelector(`script[src="${TELLER_CONNECT_URL}"]`);
         if (existing) {
-            existing.addEventListener("load", () => setScriptLoaded(true));
-            return;
+            // Re-check after a tick in case onload already fired
+            const check = () => {
+                if (window.TellerConnect) setScriptLoaded(true);
+            };
+            existing.addEventListener("load", check);
+            // Immediate check in case it already loaded before this listener attached
+            check();
+            return () => existing.removeEventListener("load", check);
         }
 
         const script = document.createElement("script");
@@ -34,6 +43,8 @@ export function useTellerConnect({ onSuccess, onError, enrollmentId } = {}) {
         script.onload = () => setScriptLoaded(true);
         script.onerror = () => {
             console.error("[TellerConnect] Failed to load script");
+            // Allow button to be clickable even if CDN fails — open() will throw a clear error
+            setScriptLoaded(true);
         };
         document.head.appendChild(script);
     }, []);

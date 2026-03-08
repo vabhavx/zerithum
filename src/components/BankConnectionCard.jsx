@@ -95,7 +95,6 @@ export default function BankConnectionCard({
     const [disconnectOpen, setDisconnectOpen] = useState(false);
     const [disconnecting, setDisconnecting] = useState(false);
     const [csvUploading, setCsvUploading] = useState(false);
-    const [connectingBank, setConnectingBank] = useState(false);
     const fileInputRef = useRef(null);
 
     const invalidate = useCallback(() => {
@@ -103,7 +102,7 @@ export default function BankConnectionCard({
         queryClient.invalidateQueries({ queryKey: ["bankAccounts"] });
     }, [queryClient]);
 
-    const { open: openTellerConnect, isLoading: tellerLoading, ready: tellerReady } = useTellerConnect({
+    const { open: openTellerConnect, isLoading: tellerLoading } = useTellerConnect({
         enrollmentId: connection?.status === "reauth_required" ? connection.teller_enrollment_id : undefined,
         onSuccess: () => {
             toast.success("Bank connected successfully");
@@ -114,13 +113,8 @@ export default function BankConnectionCard({
         },
     });
 
-    const handleConnectBank = async () => {
-        setConnectingBank(true);
-        try {
-            openTellerConnect();
-        } finally {
-            setConnectingBank(false);
-        }
+    const handleConnectBank = () => {
+        openTellerConnect();
     };
 
     const handleSync = async () => {
@@ -247,10 +241,10 @@ export default function BankConnectionCard({
                         <Button
                             type="button"
                             onClick={handleConnectBank}
-                            disabled={tellerLoading || !tellerReady || connectingBank}
+                            disabled={tellerLoading}
                             className="h-9 bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-medium"
                         >
-                            {tellerLoading || connectingBank ? (
+                            {tellerLoading ? (
                                 <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Connecting</>
                             ) : (
                                 <><Landmark className="mr-1.5 h-3.5 w-3.5" /> Connect Bank</>
@@ -328,10 +322,10 @@ export default function BankConnectionCard({
                         <Button
                             type="button"
                             onClick={handleConnectBank}
-                            disabled={tellerLoading || connectingBank}
+                            disabled={tellerLoading}
                             className="h-8 bg-amber-600 text-white hover:bg-amber-700 text-xs font-medium"
                         >
-                            {tellerLoading || connectingBank ? (
+                            {tellerLoading ? (
                                 <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Reconnecting</>
                             ) : (
                                 <><RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Reconnect</>
