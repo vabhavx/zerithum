@@ -38,7 +38,8 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
 
     for (const rev of revenueTxns) {
       const revDate = new Date(rev.transaction_date);
-      const revAmount = Math.abs(rev.amount);
+      // Convert to cents for integer arithmetic (CLAUDE.md: no floating point for money)
+      const revAmountCents = Math.round(Math.abs(rev.amount) * 100);
 
       for (const bank of bankTxns) {
         const bankDate = new Date(bank.transaction_date);
@@ -48,16 +49,16 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
         // Date constraint: Bank txn must be after revenue (or same day) and within 14 days
         if (diffDays < 0 || diffDays > 14) continue;
 
-        const bankAmount = Math.abs(bank.amount);
+        const bankAmountCents = Math.round(Math.abs(bank.amount) * 100);
         let matchType: MatchType | null = null;
         let confidence = 0;
         let baseScore = 0;
 
-        const amountRatio = bankAmount / revAmount;
-        const amountDiffPct = Math.abs(1 - amountRatio);
+        const amountDiffCents = Math.abs(bankAmountCents - revAmountCents);
+        const amountDiffPct = revAmountCents > 0 ? amountDiffCents / revAmountCents : 0;
 
-        // Exact amount match (within $0.01)
-        if (Math.abs(bankAmount - revAmount) < 0.01) {
+        // Exact amount match (within $0.01 = 1 cent)
+        if (amountDiffCents <= 1) {
           if (diffDays <= 1) {
             matchType = 'exact_match';
             confidence = 1.0;
@@ -85,7 +86,7 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
           baseScore = 700;
         }
         // Within 5% + within 3 days (fee deduction with larger platform cut)
-        else if (bankAmount < revAmount && amountDiffPct <= 0.05 && diffDays <= 3) {
+        else if (bankAmountCents < revAmountCents && amountDiffPct <= 0.05 && diffDays <= 3) {
           matchType = 'fee_deduction';
           confidence = 0.70;
           baseScore = 500;
@@ -140,7 +141,7 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
     const unmatchedRevTxns = revenueTxns.filter(r => !matchedRevenueIds.has(r.id));
 
     for (const bank of unmatchedBankTxns) {
-        const bankAmount = Math.abs(bank.amount);
+        const bankAmountCents = Math.round(Math.abs(bank.amount) * 100);
         const bankDate = new Date(bank.transaction_date);
 
         // Find revenue txns within date range that could sum to this bank deposit
@@ -163,8 +164,8 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
         for (let size = 2; size <= maxGroupSize; size++) {
             // Try the top `size` transactions
             const group = sorted.slice(0, size);
-            const groupSum = group.reduce((sum, r) => sum + Math.abs(r.amount), 0);
-            const diffPct = Math.abs(1 - groupSum / bankAmount);
+            const groupSumCents = group.reduce((sum, r) => sum + Math.round(Math.abs(r.amount) * 100), 0);
+            const diffPct = bankAmountCents > 0 ? Math.abs(1 - groupSumCents / bankAmountCents) : 0;
 
             if (diffPct <= 0.01 && diffPct < bestDiffPct) {
                 bestDiffPct = diffPct;

@@ -7,6 +7,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/utils/cors.ts';
 import { logAudit } from '../_shared/utils/audit.ts';
 import { decrypt } from '../_shared/utils/encryption.ts';
+import { autoReconcile } from '../_shared/logic/reconcile.ts';
 import {
     listAccounts,
     getAccountTransactions,
@@ -136,10 +137,11 @@ Deno.serve(async (req) => {
             }
 
             // Process transactions in batches
+            // Use integer cents for arithmetic to avoid floating point errors (CLAUDE.md)
             const rows = transactions.map((txn: any) => {
-                const amount = parseFloat(txn.amount);
-                // Teller amounts: positive = credit (deposit), negative = debit
-                const txnType = amount >= 0 ? 'credit' : 'debit';
+                // Convert to cents, round to prevent float errors, then convert back to dollars
+                const amountCents = Math.round(parseFloat(txn.amount) * 100);
+                const txnType = amountCents >= 0 ? 'credit' : 'debit';
 
                 return {
                     user_id: user.id,
@@ -150,7 +152,7 @@ Deno.serve(async (req) => {
                     account_number: acct.last_four ? `****${acct.last_four}` : null,
                     transaction_date: txn.date,
                     posted_date: txn.date,
-                    amount: Math.abs(amount),
+                    amount: Math.abs(amountCents) / 100, // Store as correct decimal value
                     description: txn.description || '',
                     category: txn.category || null,
                     transaction_type: txnType,
@@ -188,6 +190,60 @@ Deno.serve(async (req) => {
             })
             .eq('id', connectionId);
 
+        // Auto-trigger reconciliation if transactions were synced
+        let reconcileResult = { success: true, matchedCount: 0, sentToReview: 0, message: 'No transactions to reconcile' };
+        if (totalTransactions > 0) {
+            try {
+                const reconciledIds = (await serviceSupabase
+                    .from('reconciliations')
+                    .select('revenue_transaction_id')
+                    .eq('user_id', user.id)).data || [];
+                const reconciledSet = new Set(reconciledIds.map(r => r.revenue_transaction_id));
+
+                const ctx = {
+                    fetchUnreconciledRevenue: async (userId: string) => {
+                        const { data, error } = await serviceSupabase
+                            .from('revenue_transactions')
+                            .select('*')
+                            .eq('user_id', userId)
+                            .order('transaction_date', { ascending: false });
+                        if (error) return [];
+                        return (data || []).filter(r => !reconciledSet.has(r.id));
+                    },
+                    fetchUnreconciledBankTransactions: async (userId: string, startDate: string) => {
+                        const { data, error } = await serviceSupabase
+                            .from('bank_transactions')
+                            .select('*')
+                            .eq('user_id', userId)
+                            .gte('transaction_date', startDate)
+                            .eq('is_reconciled', false)
+                            .order('transaction_date', { ascending: false });
+                        if (error) return [];
+                        return data || [];
+                    },
+                    createReconciliations: async (reconciliations: any[]) => {
+                        if (reconciliations.length === 0) return;
+                        const { error } = await serviceSupabase
+                            .from('reconciliations')
+                            .insert(reconciliations);
+                        if (error) throw error;
+                    },
+                    logAudit: async (entry: any) => {
+                        try {
+                            await logAudit(null, entry);
+                        } catch (err) {
+                            console.error('[TellerSync] Audit log error:', err);
+                        }
+                    },
+                };
+
+                reconcileResult = await autoReconcile(ctx, user);
+            } catch (reconcileErr) {
+                console.error('[TellerSync] Auto-reconciliation error:', reconcileErr);
+                // Non-fatal: continue without blocking sync
+            }
+        }
+
         await logAudit(null, {
             action: 'teller_sync_completed',
             actor_id: user.id,
@@ -197,6 +253,8 @@ Deno.serve(async (req) => {
             details: {
                 accounts_synced: accounts.length,
                 transactions_synced: totalTransactions,
+                reconciliations_created: reconcileResult.matchedCount,
+                reconciliations_review: reconcileResult.sentToReview,
             },
         });
 
@@ -205,7 +263,8 @@ Deno.serve(async (req) => {
                 success: true,
                 accountsSynced: accounts.length,
                 transactionCount: totalTransactions,
-                shouldReconcile: totalTransactions > 0,
+                reconciliationsCreated: reconcileResult.matchedCount,
+                reconciliationsSentToReview: reconcileResult.sentToReview,
             },
             { headers: corsHeaders }
         );

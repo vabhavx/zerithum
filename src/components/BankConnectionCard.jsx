@@ -165,15 +165,16 @@ export default function BankConnectionCard({
             const rows = [];
             for (let i = 1; i < lines.length; i++) {
                 const cols = lines[i].split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
-                const amount = parseFloat(cols[amountIdx]);
-                if (isNaN(amount)) continue;
+                // Convert to cents using integer arithmetic (no floating point)
+                const amountCents = Math.round(parseFloat(cols[amountIdx]) * 100);
+                if (isNaN(amountCents)) continue;
                 rows.push({
                     user_id: user.id,
                     transaction_date: cols[dateIdx],
                     posted_date: cols[dateIdx],
-                    amount: Math.abs(amount),
+                    amount: Math.abs(amountCents) / 100, // Store as decimal in DB
                     description: descIdx >= 0 ? cols[descIdx] : "",
-                    transaction_type: amount >= 0 ? "credit" : "debit",
+                    transaction_type: amountCents >= 0 ? "credit" : "debit",
                     teller_status: "posted",
                     source: "csv_upload",
                     is_reconciled: false,
@@ -182,7 +183,12 @@ export default function BankConnectionCard({
 
             if (rows.length === 0) throw new Error("No valid transactions found in CSV");
 
-            await base44.entities.BankTransaction.bulkCreate(rows);
+            // Use upsert instead of bulkCreate for compatibility
+            const { error } = await base44.supabase
+                .from('bank_transactions')
+                .upsert(rows, { onConflict: 'id', ignoreDuplicates: true });
+
+            if (error) throw new Error(`Failed to import: ${error.message}`);
             toast.success(`Imported ${rows.length} transactions from CSV`);
             invalidate();
         } catch (err) {
