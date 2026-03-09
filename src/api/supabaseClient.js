@@ -429,8 +429,13 @@ export const functions = {
                 } catch { /* proceed with existing token */ }
             }
             if (isExpiringSoon) {
-                const { data: refreshed } = await supabase.auth.refreshSession();
-                if (refreshed?.session) session = refreshed.session;
+                const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+                if (refreshed?.session) {
+                    session = refreshed.session;
+                } else {
+                    // Refresh failed — token is expired and unrecoverable
+                    throw new Error('Your session has expired. Please log in and try again.');
+                }
             }
         }
 

@@ -9,31 +9,49 @@ import { useQueryClient } from "@tanstack/react-query";
 import { PLATFORMS } from "@/lib/platforms";
 
 /**
- * Wait for Supabase to restore the session from localStorage.
- * On a fresh page load (e.g., after an OAuth redirect), the Supabase client
- * may not have initialized the session yet when our useEffect fires.
- * This waits for the INITIAL_SESSION event (up to 5s) to ensure we have valid auth.
+ * Ensure we have a valid (non-expired) Supabase session before calling edge functions.
+ * After an OAuth redirect, the cached session may be expired or not yet restored.
+ * This function:
+ *   1. Waits for session restoration if needed (up to timeoutMs)
+ *   2. Refreshes the session if the access token is expired
+ *   3. Throws if no valid session can be obtained
  */
-async function waitForSession(timeoutMs = 5000) {
-  // First check if session is already available
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) return session;
+async function ensureValidSession(timeoutMs = 5000) {
+  // Step 1: Get or wait for the session to be available
+  let { data: { session } } = await supabase.auth.getSession();
 
-  // Wait for auth state change (INITIAL_SESSION or SIGNED_IN)
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      subscription.unsubscribe();
-      reject(new Error('Session restoration timed out. Please log in and try again.'));
-    }, timeoutMs);
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.access_token) {
-        clearTimeout(timer);
+  if (!session) {
+    // Session not yet restored — wait for INITIAL_SESSION event
+    session = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
         subscription.unsubscribe();
-        resolve(session);
-      }
+        reject(new Error('Session restoration timed out. Please log in and try again.'));
+      }, timeoutMs);
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+        if (s?.access_token) {
+          clearTimeout(timer);
+          subscription.unsubscribe();
+          resolve(s);
+        }
+      });
     });
-  });
+  }
+
+  // Step 2: Check if the access token is expired and refresh if needed
+  if (session?.expires_at && Date.now() >= session.expires_at * 1000 - 30_000) {
+    const { data: refreshed, error } = await supabase.auth.refreshSession();
+    if (error || !refreshed?.session) {
+      throw new Error('Your session has expired. Please log in and try again.');
+    }
+    session = refreshed.session;
+  }
+
+  if (!session?.access_token) {
+    throw new Error('Not authenticated. Please log in and try again.');
+  }
+
+  return session;
 }
 
 export default function AuthCallback() {
@@ -80,9 +98,9 @@ export default function AuthCallback() {
       localStorage.removeItem('shopify_shop_name');
 
       try {
-        // Wait for Supabase to restore the session before calling the edge function.
-        // After an OAuth redirect, the session may not be immediately available.
-        await waitForSession();
+        // Ensure we have a valid, non-expired session before calling the edge function.
+        // After an OAuth redirect, the cached session may be stale or not yet restored.
+        await ensureValidSession();
 
         const platformDef = PLATFORMS.find(p => p.id === (platform || "youtube"));
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
