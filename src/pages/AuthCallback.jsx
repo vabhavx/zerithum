@@ -38,20 +38,22 @@ async function ensureValidSession(timeoutMs = 5000) {
     });
   }
 
-  // Step 2: Check if the access token is expired and refresh if needed
-  if (session?.expires_at && Date.now() >= session.expires_at * 1000 - 30_000) {
-    const { data: refreshed, error } = await supabase.auth.refreshSession();
-    if (error || !refreshed?.session) {
-      throw new Error('Your session has expired. Please log in and try again.');
-    }
-    session = refreshed.session;
+  // Step 2: Always force-refresh after an OAuth redirect.
+  // The cached access_token from localStorage may be expired or have an invalid
+  // signature (e.g. rotated JWT secret). refreshSession() uses the refresh_token
+  // to mint a brand-new, guaranteed-valid access_token.
+  const { data: refreshed, error } = await supabase.auth.refreshSession();
+  if (refreshed?.session) {
+    return refreshed.session;
   }
 
-  if (!session?.access_token) {
-    throw new Error('Not authenticated. Please log in and try again.');
+  // Refresh failed — if we still have the original session, try it as a last resort
+  console.error('[AuthCallback] Token refresh failed:', error?.message);
+  if (session?.access_token) {
+    return session;
   }
 
-  return session;
+  throw new Error('Your session has expired. Please log in and try again.');
 }
 
 export default function AuthCallback() {
