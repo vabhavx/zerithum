@@ -133,7 +133,13 @@ export async function exchangeOAuthTokens(
   const clientSecret = ctx.envGet(def.clientSecretEnv);
   if (!clientSecret) {
     ctx.logError(`Missing client secret env var: ${def.clientSecretEnv}`);
-    return { status: 500, body: { error: 'OAuth configuration error' } };
+    return { 
+      status: 500, 
+      body: { 
+        error: 'OAuth configuration error',
+        message: `Missing required environment variable: ${def.clientSecretEnv}. Please configure this in your Supabase Edge Function secrets.`
+      } 
+    };
   }
 
   // Resolve redirect URI: prefer client-provided (validated), fall back to env var
@@ -175,7 +181,13 @@ export async function exchangeOAuthTokens(
     clientId = ctx.clientId || ctx.envGet(def.clientIdEnv!);
     if (!clientId) {
       ctx.logError(`Missing Client ID env var or payload property for ${platform}`);
-      return { status: 500, body: { error: 'OAuth configuration error' } };
+      return { 
+        status: 500, 
+        body: { 
+          error: 'OAuth configuration error',
+          message: `Missing required Client ID for ${platform}. Please configure ${def.clientIdEnv} in your Supabase Edge Function secrets or provide client_id in the request.`
+        } 
+      };
     }
   }
 
@@ -277,6 +289,7 @@ export async function exchangeOAuthTokens(
 
   if (!tokenResponse.ok) {
     let errorSummary = `Status: ${tokenResponse.status} ${tokenResponse.statusText}`;
+    let errorMessage = 'Failed to exchange code for tokens';
     try {
       const errorData = await tokenResponse.json();
       if (errorData && typeof errorData === 'object') {
@@ -285,6 +298,15 @@ export async function exchangeOAuthTokens(
           error: errorData.error,
         };
         errorSummary += `, Body: ${JSON.stringify(safeError)}`;
+        
+        // Provide more specific error message for common issues
+        if (errorData.error === 'invalid_client') {
+          errorMessage = 'Invalid OAuth credentials. Please check your Square application configuration.';
+        } else if (errorData.error === 'invalid_grant') {
+          errorMessage = 'Authorization code expired or invalid. Please try connecting again.';
+        } else if (errorData.error === 'redirect_uri_mismatch') {
+          errorMessage = 'Redirect URI mismatch. Please verify the redirect URI in your Square app settings.';
+        }
       }
     } catch (e) {
       // ignore json parse error
@@ -294,7 +316,7 @@ export async function exchangeOAuthTokens(
 
     return {
       status: 400,
-      body: { error: 'Failed to exchange code for tokens' }
+      body: { error: errorMessage }
     };
   }
 
