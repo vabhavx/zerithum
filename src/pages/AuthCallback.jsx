@@ -47,12 +47,9 @@ async function ensureValidSession(timeoutMs = 5000) {
     return refreshed.session;
   }
 
-  // Refresh failed — if we still have the original session, try it as a last resort
+  // Refresh failed — do NOT fall back to the stale token.
+  // A stale token will be rejected by the Supabase gateway with a 401.
   console.error('[AuthCallback] Token refresh failed:', error?.message);
-  if (session?.access_token) {
-    return session;
-  }
-
   throw new Error('Your session has expired. Please log in and try again.');
 }
 
@@ -118,19 +115,35 @@ export default function AuthCallback() {
         // We bypass functions.invoke() because its getSession() can return
         // the stale cached session even after ensureValidSession() refreshed it.
         const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const res = await fetch(`${supabaseUrl}/functions/v1/exchangeOAuthTokens`, {
+        let accessToken = session.access_token;
+
+        const callEdge = (token) => fetch(`${supabaseUrl}/functions/v1/exchangeOAuthTokens`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
+            'Authorization': `Bearer ${token}`,
             'apikey': anonKey,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(invokePayload)
         });
 
+        let res = await callEdge(accessToken);
+
+        // On 401, the Supabase gateway rejected the JWT (expired/invalid).
+        // Force one more refresh and retry before giving up.
+        if (res.status === 401) {
+          console.warn('[AuthCallback] Gateway returned 401 — forcing token refresh and retrying');
+          const { data: retryRefresh } = await supabase.auth.refreshSession();
+          const freshToken = retryRefresh?.session?.access_token;
+          if (freshToken && freshToken !== accessToken) {
+            accessToken = freshToken;
+            res = await callEdge(accessToken);
+          }
+        }
+
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || errData.message || `Connection failed (${res.status})`);
+          throw new Error(errData.error || errData.message || errData.msg || `Connection failed (${res.status})`);
         }
 
         const response = await res.json();

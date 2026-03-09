@@ -159,7 +159,11 @@ export default function ConnectedPlatforms() {
     const baseOrigin = isLocal ? window.location.origin : 'https://zerithum.com';
     const redirectUri = baseOrigin + (platform.redirectUri || "/authcallback");
     if (platform.id === "tiktok") { params = new URLSearchParams({ client_key: platform.clientKey, scope: platform.scope, response_type: "code", redirect_uri: redirectUri, state: stateValue }); }
-    else { params = new URLSearchParams({ client_id: platform.clientId || platform.id, redirect_uri: redirectUri, response_type: "code", scope: platform.scope || "", state: stateValue, access_type: platform.id === "youtube" ? "offline" : undefined, prompt: platform.id === "youtube" ? "consent" : undefined }); }
+    else {
+      const oauthParams = { client_id: platform.clientId || platform.id, redirect_uri: redirectUri, response_type: "code", scope: platform.scope || "", state: stateValue };
+      if (platform.id === "youtube") { oauthParams.access_type = "offline"; oauthParams.prompt = "consent"; }
+      params = new URLSearchParams(oauthParams);
+    }
     window.location.href = `${platform.oauthUrl}?${params.toString()}`;
   };
 
