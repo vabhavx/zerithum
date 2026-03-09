@@ -411,48 +411,41 @@ export const entities = Object.fromEntries(
 
 export const functions = {
     async invoke(functionName, params = {}) {
-        let { data: { session } } = await supabase.auth.getSession();
         const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-        // Ensure we have a fresh, non-expired token.
-        // getSession() can return a stale JWT from localStorage (e.g. after OAuth redirect).
-        // Refresh proactively if the token expires within 60 seconds.
-        if (session?.access_token) {
-            let isExpiringSoon = false;
-            if (session.expires_at) {
-                isExpiringSoon = Date.now() >= session.expires_at * 1000 - 60_000;
-            } else {
-                // Fallback: decode JWT exp claim directly
-                try {
-                    const payload = JSON.parse(atob(session.access_token.split('.')[1]));
-                    isExpiringSoon = payload.exp * 1000 <= Date.now() + 60_000;
-                } catch { /* proceed with existing token */ }
-            }
-            if (isExpiringSoon) {
-                const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
-                if (refreshed?.session) {
-                    session = refreshed.session;
-                } else {
-                    // Refresh failed — token is expired and unrecoverable
-                    throw new Error('Your session has expired. Please log in and try again.');
-                }
-            }
-        }
+        const getToken = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            return session?.access_token;
+        };
 
-        const token = session?.access_token;
+        const callEdge = async (token) => {
+            return fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'apikey': anonKey,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(params)
+            });
+        };
+
+        let token = await getToken();
         if (!token) throw new Error('Not authenticated');
 
-        // Use raw fetch to bypass Supabase SDK error handling opacity
-        // This ensures we get the exact error body (requiresReauth, match, etc)
-        const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'apikey': anonKey, // Critical for Supabase Edge Functions
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(params)
-        });
+        let response = await callEdge(token);
+
+        // On 401, force-refresh the session and retry exactly once.
+        // The gateway rejects expired/invalid JWTs before they reach the edge function.
+        // This handles stale tokens after OAuth redirects, long idle periods, etc.
+        if (response.status === 401) {
+            const { data: refreshed } = await supabase.auth.refreshSession();
+            const freshToken = refreshed?.session?.access_token;
+            if (freshToken && freshToken !== token) {
+                token = freshToken;
+                response = await callEdge(token);
+            }
+        }
 
         if (!response.ok) {
             // Manual error parsing to preserve custom properties
@@ -467,13 +460,9 @@ export const functions = {
                 if (errorData.authMethod) err.authMethod = errorData.authMethod;
                 if (errorData.retryAfter) err.retryAfter = errorData.retryAfter;
 
-                // Mark as a structured function error so we know to rethrow it
                 err.isFunctionError = true;
-
                 throw err;
             } catch (e) {
-                // If the error we just threw is valid (it came from our try block), rethrow it.
-                // We identify it because we just created it and flagged it.
                 if (e && (e.isFunctionError || (e.message && (e.requiresReauth || e.authMethod)))) throw e;
 
                 // Fallback for non-JSON errors
