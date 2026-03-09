@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { base44, supabase } from "@/api/supabaseClient";
+import { supabase, supabaseUrl } from "@/api/supabaseClient";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "../utils";
@@ -100,9 +100,10 @@ export default function AuthCallback() {
       localStorage.removeItem('shopify_shop_name');
 
       try {
-        // Ensure we have a valid, non-expired session before calling the edge function.
-        // After an OAuth redirect, the cached session may be stale or not yet restored.
-        await ensureValidSession();
+        // Get a guaranteed-valid access token. After an OAuth redirect the cached
+        // session in localStorage is often stale/expired. ensureValidSession()
+        // force-refreshes and returns the live session object.
+        const session = await ensureValidSession();
 
         const platformDef = PLATFORMS.find(p => p.id === (platform || "youtube"));
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -112,14 +113,34 @@ export default function AuthCallback() {
         if (platformDef?.clientId) invokePayload.client_id = platformDef.clientId;
         if (platformDef?.clientKey) invokePayload.client_key = platformDef.clientKey;
         if (shop) invokePayload.shop = shop;
-        const response = await base44.functions.invoke("exchangeOAuthTokens", invokePayload);
+
+        // Call the edge function directly with the validated token.
+        // We bypass functions.invoke() because its getSession() can return
+        // the stale cached session even after ensureValidSession() refreshed it.
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const res = await fetch(`${supabaseUrl}/functions/v1/exchangeOAuthTokens`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': anonKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(invokePayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || errData.message || `Connection failed (${res.status})`);
+        }
+
+        const response = await res.json();
         if (response.success) {
           setStatus("success");
           queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
           const platformName = platformDef?.name || platform;
           setTimeout(() => { toast.success(`${platformName} connected successfully!`); navigate(createPageUrl("ConnectedPlatforms")); }, 1500);
         } else throw new Error(response.error || "Failed to connect");
-      } catch (err) { setStatus("error"); setError(err.response?.data?.error || err.message || "Failed to connect platform"); }
+      } catch (err) { setStatus("error"); setError(err.message || "Failed to connect platform"); }
     };
     handleCallback();
   }, [navigate]);
