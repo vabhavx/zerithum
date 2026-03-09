@@ -1,12 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/supabaseClient";
+import { base44, supabase } from "@/api/supabaseClient";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "../utils";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { PLATFORMS } from "@/lib/platforms";
+
+/**
+ * Wait for Supabase to restore the session from localStorage.
+ * On a fresh page load (e.g., after an OAuth redirect), the Supabase client
+ * may not have initialized the session yet when our useEffect fires.
+ * This waits for the INITIAL_SESSION event (up to 5s) to ensure we have valid auth.
+ */
+async function waitForSession(timeoutMs = 5000) {
+  // First check if session is already available
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) return session;
+
+  // Wait for auth state change (INITIAL_SESSION or SIGNED_IN)
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      subscription.unsubscribe();
+      reject(new Error('Session restoration timed out. Please log in and try again.'));
+    }, timeoutMs);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.access_token) {
+        clearTimeout(timer);
+        subscription.unsubscribe();
+        resolve(session);
+      }
+    });
+  });
+}
 
 export default function AuthCallback() {
   const [status, setStatus] = useState("processing");
@@ -52,6 +80,10 @@ export default function AuthCallback() {
       localStorage.removeItem('shopify_shop_name');
 
       try {
+        // Wait for Supabase to restore the session before calling the edge function.
+        // After an OAuth redirect, the session may not be immediately available.
+        await waitForSession();
+
         const platformDef = PLATFORMS.find(p => p.id === (platform || "youtube"));
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const baseOrigin = isLocal ? window.location.origin : 'https://zerithum.com';

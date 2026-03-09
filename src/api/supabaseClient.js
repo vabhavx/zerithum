@@ -411,10 +411,30 @@ export const entities = Object.fromEntries(
 
 export const functions = {
     async invoke(functionName, params = {}) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
+        let { data: { session } } = await supabase.auth.getSession();
         const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+        // Ensure we have a fresh, non-expired token.
+        // getSession() can return a stale JWT from localStorage (e.g. after OAuth redirect).
+        // Refresh proactively if the token expires within 60 seconds.
+        if (session?.access_token) {
+            let isExpiringSoon = false;
+            if (session.expires_at) {
+                isExpiringSoon = Date.now() >= session.expires_at * 1000 - 60_000;
+            } else {
+                // Fallback: decode JWT exp claim directly
+                try {
+                    const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+                    isExpiringSoon = payload.exp * 1000 <= Date.now() + 60_000;
+                } catch { /* proceed with existing token */ }
+            }
+            if (isExpiringSoon) {
+                const { data: refreshed } = await supabase.auth.refreshSession();
+                if (refreshed?.session) session = refreshed.session;
+            }
+        }
+
+        const token = session?.access_token;
         if (!token) throw new Error('Not authenticated');
 
         // Use raw fetch to bypass Supabase SDK error handling opacity
@@ -433,7 +453,8 @@ export const functions = {
             // Manual error parsing to preserve custom properties
             try {
                 const errorData = await response.json();
-                const errorMsg = errorData.error || `Function returned ${response.status}`;
+                // Supabase gateway errors use `message`/`msg`, edge functions use `error`
+                const errorMsg = errorData.error || errorData.message || errorData.msg || `Function returned ${response.status}`;
                 const err = new Error(errorMsg);
 
                 // Propagate special fields exactly as Edge Function sends them
