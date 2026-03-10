@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { PLATFORMS } from "@/lib/platforms";
 
+const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 /**
  * Ensure we have a valid (non-expired) Supabase session before calling edge functions.
  * After an OAuth redirect, the cached session may be expired or not yet restored.
@@ -103,29 +105,34 @@ export default function AuthCallback() {
         const session = await ensureValidSession();
 
         const platformDef = PLATFORMS.find(p => p.id === (platform || "youtube"));
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const baseOrigin = isLocal ? window.location.origin : 'https://zerithum.com';
-        const redirectUri = baseOrigin + "/authcallback";
-        const invokePayload = { code, platform: platform || "youtube", redirect_uri: redirectUri };
+        const redirectUri = window.location.origin + "/authcallback";
+        const invokePayload = {
+          code,
+          platform: platform || "youtube",
+          redirect_uri: redirectUri,
+          shop: shop || undefined
+        };
+
         if (platformDef?.clientId) invokePayload.client_id = platformDef.clientId;
         if (platformDef?.clientKey) invokePayload.client_key = platformDef.clientKey;
-        if (shop) invokePayload.shop = shop;
 
-        // Call the edge function directly with the validated token.
-        // We bypass functions.invoke() because its getSession() can return
-        // the stale cached session even after ensureValidSession() refreshed it.
-        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        console.log(`[AuthCallback] Exchanging code for ${platform || "youtube"}...`);
+
+        // Call edge function directly with the FRESH token from ensureValidSession().
+        // Do NOT use base44.functions.invoke — it calls getSession() internally
+        // which returns the stale cached token, causing "Invalid JWT" errors.
         let accessToken = session.access_token;
 
-        const callEdge = (token) => fetch(`${supabaseUrl}/functions/v1/exchangeOAuthTokens`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'apikey': anonKey,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(invokePayload)
-        });
+        const callEdge = (token) =>
+          fetch(`${supabaseUrl}/functions/v1/exchangeOAuthTokens`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'apikey': ANON_KEY,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(invokePayload),
+          });
 
         let res = await callEdge(accessToken);
 
@@ -142,17 +149,23 @@ export default function AuthCallback() {
         }
 
         if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || errData.message || errData.msg || `Connection failed (${res.status})`);
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.error || errBody.message || errBody.msg || `Edge function returned ${res.status}`);
         }
 
         const response = await res.json();
+
         if (response.success) {
           setStatus("success");
           queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] });
           const platformName = platformDef?.name || platform;
-          setTimeout(() => { toast.success(`${platformName} connected successfully!`); navigate(createPageUrl("ConnectedPlatforms")); }, 1500);
-        } else throw new Error(response.error || "Failed to connect");
+          setTimeout(() => {
+            toast.success(`${platformName} connected successfully!`);
+            navigate(createPageUrl("ConnectedPlatforms"));
+          }, 1500);
+        } else {
+          throw new Error(response.error || "Failed to connect");
+        }
       } catch (err) { setStatus("error"); setError(err.message || "Failed to connect platform"); }
     };
     handleCallback();

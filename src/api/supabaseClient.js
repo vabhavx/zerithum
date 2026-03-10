@@ -415,7 +415,21 @@ export const functions = {
 
         const getToken = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            return session?.access_token;
+            if (!session?.access_token) return null;
+
+            // Proactively refresh if token expires within 60 seconds.
+            // getSession() returns the cached token which may be moments from expiry,
+            // causing "Invalid JWT" on the Supabase gateway.
+            try {
+                const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+                const expiresIn = (payload.exp * 1000) - Date.now();
+                if (expiresIn < 60_000) {
+                    const { data: refreshed } = await supabase.auth.refreshSession();
+                    if (refreshed?.session?.access_token) return refreshed.session.access_token;
+                }
+            } catch { /* fall through to cached token */ }
+
+            return session.access_token;
         };
 
         const callEdge = async (token) => {
