@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Shield, Download, Trash2, Loader2, Lock } from 'lucide-react';
 import DeleteAccountModal from "@/components/security/DeleteAccountModal";
-import { base44 } from '@/api/supabaseClient';
+import { auth, entities } from '@/api/supabaseClient';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -14,10 +14,10 @@ export default function SettingsPrivacy() {
     setIsExporting(true);
     try {
       const [user, transactions, expenses, platforms] = await Promise.all([
-        base44.auth.me(),
-        base44.entities.RevenueTransaction.list('-transaction_date', 5000).catch(() => []),
-        base44.entities.Expense.list('-expense_date', 5000).catch(() => []),
-        base44.entities.ConnectedPlatform.list('-connected_at', 100).catch(() => []),
+        auth.me(),
+        entities.RevenueTransaction.list('-transaction_date', 5000).catch(() => []),
+        entities.Expense.list('-expense_date', 5000).catch(() => []),
+        entities.ConnectedPlatform.list('-connected_at', 100).catch(() => []),
       ]);
 
       const exportPayload = {

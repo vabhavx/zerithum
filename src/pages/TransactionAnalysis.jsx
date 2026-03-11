@@ -4,7 +4,7 @@ import { format, eachDayOfInterval, isSameDay, subDays } from "date-fns";
 import { Download, Filter, Search, BarChart3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis } from "recharts";
-import { base44 } from "@/api/supabaseClient";
+import { entities } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,7 +37,7 @@ export default function TransactionAnalysis() {
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["revenueTransactions"],
-    queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 3000),
+    queryFn: () => entities.RevenueTransaction.list("-transaction_date", 3000),
     staleTime: 1000 * 60 * 5,
   });
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { base44 } from "@/api/supabaseClient";
+import { entities } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfYear, endOfYear } from "date-fns";
 import { 
@@ -34,7 +34,7 @@ export default function TaxReports() {
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["revenueTransactions"],
-    queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 1000),
+    queryFn: () => entities.RevenueTransaction.list("-transaction_date", 1000),
   });
 
   // Filter transactions by year

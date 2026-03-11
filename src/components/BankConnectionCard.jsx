@@ -7,7 +7,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/supabaseClient";
+import { auth, functions } from "@/api/supabaseClient";
 import supabase from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { GlassCard, itemVariants } from "@/components/ui/glass-card";
@@ -121,7 +121,7 @@ export default function BankConnectionCard({
         if (!connection?.id || syncing) return;
         setSyncing(true);
         try {
-            const result = await base44.functions.invoke("tellerSync", { connectionId: connection.id });
+            const result = await functions.invoke("tellerSync", { connectionId: connection.id });
             if (result?.reauth_required) {
                 toast.error("Bank connection needs to be renewed");
             } else {
@@ -139,7 +139,7 @@ export default function BankConnectionCard({
         if (!connection?.id) return;
         setDisconnecting(true);
         try {
-            await base44.functions.invoke("tellerDisconnect", { connectionId: connection.id });
+            await functions.invoke("tellerDisconnect", { connectionId: connection.id });
             toast.success("Bank disconnected");
             setDisconnectOpen(false);
             invalidate();
@@ -166,7 +166,7 @@ export default function BankConnectionCard({
 
             if (dateIdx === -1 || amountIdx === -1) throw new Error("CSV must have 'date' and 'amount' columns");
 
-            const user = await base44.auth.me();
+            const user = await auth.me();
             const rows = [];
             for (let i = 1; i < lines.length; i++) {
                 const cols = lines[i].split(",").map((c) => c.trim().replace(/^"|"$/g, ""));

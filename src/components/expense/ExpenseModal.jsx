@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { base44 } from "@/api/supabaseClient";
+import { entities, storage } from "@/api/supabaseClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,10 +150,10 @@ export default function ExpenseModal({
 
         try {
             if (isEditing) {
-                await base44.entities.Expense.update(initialData.id, payload);
+                await entities.Expense.update(initialData.id, payload);
                 toast.success("Expense updated");
             } else {
-                await base44.entities.Expense.create(payload);
+                await entities.Expense.create(payload);
                 toast.success("Expense added");
             }
             onSuccess?.();
@@ -177,7 +177,7 @@ export default function ExpenseModal({
 
         setUploadingReceipt(true);
         try {
-            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+            const { file_url } = await storage.uploadFile(file);
             setValue("receipt_url", file_url, { shouldValidate: true });
             toast.success("Receipt attached");
         } catch {

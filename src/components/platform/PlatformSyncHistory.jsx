@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/supabaseClient";
+import { auth, entities } from "@/api/supabaseClient";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle2, XCircle, Clock, TrendingUp } from "lucide-react";
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export default function PlatformSyncHistory({ platform, open, onOpenChange }) {
   const { data: syncHistory = [] } = useQuery({
     queryKey: ["platformSyncHistory", platform?.id],
-    queryFn: async () => { if (!platform) return []; const user = await base44.auth.me(); return base44.entities.SyncHistory.filter({ user_id: user.id, platform: platform.platform }, "-sync_started_at", 100); },
+    queryFn: async () => { if (!platform) return []; const user = await auth.me(); return entities.SyncHistory.filter({ user_id: user.id, platform: platform.platform }, "-sync_started_at", 100); },
     enabled: open && !!platform,
   });
 

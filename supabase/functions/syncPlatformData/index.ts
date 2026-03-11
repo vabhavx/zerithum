@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         const expiresAt = new Date(conn.expires_at);
         if (expiresAt <= new Date() && conn.refresh_token) {
             const refreshCtx = {
-                base44: {
+                db: {
                     asServiceRole: {
                         entities: {
                             ConnectedPlatform: {

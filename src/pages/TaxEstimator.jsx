@@ -9,7 +9,7 @@ import {
   Download
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { base44 } from "@/api/supabaseClient";
+import { auth, entities } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,19 +72,19 @@ export default function TaxEstimatorPage() {
 
   const { data: transactions = [] } = useQuery({
     queryKey: ["taxEstimator", "revenueTransactions"],
-    queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 2000),
+    queryFn: () => entities.RevenueTransaction.list("-transaction_date", 2000),
   });
 
   const { data: expenses = [] } = useQuery({
     queryKey: ["taxEstimator", "expenses"],
-    queryFn: () => base44.entities.Expense.list("-expense_date", 2000),
+    queryFn: () => entities.Expense.list("-expense_date", 2000),
   });
 
   const { data: connectedPlatforms = [] } = useQuery({
     queryKey: ["taxEstimator", "connectedPlatforms"],
     queryFn: async () => {
-      const user = await base44.auth.me();
-      return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
+      const user = await auth.me();
+      return entities.ConnectedPlatform.filter({ user_id: user.id });
     },
   });
 

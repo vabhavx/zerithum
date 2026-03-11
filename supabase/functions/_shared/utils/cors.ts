@@ -12,20 +12,9 @@ export function getCorsHeaders(req: Request) {
         'https://zerithum.vercel.app'
     ];
 
-    // Check environment variable for base URL
-    const envBaseUrl = Deno.env.get('VITE_BASE44_APP_BASE_URL');
-    if (envBaseUrl && !allowedOrigins.includes(envBaseUrl)) {
-        allowedOrigins.push(envBaseUrl);
-    }
-
     let allowOrigin = 'null';
 
-    // Only allow *.base44.app subdomain (legacy Base44 internal tooling)
-    const isAllowedSubdomain = origin && (
-        /^https:\/\/([a-zA-Z0-9-]+\.)*base44\.app$/.test(origin)
-    );
-
-    if (origin && (allowedOrigins.includes(origin) || isAllowedSubdomain)) {
+    if (origin && allowedOrigins.includes(origin)) {
         allowOrigin = origin;
     }
 

@@ -4,7 +4,7 @@ export interface ServiceResponse {
 }
 
 export interface RefreshAccessTokenContext {
-  base44: any;
+  db: any;
   env: {
     get: (key: string) => string | undefined;
   };
@@ -68,7 +68,7 @@ export async function refreshAccessTokenLogic(
   }
 
   // Get connection details - verify it belongs to the current user
-  const connections = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
+  const connections = await ctx.db.asServiceRole.entities.ConnectedPlatform.filter({
     id: connectionId,
     user_id: user.id
   });
@@ -154,7 +154,7 @@ export async function refreshAccessTokenLogic(
     updateData.refresh_token = await ctx.encrypt(refreshToken);
   }
 
-  await ctx.base44.asServiceRole.entities.ConnectedPlatform.update(connectionId, updateData);
+  await ctx.db.asServiceRole.entities.ConnectedPlatform.update(connectionId, updateData);
 
   return {
     status: 200, body: {

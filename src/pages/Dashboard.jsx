@@ -52,7 +52,7 @@ import {
   Check,
 } from 'lucide-react';
 import { AreaChart, Area, Tooltip, ResponsiveContainer, XAxis, YAxis, CartesianGrid, PieChart as RePieChart, Pie, Cell, ReferenceLine } from 'recharts';
-import { base44 } from "@/api/supabaseClient";
+import { auth, entities } from "@/api/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -1558,7 +1558,7 @@ const Dashboard = () => {
   } = useQuery({
     queryKey: ["revenueTransactions", period],
     queryFn: async () => {
-      const data = await base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date");
+      const data = await entities.RevenueTransaction.fetchAll({}, "-transaction_date");
       setLastUpdated(new Date());
       return data;
     },
@@ -1569,7 +1569,7 @@ const Dashboard = () => {
   // Fetch expenses
   const { data: expenses = [] } = useQuery({
     queryKey: ["expenses", period],
-    queryFn: () => base44.entities.Expense.list("-expense_date", 1000),
+    queryFn: () => entities.Expense.list("-expense_date", 1000),
     staleTime: QUERY_STALE_TIME,
     cacheTime: QUERY_CACHE_TIME,
   });
@@ -1582,9 +1582,9 @@ const Dashboard = () => {
   } = useQuery({
     queryKey: ["connectedPlatforms"],
     queryFn: async () => {
-      const user = await base44.auth.me();
+      const user = await auth.me();
       if (!user?.id) return [];
-      return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
+      return entities.ConnectedPlatform.filter({ user_id: user.id });
     },
     staleTime: QUERY_STALE_TIME,
   });
@@ -1593,9 +1593,9 @@ const Dashboard = () => {
   const { data: pendingAutopsyEvents = [] } = useQuery({
     queryKey: ["autopsyEvents", "pending"],
     queryFn: async () => {
-      const user = await base44.auth.me();
+      const user = await auth.me();
       if (!user?.id) return [];
-      return base44.entities.AutopsyEvent.filter({ user_id: user.id, status: "pending_review" }, "-detected_at", 10);
+      return entities.AutopsyEvent.filter({ user_id: user.id, status: "pending_review" }, "-detected_at", 10);
     },
     staleTime: QUERY_STALE_TIME,
   });

@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { Download, Pencil, Plus, Trash2, PieChart as PieChartIcon, Receipt, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
-import { base44 } from "@/api/supabaseClient";
+import { entities } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,12 +69,12 @@ export default function Expenses() {
 
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: ["expenses"],
-    queryFn: () => base44.entities.Expense.list("-expense_date", 3000),
+    queryFn: () => entities.Expense.list("-expense_date", 3000),
     staleTime: 1000 * 60 * 5,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Expense.delete(id),
+    mutationFn: (id) => entities.Expense.delete(id),
     onSuccess: () => {
       toast.success("Expense deleted");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/supabaseClient';
+import { functions } from '@/api/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle2, XCircle, ArrowLeft, RefreshCw, ExternalLink } from 'lucide-react';
 
@@ -18,7 +18,7 @@ export default function BillingConfirm() {
     useEffect(() => {
         const poll = async () => {
             try {
-                const result = await base44.functions.invoke('getSubscriptionStatus');
+                const result = await functions.invoke('getSubscriptionStatus');
                 const sub = result?.subscription;
 
                 if (sub?.status === 'ACTIVE') {
@@ -55,7 +55,7 @@ export default function BillingConfirm() {
         startTimeRef.current = Date.now();
         const poll = async () => {
             try {
-                const result = await base44.functions.invoke('getSubscriptionStatus');
+                const result = await functions.invoke('getSubscriptionStatus');
                 if (result?.subscription?.status === 'ACTIVE') {
                     setStatus('active');
                     setPlan(result.subscription.plan);

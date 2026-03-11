@@ -33,7 +33,7 @@ describe('sendSyncFailedEmailLogic', () => {
         expect(body).toContain('YouTube Sync Failed');
         expect(body).toContain('Token expired');
         expect(body).toContain('Quick fix:');
-        expect(body).toContain('https://zerithum-copy-36d43903.base44.app/ConnectedPlatforms');
+        expect(body).toContain('https://zerithum.com/ConnectedPlatforms');
     });
 
     it('should throw error if userId is missing', async () => {

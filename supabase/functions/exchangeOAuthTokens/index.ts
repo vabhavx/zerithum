@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
                 redirectUri: redirect_uri || undefined,
                 clientId: client_id || undefined,
                 clientKey: client_key || undefined,
-                base44: {
+                db: {
                     asServiceRole: {
                         supabase: supabase,
                         entities: {

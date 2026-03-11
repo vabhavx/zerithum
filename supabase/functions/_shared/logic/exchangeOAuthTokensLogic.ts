@@ -3,7 +3,7 @@ export interface ExchangeTokensContext {
   fetch: (url: string, init?: any) => Promise<Response>;
   logError: (msg: string, ...args: any[]) => void;
   encrypt: (data: string) => Promise<string>;
-  base44: any;
+  db: any;
   shop?: string; // Shopify-specific: the merchant's myshopify.com subdomain
   redirectUri?: string; // Client-provided redirect URI (validated server-side)
   clientId?: string;
@@ -95,14 +95,14 @@ export async function exchangeOAuthTokens(
   }
 
   // Limit Check: Check if connection already exists for this user+platform
-  const existingConnections = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
+  const existingConnections = await ctx.db.asServiceRole.entities.ConnectedPlatform.filter({
     user_id: user.id,
     platform: platform
   });
 
   // Check entitlements for NEW connections before executing any logic
   if (existingConnections.length === 0) {
-    const { data: entitlement } = await ctx.base44.asServiceRole.supabase
+    const { data: entitlement } = await ctx.db.asServiceRole.supabase
       .from('entitlements')
       .select('max_platforms')
       .eq('user_id', user.id)
@@ -112,7 +112,7 @@ export async function exchangeOAuthTokens(
 
     // Only enforce limit when the user actually has a subscription with a real limit
     if (maxPlatforms > 0) {
-      const allConnections = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
+      const allConnections = await ctx.db.asServiceRole.entities.ConnectedPlatform.filter({
         user_id: user.id
       });
 
@@ -155,8 +155,7 @@ export async function exchangeOAuthTokens(
       'https://www.zerithum.com'
     ];
     const isAllowed = ALLOWED_ORIGINS.some(origin => redirectUri!.startsWith(origin)) ||
-      /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app\//.test(redirectUri!) ||
-      /^https:\/\/([a-zA-Z0-9-]+\.)*base44\.app\//.test(redirectUri!);
+      /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app\//.test(redirectUri!);
     if (!isAllowed) {
       ctx.logError(`Rejected untrusted redirect_uri: ${redirectUri}`);
       return { status: 400, body: { error: 'Invalid redirect URI' } };
@@ -246,18 +245,18 @@ export async function exchangeOAuthTokens(
       last_synced_at: new Date().toISOString(),
       error_message: null
     };
-    const existingShopify = await ctx.base44.asServiceRole.entities.ConnectedPlatform.filter({
+    const existingShopify = await ctx.db.asServiceRole.entities.ConnectedPlatform.filter({
       user_id: user.id,
       platform: 'shopify'
     });
     if (existingShopify.length > 0) {
       shopifyConnectionData.connected_at = existingShopify[0].connected_at;
-      await ctx.base44.asServiceRole.entities.ConnectedPlatform.update(
+      await ctx.db.asServiceRole.entities.ConnectedPlatform.update(
         existingShopify[0].id,
         shopifyConnectionData
       );
     } else {
-      await ctx.base44.asServiceRole.entities.ConnectedPlatform.create(shopifyConnectionData);
+      await ctx.db.asServiceRole.entities.ConnectedPlatform.create(shopifyConnectionData);
     }
     return { status: 200, body: { success: true, message: 'Platform connected successfully' } };
   }
@@ -352,13 +351,13 @@ export async function exchangeOAuthTokens(
 
   if (existingConnections.length > 0) {
     // Update existing connection for this user
-    await ctx.base44.asServiceRole.entities.ConnectedPlatform.update(
+    await ctx.db.asServiceRole.entities.ConnectedPlatform.update(
       existingConnections[0].id,
       connectionData
     );
   } else {
     // Create new connection for this user
-    await ctx.base44.asServiceRole.entities.ConnectedPlatform.create(connectionData);
+    await ctx.db.asServiceRole.entities.ConnectedPlatform.create(connectionData);
   }
 
   return {

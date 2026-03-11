@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { CreditCard, ExternalLink, Globe2, ArrowRight, Loader2, Check, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/supabaseClient";
+import { functions } from "@/api/supabaseClient";
 
 const COMPLIANCE_LINKS = [
     { title: "Tax Estimator Defaults", url: "TaxEstimator", desc: "Configure global baseline variables" },
@@ -33,7 +33,7 @@ export default function SettingsBilling({ user }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        base44.functions.invoke("getSubscriptionStatus")
+        functions.invoke("getSubscriptionStatus")
             .then(setSubData)
             .catch(() => { })
             .finally(() => setLoading(false));

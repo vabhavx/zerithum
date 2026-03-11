@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
-import { base44 } from "@/api/supabaseClient";
+import { auth } from "@/api/supabaseClient";
 import {
   LayoutDashboard, Link2, Scale, FileText, Menu, X, LogOut,
   AlertTriangle, DollarSign, ChevronDown, Settings, BarChart3
@@ -31,7 +31,7 @@ export default function Layout({ children, currentPageName }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => setUser(null)); }, []);
+  useEffect(() => { auth.me().then(setUser).catch(() => setUser(null)); }, []);
   useEffect(() => { setMobileOpen(false); }, [currentPageName]);
   useEffect(() => {
     const handler = (e) => { if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false); };
@@ -39,7 +39,7 @@ export default function Layout({ children, currentPageName }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleLogout = () => base44.auth.logout();
+  const handleLogout = () => auth.logout();
 
   const NavLink = ({ item, mobile }) => {
     const isActive = currentPageName === item.page;

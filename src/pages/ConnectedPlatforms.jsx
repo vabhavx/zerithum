@@ -5,7 +5,7 @@ import {
   AlertTriangle, CheckCircle2, Loader2, Plug, RefreshCw, Search, ShieldCheck, Unplug
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { base44 } from "@/api/supabaseClient";
+import { auth, entities, functions } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,14 +70,14 @@ export default function ConnectedPlatforms() {
 
   const { data: connectedPlatforms = [], isLoading, refetch: refetchPlatforms, isFetching } = useQuery({
     queryKey: ["connectedPlatforms"],
-    queryFn: async () => { const user = await base44.auth.me(); return base44.entities.ConnectedPlatform.filter({ user_id: user.id }, '-connected_at'); },
+    queryFn: async () => { const user = await auth.me(); return entities.ConnectedPlatform.filter({ user_id: user.id }, '-connected_at'); },
     staleTime: 1000 * 60 * 2,
   });
   const { data: bankConnection, isLoading: bankLoading } = useQuery({
     queryKey: ["bankConnection"],
     queryFn: async () => {
-      const user = await base44.auth.me();
-      const connections = await base44.entities.BankConnection.filter({ user_id: user.id });
+      const user = await auth.me();
+      const connections = await entities.BankConnection.filter({ user_id: user.id });
       // Return the first active/reauth connection, or null
       return connections.find((c) => c.status !== "disconnected") || null;
     },
@@ -87,8 +87,8 @@ export default function ConnectedPlatforms() {
     queryKey: ["bankAccounts"],
     queryFn: async () => {
       if (!bankConnection?.id) return [];
-      const user = await base44.auth.me();
-      return base44.entities.BankAccount.filter({ user_id: user.id, bank_connection_id: bankConnection.id });
+      const user = await auth.me();
+      return entities.BankAccount.filter({ user_id: user.id, bank_connection_id: bankConnection.id });
     },
     enabled: !!bankConnection?.id,
     staleTime: 1000 * 60 * 2,
@@ -96,17 +96,17 @@ export default function ConnectedPlatforms() {
 
   const { data: syncHistory = [], refetch: refetchHistory } = useQuery({
     queryKey: ["syncHistory"],
-    queryFn: async () => { const user = await base44.auth.me(); return base44.entities.SyncHistory.filter({ user_id: user.id }, "-sync_started_at", 100); },
+    queryFn: async () => { const user = await auth.me(); return entities.SyncHistory.filter({ user_id: user.id }, "-sync_started_at", 100); },
     staleTime: 1000 * 30,
   });
 
   const connectMutation = useMutation({
-    mutationFn: (payload) => base44.entities.ConnectedPlatform.create(payload),
+    mutationFn: (payload) => entities.ConnectedPlatform.create(payload),
     onSuccess: () => { toast.success("Platform connected"); setCredentialsOpen(false); setSelectedPlatform(null); setApiKey(""); setShopName(""); setConnectingId(null); queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] }); },
     onError: () => { toast.error("Could not connect platform"); setConnectingId(null); },
   });
   const disconnectMutation = useMutation({
-    mutationFn: (id) => base44.entities.ConnectedPlatform.delete(id),
+    mutationFn: (id) => entities.ConnectedPlatform.delete(id),
     onSuccess: () => { toast.success("Platform disconnected"); setDisconnectTarget(null); queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] }); },
     onError: () => { toast.error("Could not disconnect platform"); },
   });
@@ -129,7 +129,7 @@ export default function ConnectedPlatforms() {
   const syncConnection = async (connection, forceFullSync = false) => {
     setSyncingId(connection.id);
     try {
-      const response = await base44.functions.invoke("syncPlatformData", { connectionId: connection.id, platform: connection.platform, forceFullSync });
+      const response = await functions.invoke("syncPlatformData", { connectionId: connection.id, platform: connection.platform, forceFullSync });
       if (response?.success) { toast.success(forceFullSync ? `Full sync complete (${response.transactionCount || 0} transactions)` : response.message || "Sync completed"); } else { toast.success("Sync request submitted"); }
       queryClient.invalidateQueries({ queryKey: ["connectedPlatforms"] }); queryClient.invalidateQueries({ queryKey: ["syncHistory"] });
     } catch (error) { toast.error(error?.response?.data?.error || error?.message || "Sync failed"); } finally { setSyncingId(null); }
@@ -140,7 +140,7 @@ export default function ConnectedPlatforms() {
 
     // Entitlement pre-check (advisory only — DB trigger + server edge function enforce)
     try {
-      const subStatus = await base44.functions.invoke('getSubscriptionStatus');
+      const subStatus = await functions.invoke('getSubscriptionStatus');
       const maxP = subStatus?.entitlements?.max_platforms ?? 0;
       const usedP = subStatus?.platforms_used ?? 0;
       if (maxP > 0 && usedP >= maxP) {
@@ -155,9 +155,7 @@ export default function ConnectedPlatforms() {
     setConnectingId(platform.id);
     const csrfToken = crypto.randomUUID(); localStorage.setItem("oauth_state", csrfToken); document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`; const stateValue = `${platform.id}:${csrfToken}`;
     let params;
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const baseOrigin = isLocal ? window.location.origin : 'https://zerithum.com';
-    const redirectUri = baseOrigin + (platform.redirectUri || "/authcallback");
+    const redirectUri = window.location.origin + (platform.redirectUri || "/authcallback");
     if (platform.id === "tiktok") { params = new URLSearchParams({ client_key: platform.clientKey, scope: platform.scope, response_type: "code", redirect_uri: redirectUri, state: stateValue }); }
     else {
       const oauthParams = { client_id: platform.clientId || platform.id, redirect_uri: redirectUri, response_type: "code", scope: platform.scope || "", state: stateValue };
@@ -178,9 +176,7 @@ export default function ConnectedPlatforms() {
       if (selectedPlatform.id === "shopify") {
         const csrfToken = crypto.randomUUID(); localStorage.setItem("oauth_state", csrfToken); localStorage.setItem("shopify_shop_name", shopName.trim()); document.cookie = `oauth_state=${csrfToken}; path=/; max-age=300; SameSite=Lax; Secure`;
         const stateValue = `shopify:${shopName.trim()}:${csrfToken}`;
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const baseOrigin = isLocal ? window.location.origin : 'https://zerithum.com';
-        const redirectUri = baseOrigin + (selectedPlatform.redirectUri || "/authcallback");
+        const redirectUri = window.location.origin + (selectedPlatform.redirectUri || "/authcallback");
         const params = new URLSearchParams({ client_id: selectedPlatform.clientId, scope: selectedPlatform.scope, redirect_uri: redirectUri, state: stateValue });
         window.location.href = `https://${shopName.trim()}.myshopify.com/admin/oauth/authorize?${params.toString()}`; return;
       }

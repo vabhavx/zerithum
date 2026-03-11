@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/supabaseClient";
+import { auth } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,7 +67,7 @@ function PlanCard({ plan, user, onSelect, processingPayment }) {
   const handleClick = () => {
     if (!user) {
       toast.error("Please sign in before subscribing");
-      base44.auth.redirectToLogin(window.location.pathname);
+      auth.redirectToLogin(window.location.pathname);
       return;
     }
     navigate("/Billing");
@@ -125,7 +125,7 @@ export default function Pricing() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => setUser(null));
+    auth.me().then(setUser).catch(() => setUser(null));
   }, []);
 
   const plans = PLANS.monthly;

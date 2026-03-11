@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { base44 } from "@/api/supabaseClient";
+import { functions } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -21,12 +21,12 @@ export default function AIExpenseChat({ open, onOpenChange, expenses = [], metri
   const initConversation = async () => {
     setInitializing(true);
     try {
-      const conv = await base44.agents.createConversation({ agent_name: "expense_advisor", metadata: { name: "Expense Advisory Session" } });
+      const conv = await functions.createConversation({ agent_name: "expense_advisor", metadata: { name: "Expense Advisory Session" } });
       setCurrentConv(conv); setMessages(conv.messages || []);
-      base44.agents.subscribeToConversation(conv.id, (data) => setMessages(data.messages));
+      functions.subscribeToConversation(conv.id, (data) => setMessages(data.messages));
       if (expenses.length > 0) {
         const topMerchant = Object.entries(expenses.reduce((acc, curr) => { acc[curr.merchant] = (acc[curr.merchant] || 0) + curr.amount; return acc; }, {})).sort((a, b) => b[1] - a[1])[0];
-        await base44.agents.addMessage(conv, { role: "system", content: `Current Financial Context:\n- Total Spend: $${metrics.total?.toFixed(2) || "0.00"}\n- Tax Deductible: $${metrics.deductible?.toFixed(2) || "0.00"}\n- Transactions: ${expenses.length}\n- Top Merchant: ${topMerchant ? `${topMerchant[0]} ($${topMerchant[1].toFixed(2)})` : "None"}\n- Recent 5:\n${expenses.slice(0, 5).map(e => `  - ${e.expense_date}: ${e.merchant} ($${e.amount}) - ${e.category}`).join("\n")}\n\nPlease use this context to answer user questions accurately.` });
+        await functions.addMessage(conv, { role: "system", content: `Current Financial Context:\n- Total Spend: $${metrics.total?.toFixed(2) || "0.00"}\n- Tax Deductible: $${metrics.deductible?.toFixed(2) || "0.00"}\n- Transactions: ${expenses.length}\n- Top Merchant: ${topMerchant ? `${topMerchant[0]} ($${topMerchant[1].toFixed(2)})` : "None"}\n- Recent 5:\n${expenses.slice(0, 5).map(e => `  - ${e.expense_date}: ${e.merchant} ($${e.amount}) - ${e.category}`).join("\n")}\n\nPlease use this context to answer user questions accurately.` });
       }
       setInitializing(false);
     } catch (error) { setInitializing(false); }
@@ -35,7 +35,7 @@ export default function AIExpenseChat({ open, onOpenChange, expenses = [], metri
   const handleSend = async (text = input) => {
     if (!text.trim() || !currentConv || sending) return;
     setInput(""); setSending(true);
-    try { await base44.agents.addMessage(currentConv, { role: "user", content: text.trim() }); } catch (error) { /* ignore */ } finally { setSending(false); }
+    try { await functions.addMessage(currentConv, { role: "user", content: text.trim() }); } catch (error) { /* ignore */ } finally { setSending(false); }
   };
 
   const quickActions = [

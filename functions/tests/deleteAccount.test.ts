@@ -54,7 +54,7 @@ describe('deleteAccount type check', () => {
             getCorsHeaders: vi.fn((req) => {
                 const origin = req.headers.get('Origin');
                 return {
-                    'Access-Control-Allow-Origin': (origin === 'http://localhost:3000' || origin?.endsWith('.base44.app')) ? origin : 'null',
+                    'Access-Control-Allow-Origin': origin === 'http://localhost:3000' ? origin : 'null',
                     'Access-Control-Allow-Headers': 'mock-headers',
                     'Access-Control-Allow-Methods': 'mock-methods',
                 };

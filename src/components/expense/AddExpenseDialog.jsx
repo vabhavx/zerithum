@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { base44 } from "@/api/supabaseClient";
+import { entities, functions, storage } from "@/api/supabaseClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,17 +45,17 @@ export default function AddExpenseDialog({ open, onOpenChange, onSuccess }) {
     useEffect(() => { if (!open) reset(); }, [open, reset]);
 
     const onSubmit = async (data) => {
-        try { await base44.entities.Expense.create(data); toast.success("Expense added successfully"); onSuccess?.(); onOpenChange(false); } catch (error) { toast.error("Failed to add expense: " + error.message); }
+        try { await entities.Expense.create(data); toast.success("Expense added successfully"); onSuccess?.(); onOpenChange(false); } catch (error) { toast.error("Failed to add expense: " + error.message); }
     };
 
     const handleReceiptUpload = async (file) => {
         if (!file) return;
         setUploadingReceipt(true);
         try {
-            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+            const { file_url } = await storage.uploadFile(file);
             setValue("receipt_url", file_url);
             setProcessingReceipt(true);
-            const result = await base44.functions.invoke('processReceipt', { receiptUrl: file_url });
+            const result = await functions.invoke('processReceipt', { receiptUrl: file_url });
             if (result.data.success) {
                 const { extracted, categorization } = result.data;
                 if (extracted.merchant) setValue("merchant", extracted.merchant);
@@ -76,7 +76,7 @@ export default function AddExpenseDialog({ open, onOpenChange, onSuccess }) {
         if (!description && !merchant) { toast.error("Add a description or merchant first"); return; }
         setCategorizing(true);
         try {
-            const result = await base44.functions.invoke('categorizeExpense', { description, merchant, amount: parseFloat(amount) || 0, receiptUrl });
+            const result = await functions.invoke('categorizeExpense', { description, merchant, amount: parseFloat(amount) || 0, receiptUrl });
             if (result.data.success) { setValue("category", result.data.category); setValue("is_tax_deductible", result.data.is_tax_deductible); setValue("deduction_percentage", result.data.deduction_percentage); toast.success(`Categorized as ${CATEGORIES[result.data.category].label}`); }
         } catch (error) { toast.error("Failed to categorize"); } finally { setCategorizing(false); }
     };

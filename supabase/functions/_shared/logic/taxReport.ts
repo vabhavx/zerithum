@@ -149,7 +149,7 @@ export async function sendQuarterlyTaxReportLogic(ctx: TaxReportContext) {
       </ul>
 
       <div style="text-align: center;">
-        <a href="https://zerithum-copy-36d43903.base44.app/TaxEstimator" class="cta-button">View Full Report →</a>
+        <a href="https://zerithum.com/TaxEstimator" class="cta-button">View Full Report →</a>
       </div>
 
       <p style="color: #666; font-size: 13px; margin-top: 30px;">

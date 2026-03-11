@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { base44 } from "@/api/supabaseClient";
+import { entities, functions, storage } from "@/api/supabaseClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,8 +21,8 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }) {
   const processFile = async (file) => {
     setUploading(true); setParsing(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      const extractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({ file_url, json_schema: { type: "object", properties: { expenses: { type: "array", items: { type: "object", properties: { amount: { type: "number" }, expense_date: { type: "string", description: "Format: YYYY-MM-DD" }, merchant: { type: "string" }, description: { type: "string" }, category: { type: "string", enum: ["software_subscriptions", "office_supplies", "travel", "meals", "marketing", "consulting", "education", "utilities", "other"] } }, required: ["amount", "expense_date", "merchant"] } } } } });
+      const { file_url } = await storage.uploadFile(file);
+      const extractResult = await functions.invoke('extractDataFromFile', { file_url, json_schema: { type: "object", properties: { expenses: { type: "array", items: { type: "object", properties: { amount: { type: "number" }, expense_date: { type: "string", description: "Format: YYYY-MM-DD" }, merchant: { type: "string" }, description: { type: "string" }, category: { type: "string", enum: ["software_subscriptions", "office_supplies", "travel", "meals", "marketing", "consulting", "education", "utilities", "other"] } }, required: ["amount", "expense_date", "merchant"] } } } } });
       if (extractResult.status === "success" && extractResult.output?.expenses) { setParsedExpenses(extractResult.output.expenses.map((exp, idx) => ({ ...exp, id: `preview-${idx}`, isValid: !!(exp.amount && exp.expense_date && exp.merchant), category: exp.category || 'other' }))); setStep("preview"); } else throw new Error(extractResult.details || "Failed to extract data");
     } catch (error) { toast.error("Import failed: " + error.message); resetState(); } finally { setUploading(false); setParsing(false); }
   };
@@ -39,7 +39,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }) {
     setStep("processing");
     try {
       const toCreate = validExpenses.map(({ id, isValid, ...rest }) => ({ ...rest, is_tax_deductible: true, deduction_percentage: 100, payment_method: "other" }));
-      await base44.entities.Expense.bulkCreate(toCreate);
+      await entities.Expense.bulkCreate(toCreate);
       setImportResult({ count: toCreate.length }); setStep("success"); toast.success(`${toCreate.length} expenses imported successfully!`);
       setTimeout(() => { onSuccess?.(); handleOpenChange(false); }, 2000);
     } catch (error) { toast.error("Failed to save expenses: " + error.message); setStep("preview"); }

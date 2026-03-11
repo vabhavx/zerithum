@@ -1,14 +1,14 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { base44 } from "@/api/supabaseClient";
+import { entities } from "@/api/supabaseClient";
 
 export const useReconciliationStats = () => {
   return useQuery({
     queryKey: ["reconciliationStats"],
     queryFn: async () => {
       const [total, matched, autoMatched] = await Promise.all([
-        base44.entities.RevenueTransaction.count(),
-        base44.entities.Reconciliation.count({ match_category: { $neq: 'unmatched' } }),
-        base44.entities.Reconciliation.count({ reconciled_by: 'auto' })
+        entities.RevenueTransaction.count(),
+        entities.Reconciliation.count({ match_category: { $neq: 'unmatched' } }),
+        entities.Reconciliation.count({ reconciled_by: 'auto' })
       ]);
 
       const unmatched = total - matched;
@@ -32,11 +32,11 @@ export const useUnreconciledTransactions = () => {
       // Fetch all reconciled revenue transaction IDs
       // This is an optimization over fetching full objects, but still scales linearly with dataset size.
       // Ideal solution would be a backend view or 'not in' query support.
-      const reconciledIds = await base44.entities.Reconciliation.fetchAllIds({}, 'id', 'revenue_transaction_id');
+      const reconciledIds = await entities.Reconciliation.fetchAllIds({}, 'id', 'revenue_transaction_id');
       const reconciledSet = new Set(reconciledIds);
 
       // Fetch all revenue IDs (sorted by date desc) to find recent unmatched ones
-      const allRevenueIds = await base44.entities.RevenueTransaction.fetchAllIds({}, '-transaction_date');
+      const allRevenueIds = await entities.RevenueTransaction.fetchAllIds({}, '-transaction_date');
 
       // Find top 5 unmatched IDs
       const topUnreconciledIds = [];
@@ -50,7 +50,7 @@ export const useUnreconciledTransactions = () => {
       if (topUnreconciledIds.length === 0) return [];
 
       // Fetch details for these 5
-      const transactions = await base44.entities.RevenueTransaction.filter({ id: { $in: topUnreconciledIds } });
+      const transactions = await entities.RevenueTransaction.filter({ id: { $in: topUnreconciledIds } });
 
       // Sort locally to ensure order
       return transactions.sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime());
@@ -62,7 +62,7 @@ export const useReviewQueue = (page = 1, pageSize = 10) => {
   return useQuery({
     queryKey: ["reviewQueue", page, pageSize],
     queryFn: async () => {
-      const { data, count } = await base44.entities.Reconciliation.paginate(
+      const { data, count } = await entities.Reconciliation.paginate(
         page, pageSize,
         { review_status: 'pending_review' },
         '-reconciled_at'
@@ -74,8 +74,8 @@ export const useReviewQueue = (page = 1, pageSize = 10) => {
       const bankIds = data.map(r => r.bank_transaction_id).filter(Boolean);
 
       const [revenueTransactions, bankTransactions] = await Promise.all([
-        revenueIds.length > 0 ? base44.entities.RevenueTransaction.filter({ id: { $in: revenueIds } }) : [],
-        bankIds.length > 0 ? base44.entities.BankTransaction.filter({ id: { $in: bankIds } }) : []
+        revenueIds.length > 0 ? entities.RevenueTransaction.filter({ id: { $in: revenueIds } }) : [],
+        bankIds.length > 0 ? entities.BankTransaction.filter({ id: { $in: bankIds } }) : []
       ]);
 
       const joinedData = data.map(rec => ({
@@ -99,7 +99,7 @@ export const useReconciliations = (page = 1, pageSize = 10, filterStatus = 'all'
         filters.match_category = filterStatus;
       }
 
-      const { data, count } = await base44.entities.Reconciliation.paginate(page, pageSize, filters, '-reconciled_at');
+      const { data, count } = await entities.Reconciliation.paginate(page, pageSize, filters, '-reconciled_at');
 
       if (data.length === 0) return { data: [], count: 0 };
 
@@ -108,8 +108,8 @@ export const useReconciliations = (page = 1, pageSize = 10, filterStatus = 'all'
 
       // Fetch details in batch
       const [revenueTransactions, bankTransactions] = await Promise.all([
-        revenueIds.length > 0 ? base44.entities.RevenueTransaction.filter({ id: { $in: revenueIds } }) : [],
-        bankIds.length > 0 ? base44.entities.BankTransaction.filter({ id: { $in: bankIds } }) : []
+        revenueIds.length > 0 ? entities.RevenueTransaction.filter({ id: { $in: revenueIds } }) : [],
+        bankIds.length > 0 ? entities.BankTransaction.filter({ id: { $in: bankIds } }) : []
       ]);
 
       // Map details to reconciliation records

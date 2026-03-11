@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { base44 } from "@/api/supabaseClient";
+import { entities } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, subYears } from "date-fns";
 import { Download, Calendar, TrendingUp, TrendingDown, DollarSign, BarChart3, FileText } from "lucide-react";
@@ -43,8 +43,8 @@ export default function Reports() {
     return { startDate: start, endDate: end, compareStartDate: compareStart, compareEndDate: compareEnd };
   }, [dateRange]);
 
-  const { data: transactions = [] } = useQuery({ queryKey: ["transactions", startDate, endDate], queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 1000) });
-  const { data: compareTransactions = [] } = useQuery({ queryKey: ["compareTransactions", compareStartDate, compareEndDate], queryFn: () => base44.entities.RevenueTransaction.list("-transaction_date", 1000) });
+  const { data: transactions = [] } = useQuery({ queryKey: ["transactions", startDate, endDate], queryFn: () => entities.RevenueTransaction.list("-transaction_date", 1000) });
+  const { data: compareTransactions = [] } = useQuery({ queryKey: ["compareTransactions", compareStartDate, compareEndDate], queryFn: () => entities.RevenueTransaction.list("-transaction_date", 1000) });
 
   const filteredTransactions = useMemo(() => transactions.filter(t => { const d = new Date(t.transaction_date); return d >= startDate && d <= endDate && (platformFilter === "all" || t.platform === platformFilter) && (categoryFilter === "all" || t.category === categoryFilter); }), [transactions, startDate, endDate, platformFilter, categoryFilter]);
   const filteredCompareTransactions = useMemo(() => compareTransactions.filter(t => { const d = new Date(t.transaction_date); return d >= compareStartDate && d <= compareEndDate; }), [compareTransactions, compareStartDate, compareEndDate]);

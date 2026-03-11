@@ -27,7 +27,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // ============================================================================
-// AUTH HELPERS (replaces base44.auth)
+// AUTH HELPERS
 // ============================================================================
 
 export const auth = {
@@ -118,7 +118,7 @@ export const auth = {
 };
 
 // ============================================================================
-// ENTITY HELPERS (replaces base44.entities)
+// ENTITY HELPERS
 // ============================================================================
 
 function createEntityHelper(tableName) {
@@ -406,7 +406,7 @@ export const entities = Object.fromEntries(
 );
 
 // ============================================================================
-// FUNCTIONS HELPERS (replaces base44.functions.invoke)
+// FUNCTIONS HELPERS
 // ============================================================================
 
 export const functions = {
@@ -572,17 +572,25 @@ export const storage = {
 
         if (error) throw error;
 
-        // Get public URL
         const { data: { publicUrl } } = supabase.storage
             .from(bucket)
             .getPublicUrl(path);
 
         return publicUrl;
+    },
+
+    async uploadFile(file) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+        const ext = file.name?.split('.').pop() || 'bin';
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const url = await this.upload('receipts', path, file);
+        return { file_url: url };
     }
 };
 
 // ============================================================================
-// ANALYTICS HELPER (replaces base44.appLogs)
+// ANALYTICS HELPER
 // ============================================================================
 
 export const appLogs = {
@@ -597,21 +605,6 @@ export const appLogs = {
         return this.logEvent('page_view', { page: pageName });
     }
 };
-
-// ============================================================================
-// BACKWARD COMPATIBLE EXPORT (drop-in replacement for base44)
-// ============================================================================
-
-export const base44Compatible = {
-    auth,
-    entities,
-    functions,
-    storage,
-    appLogs
-};
-
-// Direct export for drop-in replacement of base44Client
-export const base44 = base44Compatible;
 
 export default supabase;
 

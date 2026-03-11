@@ -10,7 +10,7 @@ import {
   Shield,
 } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Tooltip, XAxis, YAxis } from "recharts";
-import { base44 } from "@/api/supabaseClient";
+import { auth, entities } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -160,7 +160,7 @@ export default function RevenueAutopsy() {
     isFetching: isFetchingTransactions,
   } = useQuery({
     queryKey: ["revenueTransactions"],
-    queryFn: () => base44.entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
+    queryFn: () => entities.RevenueTransaction.fetchAll({}, "-transaction_date"),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -171,8 +171,8 @@ export default function RevenueAutopsy() {
   } = useQuery({
     queryKey: ["connectedPlatforms"],
     queryFn: async () => {
-      const user = await base44.auth.me();
-      return base44.entities.ConnectedPlatform.filter({ user_id: user.id });
+      const user = await auth.me();
+      return entities.ConnectedPlatform.filter({ user_id: user.id });
     },
     staleTime: 1000 * 60 * 2,
   });
@@ -180,8 +180,8 @@ export default function RevenueAutopsy() {
   const { data: autopsyEvents = [], isLoading: eventsLoading } = useQuery({
     queryKey: ["autopsyEvents"],
     queryFn: async () => {
-      const user = await base44.auth.me();
-      return base44.entities.AutopsyEvent.filter({ user_id: user.id }, "-detected_at", 40);
+      const user = await auth.me();
+      return entities.AutopsyEvent.filter({ user_id: user.id }, "-detected_at", 40);
     },
     staleTime: 1000 * 60,
   });

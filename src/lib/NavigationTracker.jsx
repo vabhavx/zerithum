@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { base44 } from '@/api/supabaseClient';
+import { appLogs } from '@/api/supabaseClient';
 import { pagesConfig } from '@/pages.config';
 
 export default function NavigationTracker() {
@@ -36,8 +36,8 @@ export default function NavigationTracker() {
             pageName = matchedKey || null;
         }
 
-        if (isAuthenticated && pageName && base44.appLogs?.logUserInApp) {
-            base44.appLogs.logUserInApp(pageName).catch(() => {
+        if (isAuthenticated && pageName && appLogs?.logUserInApp) {
+            appLogs.logUserInApp(pageName).catch(() => {
                 // Silently fail - logging shouldn't break the app
             });
         }

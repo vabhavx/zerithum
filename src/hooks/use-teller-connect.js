@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { base44 } from "@/api/supabaseClient";
+import { functions } from "@/api/supabaseClient";
 
 const TELLER_CONNECT_URL = "https://cdn.teller.io/connect/connect.js";
 
@@ -55,7 +55,7 @@ export function useTellerConnect({ onSuccess, onError, enrollmentId } = {}) {
 
         try {
             // 1. Get nonce and app config from backend
-            const config = await base44.functions.invoke("tellerGenerateNonce");
+            const config = await functions.invoke("tellerGenerateNonce");
 
             if (!config?.nonce || !config?.applicationId) {
                 throw new Error("Failed to get Teller configuration");
@@ -70,7 +70,7 @@ export function useTellerConnect({ onSuccess, onError, enrollmentId } = {}) {
                 onSuccess: async (enrollment) => {
                     try {
                         // 3. Send enrollment to backend for verification
-                        const result = await base44.functions.invoke("tellerEnrollment", {
+                        const result = await functions.invoke("tellerEnrollment", {
                             accessToken: enrollment.accessToken,
                             enrollment: enrollment.enrollment,
                             user: enrollment.user,
@@ -81,7 +81,7 @@ export function useTellerConnect({ onSuccess, onError, enrollmentId } = {}) {
                         // 4. Trigger initial sync
                         if (result?.connectionId) {
                             try {
-                                await base44.functions.invoke("tellerSync", {
+                                await functions.invoke("tellerSync", {
                                     connectionId: result.connectionId,
                                 });
                             } catch (syncErr) {

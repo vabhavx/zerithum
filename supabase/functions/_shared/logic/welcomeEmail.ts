@@ -45,7 +45,7 @@ export async function sendWelcomeEmailLogic(
 
       <p>You're minutes away from consolidating all your earnings in one place.</p>
 
-      <a href="https://zerithum-copy-36d43903.base44.app/ConnectedPlatforms" class="cta-button">Get Started →</a>
+      <a href="https://zerithum.com/ConnectedPlatforms" class="cta-button">Get Started →</a>
 
       <div class="steps">
         <h3 style="margin-top: 0; color: #111;">Quick Start Guide</h3>

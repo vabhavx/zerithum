@@ -119,7 +119,7 @@ export default function AuthCallback() {
         console.log(`[AuthCallback] Exchanging code for ${platform || "youtube"}...`);
 
         // Call edge function directly with the FRESH token from ensureValidSession().
-        // Do NOT use base44.functions.invoke — it calls getSession() internally
+        // Do NOT use functions.invoke() — it calls getSession() internally
         // which returns the stale cached token, causing "Invalid JWT" errors.
         let accessToken = session.access_token;
 

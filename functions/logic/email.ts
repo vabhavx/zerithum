@@ -65,7 +65,7 @@ export async function sendSyncFailedEmailLogic(
         <li>Reconnect with fresh credentials</li>
       </ol>
 
-      <a href="https://zerithum-copy-36d43903.base44.app/ConnectedPlatforms" class="cta-button">Fix Now →</a>
+      <a href="https://zerithum.com/ConnectedPlatforms" class="cta-button">Fix Now →</a>
 
       <p style="color: #666; font-size: 14px; margin-top: 30px;">
         Still having trouble? Reply to this email and we'll help you out.

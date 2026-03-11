@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { base44 } from "@/api/supabaseClient";
+import { entities, functions } from "@/api/supabaseClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
@@ -56,7 +56,7 @@ export default function Reconciliation() {
 
   const handleReviewAction = async (recId, action, notes = "") => {
     try {
-      await base44.entities.Reconciliation.update(recId, {
+      await entities.Reconciliation.update(recId, {
         review_status: action,
         reviewer_notes: notes || null,
       });
@@ -82,7 +82,7 @@ export default function Reconciliation() {
   }, [unreconciledRevenue, searchTerm]);
 
   const autoReconcileMutation = useMutation({
-    mutationFn: () => base44.functions.invoke("reconcileRevenue", {}),
+    mutationFn: () => functions.invoke("reconcileRevenue", {}),
     onSuccess: (response) => {
       if (response.data.success) {
         toast({ title: "Auto-Match Complete", description: response.data.message });

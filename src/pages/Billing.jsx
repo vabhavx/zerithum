@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/supabaseClient';
+import { functions } from '@/api/supabaseClient';
 import { Button } from '@/components/ui/button';
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -100,7 +100,7 @@ export default function Billing() {
 
     const fetchStatus = useCallback(async () => {
         try {
-            const result = await base44.functions.invoke('getSubscriptionStatus');
+            const result = await functions.invoke('getSubscriptionStatus');
             setData(result);
         } catch (err) {
             console.error('Failed to load subscription status:', err);
@@ -119,7 +119,7 @@ export default function Billing() {
     const handleSubscribe = async (planId) => {
         setSubscribing(planId);
         try {
-            const result = await base44.functions.invoke('createPaypalSubscription', { plan: planId });
+            const result = await functions.invoke('createPaypalSubscription', { plan: planId });
             if (result.approvalUrl) {
                 window.location.href = result.approvalUrl;
             } else {
@@ -135,7 +135,7 @@ export default function Billing() {
     const handleCancel = async () => {
         setCancelling(true);
         try {
-            await base44.functions.invoke('cancelPaypalSubscription');
+            await functions.invoke('cancelPaypalSubscription');
             toast.success('Subscription cancelled successfully');
             setCancelModalOpen(false);
             fetchStatus();

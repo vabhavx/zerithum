@@ -13,7 +13,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { base44 } from "@/api/supabaseClient";
+import { functions } from "@/api/supabaseClient";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
 import { OAUTH_PROVIDERS } from "@/lib/auth";
@@ -69,7 +69,7 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
 
     // Send OTP mutation (for OAuth users only)
     const sendOTPMutation = useMutation({
-        mutationFn: () => base44.functions.invoke('sendVerificationCode', {
+        mutationFn: () => functions.invoke('sendVerificationCode', {
             purpose: 'password_change'
         }),
         onSuccess: () => {
@@ -85,7 +85,7 @@ export default function UpdatePasswordModal({ open, onOpenChange }) {
 
     // Update password mutation
     const updatePasswordMutation = useMutation({
-        mutationFn: (data) => base44.functions.invoke('updatePassword', data),
+        mutationFn: (data) => functions.invoke('updatePassword', data),
         onSuccess: () => {
             setStep("success");
             toast.success("Password updated successfully");

@@ -143,7 +143,7 @@ export async function sendDailyDigestLogic(ctx: DailyDigestContext) {
       </div>
     ` : ''}
 
-    <a href="https://zerithum-copy-36d43903.base44.app/Dashboard" class="cta-button">View Full Dashboard →</a>
+    <a href="https://zerithum.com/Dashboard" class="cta-button">View Full Dashboard →</a>
 
     <p style="color: #666; font-size: 13px; margin-top: 30px;">
       You're receiving this because you opted in to daily digests.

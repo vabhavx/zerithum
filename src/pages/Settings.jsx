@@ -12,7 +12,7 @@ import {
   ChevronRight,
   Activity
 } from "lucide-react";
-import { base44 } from "@/api/supabaseClient";
+import { auth, entities } from "@/api/supabaseClient";
 import { toast } from "sonner";
 
 import { OAUTH_PROVIDERS } from "@/lib/auth";
@@ -56,7 +56,7 @@ export default function Settings() {
   // Data fetching
   const { data: user, isLoading: isLoadingUser } = useQuery({
     queryKey: ["settings", "user"],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => auth.me(),
     staleTime: 1000 * 60 * 2,
   });
 
@@ -67,7 +67,7 @@ export default function Settings() {
 
   const { data: connectedPlatforms = [], isFetching: isFetchingPlatforms } = useQuery({
     queryKey: ["settings", "connectedPlatforms", userId],
-    queryFn: () => base44.entities.ConnectedPlatform.filter({ user_id: userId }, "-connected_at", 100),
+    queryFn: () => entities.ConnectedPlatform.filter({ user_id: userId }, "-connected_at", 100),
     enabled: Boolean(userId),
     staleTime: 1000 * 60 * 2,
   });
@@ -75,7 +75,7 @@ export default function Settings() {
   const { data: taxProfile, isFetching: isFetchingTaxProfile } = useQuery({
     queryKey: ["settings", "taxProfile", userId, CURRENT_TAX_YEAR],
     queryFn: async () => {
-      const records = await base44.entities.TaxProfile.filter(
+      const records = await entities.TaxProfile.filter(
         { user_id: userId, tax_year: CURRENT_TAX_YEAR },
         "-updated_at",
         1
@@ -110,7 +110,7 @@ export default function Settings() {
 
   // Mutations
   const profileMutation = useMutation({
-    mutationFn: (payload) => base44.auth.updateMe(payload),
+    mutationFn: (payload) => auth.updateMe(payload),
     onSuccess: () => {
       toast.success("Identity settings updated successfully.");
       queryClient.invalidateQueries({ queryKey: ["settings", "user"] });
@@ -121,9 +121,9 @@ export default function Settings() {
   const taxProfileMutation = useMutation({
     mutationFn: async (payload) => {
       if (taxProfile?.id) {
-        return base44.entities.TaxProfile.update(taxProfile.id, payload);
+        return entities.TaxProfile.update(taxProfile.id, payload);
       }
-      return base44.entities.TaxProfile.create({ ...payload, tax_year: CURRENT_TAX_YEAR });
+      return entities.TaxProfile.create({ ...payload, tax_year: CURRENT_TAX_YEAR });
     },
     onSuccess: () => {
       toast.success(`Tax profile updated for ${CURRENT_TAX_YEAR}.`);
@@ -133,7 +133,7 @@ export default function Settings() {
   });
 
   const disconnectMutation = useMutation({
-    mutationFn: (id) => base44.entities.ConnectedPlatform.delete(id),
+    mutationFn: (id) => entities.ConnectedPlatform.delete(id),
     onSuccess: () => {
       toast.success("Platform securely disconnected.");
       setDisconnectPlatform(null);
@@ -312,7 +312,7 @@ export default function Settings() {
           <div className="my-4 h-px bg-gray-200" />
 
           <button
-            onClick={() => base44.auth.logout()}
+            onClick={() => auth.logout()}
             className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-600 transition-all hover:bg-red-50 hover:text-red-700"
           >
             <LogOut className="h-5 w-5 text-gray-400 group-hover:text-red-500" />

@@ -13,7 +13,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { base44 } from "@/api/supabaseClient";
+import { functions } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { OAUTH_PROVIDERS } from "@/lib/auth";
 import OTPVerification from "./OTPVerification";
@@ -32,7 +32,7 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
 
     // Send OTP mutation
     const sendOTPMutation = useMutation({
-        mutationFn: () => base44.functions.invoke('sendVerificationCode', {
+        mutationFn: () => functions.invoke('sendVerificationCode', {
             purpose: 'revoke_sessions'
         }),
         onSuccess: () => {
@@ -46,7 +46,7 @@ export default function SignOutAllDevicesModal({ open, onOpenChange }) {
 
     // Revoke sessions mutation
     const revokeSessionsMutation = useMutation({
-        mutationFn: (data) => base44.functions.invoke('revokeAllSessions', data),
+        mutationFn: (data) => functions.invoke('revokeAllSessions', data),
         onSuccess: () => {
             toast.success("All sessions have been revoked");
             // Sign out locally and redirect

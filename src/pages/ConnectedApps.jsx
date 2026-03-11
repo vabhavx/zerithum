@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/supabaseClient';
+import { auth, entities } from '@/api/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Circle, RefreshCw, Trash2 } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function ConnectedApps() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await auth.me();
         setUser(currentUser);
       } catch (error) {
       }
@@ -33,7 +33,7 @@ export default function ConnectedApps() {
 
   const { data: connections = [] } = useQuery({
     queryKey: ['connections'],
-    queryFn: () => base44.entities.PlatformConnection.list(),
+    queryFn: () => entities.PlatformConnection.list(),
     initialData: []
   });
 

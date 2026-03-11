@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Clock, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
-import { base44 } from "@/api/supabaseClient";
+import { entities, storage } from "@/api/supabaseClient";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -80,8 +80,8 @@ function ReceiptQueueRow({ expense, onUpdate }) {
         if (!file) return;
         setUploading(true);
         try {
-            const { file_url } = await base44.integrations.Core.UploadFile({ file });
-            await base44.entities.Expense.update(expense.id, {
+            const { file_url } = await storage.uploadFile(file);
+            await entities.Expense.update(expense.id, {
                 receipt_url: file_url,
                 receipt_status: "attached",
             });
@@ -97,7 +97,7 @@ function ReceiptQueueRow({ expense, onUpdate }) {
     const handleTagLater = async () => {
         setTagging(true);
         try {
-            await base44.entities.Expense.update(expense.id, {
+            await entities.Expense.update(expense.id, {
                 receipt_status: "pending",
             });
             toast.success("Tagged as 'Request receipt later'");

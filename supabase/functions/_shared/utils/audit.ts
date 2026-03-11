@@ -9,7 +9,7 @@ export interface AuditLogEntry {
   timestamp?: string;
 }
 
-export async function logAudit(base44: any, entry: AuditLogEntry): Promise<void> {
+export async function logAudit(db: any, entry: AuditLogEntry): Promise<void> {
   const logEntry = {
     timestamp: entry.timestamp || new Date().toISOString(),
     event_type: 'audit',
@@ -20,9 +20,9 @@ export async function logAudit(base44: any, entry: AuditLogEntry): Promise<void>
   console.log(JSON.stringify(logEntry));
 
   // Persist to database if client is available
-  if (base44) {
+  if (db) {
     try {
-      await base44.asServiceRole.entities.AuditLog.create(logEntry);
+      await db.asServiceRole.entities.AuditLog.create(logEntry);
     } catch (error) {
       console.error('Failed to persist audit log:', error);
       // We don't throw here to avoid failing the main operation just because audit logging failed

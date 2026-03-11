@@ -13,7 +13,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { base44 } from "@/api/supabaseClient";
+import { functions } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { OAUTH_PROVIDERS } from "@/lib/auth";
 import OTPVerification from "./OTPVerification";
@@ -37,7 +37,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
 
     // Send OTP mutation
     const sendOTPMutation = useMutation({
-        mutationFn: () => base44.functions.invoke('sendVerificationCode', {
+        mutationFn: () => functions.invoke('sendVerificationCode', {
             purpose: 'delete_account'
         }),
         onSuccess: () => {
@@ -58,7 +58,7 @@ export default function DeleteAccountModal({ open, onOpenChange }) {
     const deleteAccountMutation = useMutation({
         mutationFn: async (data) => {
             setProgressMessage("Deleting your account...");
-            return await base44.functions.invoke('deleteAccount', data);
+            return await functions.invoke('deleteAccount', data);
         },
         onSuccess: () => {
             setStep("success");
