@@ -13,14 +13,12 @@ const mockMe = vi.fn();
 const mockRedirectToLogin = vi.fn();
 
 vi.mock("@/api/supabaseClient", () => ({
-  base44: {
-    auth: {
-      me: () => mockMe(),
-      redirectToLogin: () => mockRedirectToLogin(),
-    },
-    functions: {
-      invoke: (fn, data) => mockInvoke(fn, data),
-    },
+  auth: {
+    me: () => mockMe(),
+    redirectToLogin: () => mockRedirectToLogin(),
+  },
+  functions: {
+    invoke: (fn, data) => mockInvoke(fn, data),
   },
 }));
 

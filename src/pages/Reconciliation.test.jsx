@@ -5,36 +5,37 @@ import * as matchers from '@testing-library/jest-dom/matchers';
 import Reconciliation from './Reconciliation';
 
 expect.extend(matchers);
-import { base44 } from '@/api/supabaseClient';
+import { entities, functions } from '@/api/supabaseClient';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
-// Mock the base44 client
+// Mock the supabase client
 vi.mock('@/api/supabaseClient', () => ({
-  base44: {
-    entities: {
-      RevenueTransaction: {
-        list: vi.fn(),
-        count: vi.fn(),
-        paginate: vi.fn(),
-        fetchAllIds: vi.fn(),
-        filter: vi.fn(),
-      },
-      BankTransaction: {
-        list: vi.fn(),
-        filter: vi.fn(),
-      },
-      Reconciliation: {
-        list: vi.fn(),
-        create: vi.fn(),
-        count: vi.fn(),
-        paginate: vi.fn(),
-        fetchAllIds: vi.fn(),
-      },
+  auth: {
+    me: vi.fn().mockResolvedValue({ id: 'user-123' }),
+  },
+  entities: {
+    RevenueTransaction: {
+      list: vi.fn(),
+      count: vi.fn(),
+      paginate: vi.fn(),
+      fetchAllIds: vi.fn(),
+      filter: vi.fn(),
     },
-    functions: {
-      invoke: vi.fn(),
+    BankTransaction: {
+      list: vi.fn(),
+      filter: vi.fn(),
     },
+    Reconciliation: {
+      list: vi.fn(),
+      create: vi.fn(),
+      count: vi.fn(),
+      paginate: vi.fn(),
+      fetchAllIds: vi.fn(),
+    },
+  },
+  functions: {
+    invoke: vi.fn(),
   },
 }));
 
@@ -77,19 +78,19 @@ describe('Reconciliation Page', () => {
     ];
 
     // Mocks for useReconciliationStats
-    base44.entities.RevenueTransaction.count.mockResolvedValue(2); // Total
-    base44.entities.Reconciliation.count.mockImplementation(async (filters) => {
+    entities.RevenueTransaction.count.mockResolvedValue(2); // Total
+    entities.Reconciliation.count.mockImplementation(async (filters) => {
         if (filters?.match_category?.$neq === 'unmatched') return 1; // Matched
         if (filters?.reconciled_by === 'auto') return 1; // AutoMatched
         return 0;
     });
 
     // Mocks for useUnreconciledTransactions
-    base44.entities.Reconciliation.fetchAllIds.mockResolvedValue(['r1']); // Reconciled Revenue ID
-    base44.entities.RevenueTransaction.fetchAllIds.mockResolvedValue(['r2', 'r1']); // All Revenue IDs (r2 is unreconciled)
+    entities.Reconciliation.fetchAllIds.mockResolvedValue(['r1']); // Reconciled Revenue ID
+    entities.RevenueTransaction.fetchAllIds.mockResolvedValue(['r2', 'r1']); // All Revenue IDs (r2 is unreconciled)
 
     // Smart mock for filter to handle both hooks
-    base44.entities.RevenueTransaction.filter.mockImplementation(async (filters) => {
+    entities.RevenueTransaction.filter.mockImplementation(async (filters) => {
         const ids = filters?.id?.$in || [];
         if (ids.includes('r2')) return [mockRevenue[1]]; // unreconciled
         if (ids.includes('r1')) return [mockRevenue[0]]; // reconciled
@@ -97,9 +98,8 @@ describe('Reconciliation Page', () => {
     });
 
     // Mocks for useReconciliations
-    base44.entities.Reconciliation.paginate.mockResolvedValue({ data: mockReconciliations, count: 1 });
-    // base44.entities.RevenueTransaction.filter is already mocked above
-    base44.entities.BankTransaction.filter.mockResolvedValue([mockBank[0]]); // Details for b1
+    entities.Reconciliation.paginate.mockResolvedValue({ data: mockReconciliations, count: 1 });
+    entities.BankTransaction.filter.mockResolvedValue([mockBank[0]]); // Details for b1
 
     render(<Reconciliation />, { wrapper: createWrapper() });
 

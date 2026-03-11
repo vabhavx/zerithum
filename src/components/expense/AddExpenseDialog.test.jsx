@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import * as matchers from '@testing-library/jest-dom/matchers';
 import AddExpenseDialog from "./AddExpenseDialog";
 import { toast } from "sonner";
-import { base44 } from "@/api/supabaseClient";
+import { entities, functions, storage } from "@/api/supabaseClient";
 
 expect.extend(matchers);
 
@@ -17,22 +17,18 @@ vi.mock("sonner", () => ({
     }
 }));
 
-// Mock base44
+// Mock supabase client
 vi.mock("@/api/supabaseClient", () => ({
-    base44: {
-        entities: {
-            Expense: {
-                create: vi.fn(),
-            }
-        },
-        integrations: {
-            Core: {
-                UploadFile: vi.fn()
-            }
-        },
-        functions: {
-            invoke: vi.fn()
+    entities: {
+        Expense: {
+            create: vi.fn(),
         }
+    },
+    storage: {
+        uploadFile: vi.fn(),
+    },
+    functions: {
+        invoke: vi.fn()
     }
 }));
 
@@ -81,7 +77,7 @@ describe("AddExpenseDialog", () => {
     it("displays error toast when expense creation fails", async () => {
         // Arrange
         const error = new Error("Network Error");
-        base44.entities.Expense.create.mockRejectedValue(error);
+        entities.Expense.create.mockRejectedValue(error);
 
         render(
             <AddExpenseDialog
@@ -102,7 +98,7 @@ describe("AddExpenseDialog", () => {
 
         // Assert
         await waitFor(() => {
-            expect(base44.entities.Expense.create).toHaveBeenCalled();
+            expect(entities.Expense.create).toHaveBeenCalled();
         });
 
         expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("Failed to add expense"));
@@ -115,7 +111,7 @@ describe("AddExpenseDialog", () => {
 
     it("successfully creates an expense", async () => {
          // Arrange
-        base44.entities.Expense.create.mockResolvedValue({ id: "123" });
+        entities.Expense.create.mockResolvedValue({ id: "123" });
 
         render(
             <AddExpenseDialog
@@ -129,20 +125,17 @@ describe("AddExpenseDialog", () => {
         const amountInput = screen.getByPlaceholderText("0.00");
         fireEvent.change(amountInput, { target: { value: "50.50" } });
 
-        // We can fill other fields if needed, but defaults should work for success path too
-        // Default date is today, category is software_subscriptions, etc.
-
         // Submit
         const submitButton = screen.getByRole("button", { name: /Add Expense/i });
         fireEvent.click(submitButton);
 
         // Assert
         await waitFor(() => {
-            expect(base44.entities.Expense.create).toHaveBeenCalled();
+            expect(entities.Expense.create).toHaveBeenCalled();
         });
 
         // Verify payload
-        const callArgs = base44.entities.Expense.create.mock.calls[0][0];
+        const callArgs = entities.Expense.create.mock.calls[0][0];
         expect(callArgs).toMatchObject({
             amount: 50.5, // coerce number
             category: "software_subscriptions",

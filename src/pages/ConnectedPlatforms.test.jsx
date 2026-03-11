@@ -68,26 +68,30 @@ vi.mock('recharts', () => ({
     Legend: () => <div data-testid="recharts-legend" />,
 }));
 
-// Mock base44
+// Mock supabase client
 vi.mock('@/api/supabaseClient', () => ({
-    base44: {
-        auth: {
-            me: vi.fn().mockResolvedValue({ id: 'user-123' }),
+    auth: {
+        me: vi.fn().mockResolvedValue({ id: 'user-123' }),
+    },
+    entities: {
+        ConnectedPlatform: {
+            filter: vi.fn().mockResolvedValue([]),
+            delete: vi.fn(),
+            create: vi.fn(),
+            update: vi.fn(),
         },
-        entities: {
-            ConnectedPlatform: {
-                filter: vi.fn().mockResolvedValue([]),
-                delete: vi.fn(),
-                create: vi.fn(),
-                update: vi.fn(),
-            },
-            SyncHistory: {
-                filter: vi.fn().mockResolvedValue([]),
-            },
+        BankConnection: {
+            filter: vi.fn().mockResolvedValue([]),
         },
-        functions: {
-            invoke: vi.fn(),
+        BankAccount: {
+            filter: vi.fn().mockResolvedValue([]),
         },
+        SyncHistory: {
+            filter: vi.fn().mockResolvedValue([]),
+        },
+    },
+    functions: {
+        invoke: vi.fn(),
     },
 }));
 

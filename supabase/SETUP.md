@@ -58,30 +58,9 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 npm install @supabase/supabase-js
 ```
 
-## Step 8: Switch from Base44 to Supabase
+## Step 8: Deploy Edge Functions
 
-Replace in your code:
-```javascript
-// OLD
-import { base44 } from '@/api/base44Client';
-
-// NEW
-import { base44Compatible as base44 } from '@/api/supabaseClient';
-```
-
-Or do a global find/replace in `src/`:
-```
-Find:    '@/api/base44Client'
-Replace: '@/api/supabaseClient'
-
-Find:    base44
-Replace: base44Compatible
-```
-
-## Step 9: Deploy Edge Functions
-
-Supabase Edge Functions replace Base44 serverless functions.
-See `supabase/functions/` directory for implementations.
+See `supabase/functions/` directory for edge function implementations.
 
 ---
 

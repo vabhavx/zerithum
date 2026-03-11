@@ -14,7 +14,7 @@ vi.mock('@/api/supabaseClient', () => {
           data: { subscription: { unsubscribe: vi.fn() } },
         })),
         signOut: vi.fn(),
-        setSession: vi.fn(), // We will use this in the fix
+        setSession: vi.fn(),
       },
       from: vi.fn(() => ({
         select: vi.fn(() => ({
@@ -24,11 +24,9 @@ vi.mock('@/api/supabaseClient', () => {
         })),
       })),
     },
-    base44: {
-      auth: {
-        me: vi.fn(),
-      }
-    }
+    auth: {
+      me: vi.fn(),
+    },
   };
 });
 
@@ -47,7 +45,6 @@ describe('AuthContext Security Vulnerability', () => {
     Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
     // Mock window.location
-    // Note: window.location is read-only in some environments, so we redefine it
     Object.defineProperty(window, 'location', {
       writable: true,
       value: {
@@ -61,7 +58,6 @@ describe('AuthContext Security Vulnerability', () => {
     });
 
     // Mock import.meta.env
-    // In Vitest/Vite, import.meta.env is populated from process.env for VITE_ prefixed variables
     vi.stubEnv('VITE_SUPABASE_URL', 'https://test-project.supabase.co');
   });
 
@@ -71,7 +67,6 @@ describe('AuthContext Security Vulnerability', () => {
 
   it('should call supabase.auth.setSession instead of localStorage.setItem when getSession fails but hash has token', async () => {
     // 1. Setup the scenario
-    // Mock getSession to fail (throw error)
     supabase.auth.getSession.mockRejectedValue(new Error('Network error'));
 
     // Mock setSession to succeed
