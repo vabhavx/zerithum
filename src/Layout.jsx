@@ -21,7 +21,6 @@ const navItems = [
 ];
 
 const secondaryNav = [
-  { name: "Reports", icon: FileText, page: "Reports" },
   { name: "Settings", icon: Settings, page: "Settings" },
 ];
 

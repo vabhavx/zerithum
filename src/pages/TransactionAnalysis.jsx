@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, eachDayOfInterval, isSameDay, subDays } from "date-fns";
-import { Download, Filter, Search, BarChart3 } from "lucide-react";
+import { Download, Filter, Search, BarChart3, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis } from "recharts";
 import { entities } from "@/api/supabaseClient";
@@ -20,7 +20,7 @@ const QUICK_VIEWS = [{ value: "all", label: "All" }, { value: "unmatched", label
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 function formatMoney(v) { return money.format(v || 0); }
-function calcNet(t) { return (t.amount || 0) - (t.platform_fee || 0); }
+function calcNet(t) { if (t.net_amount != null && t.net_amount > 0) return t.net_amount; return (t.amount || 0) - (t.fee || t.platform_fee || 0); }
 
 export default function TransactionAnalysis() {
   const [search, setSearch] = useState("");
@@ -90,9 +90,22 @@ export default function TransactionAnalysis() {
 
   const exportCsv = () => {
     const headers = ["Date", "Platform", "Category", "Status", "Description", "Amount", "Platform Fee", "Net", "Platform Transaction ID"];
-    const body = filtered.map((t) => [t.transaction_date ? format(new Date(t.transaction_date), "yyyy-MM-dd") : "", PLATFORM_NAMES[t.platform] || t.platform || "", CATEGORY_NAMES[t.category] || t.category || "", STATUS_NAMES[t.status] || t.status || "Completed", t.description || "", (t.amount || 0).toFixed(2), (t.platform_fee || 0).toFixed(2), calcNet(t).toFixed(2), t.platform_transaction_id || ""]);
+    const body = filtered.map((t) => [t.transaction_date ? format(new Date(t.transaction_date), "yyyy-MM-dd") : "", PLATFORM_NAMES[t.platform] || t.platform || "", CATEGORY_NAMES[t.category] || t.category || "", STATUS_NAMES[t.status] || t.status || "Completed", t.description || "", (t.amount || 0).toFixed(2), (t.fee || t.platform_fee || 0).toFixed(2), calcNet(t).toFixed(2), t.platform_transaction_id || ""]);
     const csv = [headers, ...body].map((line) => line.map((v) => { const safe = String(v ?? "").replaceAll('"', '""'); return `"${safe}"`; }).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `zerithum-transactions-${format(new Date(), "yyyy-MM-dd")}.csv`; document.body.appendChild(link); link.click(); URL.revokeObjectURL(url); link.remove();
+  };
+
+  const escapeHTML = (str) => typeof str !== "string" ? str : str.replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m] || m));
+
+  const exportPdf = () => {
+    const pw = window.open("", "_blank");
+    if (!pw) return;
+    const rows = filtered.map((t) =>
+      `<tr><td>${escapeHTML(t.transaction_date ? format(new Date(t.transaction_date), "yyyy-MM-dd") : "")}</td><td>${escapeHTML(PLATFORM_NAMES[t.platform] || t.platform || "")}</td><td>${escapeHTML(CATEGORY_NAMES[t.category] || t.category || "")}</td><td>${escapeHTML(t.description || "")}</td><td style="text-align:right">$${(t.amount || 0).toFixed(2)}</td><td style="text-align:right">$${(t.fee || t.platform_fee || 0).toFixed(2)}</td><td style="text-align:right">$${calcNet(t).toFixed(2)}</td></tr>`
+    ).join("");
+    pw.document.write(`<html><head><title>Zerithum Transaction Report</title><style>body{font-family:Inter,Arial,sans-serif;padding:24px;color:#111827;max-width:1100px;margin:0 auto}h1{font-size:20px;margin-bottom:4px}p.sub{color:#6B7280;font-size:13px;margin-bottom:24px}.stats{display:flex;gap:32px;margin-bottom:24px}.stat{font-size:13px;color:#6B7280}.stat strong{display:block;font-size:18px;color:#111827}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F9FAFB;text-align:left;padding:8px 10px;border-bottom:2px solid #E5E7EB;text-transform:uppercase;color:#6B7280;font-size:10px;letter-spacing:0.05em}td{padding:7px 10px;border-bottom:1px solid #F3F4F6}tr:hover td{background:#FAFAFA}</style></head><body><h1>Transaction Report</h1><p class="sub">Generated ${format(new Date(), "MMM d, yyyy")} &bull; ${filtered.length} transactions</p><div class="stats"><div class="stat"><strong>$${totals.gross.toFixed(2)}</strong>Gross Revenue</div><div class="stat"><strong>$${totals.fee.toFixed(2)}</strong>Platform Fees</div><div class="stat"><strong>$${totals.net.toFixed(2)}</strong>Net Revenue</div></div><table><thead><tr><th>Date</th><th>Platform</th><th>Category</th><th>Description</th><th style="text-align:right">Amount</th><th style="text-align:right">Fee</th><th style="text-align:right">Net</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);
+    pw.document.close();
+    setTimeout(() => pw.print(), 300);
   };
 
   return (
@@ -108,6 +121,9 @@ export default function TransactionAnalysis() {
           </Button>
           <Button type="button" variant="outline" onClick={exportCsv} className="h-9 border-gray-200 text-gray-600 hover:bg-gray-50">
             <Download className="mr-2 h-4 w-4" />Export CSV
+          </Button>
+          <Button type="button" variant="outline" onClick={exportPdf} className="h-9 border-gray-200 text-gray-600 hover:bg-gray-50">
+            <FileText className="mr-2 h-4 w-4" />Export PDF
           </Button>
         </div>
       </header>
@@ -183,7 +199,7 @@ export default function TransactionAnalysis() {
                 <TableRow className="border-gray-100 hover:bg-transparent"><TableCell colSpan={8} className="py-20 text-center text-sm text-gray-400">{isLoading ? "Loading transactions..." : "No transactions match your filters."}</TableCell></TableRow>
               )}
               {pagedRows.map((t, index) => {
-                const fee = t.platform_fee || 0;
+                const fee = t.fee || t.platform_fee || 0;
                 const net = calcNet(t);
                 const status = t.status || "completed";
                 return (

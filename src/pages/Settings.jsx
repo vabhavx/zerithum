@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   User,
   ShieldCheck,
-  Database,
   CreditCard,
   LogOut,
   Loader2,
@@ -20,11 +19,8 @@ import { OAUTH_PROVIDERS } from "@/lib/auth";
 import UpdatePasswordModal from "@/components/security/UpdatePasswordModal";
 import SignOutAllDevicesModal from "@/components/security/SignOutAllDevicesModal";
 import DeleteAccountModal from "@/components/security/DeleteAccountModal";
-import DisconnectPlatformModal from "@/components/security/DisconnectPlatformModal";
-
 import SettingsGeneral from "@/components/settings/SettingsGeneral";
 import SettingsSecurity from "@/components/settings/SettingsSecurity";
-import SettingsIntegrations from "@/components/settings/SettingsIntegrations";
 import SettingsBilling from "@/components/settings/SettingsBilling";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +29,6 @@ const CURRENT_TAX_YEAR = new Date().getFullYear();
 const TABS = [
   { id: "general", label: "Identity & Tax", icon: User },
   { id: "security", label: "Security & Access", icon: ShieldCheck },
-  { id: "sources", label: "Data Sources", icon: Database },
   { id: "billing", label: "Billing & Compliance", icon: CreditCard },
 ];
 
@@ -46,12 +41,9 @@ export default function Settings() {
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [signOutAllOpen, setSignOutAllOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
-  const [disconnectPlatform, setDisconnectPlatform] = useState(null);
-
   // Local state for forms
   const [profileForm, setProfileForm] = useState({ full_name: "", timezone: "UTC", currency: "USD" });
   const [taxForm, setTaxForm] = useState({ filing_status: "single", state: "CA", country: "US" });
-  const [platformSearch, setPlatformSearch] = useState("");
 
   // Data fetching
   const { data: user, isLoading: isLoadingUser } = useQuery({
@@ -64,13 +56,6 @@ export default function Settings() {
   const userProvider = user?.app_metadata?.provider || '';
   const userProviders = user?.app_metadata?.providers || [];
   const hasPasswordAuth = (userProvider === 'email' || userProviders.includes('email')) && !OAUTH_PROVIDERS.includes(userProvider);
-
-  const { data: connectedPlatforms = [], isFetching: isFetchingPlatforms } = useQuery({
-    queryKey: ["settings", "connectedPlatforms", userId],
-    queryFn: () => entities.ConnectedPlatform.filter({ user_id: userId }, "-connected_at", 100),
-    enabled: Boolean(userId),
-    staleTime: 1000 * 60 * 2,
-  });
 
   const { data: taxProfile, isFetching: isFetchingTaxProfile } = useQuery({
     queryKey: ["settings", "taxProfile", userId, CURRENT_TAX_YEAR],
@@ -132,43 +117,17 @@ export default function Settings() {
     onError: () => toast.error("Failed to save tax defaults."),
   });
 
-  const disconnectMutation = useMutation({
-    mutationFn: (id) => entities.ConnectedPlatform.delete(id),
-    onSuccess: () => {
-      toast.success("Platform securely disconnected.");
-      setDisconnectPlatform(null);
-      queryClient.invalidateQueries({ queryKey: ["settings", "connectedPlatforms"] });
-    },
-    onError: () => toast.error("Unable to disconnect platform."),
-  });
-
   // Computed
-  const connectedStats = useMemo(() => {
-    const active = connectedPlatforms.filter((item) => item.sync_status === "active" || item.sync_status === "synced").length;
-    const errors = connectedPlatforms.filter((item) => item.sync_status === "error").length;
-    return { total: connectedPlatforms.length, active, errors };
-  }, [connectedPlatforms]);
-
-  const filteredPlatforms = useMemo(() => {
-    const query = platformSearch.trim().toLowerCase();
-    if (!query) return connectedPlatforms;
-    return connectedPlatforms.filter((platform) => {
-      const haystack = `${platform.platform} ${platform.sync_status || ""}`.toLowerCase();
-      return haystack.includes(query);
-    });
-  }, [connectedPlatforms, platformSearch]);
 
   const accountReadinessScore = useMemo(() => {
     let score = 30;
     if (profileForm.full_name?.trim().length >= 2) score += 20;
-    if (user?.email) score += 10;
+    if (user?.email) score += 20;
     if (profileForm.timezone) score += 10;
     if (profileForm.currency) score += 10;
-    if (connectedStats.active > 0) score += 10;
     if (taxForm.filing_status && taxForm.state) score += 10;
-    score -= connectedStats.errors * 5;
     return Math.max(0, Math.min(100, score));
-  }, [profileForm, user?.email, connectedStats, taxForm]);
+  }, [profileForm, user?.email, taxForm]);
 
   const hasProfileChanges = useMemo(() => {
     if (!user) return false;
@@ -239,13 +198,6 @@ export default function Settings() {
       <UpdatePasswordModal open={passwordOpen} onOpenChange={setPasswordOpen} />
       <SignOutAllDevicesModal open={signOutAllOpen} onOpenChange={setSignOutAllOpen} />
       <DeleteAccountModal open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen} />
-      <DisconnectPlatformModal
-        open={Boolean(disconnectPlatform)}
-        onOpenChange={(open) => !open && setDisconnectPlatform(null)}
-        platformName={disconnectPlatform?.platform || ""}
-        onConfirm={() => disconnectMutation.mutate(disconnectPlatform.id)}
-        isPending={disconnectMutation.isPending}
-      />
 
       {/* Hero Header */}
       <header className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm ring-1 ring-black/5 flex flex-col md:flex-row md:items-end justify-between gap-6 overflow-hidden relative">
@@ -353,15 +305,6 @@ export default function Settings() {
                   setPasswordOpen={setPasswordOpen}
                   setSignOutAllOpen={setSignOutAllOpen}
                   setDeleteAccountOpen={setDeleteAccountOpen}
-                />
-              )}
-              {activeTab === "sources" && (
-                <SettingsIntegrations
-                  platformSearch={platformSearch}
-                  setPlatformSearch={setPlatformSearch}
-                  filteredPlatforms={filteredPlatforms}
-                  isFetchingPlatforms={isFetchingPlatforms}
-                  setDisconnectPlatform={setDisconnectPlatform}
                 />
               )}
               {activeTab === "billing" && (
