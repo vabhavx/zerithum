@@ -102,7 +102,7 @@ export default function BankConnectionCard({
         queryClient.invalidateQueries({ queryKey: ["bankAccounts"] });
     }, [queryClient]);
 
-    const { open: openTellerConnect, isLoading: tellerLoading } = useTellerConnect({
+    const { open: openTellerConnect, isLoading: tellerLoading, ready: tellerReady, scriptError: tellerScriptError } = useTellerConnect({
         enrollmentId: connection?.status === "reauth_required" ? connection.teller_enrollment_id : undefined,
         onSuccess: () => {
             toast.success("Bank connected successfully");
@@ -250,6 +250,11 @@ export default function BankConnectionCard({
                                 <><Landmark className="mr-1.5 h-3.5 w-3.5" /> Connect Bank</>
                             )}
                         </Button>
+                        {tellerScriptError && (
+                            <p className="text-xs text-amber-600 mt-1">
+                                Teller failed to load. Disable ad-blockers or try another browser.
+                            </p>
+                        )}
                         <label className="flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-gray-200 px-3 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
                             <Upload className="h-3.5 w-3.5" />
                             Upload CSV instead

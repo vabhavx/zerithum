@@ -9,7 +9,11 @@ import { logAudit } from '../_shared/utils/audit.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const tellerAppId = Deno.env.get('TELLER_APP_ID')!;
+const tellerAppId = Deno.env.get('TELLER_APP_ID');
+
+if (!tellerAppId) {
+    console.error('[TellerNonce] CRITICAL: TELLER_APP_ID environment variable is not set');
+}
 
 const NONCE_EXPIRY_MINUTES = 10;
 
@@ -35,6 +39,13 @@ Deno.serve(async (req) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
+        }
+
+        if (!tellerAppId) {
+            return Response.json(
+                { error: 'Teller integration is not configured (missing TELLER_APP_ID)' },
+                { status: 500, headers: corsHeaders }
+            );
         }
 
         const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);

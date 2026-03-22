@@ -462,9 +462,14 @@ export const functions = {
         }
 
         if (!response.ok) {
-            // Manual error parsing to preserve custom properties
+            // Read body once as text, then attempt JSON parse
+            const bodyText = await response.text().catch(() => '');
+            let errorData = null;
             try {
-                const errorData = await response.json();
+                errorData = bodyText ? JSON.parse(bodyText) : null;
+            } catch { /* non-JSON response */ }
+
+            if (errorData) {
                 // Supabase gateway errors use `message`/`msg`, edge functions use `error`
                 const errorMsg = errorData.error || errorData.message || errorData.msg || `Function returned ${response.status}`;
                 const err = new Error(errorMsg);
@@ -474,15 +479,10 @@ export const functions = {
                 if (errorData.authMethod) err.authMethod = errorData.authMethod;
                 if (errorData.retryAfter) err.retryAfter = errorData.retryAfter;
 
-                err.isFunctionError = true;
                 throw err;
-            } catch (e) {
-                if (e && (e.isFunctionError || (e.message && (e.requiresReauth || e.authMethod)))) throw e;
-
-                // Fallback for non-JSON errors
-                const text = await response.text().catch(() => '');
-                throw new Error(text || `Edge Function returned a non-2xx status code (${response.status})`);
             }
+
+            throw new Error(bodyText || `Edge Function returned a non-2xx status code (${response.status})`);
         }
 
         // Success response
