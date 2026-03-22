@@ -29,6 +29,8 @@ const PLATFORM_FEE_RATES = {
   patreon: 0.08,
   stripe: 0.029,
   gumroad: 0.1,
+  square: 0.026,
+  twitch: 0.50,
   instagram: 0.05,
   tiktok: 0.5,
   shopify: 0.02,
@@ -40,6 +42,8 @@ const PLATFORM_LABELS = {
   patreon: "Patreon",
   stripe: "Stripe",
   gumroad: "Gumroad",
+  square: "Square",
+  twitch: "Twitch",
   instagram: "Instagram",
   tiktok: "TikTok",
   shopify: "Shopify",
@@ -72,8 +76,13 @@ function formatMoney(value) {
 }
 
 function feeFor(tx) {
+  // Prefer the actual fee from the database (populated by sync pipeline)
+  const dbFee = Number(tx.fee || 0);
+  if (dbFee > 0) return dbFee;
+  // Fall back to legacy platform_fee field
   const reported = Number(tx.platform_fee || 0);
   if (reported > 0) return reported;
+  // Estimate from platform rate if no actual fee stored
   const rate = PLATFORM_FEE_RATES[(tx.platform || "").toLowerCase()] || 0;
   return (tx.amount || 0) * rate;
 }
@@ -729,7 +738,7 @@ export default function RevenueAutopsy() {
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${event.severity === "critical" || event.severity === "high"
                                 ? "border-red-200 bg-red-50 text-red-700"
-                                : event.severity === "medium"
+                                : event.severity === "medium" || event.severity === "warning"
                                   ? "border-amber-200 bg-amber-50 text-amber-700"
                                   : "border-gray-200 bg-gray-50 text-gray-600"
                               }`}
@@ -738,7 +747,11 @@ export default function RevenueAutopsy() {
                           </span>
                         </TableCell>
                         <TableCell className="text-right font-mono-financial text-gray-900">
-                          {typeof event.impact_amount === "number" ? formatMoney(event.impact_amount) : "-"}
+                          {typeof event.affected_amount === "number"
+                            ? formatMoney(event.affected_amount)
+                            : typeof event.impact_amount === "number"
+                              ? formatMoney(event.impact_amount)
+                              : (event.metadata?.impact_amount != null ? formatMoney(event.metadata.impact_amount) : "-")}
                         </TableCell>
                         <TableCell>
                           <ArrowRight className="h-4 w-4 text-gray-300 transition-colors group-hover:text-gray-600" />
