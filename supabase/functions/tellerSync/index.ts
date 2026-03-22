@@ -192,34 +192,44 @@ Deno.serve(async (req) => {
 
         // Auto-trigger reconciliation if transactions were synced
         let reconcileResult = { success: true, matchedCount: 0, sentToReview: 0, message: 'No transactions to reconcile' };
+        let newDiscrepancies = 0;
+
         if (totalTransactions > 0) {
             try {
                 const reconciledIds = (await serviceSupabase
                     .from('reconciliations')
-                    .select('revenue_transaction_id')
+                    .select('revenue_transaction_id, bank_transaction_id')
                     .eq('user_id', user.id)).data || [];
-                const reconciledSet = new Set(reconciledIds.map(r => r.revenue_transaction_id));
+                const reconciledRevenueSet = new Set(reconciledIds.map(r => r.revenue_transaction_id));
+                const reconciledBankSet = new Set(reconciledIds.map(r => r.bank_transaction_id));
+
+                // Track unreconciled items for discrepancy detection
+                let allUnreconciledRevenue: any[] = [];
+                let allUnreconciledBank: any[] = [];
 
                 const ctx = {
-                    fetchUnreconciledRevenue: async (userId: string) => {
+                    fetchUnreconciledRevenue: async (uid: string) => {
                         const { data, error } = await serviceSupabase
                             .from('revenue_transactions')
                             .select('*')
-                            .eq('user_id', userId)
+                            .eq('user_id', uid)
                             .order('transaction_date', { ascending: false });
                         if (error) return [];
-                        return (data || []).filter(r => !reconciledSet.has(r.id));
+                        const unreconciled = (data || []).filter(r => !reconciledRevenueSet.has(r.id));
+                        allUnreconciledRevenue = unreconciled;
+                        return unreconciled;
                     },
-                    fetchUnreconciledBankTransactions: async (userId: string, startDate: string) => {
+                    fetchUnreconciledBankTransactions: async (uid: string, startDate: string) => {
                         const { data, error } = await serviceSupabase
                             .from('bank_transactions')
                             .select('*')
-                            .eq('user_id', userId)
+                            .eq('user_id', uid)
                             .gte('transaction_date', startDate)
                             .eq('is_reconciled', false)
                             .order('transaction_date', { ascending: false });
                         if (error) return [];
-                        return data || [];
+                        allUnreconciledBank = data || [];
+                        return allUnreconciledBank;
                     },
                     createReconciliations: async (reconciliations: any[]) => {
                         if (reconciliations.length === 0) return;
@@ -227,10 +237,27 @@ Deno.serve(async (req) => {
                             .from('reconciliations')
                             .insert(reconciliations);
                         if (error) throw error;
+
+                        // Mark matched bank transactions as reconciled
+                        const matchedBankIds = reconciliations
+                            .map(r => r.bank_transaction_id)
+                            .filter(Boolean);
+                        if (matchedBankIds.length > 0) {
+                            await serviceSupabase
+                                .from('bank_transactions')
+                                .update({ is_reconciled: true })
+                                .in('id', matchedBankIds);
+                        }
+
+                        // Track newly matched for discrepancy exclusion
+                        for (const r of reconciliations) {
+                            reconciledRevenueSet.add(r.revenue_transaction_id);
+                            reconciledBankSet.add(r.bank_transaction_id);
+                        }
                     },
                     logAudit: async (entry: any) => {
                         try {
-                            await logAudit(null, entry);
+                            await logAudit(serviceSupabase, entry);
                         } catch (err) {
                             console.error('[TellerSync] Audit log error:', err);
                         }
@@ -238,6 +265,87 @@ Deno.serve(async (req) => {
                 };
 
                 reconcileResult = await autoReconcile(ctx, user);
+
+                // ── Discrepancy detection (same logic as reconcileRevenue) ──
+                // Surface unmatched transactions as autopsy events for Revenue Autopsy
+                const DISCREPANCY_AGE_DAYS = 7;
+                const DISCREPANCY_AMOUNT_THRESHOLD_CENTS = 500;
+                const cutoffDate = new Date(Date.now() - DISCREPANCY_AGE_DAYS * 24 * 60 * 60 * 1000);
+                const discrepancyEvents: any[] = [];
+
+                // Unmatched revenue (platform says money, no bank deposit)
+                const stillUnmatchedRevenue = allUnreconciledRevenue.filter(r => !reconciledRevenueSet.has(r.id));
+                for (const rev of stillUnmatchedRevenue) {
+                    const txDate = new Date(rev.transaction_date);
+                    const amountCents = Math.round(Math.abs(rev.amount || 0) * 100);
+                    if (txDate <= cutoffDate && amountCents >= DISCREPANCY_AMOUNT_THRESHOLD_CENTS) {
+                        const daysSince = Math.floor((Date.now() - txDate.getTime()) / (1000 * 3600 * 24));
+                        discrepancyEvents.push({
+                            user_id: user.id,
+                            event_type: 'unusual_activity',
+                            title: `Unmatched ${rev.platform} revenue — $${(amountCents / 100).toFixed(2)} not found in bank`,
+                            description: `${rev.platform} reported $${(amountCents / 100).toFixed(2)} on ${rev.transaction_date} but no bank deposit found after ${daysSince} days.`,
+                            severity: amountCents >= 10000 ? 'critical' : amountCents >= 2500 ? 'warning' : 'info',
+                            status: 'pending_review',
+                            affected_amount: amountCents / 100,
+                            platform: rev.platform,
+                            detected_at: new Date().toISOString(),
+                            metadata: { discrepancy_type: 'missing_bank_deposit', revenue_transaction_id: rev.id, platform_transaction_id: rev.platform_transaction_id, days_since_revenue: daysSince }
+                        });
+                    }
+                }
+
+                // Unmatched bank deposits (bank shows deposit, no platform claim)
+                const stillUnmatchedBank = allUnreconciledBank.filter(b => !reconciledBankSet.has(b.id));
+                for (const bank of stillUnmatchedBank) {
+                    const txDate = new Date(bank.transaction_date);
+                    const amountCents = Math.round(Math.abs(bank.amount || 0) * 100);
+                    const isCredit = (bank.transaction_type === 'credit') || (bank.amount > 0);
+                    if (isCredit && txDate <= cutoffDate && amountCents >= DISCREPANCY_AMOUNT_THRESHOLD_CENTS) {
+                        const daysSince = Math.floor((Date.now() - txDate.getTime()) / (1000 * 3600 * 24));
+                        discrepancyEvents.push({
+                            user_id: user.id,
+                            event_type: 'unusual_activity',
+                            title: `Unidentified bank deposit — $${(amountCents / 100).toFixed(2)} with no platform match`,
+                            description: `Bank deposit of $${(amountCents / 100).toFixed(2)} on ${bank.transaction_date} has no matching platform revenue after ${daysSince} days.`,
+                            severity: amountCents >= 10000 ? 'critical' : amountCents >= 2500 ? 'warning' : 'info',
+                            status: 'pending_review',
+                            affected_amount: amountCents / 100,
+                            platform: null,
+                            detected_at: new Date().toISOString(),
+                            metadata: { discrepancy_type: 'unidentified_bank_deposit', bank_transaction_id: bank.id, bank_description: bank.description, days_since_deposit: daysSince }
+                        });
+                    }
+                }
+
+                // Deduplicate against existing autopsy events
+                if (discrepancyEvents.length > 0) {
+                    const { data: existingEvents } = await serviceSupabase
+                        .from('autopsy_events')
+                        .select('metadata')
+                        .eq('user_id', user.id)
+                        .eq('event_type', 'unusual_activity')
+                        .in('status', ['pending_review', 'reviewed']);
+
+                    const existingTxIds = new Set<string>();
+                    for (const evt of (existingEvents || [])) {
+                        const meta = evt.metadata || {};
+                        if (meta.revenue_transaction_id) existingTxIds.add(meta.revenue_transaction_id);
+                        if (meta.bank_transaction_id) existingTxIds.add(meta.bank_transaction_id);
+                    }
+
+                    const deduped = discrepancyEvents.filter(evt => {
+                        const meta = evt.metadata || {};
+                        const txId = meta.revenue_transaction_id || meta.bank_transaction_id;
+                        return txId && !existingTxIds.has(txId);
+                    });
+
+                    if (deduped.length > 0) {
+                        const { error: insertErr } = await serviceSupabase.from('autopsy_events').insert(deduped);
+                        if (!insertErr) newDiscrepancies = deduped.length;
+                        else console.error('[TellerSync] Discrepancy insert error:', insertErr);
+                    }
+                }
             } catch (reconcileErr) {
                 console.error('[TellerSync] Auto-reconciliation error:', reconcileErr);
                 // Non-fatal: continue without blocking sync
