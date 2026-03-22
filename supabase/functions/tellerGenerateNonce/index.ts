@@ -10,6 +10,7 @@ import { logAudit } from '../_shared/utils/audit.ts';
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const tellerAppId = Deno.env.get('TELLER_APP_ID');
+const tellerEnvironment = Deno.env.get('TELLER_ENVIRONMENT') || 'sandbox';
 
 if (!tellerAppId) {
     console.error('[TellerNonce] CRITICAL: TELLER_APP_ID environment variable is not set');
@@ -76,11 +77,13 @@ Deno.serve(async (req) => {
             status: 'success',
         });
 
+        console.log('[TellerNonce] Success — appId:', tellerAppId, 'env:', tellerEnvironment, 'user:', user.id);
+
         return Response.json(
             {
                 nonce,
                 applicationId: tellerAppId,
-                environment: 'development',
+                environment: tellerEnvironment,
             },
             { headers: corsHeaders }
         );
