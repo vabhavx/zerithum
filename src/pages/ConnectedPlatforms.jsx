@@ -77,7 +77,7 @@ export default function ConnectedPlatforms() {
     queryKey: ["bankConnection"],
     queryFn: async () => {
       const user = await auth.me();
-      const connections = await entities.BankConnection.filter({ user_id: user.id });
+      const connections = await entities.BankConnection.filter({ user_id: user.id }, '-connected_at');
       // Return the first active/reauth connection, or null
       return connections.find((c) => c.status !== "disconnected") || null;
     },
