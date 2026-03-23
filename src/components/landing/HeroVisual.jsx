@@ -1,4 +1,6 @@
 import React from 'react';
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
 import { Check, AlertTriangle } from 'lucide-react';
 
 const ROWS = [
@@ -9,8 +11,11 @@ const ROWS = [
 ];
 
 export default function HeroVisual() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-40px' });
+
   return (
-    <div className="w-full max-w-3xl mx-auto mt-12 md:mt-16">
+    <div ref={ref} className="w-full max-w-3xl mx-auto mt-12 md:mt-16">
       <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl overflow-hidden">
         {/* Header */}
         <div className="px-5 py-3 border-b border-zinc-800/60 flex items-center justify-between">
@@ -27,37 +32,51 @@ export default function HeroVisual() {
 
         {/* Rows */}
         <div className="divide-y divide-zinc-800/30">
-          {ROWS.map((row, i) => (
-            <div key={i} className="grid grid-cols-[1fr_auto_1fr] items-center px-5 py-3 hover:bg-white/[0.02] transition-colors">
-              {/* Platform side */}
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: row.platformColor }} />
-                <span className="text-[12px] font-mono text-zinc-300 truncate">{row.platform}</span>
-                <span className="text-[12px] font-mono text-zinc-400 tabular-nums flex-shrink-0">{row.amount}</span>
-              </div>
+          {ROWS.map((row, i) => {
+            const isDiscrepancy = row.status === 'discrepancy';
+            const rowDelay = isDiscrepancy ? i * 0.12 + 0.3 : i * 0.12;
+            return (
+              <motion.div
+                key={i}
+                className="grid grid-cols-[1fr_auto_1fr] items-center px-5 py-3 hover:bg-white/[0.02] transition-colors"
+                initial={{ opacity: 0, x: isDiscrepancy ? -12 : -8 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.4, delay: rowDelay, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                {/* Platform side */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: row.platformColor }} />
+                  <span className="text-[12px] font-mono text-zinc-300 truncate">{row.platform}</span>
+                  <span className="text-[12px] font-mono text-zinc-400 tabular-nums flex-shrink-0">{row.amount}</span>
+                </div>
 
-              {/* Status */}
-              <div className="px-6 flex justify-center">
-                {row.status === 'matched' ? (
-                  <div className="w-5 h-5 rounded-full bg-emerald-950/50 border border-emerald-800/40 flex items-center justify-center">
-                    <Check className="w-3 h-3 text-emerald-500" />
-                  </div>
-                ) : (
-                  <div className="w-5 h-5 rounded-full bg-red-950/50 border border-red-800/40 flex items-center justify-center">
-                    <AlertTriangle className="w-3 h-3 text-red-400" />
-                  </div>
-                )}
-              </div>
+                {/* Status */}
+                <div className="px-6 flex justify-center">
+                  {row.status === 'matched' ? (
+                    <div className="w-5 h-5 rounded-full bg-emerald-950/50 border border-emerald-800/40 flex items-center justify-center">
+                      <Check className="w-3 h-3 text-emerald-500" />
+                    </div>
+                  ) : (
+                    <motion.div
+                      className="w-5 h-5 rounded-full bg-red-950/50 border border-red-800/40 flex items-center justify-center"
+                      animate={{ scale: [1, 1.15, 1] }}
+                      transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+                    >
+                      <AlertTriangle className="w-3 h-3 text-red-400" />
+                    </motion.div>
+                  )}
+                </div>
 
-              {/* Bank side */}
-              <div className="flex items-center justify-end gap-3 min-w-0">
-                <span className={`text-[12px] font-mono tabular-nums flex-shrink-0 ${
-                  row.status === 'matched' ? 'text-zinc-400' : 'text-red-400'
-                }`}>{row.bankAmount}</span>
-                <span className="text-[11px] font-mono text-zinc-600 truncate">{row.bankRef}</span>
-              </div>
-            </div>
-          ))}
+                {/* Bank side */}
+                <div className="flex items-center justify-end gap-3 min-w-0">
+                  <span className={`text-[12px] font-mono tabular-nums flex-shrink-0 ${
+                    row.status === 'matched' ? 'text-zinc-400' : 'text-red-400'
+                  }`}>{row.bankAmount}</span>
+                  <span className="text-[11px] font-mono text-zinc-600 truncate">{row.bankRef}</span>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Footer */}

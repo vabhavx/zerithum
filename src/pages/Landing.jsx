@@ -88,11 +88,15 @@ const Landing = () => {
             <main className="relative z-10">
                 <HeroSection />
                 <ProblemSection />
+                <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent max-w-4xl mx-auto" />
                 <ProductShowcase />
                 <ReconciliationFlow />
                 <HowItWorksSection />
+                <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent max-w-4xl mx-auto" />
                 <TaxWorkflowSection />
+                <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent max-w-4xl mx-auto" />
                 <SecuritySection />
+                <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent max-w-4xl mx-auto" />
                 <FAQSection />
                 <CTASection />
             </main>

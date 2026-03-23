@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ScrollReveal from '@/components/ui/ScrollReveal';
 
 const FAQS = [
   {
@@ -34,11 +35,17 @@ const FAQS = [
   },
 ];
 
-function FAQItem({ faq }) {
+function FAQItem({ faq, index }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border-b border-zinc-800/60">
+    <motion.div
+      className="border-b border-zinc-800/60"
+      initial={{ opacity: 0, x: -6 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.3, delay: index * 0.06 }}
+    >
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between py-5 text-left group"
@@ -51,38 +58,45 @@ function FAQItem({ faq }) {
           )}
         />
       </button>
-      <div
-        className={cn(
-          'overflow-hidden transition-all duration-200',
-          open ? 'max-h-60 pb-5' : 'max-h-0'
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+            className="overflow-hidden"
+          >
+            <p className="text-sm text-zinc-400 leading-relaxed pr-8 pb-5">{faq.a}</p>
+          </motion.div>
         )}
-      >
-        <p className="text-sm text-zinc-400 leading-relaxed pr-8">{faq.a}</p>
-      </div>
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
 export default function FAQSection() {
   return (
     <section id="faq" className="py-20 md:py-32 bg-zinc-950">
-      <motion.div
-        className="max-w-3xl mx-auto px-4 md:px-6"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.5 }}
-      >
-        <h2 className="text-3xl md:text-5xl font-serif font-bold text-white tracking-tight mb-12">
-          Common questions
-        </h2>
+      <div className="max-w-3xl mx-auto px-4 md:px-6">
+        <div className="mb-12">
+          <ScrollReveal
+            baseOpacity={0.1}
+            enableBlur={true}
+            baseRotation={3}
+            blurStrength={4}
+            textClassName="text-3xl md:text-5xl font-serif font-bold text-white tracking-tight"
+          >
+            Common questions
+          </ScrollReveal>
+        </div>
 
         <div>
           {FAQS.map((faq, i) => (
-            <FAQItem key={i} faq={faq} />
+            <FAQItem key={i} faq={faq} index={i} />
           ))}
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }
