@@ -196,46 +196,27 @@ export default function ReconciliationFlow() {
 
   return (
     <section className="py-28 bg-zinc-950 relative overflow-hidden">
-      {/* Subtle grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:48px_48px]" />
-
       <div className="max-w-6xl mx-auto px-4 md:px-6 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-zinc-400 uppercase tracking-widest mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Live Reconciliation
-          </div>
-          <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-4">
+          <h2 className="text-3xl md:text-5xl font-serif font-bold text-white tracking-tight mb-4">
             Every dollar, accounted for.
           </h2>
-          <p className="text-zinc-500 max-w-xl mx-auto text-base md:text-lg font-light">
+          <p className="text-zinc-400 max-w-xl mx-auto text-base md:text-lg">
             Platform payouts on the left. Bank deposits on the right. Zerithum draws the line between them.
           </p>
         </div>
 
         {/* The Animation Container */}
         <div className="relative bg-[#060608] border border-zinc-800/80 rounded-xl overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.5)]">
-          {/* Top chrome bar */}
+          {/* Top bar */}
           <div className="h-10 bg-[#0a0a0c] border-b border-zinc-800/60 flex items-center justify-between px-5">
-            <div className="flex items-center gap-3">
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
-                <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
-                <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
-              </div>
-              <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest ml-2">Reconciliation Engine</span>
-            </div>
             <div className="flex items-center gap-4 text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
-              <span className="hidden sm:inline">
+              <span>
                 Matched: <span className={cn("transition-colors duration-300", matchedCount > 0 ? "text-emerald-500" : "text-zinc-700")}>{matchedCount}</span>
               </span>
-              <span className="hidden sm:inline">
+              <span>
                 Flagged: <span className={cn("transition-colors duration-300", discrepancyCount > 0 ? "text-red-500" : "text-zinc-700")}>{discrepancyCount}</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-emerald-500">Active</span>
               </span>
             </div>
           </div>

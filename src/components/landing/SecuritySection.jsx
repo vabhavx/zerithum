@@ -5,20 +5,20 @@ import { Button } from '@/components/ui/button';
 
 const SecuritySection = () => {
     return (
-        <section id="security" className="py-24 relative z-10 bg-zinc-950/80 backdrop-blur-sm border-t border-zinc-800">
-             <div className="max-w-4xl mx-auto px-4">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-5xl font-serif font-bold text-white mb-6">Compliance Grade Security</h2>
-                    <p className="text-zinc-400 max-w-2xl mx-auto text-lg font-light">
-                        Zerithum never touches funds and never initiates transactions. We are a read-only observability layer for your revenue.
+        <section id="security" className="py-20 md:py-32 bg-zinc-950">
+             <div className="max-w-4xl mx-auto px-4 md:px-6">
+                <div className="text-center mb-14 md:mb-20">
+                    <h2 className="text-3xl md:text-5xl font-serif font-bold text-white mb-5">Built for trust.</h2>
+                    <p className="text-zinc-400 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
+                        Zerithum is a read-only system. We observe your revenue data and bank deposits. We never hold, move, or custody funds.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <SecurityCard
                         icon={Lock}
                         title="Read-only Access"
-                        desc="Bank connections are established via Plaid in read-only mode. We never store bank login credentials."
+                        desc="Bank connections are established via Teller in read-only mode. We never store bank login credentials."
                     />
                     <SecurityCard
                         icon={Server}
@@ -37,14 +37,7 @@ const SecuritySection = () => {
                     />
                 </div>
 
-                <div className="mt-12 flex flex-col items-center gap-8">
-                    <div className="p-4 bg-emerald-900/10 border border-emerald-900/30 rounded-lg flex items-start gap-3 max-w-lg">
-                        <Shield className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                        <div className="text-sm text-emerald-100/80">
-                            <strong>Security First:</strong> Zerithum is designed for zero-trust environments. We assume all networks are hostile and verify every request signature.
-                        </div>
-                    </div>
-
+                <div className="mt-12 flex justify-center">
                     <Link to="/Security">
                         <Button variant="outline" className="group border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800">
                             View full security details
