@@ -7,9 +7,9 @@ import { Menu, X } from 'lucide-react';
 // Sections
 import HeroSection from '@/components/landing/HeroSection';
 import ProblemSection from '@/components/landing/ProblemSection';
-import HowItWorks from '@/components/landing/HowItWorks';
+import ProductShowcase from '@/components/landing/ProductShowcase';
+import HowItWorksSection from '@/components/landing/HowItWorksSection';
 import ReconciliationFlow from '@/components/landing/ReconciliationFlow';
-import OutcomesSection from '@/components/landing/OutcomesSection';
 import TaxWorkflowSection from '@/components/landing/TaxWorkflowSection';
 import SecuritySection from '@/components/landing/SecuritySection';
 import FAQSection from '@/components/landing/FAQSection';
@@ -47,8 +47,8 @@ const Landing = () => {
 
                     {/* Desktop Nav */}
                     <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
+                        <button onClick={() => scrollToSection('product')} className="hover:text-white transition-colors">Product</button>
                         <button onClick={() => scrollToSection('how-it-works')} className="hover:text-white transition-colors">How it works</button>
-                        <button onClick={() => scrollToSection('outcomes')} className="hover:text-white transition-colors">Features</button>
                         <Link to="/Security" className="hover:text-white transition-colors">Security</Link>
                         <button onClick={() => scrollToSection('faq')} className="hover:text-white transition-colors">FAQ</button>
                     </div>
@@ -71,8 +71,8 @@ const Landing = () => {
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
                     <div className="md:hidden absolute top-full left-0 right-0 bg-zinc-950 border-b border-zinc-800 p-6 flex flex-col gap-6 shadow-2xl">
+                        <button onClick={() => scrollToSection('product')} className="text-left text-zinc-400 hover:text-white">Product</button>
                         <button onClick={() => scrollToSection('how-it-works')} className="text-left text-zinc-400 hover:text-white">How it works</button>
-                        <button onClick={() => scrollToSection('outcomes')} className="text-left text-zinc-400 hover:text-white">Features</button>
                         <Link to="/Security" className="text-zinc-400 hover:text-white">Security</Link>
                         <button onClick={() => scrollToSection('faq')} className="text-left text-zinc-400 hover:text-white">FAQ</button>
                         <div className="h-[1px] bg-zinc-800 w-full"></div>
@@ -88,9 +88,9 @@ const Landing = () => {
             <main className="relative z-10">
                 <HeroSection />
                 <ProblemSection />
-                <HowItWorks />
+                <ProductShowcase />
                 <ReconciliationFlow />
-                <OutcomesSection />
+                <HowItWorksSection />
                 <TaxWorkflowSection />
                 <SecuritySection />
                 <FAQSection />
