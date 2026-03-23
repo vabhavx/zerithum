@@ -48,7 +48,7 @@ const HowItWorksSection = () => {
     const [activePhase, setActivePhase] = useState<'idle' | 'ingesting' | 'scanning' | 'complete'>('idle');
 
     return (
-        <section id="how-it-works" className="py-24 bg-[#020204] relative overflow-hidden" aria-label="How Zerithum Works">
+        <section id="how-it-works" className="py-24 bg-zinc-950 relative overflow-hidden" aria-label="How Zerithum Works">
             {/* Dark Grid Background */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] opacity-50" />
 

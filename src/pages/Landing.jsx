@@ -37,7 +37,7 @@ const Landing = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-[radial-gradient(ellipse_at_top,_#18181b_0%,_#09090b_50%)] text-white overflow-hidden font-sans selection:bg-emerald-500/30">
+        <div className="relative min-h-screen bg-[#09090b] text-white overflow-hidden font-sans selection:bg-emerald-500/30">
             {/* Navbar */}
             <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 py-3' : 'bg-transparent py-6'}`}>
                 <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
