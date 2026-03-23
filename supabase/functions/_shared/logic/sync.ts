@@ -8,14 +8,21 @@ export interface SyncContext {
   updateSyncHistory: (status: string, count: number, duration: number, error?: string) => Promise<void>;
 }
 
-// Platform fee structures (used to calculate net_amount for reconciliation)
+// Platform fee structures — FALLBACK ESTIMATES only.
+// Actual fees from API responses are preferred where available:
+//   - Stripe: actual fee via expanded balance_transaction.fee
+//   - Square: actual fee via payment.processing_fee array
+//   - Gumroad: actual fee via sale.gumroad_fee
+// These estimates are used ONLY when the API doesn't provide actual fee data.
+// YouTube, Patreon, and Twitch APIs don't expose per-transaction fees, so
+// estimates are always used. This affects reconciliation accuracy for those platforms.
 const PLATFORM_FEES: Record<string, { percentFee: number; fixedFeeCents: number; description: string }> = {
-  patreon:  { percentFee: 0.08,   fixedFeeCents: 0,  description: 'Patreon 8% platform fee' },
-  twitch:   { percentFee: 0.50,   fixedFeeCents: 0,  description: 'Twitch 50% revenue share' },
-  square:   { percentFee: 0.026,  fixedFeeCents: 10, description: 'Square 2.6% + $0.10 processing' },
-  gumroad:  { percentFee: 0.10,   fixedFeeCents: 0,  description: 'Gumroad 10% flat fee' },
-  stripe:   { percentFee: 0.029,  fixedFeeCents: 30, description: 'Stripe 2.9% + $0.30 processing' },
-  youtube:  { percentFee: 0.45,   fixedFeeCents: 0,  description: 'YouTube 45% revenue share' },
+  patreon:  { percentFee: 0.08,   fixedFeeCents: 0,  description: 'Patreon ~8% platform fee (estimate)' },
+  twitch:   { percentFee: 0.50,   fixedFeeCents: 0,  description: 'Twitch ~50% revenue share (estimate)' },
+  square:   { percentFee: 0.026,  fixedFeeCents: 10, description: 'Square 2.6% + $0.10 (fallback if API fee missing)' },
+  gumroad:  { percentFee: 0.10,   fixedFeeCents: 0,  description: 'Gumroad ~10% flat fee (fallback if API fee missing)' },
+  stripe:   { percentFee: 0.029,  fixedFeeCents: 30, description: 'Stripe 2.9% + $0.30 (fallback if balance_transaction unavailable)' },
+  youtube:  { percentFee: 0.45,   fixedFeeCents: 0,  description: 'YouTube ~45% revenue share (estimate)' },
 };
 
 // Calculate platform fee and net amount using integer cents arithmetic
@@ -253,8 +260,9 @@ export async function syncPlatform(
       }
 
       case 'stripe': {
+        // Expand balance_transaction to get actual Stripe fees per charge
         const limit = forceFullSync ? 500 : 100;
-        const url = `https://api.stripe.com/v1/charges?limit=${limit}`;
+        const url = `https://api.stripe.com/v1/charges?limit=${limit}&expand[]=data.balance_transaction`;
 
         const data = await retryWithBackoff(async () => {
           retryAttempts++;
@@ -266,7 +274,12 @@ export async function syncPlatform(
 
         transactions = (data.data || []).map((charge: any) => {
           const grossCents = charge.amount || 0;
-          const { feeCents, netCents } = calculateFeeAndNet(grossCents, 'stripe');
+          // Use actual Stripe fee from expanded balance_transaction when available
+          const actualFeeCents = charge.balance_transaction?.fee ?? null;
+          const { feeCents: estimatedFeeCents } = calculateFeeAndNet(grossCents, 'stripe');
+
+          const feeCents = actualFeeCents ?? estimatedFeeCents;
+          const netCents = grossCents - feeCents;
 
           return {
             user_id: user.id,
@@ -274,7 +287,7 @@ export async function syncPlatform(
             platform: 'stripe',
             amount: grossCents / 100,
             fee: feeCents / 100,
-            net_amount: netCents / 100,
+            net_amount: Math.max(0, netCents) / 100,
             currency: (charge.currency || 'usd').toUpperCase(),
             transaction_date: new Date(charge.created * 1000).toISOString().split('T')[0],
             transaction_type: 'sale',

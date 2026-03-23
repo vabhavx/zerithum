@@ -157,6 +157,89 @@ export async function verifyTellerSignature(
 }
 
 // --------------------------------------------------------------------------
+// Webhook Signature Verification (HMAC-SHA256)
+//
+// Teller signs webhooks per: https://teller.io/docs/api/webhooks
+//   Header: Teller-Signature: t=<unix_timestamp>,v1=<hex_signature>[,v1=<hex_sig2>]
+//   signed_message = "<timestamp>.<raw_json_body>"
+//   signature = HMAC-SHA256(signing_secret, signed_message)
+//
+// During key rotation Teller sends multiple v1= signatures (old + new key).
+// We accept if ANY v1 signature matches.
+// --------------------------------------------------------------------------
+
+export async function verifyWebhookSignature(
+    payload: string,
+    signatureHeader: string
+): Promise<boolean> {
+    try {
+        const secret = Deno.env.get('TELLER_WEBHOOK_SECRET');
+        if (!secret) {
+            console.error('[Teller] TELLER_WEBHOOK_SECRET is not set — webhook verification disabled');
+            return false;
+        }
+
+        // Parse header: "t=1234567890,v1=abc123,v1=def456"
+        const parts = signatureHeader.split(',');
+        let timestamp = '';
+        const signatures: string[] = [];
+
+        for (const part of parts) {
+            const [key, value] = part.split('=', 2);
+            if (key === 't') {
+                timestamp = value;
+            } else if (key === 'v1' && value) {
+                signatures.push(value);
+            }
+        }
+
+        if (!timestamp || signatures.length === 0) {
+            console.error('[Teller] Malformed Teller-Signature header');
+            return false;
+        }
+
+        // Reject if timestamp is older than 5 minutes (replay protection)
+        const timestampAge = Math.abs(Date.now() / 1000 - parseInt(timestamp, 10));
+        if (timestampAge > 300) {
+            console.error(`[Teller] Webhook timestamp too old: ${timestampAge}s`);
+            return false;
+        }
+
+        // Compute expected signature: HMAC-SHA256(secret, "timestamp.body")
+        const signedMessage = `${timestamp}.${payload}`;
+        const encoder = new TextEncoder();
+        const key = await crypto.subtle.importKey(
+            'raw',
+            encoder.encode(secret),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign']
+        );
+
+        const mac = await crypto.subtle.sign('HMAC', key, encoder.encode(signedMessage));
+        const computed = Array.from(new Uint8Array(mac))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+
+        // Accept if any v1 signature matches (supports key rotation)
+        for (const sig of signatures) {
+            if (sig.length !== computed.length) continue;
+            let mismatch = 0;
+            for (let i = 0; i < computed.length; i++) {
+                mismatch |= computed.charCodeAt(i) ^ sig.charCodeAt(i);
+            }
+            if (mismatch === 0) return true;
+        }
+
+        console.error('[Teller] No matching webhook signature found');
+        return false;
+    } catch (error) {
+        console.error('[Teller] Webhook signature verification error:', error);
+        return false;
+    }
+}
+
+// --------------------------------------------------------------------------
 // Teller API convenience methods
 // --------------------------------------------------------------------------
 

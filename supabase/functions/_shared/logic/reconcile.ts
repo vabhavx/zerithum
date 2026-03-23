@@ -39,7 +39,16 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
     // 2. Individual matching — now NET-amount-aware
     const candidates: MatchCandidate[] = [];
 
-    for (const rev of revenueTxns) {
+    // Separate positive revenue (earnings) from negative revenue (refunds)
+    const positiveRevenue = revenueTxns.filter(r => r.amount >= 0);
+    const refundRevenue = revenueTxns.filter(r => r.amount < 0);
+
+    // Separate bank credits (deposits) from bank debits (withdrawals/refund clawbacks)
+    const bankCredits = bankTxns.filter(b => b.amount >= 0 || b.transaction_type === 'credit');
+    const bankDebits = bankTxns.filter(b => b.amount < 0 || b.transaction_type === 'debit');
+
+    // --- Phase 2a: Match positive revenue against bank credits (standard flow) ---
+    for (const rev of positiveRevenue) {
       const revDate = new Date(rev.transaction_date);
 
       // Determine the amount the bank should show:
@@ -53,7 +62,7 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
       const revAmountCents = Math.round(Math.abs(revReconcileAmount) * 100);
       const revGrossCents = Math.round(Math.abs(rev.amount) * 100);
 
-      for (const bank of bankTxns) {
+      for (const bank of bankCredits) {
         const bankDate = new Date(bank.transaction_date);
         const diffTime = bankDate.getTime() - revDate.getTime();
         const diffDays = diffTime / (1000 * 3600 * 24);
@@ -133,6 +142,49 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
       }
     }
 
+    // --- Phase 2b: Match refund revenue against bank debits ---
+    // Refunds are negative revenue transactions that should match negative bank transactions
+    // (clawbacks/withdrawals). We match on absolute amounts with the 'refund' category.
+    for (const rev of refundRevenue) {
+      const revDate = new Date(rev.transaction_date);
+      const revAmountCents = Math.round(Math.abs(rev.amount) * 100);
+
+      for (const bank of bankDebits) {
+        const bankDate = new Date(bank.transaction_date);
+        const diffTime = bankDate.getTime() - revDate.getTime();
+        const diffDays = diffTime / (1000 * 3600 * 24);
+
+        // Refunds may appear on bank side before or after platform reports them
+        // Allow a wider window: -7 to +14 days
+        if (diffDays < -7 || diffDays > MAX_DATE_GAP_DAYS) continue;
+
+        const bankAmountCents = Math.round(Math.abs(bank.amount) * 100);
+        const diffCents = Math.abs(bankAmountCents - revAmountCents);
+        const diffPct = revAmountCents > 0 ? diffCents / revAmountCents : 0;
+
+        // Exact refund match (within $0.01)
+        if (diffCents <= 1 && Math.abs(diffDays) <= 3) {
+          candidates.push({
+            revenue: rev,
+            bank: bank,
+            score: 900 - Math.abs(diffDays),
+            matchType: 'refund',
+            confidence: 0.90,
+          });
+        }
+        // Close refund match (within 5% — refund fees may differ)
+        else if (diffPct <= 0.05 && Math.abs(diffDays) <= 7) {
+          candidates.push({
+            revenue: rev,
+            bank: bank,
+            score: 700 - Math.abs(diffDays),
+            matchType: 'refund',
+            confidence: 0.75,
+          });
+        }
+      }
+    }
+
     // 3. Sort candidates by score (best first)
     candidates.sort((a, b) => b.score - a.score);
 
@@ -165,9 +217,10 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
 
     // 5. Grouped payout detection
     // Platforms like Patreon/Twitch batch multiple transactions into a single bank deposit.
-    // Match unmatched bank deposits against sums of unmatched NET revenue amounts.
-    const unmatchedBankTxns = bankTxns.filter(b => !matchedBankIds.has(b.id));
-    const unmatchedRevTxns = revenueTxns.filter(r => !matchedRevenueIds.has(r.id));
+    // Match unmatched bank credits against sums of unmatched positive revenue NET amounts.
+    // Refunds and debits are excluded — they don't participate in grouped payouts.
+    const unmatchedBankTxns = bankCredits.filter(b => !matchedBankIds.has(b.id));
+    const unmatchedRevTxns = positiveRevenue.filter(r => !matchedRevenueIds.has(r.id));
 
     for (const bank of unmatchedBankTxns) {
         const bankAmountCents = Math.round(Math.abs(bank.amount) * 100);
@@ -221,19 +274,25 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
               return sum + Math.round(Math.abs(netAmt) * 100);
             }, 0);
 
-            // Create a reconciliation for the first revenue txn (primary match)
-            // with grouped_payout category — review required
-            reconciliations.push({
-                user_id: user.id,
-                revenue_transaction_id: bestGroup[0].id,
-                bank_transaction_id: bank.id,
-                match_category: 'grouped_payout',
-                match_confidence: bestDiffPct <= 0.005 ? 0.90 : 0.80,
-                review_status: 'pending_review',
-                reconciled_by: 'auto',
-                reconciled_at: new Date().toISOString(),
-                reviewer_notes: `Grouped payout: ${bestGroup.length} transactions (net sum: $${(groupSumCents / 100).toFixed(2)}) matched to bank deposit of $${(bankAmountCents / 100).toFixed(2)}`
-            });
+            // Create a reconciliation record for EVERY revenue txn in the group,
+            // all linked to the same bank deposit. This prevents N-1 orphaned
+            // transactions from appearing unreconciled and triggering false discrepancies.
+            const groupConfidence = bestDiffPct <= 0.005 ? 0.90 : 0.80;
+            const groupNotes = `Grouped payout: ${bestGroup.length} transactions (net sum: $${(groupSumCents / 100).toFixed(2)}) matched to bank deposit of $${(bankAmountCents / 100).toFixed(2)}`;
+
+            for (const rev of bestGroup) {
+                reconciliations.push({
+                    user_id: user.id,
+                    revenue_transaction_id: rev.id,
+                    bank_transaction_id: bank.id,
+                    match_category: 'grouped_payout',
+                    match_confidence: groupConfidence,
+                    review_status: 'pending_review',
+                    reconciled_by: 'auto',
+                    reconciled_at: new Date().toISOString(),
+                    reviewer_notes: groupNotes
+                });
+            }
         }
     }
 

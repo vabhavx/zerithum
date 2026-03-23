@@ -8,6 +8,7 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { logAudit } from '../_shared/utils/audit.ts';
+import { verifyWebhookSignature } from '../_shared/utils/teller.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -20,7 +21,28 @@ Deno.serve(async (req) => {
 
     try {
         const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
-        const body = await req.json();
+
+        // Verify webhook signature before processing.
+        // Teller sends: Teller-Signature: t=<timestamp>,v1=<hex_hmac>
+        // Read raw body for signature verification, then parse JSON.
+        const rawBody = await req.text();
+        const signature = req.headers.get('Teller-Signature') || req.headers.get('teller-signature') || '';
+
+        if (Deno.env.get('TELLER_WEBHOOK_SECRET')) {
+            if (!signature) {
+                console.error('[TellerWebhook] Missing Teller-Signature header');
+                return Response.json({ error: 'Missing signature' }, { status: 401 });
+            }
+            const valid = await verifyWebhookSignature(rawBody, signature);
+            if (!valid) {
+                console.error('[TellerWebhook] Invalid webhook signature — rejecting');
+                return Response.json({ error: 'Invalid signature' }, { status: 401 });
+            }
+        } else {
+            console.warn('[TellerWebhook] TELLER_WEBHOOK_SECRET not configured — signature verification skipped');
+        }
+
+        const body = JSON.parse(rawBody);
 
         const eventId = body.id;
         const eventType = body.type;
