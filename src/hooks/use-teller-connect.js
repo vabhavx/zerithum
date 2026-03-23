@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { functions } from "@/api/supabaseClient";
 
 const TELLER_CONNECT_URL = "https://cdn.teller.io/connect/connect.js";
-const LOADING_TIMEOUT_MS = 30_000;
+const LOADING_TIMEOUT_MS = 180_000; // 3 minutes — sandbox flow needs manual input
 
 /**
  * Hook for Teller Connect enrollment flow.
