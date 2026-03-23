@@ -224,6 +224,7 @@ export async function autoReconcile(ctx: ReconcileContext, user: { id: string })
 
     for (const bank of unmatchedBankTxns) {
         const bankAmountCents = Math.round(Math.abs(bank.amount) * 100);
+        if (bankAmountCents <= 0) continue; // Skip zero-amount deposits
         const bankDate = new Date(bank.transaction_date);
 
         // Find revenue txns within date range that could sum to this bank deposit

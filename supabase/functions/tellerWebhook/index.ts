@@ -52,44 +52,53 @@ Deno.serve(async (req) => {
             return new Response('Missing event type', { status: 400 });
         }
 
-        // Idempotency check: skip if already processed
+        // Idempotency: upsert on event_id to prevent TOCTOU race conditions.
+        // Uses onConflict so concurrent webhook deliveries don't crash on UNIQUE constraint.
         if (eventId) {
             const { data: existing } = await serviceSupabase
                 .from('webhook_events')
-                .select('id')
+                .select('id, processed')
                 .eq('event_id', eventId)
                 .maybeSingle();
 
-            if (existing) {
+            if (existing?.processed) {
                 return Response.json({ status: 'already_processed' }, { status: 200 });
             }
 
-            // Record event
+            // Upsert event record — safe against concurrent deliveries
             await serviceSupabase
                 .from('webhook_events')
-                .insert({
+                .upsert({
                     event_id: eventId,
                     provider: 'teller',
                     event_type: eventType,
                     payload: body,
-                    processed_at: new Date().toISOString(),
-                });
+                    processed: true,
+                }, { onConflict: 'event_id' });
         }
 
         // Route by event type
         switch (eventType) {
             case 'transactions.processed': {
                 const enrollmentId = payload.enrollment_id;
-                if (!enrollmentId) break;
+                if (!enrollmentId) {
+                    console.warn('[TellerWebhook] Missing enrollment_id in transactions.processed event');
+                    break;
+                }
 
                 // Find the connection and mark it for sync
                 // The frontend will detect this and trigger a sync
-                const { data: connection } = await serviceSupabase
+                const { data: connection, error: connError } = await serviceSupabase
                     .from('bank_connections')
                     .select('id, user_id')
                     .eq('teller_enrollment_id', enrollmentId)
                     .eq('status', 'active')
                     .maybeSingle();
+
+                if (connError) {
+                    console.error('[TellerWebhook] Error querying bank_connections:', connError.message);
+                    break;
+                }
 
                 if (connection) {
                     await logAudit(null, {
@@ -106,9 +115,12 @@ Deno.serve(async (req) => {
 
             case 'enrollment.disconnected': {
                 const enrollmentId = payload.enrollment_id;
-                if (!enrollmentId) break;
+                if (!enrollmentId) {
+                    console.warn('[TellerWebhook] Missing enrollment_id in enrollment.disconnected event');
+                    break;
+                }
 
-                const { data: connection } = await serviceSupabase
+                const { data: connection, error: updateError } = await serviceSupabase
                     .from('bank_connections')
                     .update({
                         status: 'reauth_required',
@@ -117,6 +129,11 @@ Deno.serve(async (req) => {
                     .eq('teller_enrollment_id', enrollmentId)
                     .select('id, user_id')
                     .maybeSingle();
+
+                if (updateError) {
+                    console.error('[TellerWebhook] Error updating bank_connections:', updateError.message);
+                    break;
+                }
 
                 if (connection) {
                     await logAudit(null, {
