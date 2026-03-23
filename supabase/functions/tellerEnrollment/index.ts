@@ -44,6 +44,12 @@ Deno.serve(async (req) => {
 
         // Parse enrollment payload
         const body = await req.json();
+        console.log('[TellerEnrollment] Received payload keys:', Object.keys(body));
+        console.log('[TellerEnrollment] accessToken present:', !!body.accessToken);
+        console.log('[TellerEnrollment] enrollment:', JSON.stringify(body.enrollment));
+        console.log('[TellerEnrollment] nonce:', body.nonce);
+        console.log('[TellerEnrollment] signatures:', JSON.stringify(body.signatures));
+
         const {
             accessToken,
             enrollment,
@@ -53,8 +59,13 @@ Deno.serve(async (req) => {
         } = body;
 
         if (!accessToken || !enrollment?.id || !nonce) {
+            console.error('[TellerEnrollment] Validation failed:', {
+                hasAccessToken: !!accessToken,
+                enrollmentId: enrollment?.id,
+                hasNonce: !!nonce,
+            });
             return Response.json(
-                { error: 'Missing required enrollment fields' },
+                { error: 'Missing required enrollment fields', details: { hasAccessToken: !!accessToken, hasEnrollmentId: !!enrollment?.id, hasNonce: !!nonce } },
                 { status: 400, headers: corsHeaders }
             );
         }

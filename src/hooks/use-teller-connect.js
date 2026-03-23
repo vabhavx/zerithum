@@ -134,7 +134,8 @@ export function useTellerConnect({ onSuccess, onError, enrollmentId } = {}) {
                 environment: config.environment || "sandbox",
                 products: ["transactions"],
                 onSuccess: async (enrollment) => {
-                    console.log("[TellerConnect] Enrollment success — sending to backend");
+                    console.log("[TellerConnect] Enrollment success — raw payload:", JSON.stringify(enrollment, null, 2));
+                    console.log("[TellerConnect] Keys:", Object.keys(enrollment));
                     try {
                         const result = await functions.invoke("tellerEnrollment", {
                             accessToken: enrollment.accessToken,
