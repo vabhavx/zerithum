@@ -11,19 +11,82 @@ vi.stubGlobal('import.meta', {
     }
 });
 
+// Mock supabase instance
+const mockSupabaseInstance = {
+    auth: {
+        signOut: vi.fn().mockResolvedValue({ error: null }),
+        getSession: vi.fn().mockResolvedValue({
+            data: { session: { access_token: 'fake-token' } }
+        }),
+        getUser: vi.fn().mockResolvedValue({
+            data: { user: { id: 'test-user-id' } }
+        })
+    },
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data: { id: 'test-user-id' } }),
+    storage: {
+        from: vi.fn().mockReturnThis()
+    }
+};
+
 // Mock supabase-js
 vi.mock('@supabase/supabase-js', () => ({
-    createClient: () => ({
-        auth: {
-            getSession: vi.fn().mockResolvedValue({
-                data: { session: { access_token: 'fake-token' } }
-            })
-        }
-    })
+    createClient: () => mockSupabaseInstance
 }));
 
+// Mock storage
+const mockSessionStorage = {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+};
+vi.stubGlobal('sessionStorage', mockSessionStorage);
+
+// Mock location
+vi.stubGlobal('location', {
+    href: '',
+    origin: 'https://app.zerithum.com'
+});
+
 // Import the module under test
-import { functions, appLogs } from './supabaseClient';
+import { auth, functions, appLogs } from './supabaseClient';
+
+describe('auth redirection security', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.location.href = '';
+    });
+
+    it('logout should redirect to provided URL if safe', async () => {
+        await auth.logout('/safe-page');
+        expect(window.location.href).toBe('/safe-page');
+    });
+
+    it('logout should redirect to / if provided URL is unsafe', async () => {
+        await auth.logout('https://evil.com');
+        expect(window.location.href).toBe('/');
+    });
+
+    it('logout should redirect to / if no URL provided', async () => {
+        await auth.logout();
+        expect(window.location.href).toBe('/');
+    });
+
+    it('redirectToLogin should store redirect URL if safe', () => {
+        auth.redirectToLogin('/dashboard');
+        expect(mockSessionStorage.setItem).toHaveBeenCalledWith('redirectAfterLogin', '/dashboard');
+        expect(window.location.href).toBe('/login');
+    });
+
+    it('redirectToLogin should NOT store redirect URL if unsafe', () => {
+        auth.redirectToLogin('https://evil.com');
+        expect(mockSessionStorage.setItem).not.toHaveBeenCalled();
+        expect(window.location.href).toBe('/login');
+    });
+});
 
 describe('functions.invoke error handling', () => {
     beforeEach(() => {

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { isSafeRedirect } from '@/lib/security';
 
 export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -67,15 +68,17 @@ export const auth = {
     // Sign out
     async logout(redirectUrl) {
         await supabase.auth.signOut();
-        if (redirectUrl) {
+        if (redirectUrl && isSafeRedirect(redirectUrl)) {
             window.location.href = redirectUrl;
+        } else {
+            window.location.href = '/';
         }
     },
 
     // Redirect to login
     redirectToLogin(redirectUrl) {
         // Store the redirect URL for after login
-        if (redirectUrl) {
+        if (redirectUrl && isSafeRedirect(redirectUrl)) {
             sessionStorage.setItem('redirectAfterLogin', redirectUrl);
         }
         window.location.href = '/login';

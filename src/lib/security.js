@@ -92,6 +92,36 @@ export function sanitizeUrl(url, allowedProtocols = ['http:', 'https:']) {
   }
 }
 
+/**
+ * Check if a URL is safe for redirection.
+ * A URL is considered safe if it is a relative path starting with '/'
+ * (but not '//' to avoid protocol-relative URLs) or if it matches the application's origin.
+ */
+export function isSafeRedirect(url) {
+  if (typeof url !== 'string' || !url) {
+    return false;
+  }
+
+  // Prevent protocol-relative URLs (e.g., //evil.com)
+  if (url.startsWith('//')) {
+    return false;
+  }
+
+  // Allow relative paths starting with /
+  if (url.startsWith('/')) {
+    return true;
+  }
+
+  try {
+    // Check if it's an absolute URL with the same origin
+    const parsed = new URL(url);
+    return parsed.origin === window.location.origin;
+  } catch {
+    // Not a valid absolute URL and doesn't start with /
+    return false;
+  }
+}
+
 // ============================================================================
 // Rate Limiting
 // ============================================================================
